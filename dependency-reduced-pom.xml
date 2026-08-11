@@ -4,7 +4,7 @@
   <groupId>com.bx</groupId>
   <artifactId>smpplugin</artifactId>
   <name>SmpPlugin</name>
-  <version>1.4</version>
+  <version>1.2</version>
   <build>
     <sourceDirectory>${source.directory}</sourceDirectory>
     <defaultGoal>clean package</defaultGoal>

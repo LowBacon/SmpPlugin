@@ -17,7 +17,7 @@ SETTINGS:
   # Number of shards to reward per interval
   SHARD-REWARD-AMOUNT: 1
   # Permission required to set AFK Lounge location and border
-  ADMIN-PERMISSION: "finnishsmp.admin.afklounge"
+  ADMIN-PERMISSION: "smpplugin.admin.afklounge"
 
 BORDER:
   # Enable border enforcement

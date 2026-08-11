@@ -31,7 +31,7 @@ ANTI_ESP:
   # Determines whether Require Line Of Sight is enabled or disabled. Available options: true, false
   REQUIRE_LINE_OF_SIGHT: true
   # The text or value for Staff Bypass Permission. Available options: Any valid string text
-  STAFF_BYPASS_PERMISSION: finnishsmp.admin.spawner.seeall
+  STAFF_BYPASS_PERMISSION: smpplugin.admin.spawner.seeall
   # Configuration section for Camouflage.
   CAMOUFLAGE:
     # The text or value for Overworld. Available options: Any valid string text

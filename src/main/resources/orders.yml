@@ -8,10 +8,10 @@ SETTINGS:
   MAX_ACTIVE_ORDERS_DEFAULT: 5
   # Configuration section for Max Active Orders By Permission.
   MAX_ACTIVE_ORDERS_BY_PERMISSION:
-    # The numerical value for Finnishsmp.Orders.Limit.10. Available options: Any valid integer
-    finnishsmp.orders.limit.10: 10
-    # The numerical value for Finnishsmp.Orders.Limit.15. Available options: Any valid integer
-    finnishsmp.orders.limit.15: 15
+    # The numerical value for smpplugin.Orders.Limit.10. Available options: Any valid integer
+    smpplugin.orders.limit.10: 10
+    # The numerical value for smpplugin.Orders.Limit.15. Available options: Any valid integer
+    smpplugin.orders.limit.15: 15
   # The numerical value for Max Quantity Per Order. Available options: Any valid integer
   MAX_QUANTITY_PER_ORDER: 2304
   # The numerical value for Click Cooldown Ms. Available options: Any valid integer

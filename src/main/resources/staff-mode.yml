@@ -21,21 +21,21 @@ STAFF-MODE:
     # The text or value for Message. Available options: Any valid string text
     MESSAGE: '&aVANISHED &7>> &fYou are hidden from regular players'
   # The text or value for Staff Permission. Available options: Any valid string text
-  STAFF-PERMISSION: finnishsmp.staff.mode
+  STAFF-PERMISSION: smpplugin.staff.mode
   # The text or value for Admin Permission. Available options: Any valid string text
-  ADMIN-PERMISSION: finnishsmp.admin.staffmode
+  ADMIN-PERMISSION: smpplugin.admin.staffmode
   # The text or value for Vanish Permission. Available options: Any valid string text
-  VANISH-PERMISSION: finnishsmp.staff.mode.vanish
+  VANISH-PERMISSION: smpplugin.staff.mode.vanish
   # The text or value for Better View Permission. Available options: Any valid string text
-  BETTER-VIEW-PERMISSION: finnishsmp.staff.mode.betterview
+  BETTER-VIEW-PERMISSION: smpplugin.staff.mode.betterview
   # The text or value for Staff List Permission. Available options: Any valid string text
-  STAFF-LIST-PERMISSION: finnishsmp.staff.mode.stafflist
+  STAFF-LIST-PERMISSION: smpplugin.staff.mode.stafflist
   # The text or value for Random Teleport Permission. Available options: Any valid string text
-  RANDOM-TELEPORT-PERMISSION: finnishsmp.staff.mode.randomtp
+  RANDOM-TELEPORT-PERMISSION: smpplugin.staff.mode.randomtp
   # The text or value for See Vanished Permission. Available options: Any valid string text
-  SEE-VANISHED-PERMISSION: finnishsmp.staff.mode.seevanished
+  SEE-VANISHED-PERMISSION: smpplugin.staff.mode.seevanished
   # The text or value for Others Permission. Available options: Any valid string text
-  OTHERS-PERMISSION: finnishsmp.staff.mode.others
+  OTHERS-PERMISSION: smpplugin.staff.mode.others
   # Configuration section for Hotbar Slots.
   HOTBAR-SLOTS:
     # The numerical value for Vanish. Available options: Any valid integer

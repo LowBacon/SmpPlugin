@@ -1,6 +1,6 @@
 name: SmpPlugin
 version: ${project.version}
-main: com.bx.finnishSmp.FinnishSmp
+main: com.bx.smpPlugin.SmpPlugin
 api-version: "1.21"
 folia-supported: true
 softdepend:
@@ -35,11 +35,11 @@ commands:
   ignore:
     description: Add or remove a player from your ignore list
     usage: /ignore <player|list>
-    permission: finnishsmp.ignore
+    permission: smpplugin.ignore
   unignore:
     description: Remove a player from your ignore list
     usage: /unignore <player>
-    permission: finnishsmp.ignore
+    permission: smpplugin.ignore
   msg:
     description: Send a private message
     usage: /msg <player> <message>
@@ -48,20 +48,20 @@ commands:
     - tell
     - whisper
     - w
-    permission: finnishsmp.message
+    permission: smpplugin.message
   reply:
     description: Reply to your last private conversation
     usage: /reply <message>
     aliases:
     - r
-    permission: finnishsmp.message
+    permission: smpplugin.message
   pm:
     description: Toggle private messages
     usage: /pm
     aliases:
     - togglepm
     - privatemessages
-    permission: finnishsmp.message.toggle
+    permission: smpplugin.message.toggle
   home:
     description: Teleport to your home
     usage: /home [name]
@@ -83,11 +83,11 @@ commands:
   setspawn:
     description: Set the primary server spawn at your current location
     usage: /setspawn
-    permission: finnishsmp.admin.setspawn
+    permission: smpplugin.admin.setspawn
   setlobby:
     description: Set the protected lobby location at your current location
     usage: /setlobby
-    permission: finnishsmp.admin.lobby.setlobby
+    permission: smpplugin.admin.lobby.setlobby
   afk:
     description: Go to AFK zone
     usage: /afk
@@ -96,19 +96,19 @@ commands:
     usage: /setafk [name]
     aliases:
     - afkset
-    permission: finnishsmp.admin.setafk
+    permission: smpplugin.admin.setafk
   delafk:
     description: Delete a saved AFK zone
     usage: /delafk <name>
     aliases:
     - afkdel
-    permission: finnishsmp.admin.setafk
+    permission: smpplugin.admin.setafk
   afklist:
     description: List every configured AFK destination
     usage: /afklist
     aliases:
     - afkpoints
-    permission: finnishsmp.admin.setafk
+    permission: smpplugin.admin.setafk
   rtp:
     description: Random teleport
     usage: /rtp [world]
@@ -183,27 +183,27 @@ commands:
   addmoney:
     description: Add money to a player
     usage: /addmoney <player> <amount>
-    permission: finnishsmp.admin.addmoney
+    permission: smpplugin.admin.addmoney
   removemoney:
     description: Remove money from a player
     usage: /removemoney <player> <amount>
-    permission: finnishsmp.admin.removemoney
+    permission: smpplugin.admin.removemoney
   setmoney:
     description: Set a player's money balance
     usage: /setmoney <player> <amount>
-    permission: finnishsmp.admin.setmoney
+    permission: smpplugin.admin.setmoney
   addplaytime:
     description: Add playtime to a player
     usage: /addplaytime <player> <seconds>
-    permission: finnishsmp.admin.addplaytime
+    permission: smpplugin.admin.addplaytime
   addkills:
     description: Add kills to a player
     usage: /addkills <player> <amount>
-    permission: finnishsmp.admin.addkills
+    permission: smpplugin.admin.addkills
   adddeaths:
     description: Add deaths to a player
     usage: /adddeaths <player> <amount>
-    permission: finnishsmp.admin.adddeaths
+    permission: smpplugin.admin.adddeaths
   shards:
     description: Check shards
     usage: /shards [player] | /shards everywhere <status|debug> [player]
@@ -267,11 +267,11 @@ commands:
   helpop:
     description: Request staff assistance
     usage: /helpop <message>
-    permission: finnishsmp.helpop
+    permission: smpplugin.helpop
   report:
     description: Report a player to online staff
     usage: /report <player> <reason>
-    permission: finnishsmp.report
+    permission: smpplugin.report
   rename:
     description: Rename the item in your hand
     usage: /rename <name...|reset>
@@ -311,46 +311,46 @@ commands:
   ban:
     description: Ban a player and record punishment history
     usage: /ban <player> [reason]
-    permission: finnishsmp.staff.punishments.ban
+    permission: smpplugin.staff.punishments.ban
   tempban:
     description: Temporarily ban a player and record punishment history
     usage: '/tempban <player> <time> [reason] (time: 30s, 15m, 2h, 5d, or 5d 15m 30s)'
-    permission: finnishsmp.staff.punishments.ban
+    permission: smpplugin.staff.punishments.ban
   mute:
     description: Mute a player and record punishment history
     usage: /mute <player> [reason]
-    permission: finnishsmp.staff.punishments.mute
+    permission: smpplugin.staff.punishments.mute
   tempmute:
     description: Temporarily mute a player and record punishment history
     usage: '/tempmute <player> <time> [reason] (time: 30s, 15m, 2h, 5d, or 5d 15m
       30s)'
-    permission: finnishsmp.staff.punishments.mute
+    permission: smpplugin.staff.punishments.mute
   warn:
     description: Warn a player and record punishment history
     usage: /warn <player> [reason]
-    permission: finnishsmp.staff.punishments.create
+    permission: smpplugin.staff.punishments.create
   kick:
     description: Kick a player and record punishment history
     usage: /kick <player> [reason]
-    permission: finnishsmp.staff.punishments.create
+    permission: smpplugin.staff.punishments.create
   blacklist:
     description: Blacklist a player and record punishment history
     usage: /blacklist <player> [reason]
-    permission: finnishsmp.staff.punishments.blacklist
+    permission: smpplugin.staff.punishments.blacklist
   unban:
     description: Remove active ban records for a player
     usage: /unban <player> [reason]
     aliases:
     - pardon
-    permission: finnishsmp.staff.punishments.unban
+    permission: smpplugin.staff.punishments.unban
   unmute:
     description: Remove active mute records for a player
     usage: /unmute <player> [reason]
-    permission: finnishsmp.staff.punishments.unmute
+    permission: smpplugin.staff.punishments.unmute
   unblacklist:
     description: Remove active blacklist records for a player
     usage: /unblacklist <player> [reason]
-    permission: finnishsmp.staff.punishments.unblacklist
+    permission: smpplugin.staff.punishments.unblacklist
   bounty:
     description: Manage bounties
     usage: /bounty <add|set|info|list> [player] [amount]
@@ -430,7 +430,7 @@ commands:
   servers:
     description: View network server status
     usage: /servers
-    permission: finnishsmp.servers
+    permission: smpplugin.servers
   billford:
     description: Open Billford trade
     usage: /billford
@@ -442,11 +442,11 @@ commands:
   clearlag:
     description: Manually clear lag entities
     usage: /clearlag
-    permission: finnishsmp.admin.clearlag
+    permission: smpplugin.admin.clearlag
   cuboid:
     description: Manage cuboid regions
     usage: /cuboid <wand|create|delete|list|bind <cuboid> <spawn|shard|rtp-zone> <true|false>|reload>
-    permission: finnishsmp.admin.cuboid
+    permission: smpplugin.admin.cuboid
   setwarp:
     description: Set a warp point
     usage: /setwarp <name>
@@ -456,16 +456,16 @@ commands:
   amethysttool:
     description: Manage amethyst tools
     usage: /amethysttool give <player> <type> [duration] | /amethysttool reload
-    permission: finnishsmp.admin.amethysttool
-  finnishsmp:
-    description: FinnishSMP admin command
-    usage: /finnishsmp <reload|statswipe|optimize>
+    permission: smpplugin.admin.amethysttool
+  smpplugin:
+    description: SmpPlugin admin command
+    usage: /smpplugin <reload|statswipe|optimize>
     aliases:
     - fsmp
   ecsee:
     description: ecsee
     usage: /ecsee <player>
-    permission: finnishsmp.ecsee
+    permission: smpplugin.ecsee
   logs:
     description: Command logs
   addshards:
@@ -503,388 +503,388 @@ commands:
   afklounge:
     description: Manage AFK Lounge settings
     usage: /afklounge <setlocation|border|info>
-    permission: finnishsmp.admin.afklounge
+    permission: smpplugin.admin.afklounge
 permissions:
-  finnishsmp.admin:
+  smpplugin.admin:
     description: Full admin access
     default: op
     children:
-      finnishsmp.admin.shop: true
-      finnishsmp.admin.orders: true
-      finnishsmp.admin.duels: true
-      finnishsmp.admin.ffa: true
-      finnishsmp.admin.auctionhouse: true
-      finnishsmp.admin.clearlag: true
-      finnishsmp.admin.cuboid: true
-      finnishsmp.admin.warpmanager: true
-      finnishsmp.admin.portalmanager: true
-      finnishsmp.admin.setwarp: true
-      finnishsmp.admin.setspawn: true
-      finnishsmp.admin.setafk: true
-      finnishsmp.admin.delwarp: true
-      finnishsmp.admin.addmoney: true
-      finnishsmp.admin.removemoney: true
-      finnishsmp.admin.setmoney: true
-      finnishsmp.admin.addplaytime: true
-      finnishsmp.admin.addkills: true
-      finnishsmp.admin.adddeaths: true
-      finnishsmp.admin.afklounge: true
-      finnishsmp.admin.amethysttool: true
-      finnishsmp.admin.worth: true
-      finnishsmp.admin.enderchest: true
-      finnishsmp.admin.freeze: true
-      finnishsmp.admin.staffmode: true
-      finnishsmp.admin.invsee: true
-      finnishsmp.admin.spawner: true
-      finnishsmp.admin.spawner.seeall: true
-      finnishsmp.admin.crate: true
-      finnishsmp.admin.crate.reload: true
-      finnishsmp.admin.crate.keyall: true
-      finnishsmp.admin.reload: true
-      finnishsmp.admin.statswipe: true
-      finnishsmp.admin.optimize: true
-      finnishsmp.admin.shards: true
-      finnishsmp.ignore: true
-      finnishsmp.ignore.bypass: true
-      finnishsmp.message: true
-      finnishsmp.message.toggle: true
-      finnishsmp.message.bypass-disabled: true
-      finnishsmp.staff.freeze: true
-      finnishsmp.staff.freeze.alert: true
-      finnishsmp.staff.freeze.exempt: true
-      finnishsmp.staff.fly: true
-      finnishsmp.staff.heal: true
-      finnishsmp.staff.feed: true
-      finnishsmp.staff.gamemode: true
-      finnishsmp.staff.gamemode.others: true
-      finnishsmp.staff.mode: true
-      finnishsmp.staff.mode.vanish: true
-      finnishsmp.staff.mode.stafflist: true
-      finnishsmp.staff.mode.betterview: true
-      finnishsmp.staff.mode.randomtp: true
-      finnishsmp.staff.mode.seevanished: true
-      finnishsmp.staff.mode.others: true
-      finnishsmp.staff.chat.use: true
-      finnishsmp.staff.chat.mute: true
-      finnishsmp.staff.chat.unmute: true
-      finnishsmp.staff.chat.delay: true
-      finnishsmp.staff.chat.clear: true
-      finnishsmp.staff.chat.bypass.mute: true
-      finnishsmp.staff.chat.bypass.delay: true
-      finnishsmp.staff.chat.bypass.filter: true
-      finnishsmp.staff.alerts.receive: true
-      finnishsmp.staff.alerts.bypass-cooldown: true
-      finnishsmp.staff.teleport: true
-      finnishsmp.staff.rename: true
-      finnishsmp.staff.alts: true
-      finnishsmp.staff.invsee: true
-      finnishsmp.staff.profileviewer: true
-      finnishsmp.staff.punishments.view: true
-      finnishsmp.staff.punishments.create: true
-      finnishsmp.staff.punishments.remove: true
-      finnishsmp.staff.punishments.delete: true
-      finnishsmp.servers: true
-      finnishsmp.shards.everywhere: true
-      finnishsmp.admin.ecsee: true
-  finnishsmp.servers:
+      smpplugin.admin.shop: true
+      smpplugin.admin.orders: true
+      smpplugin.admin.duels: true
+      smpplugin.admin.ffa: true
+      smpplugin.admin.auctionhouse: true
+      smpplugin.admin.clearlag: true
+      smpplugin.admin.cuboid: true
+      smpplugin.admin.warpmanager: true
+      smpplugin.admin.portalmanager: true
+      smpplugin.admin.setwarp: true
+      smpplugin.admin.setspawn: true
+      smpplugin.admin.setafk: true
+      smpplugin.admin.delwarp: true
+      smpplugin.admin.addmoney: true
+      smpplugin.admin.removemoney: true
+      smpplugin.admin.setmoney: true
+      smpplugin.admin.addplaytime: true
+      smpplugin.admin.addkills: true
+      smpplugin.admin.adddeaths: true
+      smpplugin.admin.afklounge: true
+      smpplugin.admin.amethysttool: true
+      smpplugin.admin.worth: true
+      smpplugin.admin.enderchest: true
+      smpplugin.admin.freeze: true
+      smpplugin.admin.staffmode: true
+      smpplugin.admin.invsee: true
+      smpplugin.admin.spawner: true
+      smpplugin.admin.spawner.seeall: true
+      smpplugin.admin.crate: true
+      smpplugin.admin.crate.reload: true
+      smpplugin.admin.crate.keyall: true
+      smpplugin.admin.reload: true
+      smpplugin.admin.statswipe: true
+      smpplugin.admin.optimize: true
+      smpplugin.admin.shards: true
+      smpplugin.ignore: true
+      smpplugin.ignore.bypass: true
+      smpplugin.message: true
+      smpplugin.message.toggle: true
+      smpplugin.message.bypass-disabled: true
+      smpplugin.staff.freeze: true
+      smpplugin.staff.freeze.alert: true
+      smpplugin.staff.freeze.exempt: true
+      smpplugin.staff.fly: true
+      smpplugin.staff.heal: true
+      smpplugin.staff.feed: true
+      smpplugin.staff.gamemode: true
+      smpplugin.staff.gamemode.others: true
+      smpplugin.staff.mode: true
+      smpplugin.staff.mode.vanish: true
+      smpplugin.staff.mode.stafflist: true
+      smpplugin.staff.mode.betterview: true
+      smpplugin.staff.mode.randomtp: true
+      smpplugin.staff.mode.seevanished: true
+      smpplugin.staff.mode.others: true
+      smpplugin.staff.chat.use: true
+      smpplugin.staff.chat.mute: true
+      smpplugin.staff.chat.unmute: true
+      smpplugin.staff.chat.delay: true
+      smpplugin.staff.chat.clear: true
+      smpplugin.staff.chat.bypass.mute: true
+      smpplugin.staff.chat.bypass.delay: true
+      smpplugin.staff.chat.bypass.filter: true
+      smpplugin.staff.alerts.receive: true
+      smpplugin.staff.alerts.bypass-cooldown: true
+      smpplugin.staff.teleport: true
+      smpplugin.staff.rename: true
+      smpplugin.staff.alts: true
+      smpplugin.staff.invsee: true
+      smpplugin.staff.profileviewer: true
+      smpplugin.staff.punishments.view: true
+      smpplugin.staff.punishments.create: true
+      smpplugin.staff.punishments.remove: true
+      smpplugin.staff.punishments.delete: true
+      smpplugin.servers: true
+      smpplugin.shards.everywhere: true
+      smpplugin.admin.ecsee: true
+  smpplugin.servers:
     description: Access the network servers status menu
     default: false
-  finnishsmp.admin.clearlag:
+  smpplugin.admin.clearlag:
     description: Manually clear lag
     default: op
-  finnishsmp.admin.duels:
+  smpplugin.admin.duels:
     description: Manage duel system and arenas
     default: op
-  finnishsmp.admin.ffa:
+  smpplugin.admin.ffa:
     description: Manage FFA system and arenas
     default: op
-  finnishsmp.admin.cuboid:
+  smpplugin.admin.cuboid:
     description: Manage cuboid regions
     default: op
-  finnishsmp.admin.warpmanager:
+  smpplugin.admin.warpmanager:
     description: Manage public warp points
     default: op
-  finnishsmp.admin.portalmanager:
+  smpplugin.admin.portalmanager:
     description: Manage RTP portal triggers
     default: op
-  finnishsmp.admin.setwarp:
+  smpplugin.admin.setwarp:
     description: Set warp points
     default: op
-  finnishsmp.admin.setspawn:
+  smpplugin.admin.setspawn:
     description: Set the primary server spawn
     default: op
-  finnishsmp.admin.setafk:
+  smpplugin.admin.setafk:
     description: Create, delete and list AFK zones with /setafk, /delafk and /afklist
     default: op
-  finnishsmp.admin.delwarp:
+  smpplugin.admin.delwarp:
     description: Delete warp points
     default: op
-  finnishsmp.admin.addmoney:
+  smpplugin.admin.addmoney:
     description: Add money to player balances
     default: op
-  finnishsmp.admin.removemoney:
+  smpplugin.admin.removemoney:
     description: Remove money from player balances
     default: op
-  finnishsmp.admin.setmoney:
+  smpplugin.admin.setmoney:
     description: Set player balances
     default: op
-  finnishsmp.admin.shop:
+  smpplugin.admin.shop:
     description: Reload and validate shop settings
     default: op
-  finnishsmp.admin.orders:
+  smpplugin.admin.orders:
     description: Reload and manage Orders settings
     default: op
-  finnishsmp.admin.auctionhouse:
+  smpplugin.admin.auctionhouse:
     description: Reload Auction House settings
     default: op
-  finnishsmp.admin.amethysttool:
+  smpplugin.admin.amethysttool:
     description: Manage and give amethyst tools
     default: op
-  finnishsmp.admin.worth:
+  smpplugin.admin.worth:
     description: Reload worth settings
     default: op
-  finnishsmp.admin.enderchest:
+  smpplugin.admin.enderchest:
     description: Reload Ender Chest settings
     default: op
-  finnishsmp.admin.freeze:
+  smpplugin.admin.freeze:
     description: Reload and administer Freeze settings
     default: op
-  finnishsmp.admin.staffmode:
+  smpplugin.admin.staffmode:
     description: Reload and administer Staff Mode settings
     default: op
-  finnishsmp.admin.invsee:
+  smpplugin.admin.invsee:
     description: Reload and administer Invsee settings
     default: op
-  finnishsmp.admin.spawner:
+  smpplugin.admin.spawner:
     description: Manage internal spawner systems
     default: op
-  finnishsmp.admin.spawner.seeall:
+  smpplugin.admin.spawner.seeall:
     description: Bypass spawner anti-ESP concealment
     default: op
-  finnishsmp.admin.crate:
+  smpplugin.admin.crate:
     description: Manage crate balances, settings, and chest bindings
     default: op
-  finnishsmp.admin.crate.reload:
+  smpplugin.admin.crate.reload:
     description: Reload crate settings
     default: op
-  finnishsmp.admin.crate.keyall:
+  smpplugin.admin.crate.keyall:
     description: Trigger crate key-all rewards manually
     default: op
-  finnishsmp.admin.reload:
-    description: Reload all FinnishSmp configuration files
+  smpplugin.admin.reload:
+    description: Reload all SmpPlugin configuration files
     default: op
-  finnishsmp.admin.statswipe:
+  smpplugin.admin.statswipe:
     description: Open and execute Stats Wipe tools
     default: op
-  finnishsmp.admin.optimize:
+  smpplugin.admin.optimize:
     description: View and reload runtime optimization controls
     default: op
-  finnishsmp.admin.shards:
+  smpplugin.admin.shards:
     description: Inspect Shards Everywhere eligibility and status
     default: op
-  finnishsmp.staff.freeze:
+  smpplugin.staff.freeze:
     description: Freeze and unfreeze players for moderation purposes
     default: op
-  finnishsmp.staff.freeze.alert:
+  smpplugin.staff.freeze.alert:
     description: Receive freeze moderation alerts
     default: op
-  finnishsmp.staff.freeze.exempt:
+  smpplugin.staff.freeze.exempt:
     description: Cannot be frozen by non-admin staff
     default: op
-  finnishsmp.staff.fly:
+  smpplugin.staff.fly:
     description: Toggle flight mode for yourself or another player
     default: op
-  finnishsmp.staff.heal:
+  smpplugin.staff.heal:
     description: Restore health for yourself or another player
     default: op
-  finnishsmp.staff.feed:
+  smpplugin.staff.feed:
     description: Restore hunger for yourself or another player
     default: op
-  finnishsmp.staff.gamemode:
+  smpplugin.staff.gamemode:
     description: Change your own gamemode
     default: op
-  finnishsmp.staff.gamemode.others:
+  smpplugin.staff.gamemode.others:
     description: Change another online player's gamemode
     default: op
-  finnishsmp.staff.mode:
+  smpplugin.staff.mode:
     description: Full staff access for Staff Mode and staff utility commands
     default: op
     children:
-      finnishsmp.staff.freeze: true
-      finnishsmp.staff.freeze.alert: true
-      finnishsmp.staff.fly: true
-      finnishsmp.staff.heal: true
-      finnishsmp.staff.feed: true
-      finnishsmp.staff.gamemode: true
-      finnishsmp.staff.gamemode.others: true
-      finnishsmp.staff.mode.vanish: true
-      finnishsmp.staff.mode.stafflist: true
-      finnishsmp.staff.mode.betterview: true
-      finnishsmp.staff.mode.randomtp: true
-      finnishsmp.staff.mode.seevanished: true
-      finnishsmp.staff.mode.others: true
-      finnishsmp.staff.chat.use: true
-      finnishsmp.staff.teleport: true
-      finnishsmp.staff.rename: true
-      finnishsmp.staff.alts: true
-      finnishsmp.staff.alerts.receive: true
-      finnishsmp.staff.alerts.bypass-cooldown: true
-      finnishsmp.staff.invsee: true
-      finnishsmp.staff.profileviewer: true
-      finnishsmp.staff.punishments.view: true
-      finnishsmp.staff.punishments.create: true
-      finnishsmp.staff.punishments.remove: true
-  finnishsmp.staff.mode.others:
+      smpplugin.staff.freeze: true
+      smpplugin.staff.freeze.alert: true
+      smpplugin.staff.fly: true
+      smpplugin.staff.heal: true
+      smpplugin.staff.feed: true
+      smpplugin.staff.gamemode: true
+      smpplugin.staff.gamemode.others: true
+      smpplugin.staff.mode.vanish: true
+      smpplugin.staff.mode.stafflist: true
+      smpplugin.staff.mode.betterview: true
+      smpplugin.staff.mode.randomtp: true
+      smpplugin.staff.mode.seevanished: true
+      smpplugin.staff.mode.others: true
+      smpplugin.staff.chat.use: true
+      smpplugin.staff.teleport: true
+      smpplugin.staff.rename: true
+      smpplugin.staff.alts: true
+      smpplugin.staff.alerts.receive: true
+      smpplugin.staff.alerts.bypass-cooldown: true
+      smpplugin.staff.invsee: true
+      smpplugin.staff.profileviewer: true
+      smpplugin.staff.punishments.view: true
+      smpplugin.staff.punishments.create: true
+      smpplugin.staff.punishments.remove: true
+  smpplugin.staff.mode.others:
     description: Toggle staff mode for other players
     default: op
-  finnishsmp.staff.mode.vanish:
+  smpplugin.staff.mode.vanish:
     description: Toggle vanish from the staff mode hotbar
     default: op
-  finnishsmp.staff.mode.stafflist:
+  smpplugin.staff.mode.stafflist:
     description: Open the staff list from the staff mode hotbar
     default: op
-  finnishsmp.staff.mode.betterview:
+  smpplugin.staff.mode.betterview:
     description: Toggle better view from the staff mode hotbar
     default: op
-  finnishsmp.staff.mode.randomtp:
+  smpplugin.staff.mode.randomtp:
     description: Teleport to a random player from the staff mode hotbar
     default: op
-  finnishsmp.staff.mode.seevanished:
+  smpplugin.staff.mode.seevanished:
     description: See staff members who are vanished
     default: op
-  finnishsmp.staff.chat.use:
+  smpplugin.staff.chat.use:
     description: Send and receive network staff chat
     default: op
-  finnishsmp.staff.chat.mute:
+  smpplugin.staff.chat.mute:
     description: Mute the global chat
     default: op
-  finnishsmp.staff.chat.unmute:
+  smpplugin.staff.chat.unmute:
     description: Unmute the global chat
     default: op
-  finnishsmp.staff.chat.delay:
+  smpplugin.staff.chat.delay:
     description: Configure global chat delay
     default: op
-  finnishsmp.staff.chat.clear:
+  smpplugin.staff.chat.clear:
     description: Clear the global chat visually
     default: op
-  finnishsmp.staff.chat.bypass.mute:
+  smpplugin.staff.chat.bypass.mute:
     description: Bypass the global chat mute
     default: op
-  finnishsmp.staff.chat.bypass.delay:
+  smpplugin.staff.chat.bypass.delay:
     description: Bypass the global chat delay
     default: op
-  finnishsmp.staff.chat.bypass.filter:
+  smpplugin.staff.chat.bypass.filter:
     description: Bypass global chat filters
     default: op
-  finnishsmp.helpop:
+  smpplugin.helpop:
     description: Use helpop to request staff assistance
     default: true
-  finnishsmp.report:
+  smpplugin.report:
     description: Report players to staff
     default: true
-  finnishsmp.staff.alerts.receive:
+  smpplugin.staff.alerts.receive:
     description: Receive staff alerts from helpop and report
     default: op
     children:
-      finnishsmp.staff.helpop.receive: true
-      finnishsmp.staff.report.receive: true
-  finnishsmp.staff.helpop.receive:
+      smpplugin.staff.helpop.receive: true
+      smpplugin.staff.report.receive: true
+  smpplugin.staff.helpop.receive:
     description: Receive helpop alerts
     default: op
-  finnishsmp.staff.report.receive:
+  smpplugin.staff.report.receive:
     description: Receive report alerts
     default: op
-  finnishsmp.staff.alerts.bypass-cooldown:
+  smpplugin.staff.alerts.bypass-cooldown:
     description: Bypass helpop and report cooldowns
     default: op
-  finnishsmp.staff.teleport:
+  smpplugin.staff.teleport:
     description: Access staff teleport commands
     default: op
-  finnishsmp.staff.rename:
+  smpplugin.staff.rename:
     description: Rename held items
     default: op
-  finnishsmp.staff.alts:
+  smpplugin.staff.alts:
     description: View alternate accounts by shared IP history
     default: op
-  finnishsmp.staff.invsee:
+  smpplugin.staff.invsee:
     description: View other players' inventories for moderation purposes
     default: op
-  finnishsmp.staff.invsee.modify:
+  smpplugin.staff.invsee.modify:
     description: Reserved for future editable Invsee sessions
     default: op
-  finnishsmp.staff.profileviewer:
+  smpplugin.staff.profileviewer:
     description: View player profiles and homes for moderation purposes
     default: op
-  finnishsmp.staff.punishments.view:
+  smpplugin.staff.punishments.view:
     description: View punishment history for moderation purposes
     default: op
-  finnishsmp.staff.punishments.create:
+  smpplugin.staff.punishments.create:
     description: Create punishment records and apply punishment actions
     default: op
     children:
-      finnishsmp.staff.punishments.ban: true
-      finnishsmp.staff.punishments.mute: true
-      finnishsmp.staff.punishments.blacklist: true
-  finnishsmp.staff.punishments.remove:
+      smpplugin.staff.punishments.ban: true
+      smpplugin.staff.punishments.mute: true
+      smpplugin.staff.punishments.blacklist: true
+  smpplugin.staff.punishments.remove:
     description: Remove active punishment records
     default: op
     children:
-      finnishsmp.staff.punishments.unban: true
-      finnishsmp.staff.punishments.unmute: true
-      finnishsmp.staff.punishments.unblacklist: true
-  finnishsmp.staff.punishments.delete:
+      smpplugin.staff.punishments.unban: true
+      smpplugin.staff.punishments.unmute: true
+      smpplugin.staff.punishments.unblacklist: true
+  smpplugin.staff.punishments.delete:
     description: Delete punishment history records from the GUI
     default: op
-  finnishsmp.shards.everywhere:
+  smpplugin.shards.everywhere:
     description: Receive passive Shards Everywhere rewards
     default: false
-  finnishsmp.enderchest:
+  smpplugin.enderchest:
     description: Open the custom Ender Chest command
     default: true
-  finnishsmp.ignore:
+  smpplugin.ignore:
     description: Add and remove players from your ignore list
     default: true
-  finnishsmp.ignore.bypass:
+  smpplugin.ignore.bypass:
     description: Bypass private-message ignore checks
     default: op
-  finnishsmp.message:
+  smpplugin.message:
     description: Send and reply to private messages
     default: true
-  finnishsmp.message.toggle:
+  smpplugin.message.toggle:
     description: Toggle private message receiving
     default: true
-  finnishsmp.message.bypass-disabled:
+  smpplugin.message.bypass-disabled:
     description: Bypass target private-message disabled checks
     default: op
-  finnishsmp.staff.punishments.ban:
+  smpplugin.staff.punishments.ban:
     default: false
-  finnishsmp.staff.punishments.mute:
+  smpplugin.staff.punishments.mute:
     default: false
-  finnishsmp.staff.punishments.blacklist:
+  smpplugin.staff.punishments.blacklist:
     default: false
-  finnishsmp.staff.punishments.unban:
+  smpplugin.staff.punishments.unban:
     default: false
-  finnishsmp.staff.punishments.unmute:
+  smpplugin.staff.punishments.unmute:
     default: false
-  finnishsmp.staff.punishments.unblacklist:
+  smpplugin.staff.punishments.unblacklist:
     default: false
-  finnishsmp.admin.ecsee:
+  smpplugin.admin.ecsee:
     default: op
-  finnishsmp.admin.lobby.setlobby:
+  smpplugin.admin.lobby.setlobby:
     description: Set the lobby location with /setlobby
     default: op
-  finnishsmp.admin.lobby.border:
+  smpplugin.admin.lobby.border:
     description: View or change the lobby border radius with /lobby border [radius]
     default: op
-  finnishsmp.admin.lobby.reload:
+  smpplugin.admin.lobby.reload:
     description: Reload lobby.yml with /lobby reload
     default: op
-  finnishsmp.admin.lobby.debug:
+  smpplugin.admin.lobby.debug:
     description: Toggle lobby debug output with /lobby debug
     default: op
-  finnishsmp.bypass.lobby:
+  smpplugin.bypass.lobby:
     description: Bypass all lobby protection and the lobby border
     default: op
-  finnishsmp.bypass.lobby.border:
+  smpplugin.bypass.lobby.border:
     description: Bypass the lobby border specifically
     default: op

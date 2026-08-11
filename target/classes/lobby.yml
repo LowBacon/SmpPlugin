@@ -49,7 +49,7 @@ LEAVE-TO-SURVIVAL:
 
 COOLDOWNS:
   # Cooldown (seconds) between uses of /lobby or /smpplugin, per player. 0 = no cooldown.
-  # Players with finnishsmp.bypass.lobby ignore this.
+  # Players with smpplugin.bypass.lobby ignore this.
   LOBBY-COMMAND-SECONDS: 5
   # Blocks /lobby survival (and the NPC) while the player is in combat, same idea as
   # other teleport commands in this plugin.
@@ -73,7 +73,7 @@ BORDER:
 
 # Every toggle below defaults to protecting the lobby (true), except door-interact and the
 # damage-related ones players wouldn't expect in a lobby (lava/fire), which default off/on to
-# match "no unwanted damage in a safe lobby". Players with finnishsmp.bypass.lobby skip all of it.
+# match "no unwanted damage in a safe lobby". Players with smpplugin.bypass.lobby skip all of it.
 PROTECTION:
   BLOCK-PLACE: true
   BLOCK-BREAK: true

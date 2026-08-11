@@ -17,11 +17,11 @@ NETWORK:
   # The text or value for Local Display Name. Available options: Any valid string text
   LOCAL_DISPLAY_NAME: Crystal
   # The text or value for Redis Channel. Available options: Any valid string text
-  REDIS_CHANNEL: finnishsmp:staff-chat
+  REDIS_CHANNEL: smpplugin:staff-chat
   # The text or value for Helpop Redis Channel. Available options: Any valid string text
-  HELPOP_REDIS_CHANNEL: finnishsmp:staff-alerts
+  HELPOP_REDIS_CHANNEL: smpplugin:staff-alerts
   # The text or value for Report Redis Channel. Available options: Any valid string text
-  REPORT_REDIS_CHANNEL: finnishsmp:staff-alerts
+  REPORT_REDIS_CHANNEL: smpplugin:staff-alerts
   # Determines whether Send Local Fallback On Redis Error is enabled or disabled. Available options: true, false
   SEND_LOCAL_FALLBACK_ON_REDIS_ERROR: true
   # Determines whether Staff Alerts Local Fallback On Redis Error is enabled or disabled. Available options: true, false

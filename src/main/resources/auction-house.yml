@@ -8,10 +8,10 @@ SETTINGS:
   MAX_ACTIVE_LISTINGS_DEFAULT: 5
   # Configuration section for Max Active Listings By Permission.
   MAX_ACTIVE_LISTINGS_BY_PERMISSION:
-    # The numerical value for Finnishsmp.Auctionhouse.Limit.10. Available options: Any valid integer
-    finnishsmp.auctionhouse.limit.10: 10
-    # The numerical value for Finnishsmp.Auctionhouse.Limit.15. Available options: Any valid integer
-    finnishsmp.auctionhouse.limit.15: 15
+    # The numerical value for smpplugin.Auctionhouse.Limit.10. Available options: Any valid integer
+    smpplugin.auctionhouse.limit.10: 10
+    # The numerical value for smpplugin.Auctionhouse.Limit.15. Available options: Any valid integer
+    smpplugin.auctionhouse.limit.15: 15
   # The numerical value for Click Cooldown Ms. Available options: Any valid integer
   CLICK_COOLDOWN_MS: 750
   # The numerical value for Expire Check Seconds. Available options: Any valid integer

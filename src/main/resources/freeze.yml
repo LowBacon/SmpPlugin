@@ -15,13 +15,13 @@ FREEZE:
   # The text or value for Server Name. Available options: Any valid string text
   SERVER-NAME: survival-01
   # The text or value for Staff Permission. Available options: Any valid string text
-  STAFF-PERMISSION: finnishsmp.staff.freeze
+  STAFF-PERMISSION: smpplugin.staff.freeze
   # The text or value for Alert Permission. Available options: Any valid string text
-  ALERT-PERMISSION: finnishsmp.staff.freeze.alert
+  ALERT-PERMISSION: smpplugin.staff.freeze.alert
   # The text or value for Exempt Permission. Available options: Any valid string text
-  EXEMPT-PERMISSION: finnishsmp.staff.freeze.exempt
+  EXEMPT-PERMISSION: smpplugin.staff.freeze.exempt
   # The text or value for Admin Permission. Available options: Any valid string text
-  ADMIN-PERMISSION: finnishsmp.admin.freeze
+  ADMIN-PERMISSION: smpplugin.admin.freeze
   # Configuration section for Allowed Commands.
   ALLOWED-COMMANDS:
   - /discord

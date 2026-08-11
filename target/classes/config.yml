@@ -217,7 +217,7 @@ PREVENT-ITEM-DROP:
   # Prevent players from dropping items while AFK (either in the AFK area or has AFK status).
   AFK: true
   # Bypass permission for admins/staff to allow item dropping.
-  BYPASS-PERMISSION: 'finnishsmp.preventdrop.bypass'
+  BYPASS-PERMISSION: 'smpplugin.preventdrop.bypass'
   # Message sent to player when their drop is cancelled. Set to '' to disable message.
   MESSAGE: '&c✗ You are not allowed to drop items in spawn or AFK areas!'
 # Configuration section for Cuboid Binds.
@@ -229,7 +229,7 @@ CUBOID-BINDS:
 # Configuration section for Fly System.
 FLY-SYSTEM:
   # The permission required for regular players/ranks to fly in spawn or cuboids.
-  PLAYER-FLY-PERMISSION: 'finnishsmp.player.fly'
+  PLAYER-FLY-PERMISSION: 'smpplugin.player.fly'
   # Disable flight automatically when the player leaves the allowed areas or enters combat.
   AUTO-DISABLE-OUTSIDE: true
 # Configuration section for Worth Lore.
@@ -400,7 +400,7 @@ SHARDS:
     # The numerical value for Amount. Available options: Any valid integer
     AMOUNT: 1
     # The text or value for Required Permission. Available options: Any valid string text
-    REQUIRED-PERMISSION: finnishsmp.shards.everywhere
+    REQUIRED-PERMISSION: smpplugin.shards.everywhere
     # The numerical value for Recent Movement Window. Available options: Any valid integer
     RECENT-MOVEMENT-WINDOW: 15
     # Determines whether Disable While In Shard Cuboid is enabled or disabled. Available options: true, false

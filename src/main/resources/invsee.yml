@@ -18,11 +18,11 @@ INVSEE:
   # The numerical value for Auto Refresh Ticks. Available options: Any valid integer
   AUTO-REFRESH-TICKS: 10
   # The text or value for View Permission. Available options: Any valid string text
-  VIEW-PERMISSION: finnishsmp.staff.invsee
+  VIEW-PERMISSION: smpplugin.staff.invsee
   # The text or value for Modify Permission. Available options: Any valid string text
-  MODIFY-PERMISSION: finnishsmp.staff.invsee.modify
+  MODIFY-PERMISSION: smpplugin.staff.invsee.modify
   # The text or value for Admin Permission. Available options: Any valid string text
-  ADMIN-PERMISSION: finnishsmp.admin.invsee
+  ADMIN-PERMISSION: smpplugin.admin.invsee
 # Configuration section for Layout.
 LAYOUT:
   SIZE: 54

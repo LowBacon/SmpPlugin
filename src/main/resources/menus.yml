@@ -1728,7 +1728,7 @@ AFK-MENU:
     - '&7Idle for: &f{idle}'
     - '&7Auto-AFK after: &f{timeout}'
     - '&8of inactivity in spawn'
-  # Only shown to players with finnishsmp.admin.setafk
+  # Only shown to players with smpplugin.admin.setafk
   ADD-BUTTON:
     MATERIAL: AMETHYST_SHARD
     DISPLAY-NAME: '&aSave an AFK zone here'

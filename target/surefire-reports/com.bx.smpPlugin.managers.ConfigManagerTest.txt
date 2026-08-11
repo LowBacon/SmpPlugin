@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.bx.smpPlugin.managers.ConfigManagerTest
+-------------------------------------------------------------------------------
+Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.209 s -- in com.bx.smpPlugin.managers.ConfigManagerTest

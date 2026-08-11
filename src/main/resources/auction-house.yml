@@ -1,0 +1,74 @@
+# Configuration section for Settings.
+SETTINGS:
+  # Determines whether Enabled is enabled or disabled. Available options: true, false
+  ENABLED: true
+  # The numerical value for Listing Duration Hours. Available options: Any valid integer
+  LISTING_DURATION_HOURS: 48
+  # The numerical value for Max Active Listings Default. Available options: Any valid integer
+  MAX_ACTIVE_LISTINGS_DEFAULT: 5
+  # Configuration section for Max Active Listings By Permission.
+  MAX_ACTIVE_LISTINGS_BY_PERMISSION:
+    # The numerical value for Finnishsmp.Auctionhouse.Limit.10. Available options: Any valid integer
+    finnishsmp.auctionhouse.limit.10: 10
+    # The numerical value for Finnishsmp.Auctionhouse.Limit.15. Available options: Any valid integer
+    finnishsmp.auctionhouse.limit.15: 15
+  # The numerical value for Click Cooldown Ms. Available options: Any valid integer
+  CLICK_COOLDOWN_MS: 750
+  # The numerical value for Expire Check Seconds. Available options: Any valid integer
+  EXPIRE_CHECK_SECONDS: 30
+# Configuration section for Pricing.
+PRICING:
+  # The numerical value for Min Price. Available options: Any valid integer
+  MIN_PRICE: 100
+  # The numerical value for Max Price. Available options: Any valid integer
+  MAX_PRICE: 100000000
+  # The numerical value for Listing Fee. Available options: Any valid integer
+  LISTING_FEE: 0
+  # The decimal value for Tax Percent. Available options: Any decimal number
+  TAX_PERCENT: 5.0
+# Configuration section for Restrictions.
+RESTRICTIONS:
+  # Configuration section for Blocked Materials.
+  BLOCKED_MATERIALS:
+  - BEDROCK
+  - BARRIER
+  - COMMAND_BLOCK
+  - CHAIN_COMMAND_BLOCK
+  - REPEATING_COMMAND_BLOCK
+  - STRUCTURE_BLOCK
+  - STRUCTURE_VOID
+  - JIGSAW
+  - LIGHT
+  # A list configuration for Blocked If Has Lore Contains. Available options: Multiple items
+  BLOCKED_IF_HAS_LORE_CONTAINS: []
+# Configuration section for Gui.
+GUI:
+  # Configuration section for Browse.
+  BROWSE:
+    TITLE: '&8Auction House'
+    SIZE: 54
+    # The numerical value for Items Per Page. Available options: Any valid integer
+    ITEMS_PER_PAGE: 45
+  # Configuration section for My Listings.
+  MY_LISTINGS:
+    TITLE: '&8My Auctions'
+    SIZE: 54
+    # The numerical value for Items Per Page. Available options: Any valid integer
+    ITEMS_PER_PAGE: 45
+  # Configuration section for Claims.
+  CLAIMS:
+    TITLE: '&8Auction Claims'
+    SIZE: 54
+    # The numerical value for Items Per Page. Available options: Any valid integer
+    ITEMS_PER_PAGE: 45
+# Configuration section for Sorting.
+SORTING:
+  # The text or value for Default. Available options: Any valid string text
+  DEFAULT: NEWEST
+  # Configuration section for Allowed.
+  ALLOWED:
+  - NEWEST
+  - PRICE_LOWEST
+  - PRICE_HIGHEST
+  - EXPIRING_SOON
+  - OLDEST

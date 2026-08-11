@@ -1,0 +1,141 @@
+# =====================================================================
+#  SmpPlugin - lobby.yml
+#  The protected lobby: every player lands here on join (instead of straight into
+#  the SMP), then enters via /lobby survival, /smpplugin survival, or the configured
+#  FancyNpcs NPC - which restores their exact saved SMP position, or falls back to
+#  the main /setspawn location if they've never been in the SMP before.
+#
+#  Locations are stored as "world,x,y,z,yaw,pitch" strings, same as everywhere
+#  else in this plugin (see LocationUtils). LOBBY-LOCATION is set with /setlobby.
+# =====================================================================
+
+LOCATIONS:
+  LOBBY-LOCATION: ""
+
+JOIN:
+  # Every player is teleported to the lobby on join, regardless of where they logged out.
+  # (Ignored while maintenance mode is actively redirecting a player, or while a pending
+  # maintenance-location restore exists for them - those systems take priority.)
+  ENABLED: true
+  TELEPORT-DELAY-TICKS: 2
+  HEAL: true
+  FEED: true
+  CLEAR-POTION-EFFECTS: true
+  RESET-EXPERIENCE: true
+  SET-GAMEMODE: true
+  GAMEMODE: "ADVENTURE"
+  WELCOME-TITLE: "&6&lSMPPLUGIN"
+  WELCOME-SUBTITLE: "&7Welcome, &e%player%&7!"
+  WELCOME-TITLE-FADE-IN: 10
+  WELCOME-TITLE-STAY: 40
+  WELCOME-TITLE-FADE-OUT: 10
+  WELCOME-ACTIONBAR: "&7Find the NPC to enter the SMP."
+  WELCOME-SOUND: "ENTITY_PLAYER_LEVELUP|1.0|1.0"
+
+LEAVE-TO-SURVIVAL:
+  # Without this, a player would stay in the lobby's Adventure mode forever after entering
+  # the SMP, unable to break/place blocks. Set to false only if something else already
+  # manages gamemode on the survival side (e.g. a per-world gamemode plugin).
+  SET-GAMEMODE: true
+  GAMEMODE: "SURVIVAL"
+  # If a player has never been saved an SMP location (first time going to survival),
+  # fall back to the main /setspawn location instead of refusing to send them.
+  FALLBACK-TO-SERVER-SPAWN: true
+  NO-SAVED-LOCATION-MESSAGE: "&eNo saved location found - sending you to spawn."
+  TELEPORTED-MESSAGE: "&aWelcome back to the SMP!"
+  SPAWN-NOT-SET-MESSAGE: "&cThe server spawn has not been set yet. Ask an admin to run /setspawn."
+  # Console commands run right before sending a player to survival. %player% is replaced.
+  COMMANDS-ON-ENTER: []
+
+COOLDOWNS:
+  # Cooldown (seconds) between uses of /lobby or /smpplugin, per player. 0 = no cooldown.
+  # Players with finnishsmp.bypass.lobby ignore this.
+  LOBBY-COMMAND-SECONDS: 5
+  # Blocks /lobby survival (and the NPC) while the player is in combat, same idea as
+  # other teleport commands in this plugin.
+  BLOCK-DURING-COMBAT: true
+  BLOCKED-BY-COMBAT-MESSAGE: "&cYou cannot do that while in combat."
+
+BORDER:
+  ENABLED: true
+  # These are set automatically the first time you run /setlobby (as a 200x200 square centered
+  # on it) or /lobby border - don't hand-edit unless you know the exact world coordinates you
+  # want. Two ways to set an exact size/position in-game:
+  #   /lobby border <radius>      - a square of that half-width, centered on the lobby location
+  #   /lobby border pos1 (at one corner), then /lobby border pos2 (at the opposite corner)
+  #                                - an exact rectangle from two in-world points
+  WARNING-DISTANCE: 5
+  WARN-MESSAGE-ENABLED: true
+  WARN-SOUND-ENABLED: true
+  WARN-SOUND: "BLOCK_NOTE_BLOCK_BASS|1.0|0.7"
+  WARN-COOLDOWN-SECONDS: 3
+  WARNING-MESSAGE: "&cYou have reached the edge of the lobby border!"
+
+# Every toggle below defaults to protecting the lobby (true), except door-interact and the
+# damage-related ones players wouldn't expect in a lobby (lava/fire), which default off/on to
+# match "no unwanted damage in a safe lobby". Players with finnishsmp.bypass.lobby skip all of it.
+PROTECTION:
+  BLOCK-PLACE: true
+  BLOCK-BREAK: true
+  CONTAINER-INTERACT: true
+  BUCKET-USE: true
+  FIRE-IGNITE: true
+  ENTITY-DAMAGE: true
+  PLAYER-DAMAGE: true
+  ITEM-PICKUP: true
+  ITEM-DROP: true
+  HANGING-MODIFY: true
+  ARMOR-STAND-MODIFY: true
+  REDSTONE-INTERACT: true
+  DOOR-INTERACT: false
+  HUNGER-LOSS: true
+  WEATHER-DAMAGE: true
+  EXPLOSION-DAMAGE: true
+  MOB-GRIEFING: true
+  LAVA-DAMAGE: false
+  FIRE-DAMAGE: false
+  PROJECTILE-DAMAGE: true
+  VEHICLE-USE: true
+  MOB-SPAWNING: true
+  DROP-ITEMS-ON-DEATH: true
+  # Sent to the player when an action above is denied. Leave blank to cancel silently.
+  DENIED-MESSAGE: ""
+
+NPC:
+  # Requires FancyNpcs. Right-clicking the NPC with this exact name sends the player to survival.
+  ENABLED: true
+  FANCYNPCS-NAME: "smp_entrance"
+
+  INTERACTION-COOLDOWN-SECONDS: 3
+  # Shown (with sound) if a player clicks again before the cooldown above has passed.
+  COOLDOWN-MESSAGE: "&cYou can use that again in &e%seconds%s&c."
+  COOLDOWN-SOUND: "BLOCK_NOTE_BLOCK_BASS|1.0|0.7"
+
+  PLAY-SOUND: true
+  SOUND: "UI_BUTTON_CLICK|1.0|1.0"
+
+  SHOW-TITLE: true
+  TITLE: "&a&lEntering the SMP"
+  SUBTITLE: "&7Hold on, teleporting you shortly..."
+  TITLE-FADE-IN: 5
+  TITLE-STAY: 30
+  TITLE-FADE-OUT: 10
+
+  # A live "Teleporting in 3... 2... 1..." action bar countdown for the delay below, so the
+  # wait actually feels like something is happening instead of a silent pause.
+  SHOW-COUNTDOWN-ACTIONBAR: true
+  COUNTDOWN-ACTIONBAR: "&7Teleporting in &e%seconds%&7..."
+  TELEPORT-SOUND: "ENTITY_ENDERMAN_TELEPORT|1.0|1.0"
+
+  TELEPORT-DELAY-TICKS: 20
+
+SCOREBOARD:
+  TITLE: "&6&lLOBBY"
+  # %server_online% is resolved directly by the plugin (Bukkit.getOnlinePlayers().size()) -
+  # it does NOT require PlaceholderAPI or any expansion to be installed.
+  LINES:
+    - "&7Online: &e%server_online%"
+    - ""
+    - "&7Find the NPC to enter the SMP"
+
+DEBUG: false

@@ -1,0 +1,178 @@
+# Configuration section for Settings.
+SETTINGS:
+  # Determines whether Enabled is enabled or disabled. Available options: true, false
+  ENABLED: true
+  # The numerical value for Order Duration Hours. Available options: Any valid integer
+  ORDER_DURATION_HOURS: 168
+  # The numerical value for Max Active Orders Default. Available options: Any valid integer
+  MAX_ACTIVE_ORDERS_DEFAULT: 5
+  # Configuration section for Max Active Orders By Permission.
+  MAX_ACTIVE_ORDERS_BY_PERMISSION:
+    # The numerical value for Finnishsmp.Orders.Limit.10. Available options: Any valid integer
+    finnishsmp.orders.limit.10: 10
+    # The numerical value for Finnishsmp.Orders.Limit.15. Available options: Any valid integer
+    finnishsmp.orders.limit.15: 15
+  # The numerical value for Max Quantity Per Order. Available options: Any valid integer
+  MAX_QUANTITY_PER_ORDER: 2304
+  # The numerical value for Click Cooldown Ms. Available options: Any valid integer
+  CLICK_COOLDOWN_MS: 750
+  # The numerical value for Expire Check Seconds. Available options: Any valid integer
+  EXPIRE_CHECK_SECONDS: 30
+# Configuration section for Pricing.
+PRICING:
+  # The numerical value for Min Price Each. Available options: Any valid integer
+  MIN_PRICE_EACH: 10
+  # The numerical value for Max Price Each. Available options: Any valid integer
+  MAX_PRICE_EACH: 1000000
+  # The numerical value for Max Total Budget. Available options: Any valid integer
+  MAX_TOTAL_BUDGET: 250000000
+  # The numerical value for Order Creation Fee. Available options: Any valid integer
+  ORDER_CREATION_FEE: 0
+# Configuration section for Delivery.
+DELIVERY:
+  # The numerical value for Max Deliver Per Click. Available options: Any valid integer
+  MAX_DELIVER_PER_CLICK: 64
+  # The Mode setting. Available options: NORMAL, HARDCORE, CASUAL
+  MODE: DEPOSIT_GUI
+  # The numerical value for Max Deliver Per Transaction. Available options: Any valid integer
+  MAX_DELIVER_PER_TRANSACTION: 2304
+# Configuration section for Matching.
+MATCHING:
+  # Configuration section for Blocked Materials.
+  BLOCKED_MATERIALS:
+  - BEDROCK
+  - BARRIER
+  - COMMAND_BLOCK
+  - CHAIN_COMMAND_BLOCK
+  - REPEATING_COMMAND_BLOCK
+  - STRUCTURE_BLOCK
+  - STRUCTURE_VOID
+  - JIGSAW
+  - LIGHT
+# Configuration section for Category Filters.
+CATEGORY_FILTERS:
+  # A list configuration for All. Available options: Multiple items
+  ALL: []
+  # Configuration section for Blocks.
+  BLOCKS:
+  - STONE
+  - COBBLESTONE
+  - DIRT
+  - OAK_LOG
+  - GLASS
+  - OBSIDIAN
+  # Configuration section for Tools.
+  TOOLS:
+  - IRON_PICKAXE
+  - DIAMOND_PICKAXE
+  - DIAMOND_AXE
+  - DIAMOND_SHOVEL
+  # Configuration section for Food.
+  FOOD:
+  - APPLE
+  - BREAD
+  - COOKED_BEEF
+  - COOKED_CHICKEN
+  - GOLDEN_CARROT
+  # Configuration section for Combat.
+  COMBAT:
+  - ARROW
+  - SHIELD
+  - DIAMOND_SWORD
+  - NETHERITE_SWORD
+  # Configuration section for Potions.
+  POTIONS:
+  - GLASS_BOTTLE
+  - FERMENTED_SPIDER_EYE
+  - BLAZE_POWDER
+  # Configuration section for Books.
+  BOOKS:
+  - BOOK
+  - BOOKSHELF
+  - LECTERN
+  # Configuration section for Ingredients.
+  INGREDIENTS:
+  - WHEAT
+  - SUGAR_CANE
+  - BLAZE_ROD
+  - ENDER_PEARL
+  - SLIME_BALL
+  # Configuration section for Utilities.
+  UTILITIES:
+  - HOPPER
+  - PISTON
+  - OBSERVER
+  - REDSTONE
+  - DISPENSER
+# Configuration section for Gui.
+GUI:
+  # Configuration section for Main.
+  MAIN:
+    TITLE: '&8Orders'
+    SIZE: 54
+    # The numerical value for Items Per Page. Available options: Any valid integer
+    ITEMS_PER_PAGE: 45
+  # Configuration section for My Orders.
+  MY_ORDERS:
+    TITLE: '&8Orders -> My Orders'
+    SIZE: 27
+    # The numerical value for Items Per Page. Available options: Any valid integer
+    ITEMS_PER_PAGE: 45
+    # Configuration section for Buttons.
+    BUTTONS:
+      # Configuration section for New.
+      NEW:
+        SLOT: 26
+  # Configuration section for New Order.
+  NEW_ORDER:
+    TITLE: '&8Orders -> New Order'
+    SIZE: 27
+  # Configuration section for Select Item.
+  SELECT_ITEM:
+    TITLE: '&8Orders -> Select Item'
+    SIZE: 54
+    # The numerical value for Items Per Page. Available options: Any valid integer
+    ITEMS_PER_PAGE: 45
+  # Configuration section for Edit Order.
+  EDIT_ORDER:
+    TITLE: '&8Orders -> Edit Order'
+    SIZE: 27
+  # Configuration section for Deliver Confirm.
+  DELIVER_CONFIRM:
+    TITLE: '&8Orders -> Deliver'
+    SIZE: 27
+  # Configuration section for Collect.
+  COLLECT:
+    TITLE: '&8Orders -> Collect'
+    SIZE: 54
+    # The numerical value for Items Per Page. Available options: Any valid integer
+    ITEMS_PER_PAGE: 45
+  # Configuration section for Delivery Deposit.
+  DELIVERY_DEPOSIT:
+    # Configuration section for Buttons.
+    BUTTONS:
+      # Configuration section for Confirm.
+      CONFIRM:
+        SLOT: 35
+# Configuration section for Sorting.
+SORTING:
+  # The text or value for Default. Available options: Any valid string text
+  DEFAULT: MOST_PAID
+  # Configuration section for Allowed.
+  ALLOWED:
+  - MOST_PAID
+  - MOST_DELIVERED
+  - RECENTLY_LISTED
+  - MOST_MONEY_PER_ITEM
+# The text or value for Donut Style. Available options: Any valid string text
+DONUT-STYLE: DEPOSIT_GUI
+# Configuration section for Bedrock.
+BEDROCK:
+  # Determines whether Enabled is enabled or disabled. Available options: true, false
+  ENABLED: true
+# Configuration section for Network.
+NETWORK:
+  # Determines whether Enabled is enabled or disabled. Available options: true, false
+  ENABLED: true
+  # The text or value for Redis Channel. Available options: Any valid string text
+  REDIS_CHANNEL: finnish-smp:orders

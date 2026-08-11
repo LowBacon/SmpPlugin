@@ -1,0 +1,15 @@
+# Determines whether Enabled is enabled or disabled. Available options: true, false
+ENABLED: true
+# A list configuration for Reset Worlds. Available options: Multiple items
+RESET-WORLDS: []
+# A list configuration for Protected Worlds. Available options: Multiple items
+PROTECTED-WORLDS: []
+# The numerical value for Token Ttl Seconds. Available options: Any valid integer
+TOKEN-TTL-SECONDS: 300
+# The text or value for Backup Directory. Available options: Any valid string text
+BACKUP-DIRECTORY: server-wipe-backups
+MESSAGES:
+  # The text or value for Maintenance. Available options: Any valid string text
+  MAINTENANCE: '&cᴛʜᴇ ѕᴇʀᴠᴇʀ ɪѕ ᴘʀᴇᴘᴀʀɪɴɢ ᴀ ѕᴇᴀѕᴏɴ ʀᴇѕᴇᴛ. ᴛʀʏ ᴀɢᴀɪɴ ᴀꜰᴛᴇʀ ᴛʜᴇ ʀᴇѕᴛᴀʀᴛ.'
+  # The text or value for Kick. Available options: Any valid string text
+  KICK: '&cᴀ ѕᴇᴀѕᴏɴ ʀᴇѕᴇᴛ ɪѕ ѕᴛᴀʀᴛɪɴɢ. ᴛʜᴇ ѕᴇʀᴠᴇʀ ᴡɪʟʟ ʀᴇѕᴛᴀʀᴛ ѕʜᴏʀᴛʟʏ.'

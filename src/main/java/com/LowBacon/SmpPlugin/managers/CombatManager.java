@@ -1,0 +1,160 @@
+package com.bx.finnishSmp.managers;
+
+import com.bx.finnishSmp.FinnishSmp;
+import com.bx.finnishSmp.utils.ColorUtils;
+import com.bx.finnishSmp.utils.PlayerSettingUtils;
+import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+
+import com.bx.finnishSmp.utils.PermissionUtils;
+
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
+public class CombatManager {
+
+    private final FinnishSmp plugin;
+    /** UUID → expiry time in millis */
+    private final Map<UUID, Long> combatMap = new ConcurrentHashMap<>();
+    private final Map<UUID, BukkitTask> tasks = new ConcurrentHashMap<>();
+
+    public CombatManager(FinnishSmp plugin) {
+        this.plugin = plugin;
+    }
+
+    public void tag(Player player) {
+        if (!isEnabled()) return;
+        long cooldownMillis = getCooldownSeconds() * 1000L;
+        combatMap.put(player.getUniqueId(), System.currentTimeMillis() + cooldownMillis);
+        startCountdown(player);
+
+        if (player.getAllowFlight()
+                && player.getGameMode() != org.bukkit.GameMode.CREATIVE
+                && player.getGameMode() != org.bukkit.GameMode.SPECTATOR) {
+            if (plugin.getConfigManager().getConfig().getBoolean("FLY-SYSTEM.AUTO-DISABLE-OUTSIDE", true)) {
+                if (!PermissionUtils.has(player, "finnishsmp.staff.fly")) {
+                    player.setFlying(false);
+                    player.setAllowFlight(false);
+                    String msg = plugin.getConfigManager().getMessageOrDefault(
+                            "FLY.PLAYER_DISABLED",
+                            "&c✗ &7Flight deactivated because you left the allowed area or entered combat."
+                    );
+                    player.sendMessage(ColorUtils.toComponent(msg));
+                }
+            }
+        }
+    }
+
+    private void startCountdown(Player player) {
+        UUID uuid = player.getUniqueId();
+        BukkitTask old = tasks.remove(uuid);
+        if (old != null) old.cancel();
+
+        BukkitTask task = plugin.getSpigotScheduler().runEntityTimer(player, () -> {
+            Player p = Bukkit.getPlayer(uuid);
+            if (p == null || !isInCombat(uuid)) {
+                BukkitTask t = tasks.remove(uuid);
+                if (t != null) t.cancel();
+                return;
+            }
+            long remaining = getRemainingSeconds(uuid);
+            String format = plugin.getConfigManager().getConfig()
+                    .getString("COMBAT-MANAGER.ACTION-BAR", "&fcombat: &b${time}s")
+                    .replace("${time}", String.valueOf(remaining))
+                    .replace("{time}", String.valueOf(remaining));
+            PlayerSettingUtils.sendActionBar(plugin, p, ColorUtils.toComponent(format));
+        }, 0L, 20L);
+        if (task != null) {
+            tasks.put(uuid, task);
+        }
+    }
+
+    public void clearTag(UUID uuid) {
+        combatMap.remove(uuid);
+        BukkitTask task = tasks.remove(uuid);
+        if (task != null) task.cancel();
+        Player p = Bukkit.getPlayer(uuid);
+        if (p != null) PlayerSettingUtils.clearActionBar(p);
+    }
+
+    public boolean isInCombat(UUID uuid) {
+        Long expiry = combatMap.get(uuid);
+        if (expiry == null) return false;
+        if (System.currentTimeMillis() >= expiry) {
+            clearTag(uuid);
+            return false;
+        }
+        return true;
+    }
+
+    public long getRemainingSeconds(UUID uuid) {
+        Long expiry = combatMap.get(uuid);
+        if (expiry == null) return 0;
+        return Math.max(0, (expiry - System.currentTimeMillis()) / 1000L);
+    }
+
+    public boolean isEnabled() {
+        return plugin.getFeatureManager().isEnabled(FeatureManager.Feature.COMBAT)
+                && plugin.getConfigManager().getConfig()
+                .getBoolean("COMBAT-MANAGER.ENABLED", true);
+    }
+
+    public int getCooldownSeconds() {
+        return plugin.getConfigManager().getConfig()
+                .getInt("COMBAT-MANAGER.COOLDOWN", 16);
+    }
+
+    public boolean isKillOnLogoutEnabled() {
+        return plugin.getConfigManager().getConfig()
+                .getBoolean("COMBAT-MANAGER.KILL-ON-LOGOUT", false);
+    }
+
+    public boolean isMobCombatEnabled() {
+        return plugin.getConfigManager().getConfig()
+                .getBoolean("COMBAT-MANAGER.MOBS", false);
+    }
+
+    public boolean isEnderCrystalCombatEnabled() {
+        return plugin.getConfigManager().getConfig()
+                .getBoolean("COMBAT-MANAGER.ENDER-CRYSTAL", true);
+    }
+
+    public boolean isEnderPearlCombatEnabled() {
+        return plugin.getConfigManager().getConfig()
+                .getBoolean("COMBAT-MANAGER.ENDER-PEARL", true);
+    }
+
+    public boolean isRespawnAnchorCombatEnabled() {
+        return plugin.getConfigManager().getConfig()
+                .getBoolean("COMBAT-MANAGER.RESPAWN-ANCHOR", true);
+    }
+
+    public boolean isBlockedCommand(String command) {
+        for (String blocked : plugin.getConfigManager().getConfig()
+                .getStringList("COMBAT-MANAGER.BLOCK-COMMANDS")) {
+            if (blocked.equalsIgnoreCase(command) ||
+                command.toLowerCase().startsWith(blocked.toLowerCase() + " ")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isExcludedWorld(String worldName) {
+        return plugin.getConfigManager().getConfig()
+                .getStringList("COMBAT-MANAGER.EXCLUDED-WORLDS")
+                .contains(worldName);
+    }
+
+    public boolean isAntiStasisEnabled() {
+        return plugin.getConfigManager().getConfig()
+                .getBoolean("COMBAT-MANAGER.ANTI-STASIS-CHAMBER.ENABLED", true);
+    }
+
+    public int getMaxStasisDistance() {
+        return plugin.getConfigManager().getConfig()
+                .getInt("COMBAT-MANAGER.ANTI-STASIS-CHAMBER.MAX-DISTANCE", 500);
+    }
+}

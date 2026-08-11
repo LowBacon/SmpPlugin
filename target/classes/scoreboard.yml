@@ -1,0 +1,28 @@
+# Configuration section for Scoreboard.
+SCOREBOARD:
+  # Determines whether Enabled is enabled or disabled. Available options: true, false
+  ENABLED: true
+  # The numerical value for Title Update Ticks. Available options: Any valid integer
+  TITLE-UPDATE-TICKS: 2
+  # The text or value for Team. Available options: Any valid string text
+  TEAM: '&#00A4FC🪓 &fTeam &#00A4FC%economy_team%     '
+  # The text or value for Shard Booster. Available options: Any valid string text
+  SHARD-BOOSTER: '&#A303F9⚡ &fBooster &#A303F9%economy_booster_countdown%     '
+  # The text or value for Shard Cuboid. Available options: Any valid string text
+  SHARD-CUBOID: '&#A303F9⌛ &fShards &#A303F9%economy_shard_cuboid_display%     '
+  TITLE:
+  - '&#0069d6&lC&#0374da&lu&#067fdf&ls&#0a8be3&lt&#0d96e7&lo&#10a1ec&lm&#13acf0&lS&#17b8f4&lM&#1ac3f9&lP'
+  # Configuration section for Lines.
+  LINES:
+  - ''
+  - '&#00FC00&l$ &fMoney &#00FC00%economy_nicestMoney%     '
+  - '&#A303F9★ &fShards &#A303F9%economy_shards%     '
+  - '&#FC0000🗡 &fKills &#FC0000%economy_kills%      '
+  - '&#F97603☠ &fDeaths &#F97603%economy_deaths%   '
+  - '&#00A4FC⌛ &fKeyall &#00A4FC%economy_keyall_countdown%'
+  - '&#FCE300⌚ &fPlaytime &#FCE300%economy_playtime%   '
+  - '{team}'
+  - '{shard_cuboid}'
+  - '{shard_booster}'
+  - ''
+  - '&7NA East &7(&#0069D6%economy_ping%ms&7)'

@@ -1,0 +1,96 @@
+# Configuration section for Settings.
+SETTINGS:
+  # Determines whether Enabled is enabled or disabled. Available options: true, false
+  ENABLED: true
+  # The numerical value for Countdown Seconds. Available options: Any valid integer
+  COUNTDOWN_SECONDS: 5
+  # The numerical value for Match Duration Seconds. Available options: Any valid integer
+  MATCH_DURATION_SECONDS: 900
+  # The numerical value for Request Timeout Seconds. Available options: Any valid integer
+  REQUEST_TIMEOUT_SECONDS: 30
+  # The numerical value for Draw Request Timeout Seconds. Available options: Any valid integer
+  DRAW_REQUEST_TIMEOUT_SECONDS: 15
+  # The numerical value for Return Delay Seconds. Available options: Any valid integer
+  RETURN_DELAY_SECONDS: 3
+  # The numerical value for Rollback Padding Horizontal. Available options: Any valid integer
+  ROLLBACK_PADDING_HORIZONTAL: 8
+  # The numerical value for Rollback Padding Vertical. Available options: Any valid integer
+  ROLLBACK_PADDING_VERTICAL: 6
+# Configuration section for Start Countdown.
+START-COUNTDOWN:
+  # Determines whether Enabled is enabled or disabled. Available options: true, false
+  ENABLED: true
+  # Configuration section for Sounds.
+  SOUNDS:
+    # Determines whether Enabled is enabled or disabled. Available options: true, false
+    ENABLED: true
+  # Configuration section for Titles.
+  TITLES:
+    # The text or value for 6. Available options: Any valid string text
+    6: ''
+    # The text or value for 5. Available options: Any valid string text
+    5: '&e5'
+    # The text or value for 4. Available options: Any valid string text
+    4: '&e4'
+    # The text or value for 3. Available options: Any valid string text
+    3: '&c3'
+    # The text or value for 2. Available options: Any valid string text
+    2: '&c2'
+    # The text or value for 1. Available options: Any valid string text
+    1: '&c1'
+    # The text or value for 0. Available options: Any valid string text
+    0: '&a&lFight!'
+  MESSAGES:
+    # The text or value for '5'. Available options: Any valid string text
+    '5': '&a5'
+    # The text or value for '4'. Available options: Any valid string text
+    '4': '&a4'
+    # The text or value for '3'. Available options: Any valid string text
+    '3': '&a3'
+    # The text or value for '2'. Available options: Any valid string text
+    '2': '&a2'
+    # The text or value for '1'. Available options: Any valid string text
+    '1': '&a1'
+  # The text or value for Start Message. Available options: Any valid string text
+  START-MESSAGE: '&aMatch Started!'
+# Configuration section for Result Titles.
+RESULT-TITLES:
+  # Configuration section for Victory.
+  victory:
+    # The text or value for Title. Available options: Any valid string text
+    title: '&e&lVICTORY!'
+    # The text or value for Subtitle. Available options: Any valid string text
+    subtitle: '&e<player> &fwon the Match!'
+  # Configuration section for Defeat.
+  defeat:
+    # The text or value for Title. Available options: Any valid string text
+    title: '&c&lDEFEAT!'
+    # The text or value for Subtitle. Available options: Any valid string text
+    subtitle: '&c<opponent> &fwon this Match!'
+  # Configuration section for Draw.
+  draw:
+    # The text or value for Title. Available options: Any valid string text
+    title: '&e&lDRAW!'
+    # The text or value for Subtitle. Available options: Any valid string text
+    subtitle: '&fTime''s up - no winner.'
+    # The text or value for Message. Available options: Any valid string text
+    message: '&e[Timer] &fTime limit reached! Match ended as a &eDRAW &f- streaks
+      unchanged.'
+# The text or value for Arena Settings. Available options: Any valid string text
+ARENA_SETTINGS: {}
+# Configuration section for Gui.
+GUI:
+  # Configuration section for Queue.
+  QUEUE:
+    TITLE: '&8Casual Queue'
+    SIZE: 27
+  # Configuration section for Create.
+  CREATE:
+    TITLE: '&8Create Duel -> {player}'
+    SIZE: 27
+  # Configuration section for Claims.
+  CLAIMS:
+    TITLE: '&8Duel Claims'
+    SIZE: 54
+    # The numerical value for Items Per Page. Available options: Any valid integer
+    ITEMS_PER_PAGE: 45

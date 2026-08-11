@@ -1,0 +1,57 @@
+# =====================================================================
+#  AFK Lounge Configuration
+#  The protected AFK lounge: players can teleport here to AFK and earn shards
+#  Border is set with /afklounge border or /afklounge border radius
+#  Players inside the border will see a different scoreboard and get shard rewards
+# =====================================================================
+
+LOCATIONS:
+  # Set with /afklounge setlocation
+  AFK-LOUNGE-LOCATION: ""
+
+SETTINGS:
+  # Enable/disable the AFK Lounge system
+  ENABLED: true
+  # Shard reward every X seconds while inside the AFK Lounge
+  SHARD-REWARD-INTERVAL-SECONDS: 30
+  # Number of shards to reward per interval
+  SHARD-REWARD-AMOUNT: 1
+  # Permission required to set AFK Lounge location and border
+  ADMIN-PERMISSION: "finnishsmp.admin.afklounge"
+
+BORDER:
+  # Enable border enforcement
+  ENABLED: true
+  # Default border size (radius in blocks from center)
+  DEFAULT-RADIUS: 100
+  # Position coordinates (set automatically with commands)
+  MIN-X: 0
+  MAX-X: 0
+  MIN-Z: 0
+  MAX-Z: 0
+  # World the border is in
+  WORLD: "world"
+  # Message when player leaves border
+  LEFT-BORDER-MESSAGE: "&cYou left the AFK Lounge! Shard rewards disabled."
+  # Message when player enters border
+  ENTERED-BORDER-MESSAGE: "&aYou entered the AFK Lounge! Earning shards every 30 seconds."
+
+SCOREBOARD:
+  # Scoreboard name in AFK Lounge
+  TITLE: "&6&lAFK LOUNGE"
+  # Lines to display (use {player}, {shards}, {money}, {playtime}, {kills}, {deaths})
+  LINES:
+    - ""
+    - "&#FC0000Player &#FC0000{player}     "
+    - "&#A303F9★ &fShards &#A303F9{shards}     "
+    - "&#00FC00&l$ &fMoney &#00FC00{money}     "
+    - "&#FCE300⌚ &fPlaytime &#FCE300{playtime}   "
+    - "&#FC0000🗡 &fKills &#FC0000{kills}      "
+    - "&#F97603☠ &fDeaths &#F97603{deaths}   "
+    - ""
+
+MESSAGES:
+  # Message sent when shard reward is given
+  SHARD-REWARD: "&a+1 Shard earned! (AFK Lounge)"
+  # Message sent when player is not in AFK Lounge anymore (during reward interval)
+  LEFT-LOUNGE: "&cYou must be in the AFK Lounge to earn shards."

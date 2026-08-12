@@ -21,14 +21,14 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class AddPlaytimeCommand implements CommandExecutor, TabCompleter {
+public class SetPlaytimeCommand implements CommandExecutor, TabCompleter {
 
-    private static final String PERMISSION = "smpplugin.admin.addplaytime";
+    private static final String PERMISSION = "smpplugin.admin.setplaytime";
     private static final Pattern DURATION_TOKEN = Pattern.compile("(\\d+)([smhdw])", Pattern.CASE_INSENSITIVE);
 
     private final SmpPlugin plugin;
 
-    public AddPlaytimeCommand(SmpPlugin plugin) {
+    public SetPlaytimeCommand(SmpPlugin plugin) {
         this.plugin = plugin;
     }
 
@@ -50,8 +50,8 @@ public class AddPlaytimeCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        if (seconds <= 0) {
-            sender.sendMessage(ColorUtils.toComponent("&cᴘʟᴀʏᴛɪᴍᴇ ᴍᴜѕᴛ ʙᴇ ᴘᴏѕɪᴛɪᴠᴇ."));
+        if (seconds < 0) {
+            sender.sendMessage(ColorUtils.toComponent("&cᴘʟᴀʏᴛɪᴍᴇ ᴍᴜѕᴛ ʙᴇ ᴢᴇʀᴏ ᴏʀ ᴀʙᴏᴠᴇ."));
             return true;
         }
 
@@ -62,32 +62,19 @@ public class AddPlaytimeCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        // getTotalPlaytimeSeconds() folds in time elapsed since sessionStartMillis, which is only
-        // meaningful while the target is online (for an offline player it's frozen at their last
-        // logout, so treating it as "live" would wrongly add real-world time spent offline). It's
-        // also why we always add the new seconds on top of the raw stored field, not the live total:
-        // adding to the live total would double count the in-progress session on every later read.
         boolean online = targetPlayer != null;
         long oldTotal = online ? data.getTotalPlaytimeSeconds() : data.getPlaytimeSeconds();
-        long rawBase = data.getPlaytimeSeconds();
-        long newRawBase = rawBase + seconds;
-        if (newRawBase < rawBase) { // overflow guard
-            newRawBase = Long.MAX_VALUE;
-        }
-        data.setPlaytimeSeconds(newRawBase);
+        data.setPlaytimeSeconds(seconds);
         plugin.getDatabaseManager().savePlayer(data);
         invalidateLeaderboard();
 
         long newTotal = online ? data.getTotalPlaytimeSeconds() : data.getPlaytimeSeconds();
 
-        sender.sendMessage(ColorUtils.toComponent("&aᴀᴅᴅᴇᴅ &f" + NumberUtils.formatTimeLong(seconds)
-                + " &aᴏꜰ ᴘʟᴀʏᴛɪᴍᴇ ᴛᴏ &e" + data.getUsername()));
-        sender.sendMessage(ColorUtils.toComponent("&7ᴘʀᴇᴠɪᴏᴜѕ: &f" + NumberUtils.formatTimeLong(oldTotal)
-                + " &7ɴᴇᴡ: &f" + NumberUtils.formatTimeLong(newTotal)));
+        sender.sendMessage(ColorUtils.toComponent("&aѕᴇᴛ &e" + data.getUsername() + "&a'ѕ ᴘʟᴀʏᴛɪᴍᴇ ᴛᴏ &f" + NumberUtils.formatTimeLong(seconds) + "&a."));
+        sender.sendMessage(ColorUtils.toComponent("&7ᴘʀᴇᴠɪᴏᴜѕ: &f" + NumberUtils.formatTimeLong(oldTotal) + " &7ɴᴇᴡ: &f" + NumberUtils.formatTimeLong(newTotal)));
 
         if (targetPlayer != null && !targetPlayer.equals(sender)) {
-            targetPlayer.sendMessage(ColorUtils.toComponent("&e" + sender.getName() + " &aᴀᴅᴅᴇᴅ &f"
-                    + NumberUtils.formatTimeLong(seconds) + " &aᴏꜰ ᴘʟᴀʏᴛɪᴍᴇ."));
+            targetPlayer.sendMessage(ColorUtils.toComponent("&e" + sender.getName() + " &aѕᴇᴛ ʏᴏᴜʀ ᴘʟᴀʏᴛɪᴍᴇ ᴛᴏ &f" + NumberUtils.formatTimeLong(seconds) + "&a."));
         }
         return true;
     }
@@ -107,8 +94,6 @@ public class AddPlaytimeCommand implements CommandExecutor, TabCompleter {
         return matches;
     }
 
-    /** Online players are resolved from the live cache; offline players are looked up locally
-     *  (never via Bukkit's blocking, network-hitting getOfflinePlayer(String)). */
     private PlayerData resolveData(Player targetPlayer, String rawName) {
         if (targetPlayer != null) {
             return plugin.getPlayerDataManager().get(targetPlayer);
@@ -123,8 +108,6 @@ public class AddPlaytimeCommand implements CommandExecutor, TabCompleter {
         }
     }
 
-    /** Accepts plain seconds ("3600") or a compound duration ("1d2h30m", using s/m/h/d/w units).
-     *  Returns Long.MIN_VALUE if the input can't be parsed either way. */
     private long parseDurationSeconds(String input) {
         if (input == null || input.isBlank()) {
             return Long.MIN_VALUE;
@@ -134,7 +117,6 @@ public class AddPlaytimeCommand implements CommandExecutor, TabCompleter {
         try {
             return Long.parseLong(trimmed);
         } catch (NumberFormatException ignored) {
-            // not a plain number, try duration syntax below
         }
 
         Matcher matcher = DURATION_TOKEN.matcher(trimmed);

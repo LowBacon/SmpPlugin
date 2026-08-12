@@ -7,7 +7,7 @@
 
     <groupId>com.bx</groupId>
     <artifactId>smpplugin</artifactId>
-    <version>1.4</version>
+    <version>1.5-Pre-Release</version>
     <packaging>jar</packaging>
 
     <name>SmpPlugin</name>

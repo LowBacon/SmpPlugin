@@ -5,11 +5,12 @@ import com.bx.smpPlugin.managers.CrateManager;
 import com.bx.smpPlugin.utils.ColorUtils;
 import com.bx.smpPlugin.utils.ItemUtils;
 import com.bx.smpPlugin.utils.SoundUtils;
-import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.Material;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -29,6 +30,7 @@ public class CrateGachaMenu extends BaseMenu {
     private BukkitTask spinTask;
     private boolean finished;
     private boolean allowClose;
+    private int particleTickCounter;
 
     public CrateGachaMenu(SmpPlugin plugin, CrateManager.CrateDefinition crate) {
         super(plugin, crate.gachaSettings().title(), crate.menuSettings().size());
@@ -39,6 +41,7 @@ public class CrateGachaMenu extends BaseMenu {
                 ? crate.gachaSettings().pointerSlot()
                 : previewSlots.get(previewSlots.size() / 2);
         this.spinDirection = resolveSpinDirection(crate);
+        this.particleTickCounter = 0;
     }
 
     @Override
@@ -53,34 +56,42 @@ public class CrateGachaMenu extends BaseMenu {
     public void open(Player player) {
         finished = false;
         allowClose = false;
+        particleTickCounter = 0;
         build(player);
         player.openInventory(inventory);
         startSpin(player);
+        playOpeningEffects(player);
+    }
+
+    private void playOpeningEffects(Player player) {
+        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.4f);
+        player.spawnParticle(Particle.TOTEM_OF_UNDYING, player.getLocation().add(0, 1.2, 0), 30, 0.5, 0.5, 0.5, 0.15);
     }
 
     @Override
-    public void handleClick(int slot, Player player, ClickType clickType) {
-        // Gacha menu is view-only while spinning.
+    public void handleClick(int slot, Player player, org.bukkit.event.inventory.ClickType clickType) {
+        if (!finished) {
+            SoundUtils.play(player, plugin.getConfigManager().getSound("MENUS.BUTTON-CLICK"));
+            player.sendMessage(ColorUtils.toComponent("&7ᴘʟᴇᴀѕᴇ ᴡᴀɪᴛ ꜰᴏʀ ᴛʜᴇ ʀᴏʟʟ ᴛᴏ ꜰɪɴɪѕʜ..."));
+            return;
+        }
     }
 
     @Override
     public void onClose(Player player) {
-        if (allowClose || finished || !plugin.isEnabled()) {
-            cancelSpin();
-            if (!finished) {
-                plugin.getCrateManager().clearSession(player.getUniqueId());
+        if (allowClose) {
+            if (spinTask != null) {
+                spinTask.cancel();
+                spinTask = null;
             }
             return;
         }
 
-        if (!player.isOnline()) {
-            cancelSpin();
-            plugin.getCrateManager().clearSession(player.getUniqueId());
-            return;
+        if (spinTask != null) {
+            spinTask.cancel();
+            spinTask = null;
         }
 
-        plugin.getCrateVisualManager().playNoKeyEffects(player);
-        player.sendMessage(ColorUtils.toComponent("&cᴘʟᴇᴀѕᴇ ᴡᴀɪᴛ ᴜɴᴛɪʟ ᴛʜᴇ ʀᴏʟʟ ꜰɪɴɪѕʜᴇѕ."));
         plugin.getSpigotScheduler().runEntity(player, () -> {
             if (!plugin.isEnabled() || allowClose || finished || !player.isOnline()) {
                 return;
@@ -103,7 +114,7 @@ public class CrateGachaMenu extends BaseMenu {
             finished = true;
             allowClose = true;
             player.closeInventory();
-            player.sendMessage(ColorUtils.toComponent("&cᴛʜᴀᴛ ᴄʀᴀᴛᴇ ʜᴀѕ ɴᴏ ᴠᴀʟɪᴅ ʀᴇᴡᴀʀᴅѕ ᴄᴏɴꜰɪɢᴜʀᴇᴅ."));
+            player.sendMessage(ColorUtils.toComponent("&cᴛʜɪѕ ᴄʀᴀᴛᴇ ʜᴀѕ ɴᴏ ᴠᴀʟɪᴅ ʀᴇᴡᴀʀᴅѕ ᴄᴏɴꜰɪɢᴜʀᴇᴅ."));
             plugin.getCrateManager().clearSession(player.getUniqueId());
             return;
         }
@@ -125,19 +136,45 @@ public class CrateGachaMenu extends BaseMenu {
 
             steps[0]++;
             advanceRoll();
+            emitSpinParticles(player);
+            render(player);
 
             if (steps[0] >= crate.gachaSettings().totalSteps()) {
                 lockWinningReward();
                 render(player);
                 SoundUtils.play(player, plugin.getConfigManager().getSound("CRATES.SPIN-END"));
+                playWinEffects(player);
                 cancelSpin();
-                plugin.getSpigotScheduler().runEntityLater(player, () -> finish(player), 12L);
+                plugin.getSpigotScheduler().runEntityLater(player, () -> finish(player), 14L);
                 return;
             }
 
-            render(player);
             SoundUtils.play(player, plugin.getConfigManager().getSound("CRATES.SPIN-TICK"));
         }, 0L, crate.gachaSettings().tickInterval());
+    }
+
+    private void emitSpinParticles(Player player) {
+        particleTickCounter++;
+        if (particleTickCounter % 3 != 0) {
+            return;
+        }
+        int pointerIndex = previewSlots.indexOf(pointerSlot);
+        if (pointerIndex < 0 || pointerIndex >= rollingRewards.size()) {
+            return;
+        }
+        CrateManager.CrateReward reward = rollingRewards.get(pointerIndex);
+        if (reward == null) {
+            return;
+        }
+        Particle particleType = Particle.ENCHANT;
+        player.spawnParticle(particleType, player.getLocation().add(0, 1.3, 0), 6, 0.4, 0.15, 0.4, 0.02);
+    }
+
+    private void playWinEffects(Player player) {
+        player.playSound(player.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_BLAST, 1.0f, 1.2f);
+        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.7f, 1.8f);
+        player.spawnParticle(Particle.TOTEM_OF_UNDYING, player.getLocation().add(0, 1.0, 0), 40, 0.6, 0.6, 0.6, 0.2);
+        player.spawnParticle(Particle.FIREWORK, player.getLocation().add(0, 1.5, 0), 25, 0.5, 0.5, 0.5, 0.08);
     }
 
     private void finish(Player player) {
@@ -236,12 +273,12 @@ public class CrateGachaMenu extends BaseMenu {
     private void renderPointerIndicators() {
         int topSlot = findIndicatorSlot(-9);
         if (topSlot >= 0) {
-            set(topSlot, createIndicatorItem("&c↓"));
+            set(topSlot, createIndicatorItem("&c▼"));
         }
 
         int bottomSlot = findIndicatorSlot(9);
         if (bottomSlot >= 0) {
-            set(bottomSlot, createIndicatorItem("&c↑"));
+            set(bottomSlot, createIndicatorItem("&c▲"));
         }
     }
 

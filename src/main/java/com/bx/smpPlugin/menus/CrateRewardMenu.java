@@ -5,6 +5,7 @@ import com.bx.smpPlugin.managers.CrateManager;
 import com.bx.smpPlugin.utils.ColorUtils;
 import com.bx.smpPlugin.utils.ItemUtils;
 import com.bx.smpPlugin.utils.SoundUtils;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -56,10 +57,57 @@ public class CrateRewardMenu extends BaseMenu {
             }
             set(targetSlot, display);
             rewardSlots.put(targetSlot, reward.id());
+
+            if (openContext.interactive()) {
+                applyRarityBorders(targetSlot, reward.rarity());
+            }
         }
 
         if (openContext.showBackButton()) {
             set(crate.menuSettings().backSlot(), createSimpleItem(crate.menuSettings().backButton(), player, null));
+        }
+    }
+
+    private void applyRarityBorders(int centerSlot, CrateManager.RewardRarity rarity) {
+        int row = centerSlot / 9;
+        int col = centerSlot % 9;
+        if (row == 0 || row == (inventory.getSize() / 9) - 1) {
+            return;
+        }
+        if (col == 0 || col == 8) {
+            return;
+        }
+
+        int[][] offsets = {
+                {-1, -1}, {-1, 0}, {-1, 1},
+                {0, -1},           {0, 1},
+                {1, -1},  {1, 0},  {1, 1}
+        };
+
+        Material borderMat = rarity.borderMaterial();
+        String borderName = "&8" + rarity.name() + " Border";
+
+        for (int[] offset : offsets) {
+            int nr = row + offset[0];
+            int nc = col + offset[1];
+            if (nr <= 0 || nr >= (inventory.getSize() / 9) - 1) {
+                continue;
+            }
+            if (nc <= 0 || nc >= 8) {
+                continue;
+            }
+            int borderSlot = nr * 9 + nc;
+            if (rewardSlots.containsKey(borderSlot)) {
+                continue;
+            }
+            ItemStack borderPane = new ItemStack(borderMat);
+            var meta = borderPane.getItemMeta();
+            if (meta != null) {
+                meta.setDisplayName(ColorUtils.toComponent(borderName));
+                meta.setLore(List.of(ColorUtils.toComponent("&8" + rarity.name() + " ᴛɪᴇʀ ʀᴇᴡᴀʀᴅ")));
+                borderPane.setItemMeta(meta);
+            }
+            set(borderSlot, borderPane);
         }
     }
 
@@ -121,9 +169,6 @@ public class CrateRewardMenu extends BaseMenu {
         return openContext;
     }
 
-    // one unified menu instead of preview/open modes: the reward copy says whether the
-    // player can claim (keys are a per-player balance, not an inventory item), and a
-    // keyless claim click explains itself in place
     private void appendKeyHint(ItemStack display, Player player) {
         var meta = display.getItemMeta();
         if (meta == null) {

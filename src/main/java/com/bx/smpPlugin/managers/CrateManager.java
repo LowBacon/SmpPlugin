@@ -42,6 +42,7 @@ public class CrateManager {
     private final Map<CrateBlockKey, String> boundBlocks = new HashMap<>();
     private final Map<UUID, String> pendingBindCrates = new HashMap<>();
     private final Map<UUID, Map<String, Integer>> keyBalanceCache = new HashMap<>();
+    private final CrateHistoryTracker historyTracker = new CrateHistoryTracker();
 
     private ListMenuSettings listMenuSettings = ListMenuSettings.defaults();
     private ConfirmMenuSettings confirmMenuSettings = ConfirmMenuSettings.defaults();
@@ -510,6 +511,11 @@ public class CrateManager {
         activeSessions.clear();
         pendingBindCrates.clear();
         keyBalanceCache.clear();
+        historyTracker.clearAll();
+    }
+
+    public java.util.Deque<CrateHistoryEntry> getPlayerHistory(UUID uuid) {
+        return historyTracker.getPlayerHistory(uuid);
     }
 
     public ClaimResult claimSelectedReward(Player player) {
@@ -595,6 +601,15 @@ public class CrateManager {
                 "Crates",
                 "CRATE_OPEN",
                 "Opened " + crateName + " crate and received " + rewardName
+        );
+
+        historyTracker.recordClaim(
+                player.getUniqueId(),
+                player.getName(),
+                crate.id(),
+                crateName,
+                reward.id(),
+                rewardName
         );
 
         clearSession(player.getUniqueId());
@@ -1296,7 +1311,8 @@ public class CrateManager {
                     display,
                     grant,
                     rewardSection.contains("BROADCAST") ? rewardSection.getBoolean("BROADCAST") : null,
-                    Math.max(1, rewardSection.getInt("WEIGHT", 1))
+                    Math.max(1, rewardSection.getInt("WEIGHT", 1)),
+                    parseRewardRarity(rewardSection.getString("RARITY", "COMMON"))
             ));
         }
 
@@ -1528,6 +1544,18 @@ public class CrateManager {
         }
     }
 
+    private RewardRarity parseRewardRarity(String rawValue) {
+        if (rawValue == null || rawValue.isBlank()) {
+            return RewardRarity.COMMON;
+        }
+
+        try {
+            return RewardRarity.valueOf(rawValue.trim().toUpperCase(Locale.US));
+        } catch (IllegalArgumentException exception) {
+            return RewardRarity.COMMON;
+        }
+    }
+
     private SpinDirection parseSpinDirection(String rawValue) {
         if (rawValue == null || rawValue.isBlank()) {
             return SpinDirection.RANDOM;
@@ -1584,6 +1612,34 @@ public class CrateManager {
         SHARDS
     }
 
+    public enum RewardRarity {
+        COMMON("&7"),
+        UNCOMMON("&a"),
+        RARE("&9"),
+        EPIC("&5"),
+        LEGENDARY("&6");
+
+        private final String colorCode;
+
+        RewardRarity(String colorCode) {
+            this.colorCode = colorCode;
+        }
+
+        public String colorCode() {
+            return colorCode;
+        }
+
+        public Material borderMaterial() {
+            return switch (this) {
+                case COMMON -> Material.GRAY_STAINED_GLASS_PANE;
+                case UNCOMMON -> Material.LIME_STAINED_GLASS_PANE;
+                case RARE -> Material.LIGHT_BLUE_STAINED_GLASS_PANE;
+                case EPIC -> Material.PURPLE_STAINED_GLASS_PANE;
+                case LEGENDARY -> Material.ORANGE_STAINED_GLASS_PANE;
+            };
+        }
+    }
+
     public enum FailureReason {
         CRATE_NOT_FOUND,
         CRATE_DISABLED,
@@ -1626,7 +1682,8 @@ public class CrateManager {
             DisplayItem display,
             GrantDefinition grant,
             Boolean broadcast,
-            int weight
+            int weight,
+            RewardRarity rarity
     ) {
     }
 
@@ -1671,6 +1728,9 @@ public class CrateManager {
     }
 
     public record CrateBlockKey(String world, int x, int y, int z) {
+    }
+
+    public record CrateHistoryEntry(String crateDisplayName, String rewardDisplayName, long claimedAtMillis) {
     }
 
     public record ActionResult(boolean success, String message) {

@@ -2,11 +2,15 @@ package com.bx.smpPlugin.menus;
 
 import com.bx.smpPlugin.SmpPlugin;
 import com.bx.smpPlugin.managers.CrateManager;
-import com.bx.smpPlugin.menus.CrateRewardMenu.OpenContext;
 import com.bx.smpPlugin.utils.ColorUtils;
+import com.bx.smpPlugin.utils.ItemUtils;
 import com.bx.smpPlugin.utils.SoundUtils;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +19,7 @@ public class CratesMenu extends BaseMenu {
 
     private final Map<Integer, String> crateSlots = new HashMap<>();
     private final int closeSlot;
+    private final int historySlot = 31;
 
     public CratesMenu(SmpPlugin plugin) {
         super(
@@ -49,6 +54,7 @@ public class CratesMenu extends BaseMenu {
         }
 
         set(settings.closeSlot(), createSimpleItem(settings.closeItem(), player, null, null));
+        set(historySlot, createHistoryButton(player));
     }
 
     @Override
@@ -56,6 +62,13 @@ public class CratesMenu extends BaseMenu {
         if (slot == closeSlot) {
             SoundUtils.play(player, plugin.getConfigManager().getSound("MENUS.BUTTON-CLICK"));
             player.closeInventory();
+            return;
+        }
+
+        if (slot == historySlot) {
+            SoundUtils.play(player, plugin.getConfigManager().getSound("MENUS.BUTTON-CLICK"));
+            Deque<CrateManager.CrateHistoryEntry> history = plugin.getCrateManager().getPlayerHistory(player.getUniqueId());
+            new CrateRewardHistoryMenu(plugin, history).open(player);
             return;
         }
 
@@ -79,16 +92,35 @@ public class CratesMenu extends BaseMenu {
             return;
         }
 
-        new CrateRewardMenu(plugin, result.crate(), OpenContext.COMMAND).open(player);
+        new CrateRewardMenu(plugin, result.crate(), CrateRewardMenu.OpenContext.COMMAND).open(player);
     }
 
-    private org.bukkit.inventory.ItemStack createSimpleItem(
+    private ItemStack createHistoryButton(Player player) {
+        Deque<CrateManager.CrateHistoryEntry> history = plugin.getCrateManager().getPlayerHistory(player.getUniqueId());
+        int count = history != null ? history.size() : 0;
+
+        List<String> lore = List.of(
+                "&7ᴠɪᴇᴡ ʏᴏᴜʀ ʀᴇᴄᴇɴᴛ ᴄʀᴀᴛᴇ ᴄʟᴀɪᴍѕ.",
+                "",
+                "&7ʀᴇᴄᴇɴᴛ ᴄʟᴀɪᴍѕ: &f" + count,
+                "",
+                "&eᴄʟɪᴄᴋ ᴛᴏ ᴠɪᴇᴡ ʜɪѕᴛᴏʀʏ."
+        );
+
+        return ItemUtils.createItem(
+                Material.BOOK,
+                "&bʜɪѕᴛᴏʀʏ",
+                lore
+        );
+    }
+
+    private ItemStack createSimpleItem(
             CrateManager.DisplayItem display,
             Player player,
             CrateManager.CrateDefinition crate,
             CrateManager.CrateReward reward
     ) {
-        org.bukkit.inventory.ItemStack item = com.bx.smpPlugin.utils.ItemUtils.createItem(
+        ItemStack item = com.bx.smpPlugin.utils.ItemUtils.createItem(
                 display.material(),
                 plugin.getCrateManager().applyPlaceholders(display.displayName(), player, crate, reward),
                 plugin.getCrateManager().applyPlaceholders(display.lore(), player, crate, reward)

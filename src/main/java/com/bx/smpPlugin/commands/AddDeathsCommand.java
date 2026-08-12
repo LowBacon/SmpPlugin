@@ -1,15 +1,23 @@
 package com.bx.smpPlugin.commands;
 
 import com.bx.smpPlugin.SmpPlugin;
+import com.bx.smpPlugin.managers.LeaderboardManager;
 import com.bx.smpPlugin.models.PlayerData;
 import com.bx.smpPlugin.utils.ColorUtils;
 import com.bx.smpPlugin.utils.PermissionUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.bukkit.util.StringUtil;
 
-public class AddDeathsCommand implements CommandExecutor {
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+public class AddDeathsCommand implements CommandExecutor, TabCompleter {
 
     private static final String PERMISSION = "smpplugin.admin.adddeaths";
 
@@ -27,7 +35,7 @@ public class AddDeathsCommand implements CommandExecutor {
         }
 
         if (args.length < 2) {
-            sender.sendMessage(ColorUtils.toComponent("&cᴜѕᴀɢᴇ: /ᴀᴅᴅᴅᴇᴀᴛʜѕ <player> <amount>"));
+            sender.sendMessage(ColorUtils.toComponent("&cᴜѕᴀɢᴇ: /" + label + " <player> <amount>"));
             return true;
         }
 
@@ -44,30 +52,61 @@ public class AddDeathsCommand implements CommandExecutor {
             return true;
         }
 
-        Player targetPlayer = plugin.getServer().getPlayerExact(args[0]);
-        PlayerData data;
-        if (targetPlayer != null) {
-            data = plugin.getPlayerDataManager().get(targetPlayer);
-        } else {
-            var offlinePlayer = plugin.getServer().getOfflinePlayer(args[0]);
-            data = plugin.getDatabaseManager().loadPlayer(offlinePlayer.getUniqueId());
-        }
-
+        Player targetPlayer = Bukkit.getPlayerExact(args[0]);
+        PlayerData data = resolveData(targetPlayer, args[0]);
         if (data == null) {
             sender.sendMessage(ColorUtils.toComponent("&cᴘʟᴀʏᴇʀ ɴᴏᴛ ꜰᴏᴜɴᴅ."));
             return true;
         }
 
         int oldDeaths = data.getDeaths();
-        data.setDeaths(oldDeaths + deaths);
+        int newDeaths;
+        try {
+            newDeaths = Math.addExact(oldDeaths, deaths);
+        } catch (ArithmeticException overflow) {
+            newDeaths = Integer.MAX_VALUE;
+        }
+        data.setDeaths(newDeaths);
         plugin.getDatabaseManager().savePlayer(data);
+        invalidateLeaderboard();
 
         sender.sendMessage(ColorUtils.toComponent("&aᴀᴅᴅᴇᴅ " + deaths + " ᴅᴇᴀᴛʜѕ ᴛᴏ &e" + data.getUsername()));
-        sender.sendMessage(ColorUtils.toComponent("&7ᴘʀᴇᴠɪᴏᴜѕ: &ᶠ" + oldDeaths + " &7ɴᴇᴡ: &ᶠ" + (oldDeaths + deaths)));
+        sender.sendMessage(ColorUtils.toComponent("&7ᴘʀᴇᴠɪᴏᴜѕ: &f" + oldDeaths + " &7ɴᴇᴡ: &f" + newDeaths));
 
         if (targetPlayer != null && !targetPlayer.equals(sender)) {
-            targetPlayer.sendMessage(ColorUtils.toComponent("&a&eAdmin &aᴀᴅᴅᴇᴅ &e" + deaths + " ᴅᴇᴀᴛʜѕ!"));
+            targetPlayer.sendMessage(ColorUtils.toComponent("&e" + sender.getName() + " &aᴀᴅᴅᴇᴅ &f" + deaths + " &aᴅᴇᴀᴛʜѕ."));
         }
         return true;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (args.length != 1 || !PermissionUtils.has(sender, PERMISSION)) {
+            return List.of();
+        }
+        List<String> names = new ArrayList<>();
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            names.add(player.getName());
+        }
+        List<String> matches = new ArrayList<>();
+        StringUtil.copyPartialMatches(args[0], names, matches);
+        matches.sort(String.CASE_INSENSITIVE_ORDER);
+        return matches;
+    }
+
+    /** Online players are resolved from the live cache; offline players are looked up locally
+     *  (never via Bukkit's blocking, network-hitting getOfflinePlayer(String)). */
+    private PlayerData resolveData(Player targetPlayer, String rawName) {
+        if (targetPlayer != null) {
+            return plugin.getPlayerDataManager().get(targetPlayer);
+        }
+        UUID uuid = plugin.getDatabaseManager().findPlayerUuidByUsername(rawName);
+        return uuid == null ? null : plugin.getDatabaseManager().loadPlayer(uuid);
+    }
+
+    private void invalidateLeaderboard() {
+        if (plugin.getLeaderboardManager() != null) {
+            plugin.getLeaderboardManager().invalidate(LeaderboardManager.LeaderboardType.DEATHS);
+        }
     }
 }

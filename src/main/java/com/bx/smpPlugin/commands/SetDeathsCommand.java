@@ -17,13 +17,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class AddKillsCommand implements CommandExecutor, TabCompleter {
+public class SetDeathsCommand implements CommandExecutor, TabCompleter {
 
-    private static final String PERMISSION = "smpplugin.admin.addkills";
+    private static final String PERMISSION = "smpplugin.admin.setdeaths";
 
     private final SmpPlugin plugin;
 
-    public AddKillsCommand(SmpPlugin plugin) {
+    public SetDeathsCommand(SmpPlugin plugin) {
         this.plugin = plugin;
     }
 
@@ -39,16 +39,16 @@ public class AddKillsCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        int kills;
+        int deaths;
         try {
-            kills = Integer.parseInt(args[1]);
+            deaths = Integer.parseInt(args[1]);
         } catch (NumberFormatException e) {
             sender.sendMessage(ColorUtils.toComponent("&cɪɴᴠᴀʟɪᴅ ᴀᴍᴏᴜɴᴛ."));
             return true;
         }
 
-        if (kills <= 0) {
-            sender.sendMessage(ColorUtils.toComponent("&cᴋɪʟʟѕ ᴍᴜѕᴛ ʙᴇ ᴘᴏѕɪᴛɪᴠᴇ."));
+        if (deaths < 0) {
+            sender.sendMessage(ColorUtils.toComponent("&cᴅᴇᴀᴛʜѕ ᴍᴜѕᴛ ʙᴇ ᴢᴇʀᴏ ᴏʀ ᴀʙᴏᴠᴇ."));
             return true;
         }
 
@@ -59,22 +59,16 @@ public class AddKillsCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        int oldKills = data.getKills();
-        int newKills;
-        try {
-            newKills = Math.addExact(oldKills, kills);
-        } catch (ArithmeticException overflow) {
-            newKills = Integer.MAX_VALUE;
-        }
-        data.setKills(newKills);
+        int oldDeaths = data.getDeaths();
+        data.setDeaths(deaths);
         plugin.getDatabaseManager().savePlayer(data);
         invalidateLeaderboard();
 
-        sender.sendMessage(ColorUtils.toComponent("&aᴀᴅᴅᴇᴅ " + kills + " ᴋɪʟʟѕ ᴛᴏ &e" + data.getUsername()));
-        sender.sendMessage(ColorUtils.toComponent("&7ᴘʀᴇᴠɪᴏᴜѕ: &f" + oldKills + " &7ɴᴇᴡ: &f" + newKills));
+        sender.sendMessage(ColorUtils.toComponent("&aѕᴇᴛ &e" + data.getUsername() + "&a'ѕ ᴅᴇᴀᴛʜѕ ᴛᴏ &f" + deaths + "&a."));
+        sender.sendMessage(ColorUtils.toComponent("&7ᴘʀᴇᴠɪᴏᴜѕ: &f" + oldDeaths + " &7ɴᴇᴡ: &f" + deaths));
 
         if (targetPlayer != null && !targetPlayer.equals(sender)) {
-            targetPlayer.sendMessage(ColorUtils.toComponent("&e" + sender.getName() + " &aᴀᴅᴅᴇᴅ &f" + kills + " &aᴋɪʟʟѕ."));
+            targetPlayer.sendMessage(ColorUtils.toComponent("&e" + sender.getName() + " &aѕᴇᴛ ʏᴏᴜʀ ᴅᴇᴀᴛʜѕ ᴛᴏ &f" + deaths + "&a."));
         }
         return true;
     }
@@ -94,8 +88,6 @@ public class AddKillsCommand implements CommandExecutor, TabCompleter {
         return matches;
     }
 
-    /** Online players are resolved from the live cache; offline players are looked up locally
-     *  (never via Bukkit's blocking, network-hitting getOfflinePlayer(String)). */
     private PlayerData resolveData(Player targetPlayer, String rawName) {
         if (targetPlayer != null) {
             return plugin.getPlayerDataManager().get(targetPlayer);
@@ -106,7 +98,7 @@ public class AddKillsCommand implements CommandExecutor, TabCompleter {
 
     private void invalidateLeaderboard() {
         if (plugin.getLeaderboardManager() != null) {
-            plugin.getLeaderboardManager().invalidate(LeaderboardManager.LeaderboardType.KILLS);
+            plugin.getLeaderboardManager().invalidate(LeaderboardManager.LeaderboardType.DEATHS);
         }
     }
 }

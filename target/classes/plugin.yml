@@ -1,5 +1,5 @@
 name: SmpPlugin
-version: 1.4
+version: 1.5-Pre-Release
 main: com.bx.smpPlugin.SmpPlugin
 api-version: "1.21"
 folia-supported: true
@@ -194,7 +194,7 @@ commands:
     permission: smpplugin.admin.setmoney
   addplaytime:
     description: Add playtime to a player
-    usage: /addplaytime <player> <seconds>
+    usage: /addplaytime <player> <seconds|1d2h30m>
     permission: smpplugin.admin.addplaytime
   addkills:
     description: Add kills to a player
@@ -219,6 +219,18 @@ commands:
   keys:
     description: Open your crate keys menu
     usage: /keys
+  setkills:
+    description: Set a player's kill count
+    usage: /setkills <player> <amount>
+    permission: smpplugin.admin.setkills
+  setdeaths:
+    description: Set a player's death count
+    usage: /setdeaths <player> <amount>
+    permission: smpplugin.admin.setdeaths
+  setplaytime:
+    description: Set a player's playtime
+    usage: /setplaytime <player> <seconds|1d2h30m>
+    permission: smpplugin.admin.setplaytime
   stats:
     description: View player stats
     usage: /stats [player]
@@ -528,6 +540,9 @@ permissions:
       smpplugin.admin.addplaytime: true
       smpplugin.admin.addkills: true
       smpplugin.admin.adddeaths: true
+      smpplugin.admin.setkills: true
+      smpplugin.admin.setdeaths: true
+      smpplugin.admin.setplaytime: true
       smpplugin.admin.afklounge: true
       smpplugin.admin.amethysttool: true
       smpplugin.admin.worth: true
@@ -881,6 +896,15 @@ permissions:
     default: op
   smpplugin.admin.lobby.debug:
     description: Toggle lobby debug output with /lobby debug
+    default: op
+  smpplugin.admin.setkills:
+    description: Set a player's kill count directly
+    default: op
+  smpplugin.admin.setdeaths:
+    description: Set a player's death count directly
+    default: op
+  smpplugin.admin.setplaytime:
+    description: Set a player's playtime directly
     default: op
   smpplugin.bypass.lobby:
     description: Bypass all lobby protection and the lobby border

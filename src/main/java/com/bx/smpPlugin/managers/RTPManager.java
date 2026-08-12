@@ -113,6 +113,8 @@ public class RTPManager {
 
     private final SmpPlugin plugin;
     private final Map<UUID, Map<String, Long>> cooldownsByPlayer = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> globalCooldownsByPlayer = new ConcurrentHashMap<>();
+    private static final long GLOBAL_COOLDOWN_MILLIS = 5000L;
     private final Map<UUID, BukkitTask> activeSearchTasks = new ConcurrentHashMap<>();
     private final Map<UUID, BukkitTask> activeResultTasks = new ConcurrentHashMap<>();
     private final Map<UUID, CompletableFuture<Location>> activeDirectSearches = new ConcurrentHashMap<>();
@@ -128,6 +130,7 @@ public class RTPManager {
     public void reload() {
         clearAllSearches();
         cooldownsByPlayer.clear();
+        globalCooldownsByPlayer.clear();
         configuredDestinations = loadConfiguredDestinations();
         menuDestinations = buildMenuDestinations(configuredDestinations);
     }
@@ -648,6 +651,17 @@ public class RTPManager {
             return false;
         }
 
+        long globalRemaining = getGlobalCooldownRemainingMillis(player.getUniqueId());
+        if (globalRemaining > 0L) {
+            long remainingSeconds = Math.max(1L, (long) Math.ceil(globalRemaining / 1000.0D));
+            String message = plugin.getConfigManager().getRtp()
+                    .getString("MESSAGES.GLOBAL-COOLDOWN", "&cʏᴏᴜ ᴄᴀɴ'ᴛ ʀᴛᴘ ꜰᴏʀ ᴀɴᴏᴛʜᴇʀ {remaining}ѕ.");
+            message = message.replace("{remaining}", String.valueOf(remainingSeconds))
+                    .replace("%remaining%", String.valueOf(remainingSeconds));
+            player.sendMessage(ColorUtils.toComponent(message));
+            return false;
+        }
+
         if (isQueueFull(player.getUniqueId())) {
             player.sendMessage(ColorUtils.toComponent(
                     plugin.getConfigManager().getRtp()
@@ -670,6 +684,8 @@ public class RTPManager {
         player.sendMessage(ColorUtils.toComponent(searching));
 
         SoundUtils.play(player, plugin.getConfigManager().getSound("RTP.SEARCH-START"));
+
+        player.sendTitle(ColorUtils.toComponent("&b&lSearching"), ColorUtils.toComponent("&7Finding a safe location..."), 5, 40, 10);
 
         SearchProgress progress = new SearchProgress(worldName, settings);
         activeSearches.put(player.getUniqueId(), progress);
@@ -883,6 +899,11 @@ public class RTPManager {
 
     private void finishSearch(Player player, String worldName, Location found) {
         applyCooldown(player.getUniqueId(), worldName);
+        applyGlobalCooldown(player.getUniqueId());
+
+        player.sendTitle(ColorUtils.toComponent("&a&lFound!"), ColorUtils.toComponent("&7Preparing teleport..."), 5, 20, 10);
+        player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_ENDERMAN_TELEPORT, 0.8f, 1.2f);
+        player.spawnParticle(org.bukkit.Particle.PORTAL, player.getLocation().add(0, 1, 0), 40, 0.5, 0.8, 0.5, 0.15);
 
         String foundMessage = plugin.getConfigManager().getRtp()
                 .getString("MESSAGES.SAFE-LOCATION-FOUND", "&aѕᴀꜰᴇ ʟᴏᴄᴀᴛɪᴏɴ ꜰᴏᴜɴᴅ ᴀᴛ: x:{x} ʏ:{y} ᴢ:{z}")
@@ -1788,6 +1809,24 @@ public class RTPManager {
                 .put(normalizeWorldKey(worldName), System.currentTimeMillis() + (cooldownSeconds * 1000L));
     }
 
+    private void applyGlobalCooldown(UUID playerId) {
+        globalCooldownsByPlayer.put(playerId, System.currentTimeMillis() + GLOBAL_COOLDOWN_MILLIS);
+    }
+
+    private long getGlobalCooldownRemainingMillis(UUID playerId) {
+        Long expiresAt = globalCooldownsByPlayer.get(playerId);
+        if (expiresAt == null) {
+            return 0L;
+        }
+
+        long remaining = expiresAt - System.currentTimeMillis();
+        if (remaining <= 0L) {
+            globalCooldownsByPlayer.remove(playerId);
+            return 0L;
+        }
+        return remaining;
+    }
+
     private boolean isQueueFull(UUID playerId) {
         int maxPlayers = getMaxConcurrentRtp();
         int inProgress = countActiveSearches() + plugin.getTeleportManager().countPendingByType("RTP");
@@ -1918,6 +1957,7 @@ public class RTPManager {
         for (UUID playerId : playerIds) {
             clearSearch(playerId);
         }
+        globalCooldownsByPlayer.clear();
     }
 
     private void warn(String message) {

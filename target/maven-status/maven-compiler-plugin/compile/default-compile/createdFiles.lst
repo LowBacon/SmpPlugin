@@ -352,9 +352,11 @@ com\bx\smpPlugin\managers\OrdersManager$RemovedOrderItems.class
 com\bx\smpPlugin\managers\ExplosionParticleFilter.class
 com\bx\smpPlugin\staff\StaffToolType.class
 com\bx\smpPlugin\managers\FreezeManager$FreezeToggleResult.class
+com\bx\smpPlugin\managers\CrateManager$RewardRarity.class
 com\bx\smpPlugin\menus\DuelCreateMenu$1.class
 com\bx\smpPlugin\managers\DuelManager$TransitionTitleState.class
 com\bx\smpPlugin\managers\StaffModeManager.class
+com\bx\smpPlugin\commands\SetPlaytimeCommand.class
 com\bx\smpPlugin\managers\OrdersManager$ClaimResult.class
 com\bx\smpPlugin\managers\ChatManager$ClickActionType.class
 com\bx\smpPlugin\listeners\SpawnerInteractListener.class
@@ -411,6 +413,7 @@ com\bx\smpPlugin\commands\RenameCommand.class
 com\bx\smpPlugin\commands\SetSpawnCommand.class
 com\bx\smpPlugin\managers\ShopManager$ManagedSpawnerReward.class
 com\bx\smpPlugin\managers\HomeManager$PendingHomeInput$Type.class
+com\bx\smpPlugin\commands\SetKillsCommand.class
 com\bx\smpPlugin\menus\PayConfirmMenu.class
 com\bx\smpPlugin\models\AuctionBrowseRequest.class
 com\bx\smpPlugin\managers\FakePlayerManager$SkinSourceMode.class
@@ -461,6 +464,7 @@ com\bx\smpPlugin\commands\WorthCommand.class
 com\bx\smpPlugin\managers\LeaderboardManager.class
 com\bx\smpPlugin\commands\AddKillsCommand.class
 com\bx\smpPlugin\managers\SkinsRestorerHideBridge.class
+com\bx\smpPlugin\managers\CrateManager$CrateHistoryEntry.class
 com\bx\smpPlugin\models\Order.class
 com\bx\smpPlugin\managers\AntiEspManager.class
 com\bx\smpPlugin\listeners\WorthDisplayListener.class
@@ -535,6 +539,7 @@ com\bx\smpPlugin\listeners\FreezeListener.class
 com\bx\smpPlugin\managers\DatabaseManager$ServerWipeResult.class
 com\bx\smpPlugin\models\ThreeChoice.class
 com\bx\smpPlugin\api\LeaderboardPlaceholderResolver.class
+com\bx\smpPlugin\commands\SetDeathsCommand.class
 com\bx\smpPlugin\commands\ShardAdminCommand.class
 com\bx\smpPlugin\models\StaffAlertPayload.class
 com\bx\smpPlugin\commands\PunishmentCommand$DurationParseResult.class
@@ -548,6 +553,7 @@ com\bx\smpPlugin\menus\CrateRewardMenu$OpenContext.class
 com\bx\smpPlugin\commands\QueueCommand.class
 com\bx\smpPlugin\listeners\PunishmentCommandAliasListener.class
 com\bx\smpPlugin\managers\ShopManager$PendingSale.class
+com\bx\smpPlugin\managers\CrateHistoryTracker$Entry.class
 com\bx\smpPlugin\commands\FlyCommand.class
 com\bx\smpPlugin\managers\NetworkStaffChatManager.class
 com\bx\smpPlugin\commands\SetMoneyCommand.class
@@ -652,6 +658,7 @@ com\bx\smpPlugin\utils\LazyLocation.class
 com\bx\smpPlugin\managers\LuckPermsTablistRefreshBridge$1.class
 com\bx\smpPlugin\managers\ShopManager$ShopCategory.class
 com\bx\smpPlugin\models\StaffModeState.class
+com\bx\smpPlugin\managers\CrateHistoryTracker.class
 com\bx\smpPlugin\managers\DuelWorldManager$SingleBiomeProvider.class
 com\bx\smpPlugin\models\Bounty.class
 com\bx\smpPlugin\menus\TeleportAreaMenu.class
@@ -707,6 +714,7 @@ com\bx\smpPlugin\managers\DuelManager$PendingCrossServerMatch.class
 com\bx\smpPlugin\managers\TPAManager.class
 com\bx\smpPlugin\commands\SellCommand.class
 com\bx\smpPlugin\managers\AuctionHouseManager$TimeUnitHours.class
+com\bx\smpPlugin\menus\CrateRewardHistoryMenu.class
 com\bx\smpPlugin\models\PortalDefinition.class
 com\bx\smpPlugin\menus\FriendsMenu$FilterType.class
 com\bx\smpPlugin\models\OrderSort.class

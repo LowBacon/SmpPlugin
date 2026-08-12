@@ -149,6 +149,8 @@ CRATES:
           MATERIAL: IRON_HELMET
           # The numerical value for Amount. Available options: Any valid integer
           AMOUNT: 1
+        # The text or value for Rarity. Available options: Any valid string text
+        RARITY: COMMON
       # Configuration section for Iron Chestplate.
       iron_chestplate:
         SLOT: 11
@@ -164,6 +166,8 @@ CRATES:
           MATERIAL: IRON_CHESTPLATE
           # The numerical value for Amount. Available options: Any valid integer
           AMOUNT: 1
+        # The text or value for Rarity. Available options: Any valid string text
+        RARITY: COMMON
       # Configuration section for Iron Leggings.
       iron_leggings:
         SLOT: 12
@@ -179,6 +183,8 @@ CRATES:
           MATERIAL: IRON_LEGGINGS
           # The numerical value for Amount. Available options: Any valid integer
           AMOUNT: 1
+        # The text or value for Rarity. Available options: Any valid string text
+        RARITY: COMMON
       # Configuration section for Iron Boots.
       iron_boots:
         SLOT: 13
@@ -194,6 +200,8 @@ CRATES:
           MATERIAL: IRON_BOOTS
           # The numerical value for Amount. Available options: Any valid integer
           AMOUNT: 1
+        # The text or value for Rarity. Available options: Any valid string text
+        RARITY: COMMON
       # Configuration section for Iron Sword.
       iron_sword:
         SLOT: 14
@@ -209,6 +217,8 @@ CRATES:
           MATERIAL: IRON_SWORD
           # The numerical value for Amount. Available options: Any valid integer
           AMOUNT: 1
+        # The text or value for Rarity. Available options: Any valid string text
+        RARITY: COMMON
       # Configuration section for Money.
       money:
         SLOT: 15
@@ -224,6 +234,8 @@ CRATES:
           # Configuration section for Commands.
           COMMANDS:
           - addmoney {player} 5000
+        # The text or value for Rarity. Available options: Any valid string text
+        RARITY: UNCOMMON
   # Configuration section for Rare.
   rare:
     # Determines whether Enabled is enabled or disabled. Available options: true, false
@@ -281,6 +293,8 @@ CRATES:
           MATERIAL: DIAMOND_HELMET
           # The numerical value for Amount. Available options: Any valid integer
           AMOUNT: 1
+        # The text or value for Rarity. Available options: Any valid string text
+        RARITY: RARE
       # Configuration section for Diamond Chestplate.
       diamond_chestplate:
         SLOT: 11
@@ -296,6 +310,8 @@ CRATES:
           MATERIAL: DIAMOND_CHESTPLATE
           # The numerical value for Amount. Available options: Any valid integer
           AMOUNT: 1
+        # The text or value for Rarity. Available options: Any valid string text
+        RARITY: RARE
       # Configuration section for Diamond Leggings.
       diamond_leggings:
         SLOT: 12
@@ -311,6 +327,8 @@ CRATES:
           MATERIAL: DIAMOND_LEGGINGS
           # The numerical value for Amount. Available options: Any valid integer
           AMOUNT: 1
+        # The text or value for Rarity. Available options: Any valid string text
+        RARITY: RARE
       # Configuration section for Diamond Boots.
       diamond_boots:
         SLOT: 13
@@ -326,6 +344,8 @@ CRATES:
           MATERIAL: DIAMOND_BOOTS
           # The numerical value for Amount. Available options: Any valid integer
           AMOUNT: 1
+        # The text or value for Rarity. Available options: Any valid string text
+        RARITY: RARE
       # Configuration section for Diamond Sword.
       diamond_sword:
         SLOT: 14
@@ -341,6 +361,8 @@ CRATES:
           MATERIAL: DIAMOND_SWORD
           # The numerical value for Amount. Available options: Any valid integer
           AMOUNT: 1
+        # The text or value for Rarity. Available options: Any valid string text
+        RARITY: RARE
       # Configuration section for Money.
       money:
         SLOT: 15
@@ -356,6 +378,8 @@ CRATES:
           # Configuration section for Commands.
           COMMANDS:
           - addmoney {player} 15000
+        # The text or value for Rarity. Available options: Any valid string text
+        RARITY: UNCOMMON
   # Configuration section for Epic.
   epic:
     # Determines whether Enabled is enabled or disabled. Available options: true, false
@@ -413,6 +437,8 @@ CRATES:
           MATERIAL: NETHERITE_HELMET
           # The numerical value for Amount. Available options: Any valid integer
           AMOUNT: 1
+        # The text or value for Rarity. Available options: Any valid string text
+        RARITY: EPIC
       # Configuration section for Netherite Chestplate.
       netherite_chestplate:
         SLOT: 11
@@ -428,6 +454,8 @@ CRATES:
           MATERIAL: NETHERITE_CHESTPLATE
           # The numerical value for Amount. Available options: Any valid integer
           AMOUNT: 1
+        # The text or value for Rarity. Available options: Any valid string text
+        RARITY: EPIC
       # Configuration section for Netherite Leggings.
       netherite_leggings:
         SLOT: 12
@@ -443,6 +471,8 @@ CRATES:
           MATERIAL: NETHERITE_LEGGINGS
           # The numerical value for Amount. Available options: Any valid integer
           AMOUNT: 1
+        # The text or value for Rarity. Available options: Any valid string text
+        RARITY: EPIC
       # Configuration section for Netherite Boots.
       netherite_boots:
         SLOT: 13
@@ -458,6 +488,8 @@ CRATES:
           MATERIAL: NETHERITE_BOOTS
           # The numerical value for Amount. Available options: Any valid integer
           AMOUNT: 1
+        # The text or value for Rarity. Available options: Any valid string text
+        RARITY: EPIC
       # Configuration section for Netherite Sword.
       netherite_sword:
         SLOT: 14
@@ -473,6 +505,8 @@ CRATES:
           MATERIAL: NETHERITE_SWORD
           # The numerical value for Amount. Available options: Any valid integer
           AMOUNT: 1
+        # The text or value for Rarity. Available options: Any valid string text
+        RARITY: EPIC
       # Configuration section for Money.
       money:
         SLOT: 15
@@ -488,3 +522,5 @@ CRATES:
           # Configuration section for Commands.
           COMMANDS:
           - addmoney {player} 50000
+        # The text or value for Rarity. Available options: Any valid string text
+        RARITY: RARE

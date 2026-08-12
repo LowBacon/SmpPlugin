@@ -2,6 +2,7 @@ package com.bx.smpPlugin.menus;
 
 import com.bx.smpPlugin.SmpPlugin;
 import com.bx.smpPlugin.managers.RTPManager;
+import com.bx.smpPlugin.utils.ColorUtils;
 import com.bx.smpPlugin.utils.ItemUtils;
 import com.bx.smpPlugin.utils.SoundUtils;
 import org.bukkit.Material;
@@ -22,9 +23,19 @@ public class RTPMenu extends BaseMenu {
     @Override
     public void build(Player player) {
         clear();
-        if (plugin.getConfigManager().getRtp().getBoolean("RTP-MENU.PLACEHOLDER", true)) {
-            fill(Material.GRAY_STAINED_GLASS_PANE);
-        }
+        fill(Material.LIGHT_BLUE_STAINED_GLASS_PANE);
+
+        set(4, ItemUtils.createItem(
+                Material.COMPASS,
+                "&b&lRandom Teleport",
+                List.of(
+                        "&7Choose a destination below to",
+                        "&7teleport to a random safe location.",
+                        "",
+                        "&7Each destination has its own",
+                        "&7cooldown and requirements."
+                )
+        ));
 
         List<RTPManager.RTPDestination> destinations = plugin.getRtpManager().getMenuDestinations();
         if (destinations.isEmpty()) {

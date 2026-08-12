@@ -2,7 +2,8 @@
 #  AFK Lounge Configuration
 #  The protected AFK lounge: players can teleport here to AFK and earn shards
 #  Border is set with /afklounge border or /afklounge border radius
-#  Players inside the border will see a different scoreboard and get shard rewards
+#  Players inside the border see the main server scoreboard with the
+#  "AFK Lounge" title, plus an on-screen cooldown timer for shard rewards.
 # =====================================================================
 
 LOCATIONS:
@@ -18,6 +19,8 @@ SETTINGS:
   SHARD-REWARD-AMOUNT: 1
   # Permission required to set AFK Lounge location and border
   ADMIN-PERMISSION: "smpplugin.admin.afklounge"
+  # Show on-screen cooldown timer while inside the AFK Lounge border
+  SHOW-COOLDOWN-ACTIONBAR: true
 
 BORDER:
   # Enable border enforcement
@@ -37,7 +40,8 @@ BORDER:
   ENTERED-BORDER-MESSAGE: "&aYou entered the AFK Lounge! Earning shards every 30 seconds."
 
 SCOREBOARD:
-  # Scoreboard name in AFK Lounge
+  # Scoreboard title shown while inside the AFK Lounge border.
+  # The lines now mirror the main server scoreboard (configured in scoreboard.yml).
   TITLE: "&6&lAFK LOUNGE"
   # Lines to display (use {player}, {shards}, {money}, {playtime}, {kills}, {deaths})
   LINES:
@@ -55,3 +59,5 @@ MESSAGES:
   SHARD-REWARD: "&a+1 Shard earned! (AFK Lounge)"
   # Message sent when player is not in AFK Lounge anymore (during reward interval)
   LEFT-LOUNGE: "&cYou must be in the AFK Lounge to earn shards."
+  # Action bar timer text shown while inside the AFK Lounge border (use {seconds} for remaining seconds)
+  NEXT-SHARD-IN: "&eNext shard in &f{seconds}&es"

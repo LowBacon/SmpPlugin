@@ -229,4 +229,24 @@ public class AFKLoungeManager {
     public boolean hasPendingBorderCorner1(UUID uuid) {
         return pendingBorderCorner1.containsKey(uuid);
     }
+
+    public boolean isCooldownActionBarEnabled() {
+        return getConfig().getBoolean("SETTINGS.SHOW-COOLDOWN-ACTIONBAR", true);
+    }
+
+    public long getRemainingShardCooldownSeconds(UUID uuid) {
+        int interval = getShardRewardIntervalSeconds();
+        Long lastReward = lastShardReward.get(uuid);
+        if (lastReward == null) {
+            return 0;
+        }
+        long elapsedSeconds = (System.currentTimeMillis() - lastReward) / 1000L;
+        long remaining = interval - elapsedSeconds;
+        return Math.max(0, remaining);
+    }
+
+    public String getNextShardTimerMessage(long remainingSeconds) {
+        String template = getConfig().getString("MESSAGES.NEXT-SHARD-IN", "&eNext shard in &f{seconds}&es");
+        return template.replace("{seconds}", String.valueOf(remainingSeconds));
+    }
 }

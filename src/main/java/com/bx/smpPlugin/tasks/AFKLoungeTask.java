@@ -4,6 +4,7 @@ import com.bx.smpPlugin.SmpPlugin;
 import com.bx.smpPlugin.managers.OptimizationManager;
 import com.bx.smpPlugin.models.PlayerData;
 import com.bx.smpPlugin.utils.ColorUtils;
+import com.bx.smpPlugin.utils.PlayerSettingUtils;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -38,11 +39,9 @@ public class AFKLoungeTask implements Runnable {
 
             if (!plugin.getAFKLoungeManager().isPlayerInLounge(player)) {
                 if (previouslyInLounge.contains(uuid)) {
-                    // Player just left the lounge
                     plugin.getAFKLoungeManager().playerLeftLounge(uuid);
                     player.sendMessage(ColorUtils.toComponent(plugin.getAFKLoungeManager().getLeftBorderMessage()));
-                    
-                    // Update tablist to remove AFK indicator
+                    PlayerSettingUtils.clearActionBar(player);
                     if (plugin.getTablistManager() != null) {
                         plugin.getTablistManager().updateTablistName(player);
                     }
@@ -50,13 +49,9 @@ public class AFKLoungeTask implements Runnable {
                 continue;
             }
 
-            // Player is in the lounge
             if (!previouslyInLounge.contains(uuid)) {
-                // Player just entered the lounge
                 plugin.getAFKLoungeManager().playerEnteredLounge(uuid);
                 player.sendMessage(ColorUtils.toComponent(plugin.getAFKLoungeManager().getEnteredBorderMessage()));
-                
-                // Update tablist to show AFK indicator
                 if (plugin.getTablistManager() != null) {
                     plugin.getTablistManager().updateTablistName(player);
                 }
@@ -64,7 +59,6 @@ public class AFKLoungeTask implements Runnable {
 
             currentlyInLounge.add(uuid);
 
-            // Check if player can receive shard reward
             if (plugin.getAFKLoungeManager().canReceiveShard(uuid)) {
                 PlayerData data = plugin.getPlayerDataManager().get(player);
                 if (data != null) {
@@ -72,9 +66,14 @@ public class AFKLoungeTask implements Runnable {
                     data.addShards(rewardAmount);
                     plugin.getDatabaseManager().savePlayer(data);
                     plugin.getAFKLoungeManager().recordShardReward(uuid);
-
-                    player.sendMessage(ColorUtils.toComponent("&a+" + rewardAmount + " Shard earned! (AFK Lounge)"));
+                    player.sendMessage(ColorUtils.toComponent(plugin.getAFKLoungeManager().getShardRewardMessage()));
                 }
+            }
+
+            if (plugin.getAFKLoungeManager().isCooldownActionBarEnabled()) {
+                long remaining = plugin.getAFKLoungeManager().getRemainingShardCooldownSeconds(uuid);
+                String actionBarText = plugin.getAFKLoungeManager().getNextShardTimerMessage(remaining);
+                PlayerSettingUtils.sendActionBar(plugin, player, ColorUtils.toComponent(actionBarText));
             }
         }
 

@@ -362,15 +362,10 @@ public class ScoreboardManager {
         if (plugin.getLobbyManager() != null && plugin.getLobbyManager().isInLobby(player)) {
             return plugin.getLobbyManager().getScoreboardLines();
         }
-        if (plugin.getAFKLoungeManager() != null && plugin.getAFKLoungeManager().isPlayerInLounge(player)) {
-            List<String> afkLines = plugin.getAFKLoungeManager().getScoreboardLines();
-            List<String> processedLines = new ArrayList<>();
-            for (String line : afkLines) {
-                String processed = applySidebarEconomyPlaceholders(line, player);
-                processedLines.add(applySidebarLayoutPlaceholders(processed));
-            }
-            return processedLines;
-        }
+        return getMainScoreboardLines(player);
+    }
+
+    private List<String> getMainScoreboardLines(Player player) {
         FileConfiguration scoreboard = plugin.getConfigManager().getScoreboard();
         List<String> lines = new ArrayList<>();
         String teamLine = scoreboard.getString("SCOREBOARD.TEAM");

@@ -312,7 +312,7 @@ mvn clean package
 The compiled plugin will be generated as:
 
 ```text
-target/SmpPlugin-1.4.jar
+target/SmpPlugin-1.5-Pre-Release.jar
 ```
 
 ## 📦 Installation

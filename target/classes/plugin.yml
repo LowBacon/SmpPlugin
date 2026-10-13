@@ -1,0 +1,1376 @@
+name: SmpPlugin
+version: 2.0.0-alpha.4
+main: com.bx.smpPlugin.SmpPlugin
+# Minimum Minecraft version; filled from minecraft.api.version in pom.xml.
+api-version: "26.3"
+# No Folia 26.3 build has been tested. See COMPATIBILITY.md.
+folia-supported: false
+softdepend:
+- LPC
+- NickPlus
+- PlaceholderAPI
+- LuckPerms
+- Vault
+- ProtocolLib
+- Apollo
+- Multiverse-Core
+- floodgate
+- FancyNpcs
+loadbefore:
+- EconomyShopGUI
+- EconomyShopGUI-Premium
+- UltraCosmetics
+- DeluxeMenus
+commands:
+  lobby:
+    description: Go to the lobby, return to Survival, or manage the lobby
+    usage: /lobby [survival|border [radius]|reload|debug|help]
+  team:
+    description: Team management
+    usage: /team <create|disband|invite|kick|join|leave|home|sethome|delhome|chat|info|pvp>
+  chat:
+    permission: smpplugin.staff.chat.use;smpplugin.staff.chat.mute;smpplugin.staff.chat.unmute;smpplugin.staff.chat.delay;smpplugin.staff.chat.clear
+    description: Manage global chat settings
+    usage: /chat <help|mute|unmute|delay|clear>
+  ignore:
+    description: Add or remove a player from your ignore list
+    usage: /ignore <player|list>
+    permission: smpplugin.ignore
+  unignore:
+    description: Remove a player from your ignore list
+    usage: /unignore <player>
+    permission: smpplugin.ignore
+  msg:
+    description: Send a private message
+    usage: /msg <player> <message>
+    aliases:
+    - message
+    - tell
+    - whisper
+    - w
+    permission: smpplugin.message
+  reply:
+    description: Reply to your last private conversation
+    usage: /reply <message>
+    aliases:
+    - r
+    permission: smpplugin.message
+  pm:
+    description: Toggle private messages
+    usage: /pm
+    aliases:
+    - togglepm
+    - privatemessages
+    permission: smpplugin.message.toggle
+  home:
+    description: Teleport to your home
+    usage: /home [name]
+  homes:
+    description: List your homes
+    usage: /homes
+  sethome:
+    description: Set your home
+    usage: /sethome [name]
+  delhome:
+    description: Delete a home
+    usage: /delhome <name>
+  renamehome:
+    description: Rename a home
+    usage: /renamehome <old> <new>
+  spawn:
+    description: Teleport to spawn
+    usage: /spawn
+  setspawn:
+    description: Set the primary server spawn at your current location
+    usage: /setspawn
+    permission: smpplugin.admin.setspawn
+  setlobby:
+    description: Set the protected lobby location at your current location
+    usage: /setlobby
+    permission: smpplugin.admin.lobby.setlobby
+  afk:
+    description: Go to AFK zone
+    usage: /afk
+  setafk:
+    description: Save an AFK zone at your current location
+    usage: /setafk [name]
+    aliases:
+    - afkset
+    permission: smpplugin.admin.setafk
+  delafk:
+    description: Delete a saved AFK zone
+    usage: /delafk <name>
+    aliases:
+    - afkdel
+    permission: smpplugin.admin.setafk
+  afklist:
+    description: List every configured AFK destination
+    usage: /afklist
+    aliases:
+    - afkpoints
+    permission: smpplugin.admin.setafk
+  rtp:
+    description: Random teleport
+    usage: /rtp [world]
+  rtpq:
+    description: Join the RTP queue to be teleported together with other players
+    usage: /rtpq [join|leave]
+    aliases:
+    - rtpqueue
+  shop:
+    description: Open the shop
+    usage: /shop [reload]
+  shardshop:
+    description: Open the shop that charges shards
+    usage: /shardshop
+  orders:
+    description: Open the Orders board
+    usage: /orders [my|collect|reload]
+  duel:
+    description: Challenge or manage duels
+    usage: /duel [player|accept|deny|claims|reload]
+  create:
+    description: Create a custom duel and invite a player or friend
+    usage: /create <invite|friends> <player> [map]
+  queue:
+    description: Open or join the duel queue
+    usage: /queue [join|leave]
+  leave:
+    description: Leave a duel or FFA queue/match
+    usage: /leave
+  draw:
+    description: Request or accept a duel draw
+    usage: /draw
+  arena:
+    permission: smpplugin.admin.duels
+    description: Manage duel arenas
+    usage: /arena <create|delete|setpos1|setpos2|setreturn|setdisplay|enable|disable|queue|list|reload>
+    aliases:
+    - duelarena
+  ffa:
+    description: Join the instanced FFA queue
+    usage: /ffa [join|reload|arena ...]
+  ffastats:
+    description: View FFA stats
+    usage: /ffastats [player]
+  ffaarena:
+    permission: smpplugin.admin.ffa
+    description: Manage FFA arenas
+    usage: /ffaarena <create|delete|setpos|setdisplay|settings|enable|disable|list|reload>
+  auctionhouse:
+    description: Open the Auction House
+    usage: /auctionhouse [sell|my|claims|cancel|reload]
+    aliases:
+    - ah
+  enderchest:
+    description: Open your custom Ender Chest
+    usage: /enderchest [reload]
+    aliases:
+    - ec
+  ecsee:
+    description: View another player's Ender Chest
+    usage: /ecsee <player>
+    permission: smpplugin.admin.ecsee
+  sell:
+    description: Open sell menu
+    usage: /sell
+  sellhand:
+    description: Sell item in hand
+    usage: /sellhand [amount]
+  sellall:
+    description: Sell all sellable items
+    usage: /sellall
+  sellhistory:
+    description: View sell history
+    usage: /sellhistory
+  sellmulti:
+    description: Open the sell multiplier menu
+    usage: /sellmulti [category]
+  sellmultiplier:
+    description: Open the sell multiplier menu
+    usage: /sellmultiplier [category]
+  sellprogress:
+    description: Open the sell multiplier progress menu
+    usage: /sellprogress [category]
+  topsell:
+    description: View and export sell statistics
+    usage: /topsell [gui|items|volume|sellers|export|reset]
+    aliases:
+    - sellstats
+    permission: smpplugin.admin.sellstats
+  meta:
+    description: Show the item that is currently the farming meta
+    usage: /meta
+    aliases:
+    - farmingmeta
+  worth:
+    description: Open the worth browser or check held item worth
+    usage: /worth [hand|reload]
+    aliases:
+    - prices
+  balance:
+    description: Check balance
+    usage: /balance [player]
+    aliases:
+    - bal
+    - money
+  pay:
+    description: Pay a player
+    usage: /pay <player> <amount>
+  addmoney:
+    description: Add money to a player
+    usage: /addmoney <player> <amount>
+    permission: smpplugin.admin.addmoney
+  removemoney:
+    description: Remove money from a player
+    usage: /removemoney <player> <amount>
+    permission: smpplugin.admin.removemoney
+  setmoney:
+    description: Set a player's money balance
+    usage: /setmoney <player> <amount>
+    permission: smpplugin.admin.setmoney
+  logs:
+    description: View a player's activity log
+    usage: /logs <player>
+    permission: smpplugin.admin.logs
+  addplaytime:
+    description: Add playtime to a player
+    usage: /addplaytime <player> <seconds|1d2h30m>
+    permission: smpplugin.admin.addplaytime
+  addkills:
+    description: Add kills to a player
+    usage: /addkills <player> <amount>
+    permission: smpplugin.admin.addkills
+  adddeaths:
+    description: Add deaths to a player
+    usage: /adddeaths <player> <amount>
+    permission: smpplugin.admin.adddeaths
+  setkills:
+    description: Set a player's kill count
+    usage: /setkills <player> <amount>
+    permission: smpplugin.admin.setkills
+  setdeaths:
+    description: Set a player's death count
+    usage: /setdeaths <player> <amount>
+    permission: smpplugin.admin.setdeaths
+  setplaytime:
+    description: Set a player's playtime
+    usage: /setplaytime <player> <seconds|1d2h30m>
+    permission: smpplugin.admin.setplaytime
+  shards:
+    description: Check shards
+    usage: /shards [player] | /shards everywhere <status|debug> [player]
+  shardpay:
+    description: Pay shards to a player
+    usage: /shardpay <player> <amount>
+  addshards:
+    description: Add shards to a player
+    usage: /addshards <player> <amount>
+    permission: smpplugin.admin.shards
+  removeshards:
+    description: Remove shards from a player
+    usage: /removeshards <player> <amount>
+    permission: smpplugin.admin.shards
+  setshards:
+    description: Set a player's shard balance
+    usage: /setshards <player> <amount>
+    permission: smpplugin.admin.shards
+  crate:
+    description: Manage crates
+    usage: /crate <create|delete|type|open|keys|reload|key|take|set|keyall|add|edit|remove|bind|unbind|listbound|info>
+  crates:
+    description: Open the crates menu
+    usage: /crates
+  keys:
+    description: Open your crate keys menu
+    usage: /keys
+  stats:
+    description: View player stats
+    usage: /stats [player]
+  ping:
+    description: Check your ping or another online player's ping
+    usage: /ping [player]
+  playtime:
+    description: Check your playtime or another player's playtime
+    usage: /playtime [player]
+    aliases:
+    - pt
+  freeze:
+    permission: smpplugin.staff.freeze;smpplugin.admin.freeze
+    description: Freeze or unfreeze a player for moderation
+    usage: /freeze <player> | /freeze reload
+  fly:
+    permission: smpplugin.staff.fly;smpplugin.player.fly
+    description: Toggle flight mode for yourself or another player
+    usage: /fly [player]
+  heal:
+    description: Restore health for yourself or another player
+    usage: /heal [player]
+    permission: smpplugin.staff.heal
+  feed:
+    description: Restore hunger for yourself or another player
+    usage: /feed [player]
+    permission: smpplugin.staff.feed
+  god:
+    description: Toggle god mode for yourself or another player
+    usage: /god [player]
+    permission: smpplugin.staff.god
+  kill:
+    description: Kill yourself after a confirmation menu (blocked in combat)
+    usage: /kill
+  gamemode:
+    description: Change your gamemode or another online player's gamemode
+    usage: /gamemode <mode> [player]
+    aliases:
+    - gm
+    - gmc
+    - gms
+    - gma
+    - gmsp
+    permission: smpplugin.staff.gamemode
+  staffmode:
+    permission: smpplugin.staff.mode;smpplugin.staff.mode.others;smpplugin.admin.staffmode
+    description: Toggle the staff moderation hotbar
+    usage: /staffmode [player|reload]
+    aliases:
+    - staff
+  stafflist:
+    permission: smpplugin.staff.mode.stafflist
+    description: Open the online staff list
+    usage: /stafflist
+  staffchat:
+    description: Send a message to staff chat
+    usage: /staffchat <message>
+    aliases:
+    - sc
+    permission: smpplugin.staff.chat.use
+  helpop:
+    description: Request staff assistance
+    usage: /helpop <message>
+    permission: smpplugin.helpop
+  report:
+    description: Report a player to online staff
+    usage: /report <player> <reason>
+    permission: smpplugin.report
+  rename:
+    description: Rename the item in your hand
+    usage: /rename <name...|reset>
+    permission: smpplugin.staff.rename
+  randomteleport:
+    permission: smpplugin.staff.mode.randomtp
+    description: Teleport to a random online player
+    usage: /randomteleport
+    aliases:
+    - randomtp
+  teleport:
+    description: Staff teleport command suite
+    usage: /teleport <player|here <player>|all|top|x y z [world]>
+    aliases:
+    - tp
+    - tphere
+    - tpall
+    permission: smpplugin.staff.teleport
+  alts:
+    description: View alternate accounts by shared IP history
+    usage: /alts <player>
+    permission: smpplugin.staff.alts
+  vanish:
+    permission: smpplugin.staff.mode.vanish
+    description: Toggle vanish while in staff mode
+    usage: /vanish
+  invsee:
+    permission: smpplugin.staff.invsee;smpplugin.admin.invsee
+    description: View another player's inventory
+    usage: /invsee <player> | /invsee reload
+    aliases:
+    - inventorysee
+  profileviewer:
+    permission: smpplugin.staff.profileviewer
+    description: View a player's profile and homes
+    usage: /profileviewer <player>
+    aliases:
+    - pv
+  punishments:
+    permission: smpplugin.staff.punishments.view
+    description: View a player's punishment history
+    usage: /punishments <player>
+    aliases:
+    - phistory
+  ban:
+    description: Ban a player and record punishment history
+    usage: /ban <player> [reason]
+    permission: smpplugin.staff.punishments.ban
+  tempban:
+    description: Temporarily ban a player and record punishment history
+    usage: '/tempban <player> <time> [reason] (time: 30s, 15m, 2h, 5d, or 5d 15m 30s)'
+    permission: smpplugin.staff.punishments.tempban
+  mute:
+    description: Mute a player and record punishment history
+    usage: /mute <player> [reason]
+    permission: smpplugin.staff.punishments.mute
+  tempmute:
+    description: Temporarily mute a player and record punishment history
+    usage: '/tempmute <player> <time> [reason] (time: 30s, 15m, 2h, 5d, or 5d 15m 30s)'
+    permission: smpplugin.staff.punishments.tempmute
+  warn:
+    description: Warn a player and record punishment history
+    usage: /warn <player> [reason]
+    permission: smpplugin.staff.punishments.warn
+  kick:
+    description: Kick a player and record punishment history
+    usage: /kick <player> [reason]
+    permission: smpplugin.staff.punishments.kick
+  blacklist:
+    description: Blacklist a player and record punishment history
+    usage: /blacklist <player> [reason]
+    permission: smpplugin.staff.punishments.blacklist
+  unban:
+    description: Remove active ban records for a player
+    usage: /unban <player> [reason]
+    aliases:
+    - pardon
+    permission: smpplugin.staff.punishments.unban
+  unmute:
+    description: Remove active mute records for a player
+    usage: /unmute <player> [reason]
+    permission: smpplugin.staff.punishments.unmute
+  unblacklist:
+    description: Remove active blacklist records for a player
+    usage: /unblacklist <player> [reason]
+    permission: smpplugin.staff.punishments.unblacklist
+  bounty:
+    description: Manage bounties
+    usage: /bounty <add|set|info|list> [player] [amount]
+  tpa:
+    description: Request teleport to player
+    usage: /tpa <player>
+  tpahere:
+    description: Request player to teleport to you
+    usage: /tpahere <player>
+  tpaccept:
+    description: Accept a TPA request
+    usage: /tpaccept [player]
+  tpadeny:
+    description: Deny a TPA request
+    usage: /tpadeny [player]
+  tpacancel:
+    description: Cancel your TPA requests
+    usage: /tpacancel
+  tpauto:
+    description: Toggle TPA auto-accept
+    usage: /tpauto
+  tpahereauto:
+    description: Toggle TPA Here auto-accept
+    usage: /tpahereauto
+  leaderboard:
+    description: View leaderboards
+    usage: /leaderboard [type]
+    aliases:
+    - lb
+    - top
+    - leaderboards
+  warp:
+    description: Teleport to a warp
+    usage: /warp [name]
+  warpmanager:
+    permission: smpplugin.admin.warpmanager;smpplugin.admin.setwarp;smpplugin.admin.delwarp
+    description: Manage warp points
+    usage: /warpmanager <create|delete|list> [name]
+  setwarp:
+    permission: smpplugin.admin.warpmanager;smpplugin.admin.setwarp
+    description: Set a warp point
+    usage: /setwarp <name>
+  delwarp:
+    permission: smpplugin.admin.warpmanager;smpplugin.admin.delwarp
+    description: Delete a warp point
+    usage: /delwarp <name>
+  portalmanager:
+    permission: smpplugin.admin.portalmanager
+    description: Manage RTP portal triggers
+    usage: /portalmanager <list|info|create|delete|setcuboid|setdestination|setdisplay|toggle|setpriority|sethologramhere>
+  nightvision:
+    description: Toggle night vision
+    usage: /nightvision
+    aliases:
+    - nv
+  phantom:
+    description: Toggle phantom spawning
+    usage: /phantom
+  findplayer:
+    description: See which dimension and biome an online player is in
+    usage: /findplayer <player>
+    aliases:
+    - fp
+    permission: smpplugin.findplayer
+  settings:
+    description: Open player settings
+    usage: /settings
+  discord:
+    description: Get Discord link
+    usage: /discord
+  twitter:
+    description: Get Twitter/X link
+    usage: /twitter
+  store:
+    description: Get store link
+    usage: /store
+  social:
+    description: Get social links
+    usage: /social
+    aliases:
+    - media
+  rules:
+    description: View server rules
+    usage: /rules
+  safety:
+    description: Read the server safety book, or give it to a player
+    usage: /safety [reload|add <player>|give <player>]
+  help:
+    description: View help
+    usage: /help
+  servers:
+    description: View network server status
+    usage: /servers
+    permission: smpplugin.servers
+  friends:
+    description: Manage friends and follows
+    usage: /friends [list|following|followers|friends|add|remove|search|reload]
+  friend:
+    description: Manage friends and follows
+    usage: /friend [list|following|followers|friends|add|remove|search|reload]
+  billford:
+    description: Open Billford trade
+    usage: /billford
+  spawner:
+    permission: smpplugin.admin.spawner
+    description: Manage Donut-style spawners
+    usage: /spawner [give|info|panel|split|reload|remove]
+    aliases:
+    - spawners
+  spawnstash:
+    permission: smpplugin.staff.spawnstash;smpplugin.admin.spawnstash
+    description: Spawn and manage staff bait stashes
+    usage: /spawnstash [spawn|list|remove|reload] [type]
+  fakeplayer:
+    permission: smpplugin.staff.fakeplayer
+    description: Spawn a packet-based fake player (requires ProtocolLib)
+    usage: /fakeplayer
+  hide:
+    permission: smpplugin.hide.scramble;smpplugin.hide.disguise;smpplugin.hide.admin
+    description: Scramble your identity or disguise as a configured alias
+    usage: /hide <disguise|status|scramble|remove|list>
+  disguise:
+    permission: smpplugin.hide.disguise;smpplugin.hide.admin
+    description: Disguise as a configured alias
+    usage: /disguise <alias>
+  clearlag:
+    description: Manually clear lag entities
+    usage: /clearlag
+    permission: smpplugin.admin.clearlag
+  cuboid:
+    description: Manage cuboid regions
+    usage: /cuboid <wand|create|delete|list|bind <cuboid> <spawn|shard|rtp-zone> <true|false>|reload>
+    permission: smpplugin.admin.cuboid
+  amethysttool:
+    description: Manage amethyst tools
+    usage: /amethysttool give <player> <type> [duration] | /amethysttool reload
+    permission: smpplugin.admin.amethysttool
+  smpplugin:
+    permission: smpplugin.admin.status;smpplugin.admin.reload;smpplugin.admin.statswipe;smpplugin.admin.optimize;smpplugin.admin.setup;smpplugin.admin.features;smpplugin.admin.maintenance
+    description: SmpPlugin administration
+    usage: /smpplugin <status|reload|statswipe|optimize|setup|features|maintenance>
+    aliases:
+    - fsmp
+    - finnishsmp
+  maintenance:
+    permission: smpplugin.admin.maintenance
+    description: Turn maintenance mode on or off
+    usage: /maintenance <on|off|status|setlobby>
+  serverwipe:
+    description: Prepare and run a season wipe (backs up worlds first)
+    usage: /serverwipe <preview|status|prepare|confirm|cancel>
+    permission: smpplugin.admin.serverwipe
+  amod:
+    description: Manage anvil moderation banned words
+    usage: /amod <add|reload> [word]
+    permission: smpplugin.admin.anvilmod
+  anticheat:
+    permission: smpplugin.security.alerts;smpplugin.security.inspect;smpplugin.security.manage
+    description: Anti-cheat alerts, evidence, profiles, ban queue, exemptions and status
+    usage: /anticheat <alerts|status|checks|history|evidence|profile|bans|exempt|reset|reload>
+    aliases:
+    - ac
+  coinflip:
+    description: Open CoinFlip - 1v1 coin flips for in-game currency
+    usage: /coinflip [create|browse|join|cancel|challenge|accept|deny|rematch|history|stats|top|practice|settings|help]
+    permission: smpplugin.coinflip.use
+    aliases:
+    - cf
+  coinflipadmin:
+    description: CoinFlip staff tools - status, inspect, audit, cancel, recover, reconcile, resolve
+    usage: /coinflipadmin <status|inspect|audit|cancel|recover|reconcile|resolve|stats|resetstats|disable|enable|reload|refresh|debug>
+    permission: smpplugin.coinflip.inspect
+    aliases:
+    - cfadmin
+  afklounge:
+    description: Manage AFK Lounge settings
+    usage: /afklounge <setlocation|border|info>
+    permission: smpplugin.admin.afklounge
+# BEGIN GENERATED PERMISSIONS - edit PermissionRegistry.java, not this section
+permissions:
+  smpplugin.admin:
+    description: 'Default-op administrator bundle: staff tools, administration and operational bypasses. Excludes destructive actions and security bypasses.'
+    default: op
+    children:
+      smpplugin.staff.mode: true
+      smpplugin.staff.mode.vanish: true
+      smpplugin.staff.mode.stafflist: true
+      smpplugin.staff.mode.betterview: true
+      smpplugin.staff.mode.randomtp: true
+      smpplugin.staff.mode.seevanished: true
+      smpplugin.staff.mode.others: true
+      smpplugin.staff.freeze: true
+      smpplugin.staff.freeze.alert: true
+      smpplugin.staff.fly: true
+      smpplugin.staff.heal: true
+      smpplugin.staff.feed: true
+      smpplugin.staff.god: true
+      smpplugin.staff.gamemode: true
+      smpplugin.staff.gamemode.others: true
+      smpplugin.staff.chat.use: true
+      smpplugin.staff.chat.mute: true
+      smpplugin.staff.chat.unmute: true
+      smpplugin.staff.chat.delay: true
+      smpplugin.staff.chat.clear: true
+      smpplugin.staff.helpop.receive: true
+      smpplugin.staff.report.receive: true
+      smpplugin.staff.alerts.receive: true
+      smpplugin.staff.teleport: true
+      smpplugin.staff.rename: true
+      smpplugin.staff.alts: true
+      smpplugin.staff.invsee: true
+      smpplugin.staff.profileviewer: true
+      smpplugin.staff.punishments.view: true
+      smpplugin.staff.punishments.ban: true
+      smpplugin.staff.punishments.tempban: true
+      smpplugin.staff.punishments.mute: true
+      smpplugin.staff.punishments.tempmute: true
+      smpplugin.staff.punishments.warn: true
+      smpplugin.staff.punishments.kick: true
+      smpplugin.staff.punishments.blacklist: true
+      smpplugin.staff.punishments.unban: true
+      smpplugin.staff.punishments.unmute: true
+      smpplugin.staff.punishments.unblacklist: true
+      smpplugin.staff.fakeplayer: true
+      smpplugin.staff.fakeplayer.alert: true
+      smpplugin.staff.spawnstash: true
+      smpplugin.staff.spawnstash.alert: true
+      smpplugin.security.alerts: true
+      smpplugin.security.inspect: true
+      smpplugin.coinflip.alerts: true
+      smpplugin.coinflip.inspect: true
+      smpplugin.admin.status: true
+      smpplugin.admin.reload: true
+      smpplugin.admin.optimize: true
+      smpplugin.admin.setup: true
+      smpplugin.admin.features: true
+      smpplugin.admin.maintenance: true
+      smpplugin.admin.updatenotify: true
+      smpplugin.admin.shop: true
+      smpplugin.admin.orders: true
+      smpplugin.admin.auctionhouse: true
+      smpplugin.admin.duels: true
+      smpplugin.admin.ffa: true
+      smpplugin.admin.clearlag: true
+      smpplugin.admin.cuboid: true
+      smpplugin.admin.warpmanager: true
+      smpplugin.admin.setwarp: true
+      smpplugin.admin.delwarp: true
+      smpplugin.admin.portalmanager: true
+      smpplugin.admin.setspawn: true
+      smpplugin.admin.setafk: true
+      smpplugin.admin.teleportareas.delete: true
+      smpplugin.admin.afklounge: true
+      smpplugin.admin.amethysttool: true
+      smpplugin.admin.worth: true
+      smpplugin.admin.sellstats: true
+      smpplugin.admin.enderchest: true
+      smpplugin.admin.ecsee: true
+      smpplugin.admin.freeze: true
+      smpplugin.admin.staffmode: true
+      smpplugin.admin.invsee: true
+      smpplugin.admin.spawner: true
+      smpplugin.admin.crate: true
+      smpplugin.admin.crate.reload: true
+      smpplugin.admin.crate.keyall: true
+      smpplugin.admin.shards: true
+      smpplugin.admin.addmoney: true
+      smpplugin.admin.removemoney: true
+      smpplugin.admin.addkills: true
+      smpplugin.admin.adddeaths: true
+      smpplugin.admin.addplaytime: true
+      smpplugin.admin.lobby.setlobby: true
+      smpplugin.admin.lobby.border: true
+      smpplugin.admin.lobby.reload: true
+      smpplugin.admin.lobby.debug: true
+      smpplugin.admin.logs: true
+      smpplugin.admin.spawnstash: true
+      smpplugin.admin.anvilmod: true
+      smpplugin.admin.safety.reload: true
+      smpplugin.admin.safety.give: true
+      smpplugin.admin.friends: true
+      smpplugin.hide.admin: true
+      smpplugin.security.manage: true
+      smpplugin.coinflip.admin.cancel: true
+      smpplugin.coinflip.admin.recover: true
+      smpplugin.coinflip.admin.reload: true
+      smpplugin.coinflip.admin.toggle: true
+      smpplugin.bypass.lobby: true
+      smpplugin.bypass.lobby.border: true
+      smpplugin.admin.maintenance.bypass: true
+  smpplugin.message:
+    description: 'Send private messages with /msg and reply with /reply.'
+    default: true
+  smpplugin.message.toggle:
+    description: 'Turn receiving private messages on or off with /pm.'
+    default: true
+  smpplugin.ignore:
+    description: 'Add and remove players from your ignore list.'
+    default: true
+  smpplugin.helpop:
+    description: 'Ask online staff for help with /helpop.'
+    default: true
+  smpplugin.report:
+    description: 'Report a player to staff with /report.'
+    default: true
+  smpplugin.enderchest:
+    description: 'Open your own custom Ender Chest with /enderchest.'
+    default: true
+  smpplugin.coinflip.use:
+    description: 'Open /coinflip: browse matches, view statistics, history, leaderboards, achievements and settings.'
+    default: true
+  smpplugin.coinflip.create:
+    description: 'Create public CoinFlip matches with in-game currency.'
+    default: true
+  smpplugin.coinflip.join:
+    description: 'Join CoinFlip matches and accept challenges.'
+    default: true
+  smpplugin.coinflip.challenge:
+    description: 'Send private CoinFlip challenges and rematches.'
+    default: true
+  smpplugin.coinflip.practice:
+    description: 'Flip practice coins (no currency).'
+    default: true
+  smpplugin.findplayer:
+    description: 'See which dimension and biome another online player is in with /findplayer.'
+    default: true
+  smpplugin.friends:
+    description: 'Use /friends to add, remove and follow friends.'
+    default: true
+  smpplugin.lobby:
+    description: 'Use /lobby and /lobby survival.'
+    default: true
+  smpplugin.safety.use:
+    description: 'Read the server safety book with /safety.'
+    default: true
+  smpplugin.auctionhouse.use:
+    description: 'Open and browse the Auction House.'
+    default: true
+  smpplugin.auctionhouse.limit:
+    description: 'See your Auction House listing limit with /ah limit.'
+    default: true
+  smpplugin.auctionhouse.sell:
+    description: 'List your own items on the Auction House.'
+    default: true
+  smpplugin.auctionhouse.buy:
+    description: 'Buy Auction House listings.'
+    default: true
+  smpplugin.auctionhouse.cancel:
+    description: 'Cancel your own active Auction House listings.'
+    default: true
+  smpplugin.auctionhouse.claims:
+    description: 'Collect your own sold, expired and cancelled Auction House items.'
+    default: true
+  smpplugin.auctionhouse.my:
+    description: 'View your own Auction House listings.'
+    default: true
+  smpplugin.auctionhouse.fastbuy:
+    description: 'Allow the quick-purchase setting that skips the Auction House buy confirmation.'
+    default: false
+  smpplugin.auctionhouse.fastsell:
+    description: 'Allow the quick-sell setting for Auction House listings.'
+    default: false
+  smpplugin.donutplus:
+    description: 'Show the Donut+ badge (player setting).'
+    default: false
+  smpplugin.donutplusplus:
+    description: 'Donut++ rank: unlocks the second page of Auction House listing slots.'
+    default: false
+  smpplugin.donutplusplusplus:
+    description: 'Donut+++ rank: same Auction House slots as Donut++.'
+    default: false
+  smpplugin.rtp.priority.vip++:
+    description: 'RTP waiting-queue priority 30 (rtp.yml PRIORITY-QUEUE).'
+    default: false
+  smpplugin.rtp.priority.vip+:
+    description: 'RTP waiting-queue priority 20 (rtp.yml PRIORITY-QUEUE).'
+    default: false
+  smpplugin.rtp.priority.vip:
+    description: 'RTP waiting-queue priority 10 (rtp.yml PRIORITY-QUEUE).'
+    default: false
+  smpplugin.rtp.priority.high:
+    description: 'RTP waiting-queue priority 5 (rtp.yml PRIORITY-QUEUE).'
+    default: false
+  smpplugin.rtp.cooldown.vip++:
+    description: '3-second RTP cooldown (rtp.yml RANK-COOLDOWNS).'
+    default: false
+  smpplugin.rtp.cooldown.vip+:
+    description: '10-second RTP cooldown (rtp.yml RANK-COOLDOWNS).'
+    default: false
+  smpplugin.rtp.cooldown.vip:
+    description: '15-second RTP cooldown (rtp.yml RANK-COOLDOWNS).'
+    default: false
+  smpplugin.player.fly:
+    description: 'Fly with /fly where the server allows player flight (config FLY-SYSTEM).'
+    default: false
+  smpplugin.shards.everywhere:
+    description: 'Receive passive Shards Everywhere income.'
+    default: false
+  smpplugin.servers:
+    description: 'Open the network server status menu with /servers.'
+    default: false
+  smpplugin.hide.scramble:
+    description: 'Scramble your displayed name with /hide scramble.'
+    default: false
+  smpplugin.hide.disguise:
+    description: 'Disguise as a configured alias with /hide disguise.'
+    default: false
+  smpplugin.staff.mode:
+    description: 'Enter staff mode. Each hotbar tool still needs its own permission.'
+    default: false
+  smpplugin.staff.mode.vanish:
+    description: 'Use vanish (staff-mode hotbar and /vanish).'
+    default: false
+  smpplugin.staff.mode.stafflist:
+    description: 'Open the staff list.'
+    default: false
+  smpplugin.staff.mode.betterview:
+    description: 'Toggle better view from the staff-mode hotbar.'
+    default: false
+  smpplugin.staff.mode.randomtp:
+    description: 'Teleport to a random player from the staff-mode hotbar.'
+    default: false
+  smpplugin.staff.mode.seevanished:
+    description: 'See vanished staff members.'
+    default: false
+  smpplugin.staff.mode.others:
+    description: 'Toggle staff mode for other players.'
+    default: false
+  smpplugin.staff.freeze:
+    description: 'Freeze and unfreeze players.'
+    default: false
+  smpplugin.staff.freeze.alert:
+    description: 'Receive freeze alerts.'
+    default: false
+  smpplugin.staff.fly:
+    description: 'Toggle flight for yourself or others with /fly.'
+    default: false
+  smpplugin.staff.heal:
+    description: 'Heal yourself or others with /heal.'
+    default: false
+  smpplugin.staff.feed:
+    description: 'Feed yourself or others with /feed.'
+    default: false
+  smpplugin.staff.god:
+    description: 'Toggle god mode with /god.'
+    default: false
+  smpplugin.staff.gamemode:
+    description: 'Change your own game mode.'
+    default: false
+  smpplugin.staff.gamemode.others:
+    description: 'Change another player''s game mode.'
+    default: false
+  smpplugin.staff.chat.use:
+    description: 'Send and read staff chat.'
+    default: false
+  smpplugin.staff.chat.mute:
+    description: 'Mute global chat.'
+    default: false
+  smpplugin.staff.chat.unmute:
+    description: 'Unmute global chat.'
+    default: false
+  smpplugin.staff.chat.delay:
+    description: 'Set the global chat slow-mode delay.'
+    default: false
+  smpplugin.staff.chat.clear:
+    description: 'Clear global chat.'
+    default: false
+  smpplugin.staff.helpop.receive:
+    description: 'Receive /helpop alerts.'
+    default: false
+  smpplugin.staff.report.receive:
+    description: 'Receive /report alerts.'
+    default: false
+  smpplugin.staff.alerts.receive:
+    description: 'Receive both /helpop and /report alerts.'
+    default: false
+    children:
+      smpplugin.staff.helpop.receive: true
+      smpplugin.staff.report.receive: true
+  smpplugin.staff.teleport:
+    description: 'Use the staff /teleport suite (/tp, /tphere, /tpall, /tp top).'
+    default: false
+  smpplugin.staff.rename:
+    description: 'Rename the held item with /rename.'
+    default: false
+  smpplugin.staff.alts:
+    description: 'See accounts that share an IP address with /alts.'
+    default: false
+  smpplugin.staff.invsee:
+    description: 'View another player''s inventory (read-only).'
+    default: false
+  smpplugin.staff.profileviewer:
+    description: 'View player profiles and homes with /profileviewer.'
+    default: false
+  smpplugin.staff.punishments.view:
+    description: 'View punishment history with /punishments.'
+    default: false
+  smpplugin.staff.punishments.ban:
+    description: 'Permanently ban players with /ban. Also grants /tempban.'
+    default: false
+    children:
+      smpplugin.staff.punishments.tempban: true
+  smpplugin.staff.punishments.tempban:
+    description: 'Temporarily ban players with /tempban.'
+    default: false
+  smpplugin.staff.punishments.mute:
+    description: 'Permanently mute players with /mute. Also grants /tempmute.'
+    default: false
+    children:
+      smpplugin.staff.punishments.tempmute: true
+  smpplugin.staff.punishments.tempmute:
+    description: 'Temporarily mute players with /tempmute.'
+    default: false
+  smpplugin.staff.punishments.warn:
+    description: 'Warn players with /warn.'
+    default: false
+  smpplugin.staff.punishments.kick:
+    description: 'Kick players with /kick.'
+    default: false
+  smpplugin.staff.punishments.blacklist:
+    description: 'Blacklist players with /blacklist.'
+    default: false
+  smpplugin.staff.punishments.unban:
+    description: 'Lift bans with /unban (/pardon).'
+    default: false
+  smpplugin.staff.punishments.unmute:
+    description: 'Lift mutes with /unmute.'
+    default: false
+  smpplugin.staff.punishments.unblacklist:
+    description: 'Lift blacklists with /unblacklist.'
+    default: false
+  smpplugin.staff.fakeplayer:
+    description: 'Spawn fake players with /fakeplayer.'
+    default: false
+  smpplugin.staff.fakeplayer.alert:
+    description: 'Receive fake-player alerts.'
+    default: false
+  smpplugin.staff.spawnstash:
+    description: 'Spawn and manage bait stashes with /spawnstash.'
+    default: false
+  smpplugin.staff.spawnstash.alert:
+    description: 'Receive alerts when a bait stash is found.'
+    default: false
+  smpplugin.security.alerts:
+    description: 'Receive anti-cheat alerts and toggle them with /anticheat alerts.'
+    default: false
+  smpplugin.security.inspect:
+    description: 'View anti-cheat status, check settings, flag history and evidence.'
+    default: false
+  smpplugin.coinflip.alerts:
+    description: 'Receive CoinFlip storage and settlement alerts.'
+    default: false
+  smpplugin.coinflip.inspect:
+    description: '/coinflipadmin status, inspect, audit, reconcile report, debug and any player''s statistics.'
+    default: false
+  smpplugin.admin.status:
+    description: 'View /smpplugin status (platform, storage, integrations, anti-Xray).'
+    default: false
+  smpplugin.admin.reload:
+    description: 'Reload configuration with /smpplugin reload.'
+    default: false
+  smpplugin.admin.optimize:
+    description: 'View and change runtime optimization with /smpplugin optimize.'
+    default: false
+  smpplugin.admin.setup:
+    description: 'Use the /smpplugin setup wizard.'
+    default: false
+  smpplugin.admin.features:
+    description: 'Turn features on and off with /smpplugin features.'
+    default: false
+  smpplugin.admin.maintenance:
+    description: 'Turn maintenance mode on and off.'
+    default: false
+  smpplugin.admin.updatenotify:
+    description: 'See the update-available notice on join.'
+    default: false
+  smpplugin.admin.shop:
+    description: 'Reload and validate shop settings.'
+    default: false
+  smpplugin.admin.orders:
+    description: 'Administer the Orders board.'
+    default: false
+  smpplugin.admin.auctionhouse:
+    description: 'Administer the Auction House; also passes every Auction House action check.'
+    default: false
+  smpplugin.admin.duels:
+    description: 'Manage duels and duel arenas.'
+    default: false
+  smpplugin.admin.ffa:
+    description: 'Manage FFA and FFA arenas.'
+    default: false
+  smpplugin.admin.clearlag:
+    description: 'Run /clearlag.'
+    default: false
+  smpplugin.admin.cuboid:
+    description: 'Manage cuboid regions.'
+    default: false
+  smpplugin.admin.warpmanager:
+    description: 'Manage warps with /warpmanager.'
+    default: false
+  smpplugin.admin.setwarp:
+    description: 'Create warps with /setwarp.'
+    default: false
+  smpplugin.admin.delwarp:
+    description: 'Delete warps with /delwarp.'
+    default: false
+  smpplugin.admin.portalmanager:
+    description: 'Manage RTP portals.'
+    default: false
+  smpplugin.admin.setspawn:
+    description: 'Set the server spawn.'
+    default: false
+  smpplugin.admin.setafk:
+    description: 'Create, delete and list AFK zones.'
+    default: false
+  smpplugin.admin.teleportareas.delete:
+    description: 'Delete AFK and teleport areas from their menus.'
+    default: false
+  smpplugin.admin.afklounge:
+    description: 'Configure the AFK Lounge.'
+    default: false
+  smpplugin.admin.amethysttool:
+    description: 'Give amethyst tools.'
+    default: false
+  smpplugin.admin.worth:
+    description: 'Reload worth settings.'
+    default: false
+  smpplugin.admin.sellstats:
+    description: 'View and export sell statistics with /topsell. Resetting them needs smpplugin.admin.statswipe.'
+    default: false
+  smpplugin.admin.enderchest:
+    description: 'Reload custom Ender Chest settings.'
+    default: false
+  smpplugin.admin.ecsee:
+    description: 'View another player''s Ender Chest with /ecsee (read-only).'
+    default: false
+  smpplugin.admin.freeze:
+    description: 'Reload freeze settings and freeze exempt players.'
+    default: false
+  smpplugin.admin.staffmode:
+    description: 'Reload staff-mode settings.'
+    default: false
+  smpplugin.admin.invsee:
+    description: 'Reload invsee settings.'
+    default: false
+  smpplugin.admin.spawner:
+    description: 'Give and manage managed spawners.'
+    default: false
+  smpplugin.admin.crate:
+    description: 'Create, edit and bind crates; give and take keys.'
+    default: false
+  smpplugin.admin.crate.reload:
+    description: 'Reload crate settings.'
+    default: false
+  smpplugin.admin.crate.keyall:
+    description: 'Start a key-all manually.'
+    default: false
+  smpplugin.admin.shards:
+    description: 'Add and remove shards; inspect Shards Everywhere.'
+    default: false
+  smpplugin.admin.addmoney:
+    description: 'Add money to a balance.'
+    default: false
+  smpplugin.admin.removemoney:
+    description: 'Remove money from a balance.'
+    default: false
+  smpplugin.admin.addkills:
+    description: 'Add kills to a player.'
+    default: false
+  smpplugin.admin.adddeaths:
+    description: 'Add deaths to a player.'
+    default: false
+  smpplugin.admin.addplaytime:
+    description: 'Add playtime to a player.'
+    default: false
+  smpplugin.admin.lobby.setlobby:
+    description: 'Set the lobby location with /setlobby.'
+    default: false
+  smpplugin.admin.lobby.border:
+    description: 'View or change the lobby border.'
+    default: false
+  smpplugin.admin.lobby.reload:
+    description: 'Reload lobby.yml.'
+    default: false
+  smpplugin.admin.lobby.debug:
+    description: 'Toggle lobby debug output.'
+    default: false
+  smpplugin.admin.logs:
+    description: 'View a player''s activity log with /logs.'
+    default: false
+  smpplugin.admin.spawnstash:
+    description: 'Administer bait stashes (reload, remove any).'
+    default: false
+  smpplugin.admin.anvilmod:
+    description: 'Manage anvil moderation words (/amod) and bypass its filter.'
+    default: false
+  smpplugin.admin.safety.reload:
+    description: 'Reload the safety book.'
+    default: false
+  smpplugin.admin.safety.give:
+    description: 'Give the safety book to a player.'
+    default: false
+  smpplugin.admin.friends:
+    description: 'Use administrative /friends subcommands.'
+    default: false
+  smpplugin.hide.admin:
+    description: 'Manage other players'' hide and disguise state.'
+    default: false
+  smpplugin.security.manage:
+    description: 'Grant temporary anti-cheat exemptions, reset violation levels and reload anticheat.yml.'
+    default: false
+  smpplugin.coinflip.admin.cancel:
+    description: 'Cancel and refund a waiting CoinFlip match (a reason is required and audited).'
+    default: false
+  smpplugin.coinflip.admin.recover:
+    description: 'Retry stuck CoinFlip payouts and reconcile held matches from the journal.'
+    default: false
+  smpplugin.coinflip.admin.reload:
+    description: 'Reload coinflip.yml and coinflip-messages.yml and refresh leaderboards.'
+    default: false
+  smpplugin.coinflip.admin.toggle:
+    description: 'Pause or resume CoinFlip wagering for everyone.'
+    default: false
+  smpplugin.bypass.lobby:
+    description: 'Ignore lobby protection and the lobby border (needed to build the lobby).'
+    default: false
+  smpplugin.bypass.lobby.border:
+    description: 'Ignore only the lobby border.'
+    default: false
+  smpplugin.admin.maintenance.bypass:
+    description: 'Join and stay on the server during maintenance.'
+    default: false
+  smpplugin.ignore.bypass:
+    description: 'Message players who ignore you.'
+    default: false
+  smpplugin.message.bypass-disabled:
+    description: 'Message players who turned private messages off.'
+    default: false
+  smpplugin.staff.chat.bypass.mute:
+    description: 'Talk while global chat is muted.'
+    default: false
+  smpplugin.staff.chat.bypass.delay:
+    description: 'Ignore the chat slow-mode delay.'
+    default: false
+  smpplugin.staff.chat.bypass.filter:
+    description: 'Bypass the chat filter.'
+    default: false
+  smpplugin.staff.freeze.exempt:
+    description: 'Cannot be frozen by staff without smpplugin.admin.freeze.'
+    default: false
+  smpplugin.staff.alerts.bypass-cooldown:
+    description: 'Skip the /helpop and /report cooldowns.'
+    default: false
+  smpplugin.admin.spawner.seeall:
+    description: 'See spawners that anti-ESP hides from other players.'
+    default: false
+  smpplugin.hide.bypass:
+    description: 'See the real names behind hidden and disguised players.'
+    default: false
+  smpplugin.preventdrop.bypass:
+    description: 'Drop items where item dropping is blocked.'
+    default: false
+  smpplugin.staff.fakeplayer.bypass:
+    description: 'Not affected by fake-player restrictions.'
+    default: false
+  smpplugin.staff.spawnstash.bypass:
+    description: 'Do not trigger bait-stash alerts.'
+    default: false
+  smpplugin.bypass.anticheat.movement:
+    description: 'Skip anti-cheat movement checks (fly, speed, timer, no-fall, step, water walk, boat fly). Use is logged once per session.'
+    default: false
+  smpplugin.bypass.anticheat.combat:
+    description: 'Skip anti-cheat combat checks (reach, wall hit, kill aura, autoclicker, anti-knockback, criticals). Use is logged.'
+    default: false
+  smpplugin.bypass.anticheat.world:
+    description: 'Skip anti-cheat block checks (fast break, nuker, fast place, block reach, scaffold, through-wall, x-ray). Use is logged.'
+    default: false
+  smpplugin.bypass.anticheat.player:
+    description: 'Skip anti-cheat inventory, auto-totem and cheat-client checks. Use is logged.'
+    default: false
+  smpplugin.coinflip.admin.resolve:
+    description: 'Decide unknown CoinFlip transactions (applied or not); can create claims, so it is never bundled.'
+    default: false
+  smpplugin.coinflip.admin.resetstats:
+    description: 'Reset a player''s CoinFlip statistics (a reason is required and audited).'
+    default: false
+  smpplugin.admin.serverwipe:
+    description: 'Run the season wipe workflow (/serverwipe).'
+    default: false
+  smpplugin.admin.statswipe:
+    description: 'Wipe stats with /smpplugin statswipe.'
+    default: false
+  smpplugin.staff.punishments.delete:
+    description: 'Delete punishment records from history.'
+    default: false
+  smpplugin.admin.setmoney:
+    description: 'Overwrite a player''s balance with /setmoney.'
+    default: false
+  smpplugin.admin.setkills:
+    description: 'Overwrite a player''s kill count.'
+    default: false
+  smpplugin.admin.setdeaths:
+    description: 'Overwrite a player''s death count.'
+    default: false
+  smpplugin.admin.setplaytime:
+    description: 'Overwrite a player''s playtime.'
+    default: false
+  smpplugin.staff.invsee.modify:
+    description: 'Edit another player''s inventory through invsee.'
+    default: false
+  smpplugin.admin.ecsee.edit:
+    description: 'Edit another player''s Ender Chest through /ecsee.'
+    default: false
+  smpplugin.staff.punishments.create:
+    description: 'Legacy bundle: every punishment-creating action.'
+    default: false
+    children:
+      smpplugin.staff.punishments.warn: true
+      smpplugin.staff.punishments.kick: true
+      smpplugin.staff.punishments.ban: true
+      smpplugin.staff.punishments.tempban: true
+      smpplugin.staff.punishments.mute: true
+      smpplugin.staff.punishments.tempmute: true
+      smpplugin.staff.punishments.blacklist: true
+  smpplugin.staff.punishments.remove:
+    description: 'Legacy bundle: lift bans, mutes and blacklists.'
+    default: false
+    children:
+      smpplugin.staff.punishments.unban: true
+      smpplugin.staff.punishments.unmute: true
+      smpplugin.staff.punishments.unblacklist: true
+  smpplugin.legacy.staff-mode-bundle:
+    description: 'Everything smpplugin.staff.mode granted in 1.5.'
+    default: false
+    children:
+      smpplugin.staff.mode: true
+      smpplugin.staff.freeze: true
+      smpplugin.staff.freeze.alert: true
+      smpplugin.staff.fly: true
+      smpplugin.staff.heal: true
+      smpplugin.staff.feed: true
+      smpplugin.staff.gamemode: true
+      smpplugin.staff.gamemode.others: true
+      smpplugin.staff.mode.vanish: true
+      smpplugin.staff.mode.stafflist: true
+      smpplugin.staff.mode.betterview: true
+      smpplugin.staff.mode.randomtp: true
+      smpplugin.staff.mode.seevanished: true
+      smpplugin.staff.mode.others: true
+      smpplugin.staff.chat.use: true
+      smpplugin.staff.teleport: true
+      smpplugin.staff.rename: true
+      smpplugin.staff.alts: true
+      smpplugin.staff.alerts.receive: true
+      smpplugin.staff.alerts.bypass-cooldown: true
+      smpplugin.staff.invsee: true
+      smpplugin.staff.profileviewer: true
+      smpplugin.staff.punishments.view: true
+      smpplugin.staff.punishments.create: true
+      smpplugin.staff.punishments.remove: true
+  anvilmod.admin:
+    description: 'Legacy name for smpplugin.admin.anvilmod.'
+    default: false
+    children:
+      smpplugin.admin.anvilmod: true
+  safety.use:
+    description: 'Legacy name for smpplugin.safety.use.'
+    default: false
+    children:
+      smpplugin.safety.use: true
+  safety.reload:
+    description: 'Legacy name for smpplugin.admin.safety.reload.'
+    default: false
+    children:
+      smpplugin.admin.safety.reload: true
+  safety.add:
+    description: 'Legacy name for smpplugin.admin.safety.give.'
+    default: false
+    children:
+      smpplugin.admin.safety.give: true
+  smpplugin.updatechecker:
+    description: 'Legacy name for smpplugin.admin.updatenotify.'
+    default: false
+    children:
+      smpplugin.admin.updatenotify: true
+  donutfriends.admin:
+    description: 'Legacy name for smpplugin.admin.friends.'
+    default: false
+    children:
+      smpplugin.admin.friends: true
+  donutauction.use:
+    description: 'Legacy name for smpplugin.auctionhouse.use.'
+    default: false
+    children:
+      smpplugin.auctionhouse.use: true
+  donutauction.sell:
+    description: 'Legacy name for smpplugin.auctionhouse.sell.'
+    default: false
+    children:
+      smpplugin.auctionhouse.sell: true
+  donutauction.buy:
+    description: 'Legacy name for smpplugin.auctionhouse.buy.'
+    default: false
+    children:
+      smpplugin.auctionhouse.buy: true
+  donutauction.cancel:
+    description: 'Legacy name for smpplugin.auctionhouse.cancel.'
+    default: false
+    children:
+      smpplugin.auctionhouse.cancel: true
+  donutauction.claims:
+    description: 'Legacy name for smpplugin.auctionhouse.claims.'
+    default: false
+    children:
+      smpplugin.auctionhouse.claims: true
+  donutauction.my:
+    description: 'Legacy name for smpplugin.auctionhouse.my.'
+    default: false
+    children:
+      smpplugin.auctionhouse.my: true
+  donutauction.limit:
+    description: 'Legacy name for smpplugin.auctionhouse.limit.'
+    default: false
+    children:
+      smpplugin.auctionhouse.limit: true
+  donutauction.fastbuy:
+    description: 'Legacy name for smpplugin.auctionhouse.fastbuy.'
+    default: false
+    children:
+      smpplugin.auctionhouse.fastbuy: true
+  donutauction.fastsell:
+    description: 'Legacy name for smpplugin.auctionhouse.fastsell.'
+    default: false
+    children:
+      smpplugin.auctionhouse.fastsell: true
+# END GENERATED PERMISSIONS

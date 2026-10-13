@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.bx.smpPlugin.coinflip.CoinFlipServiceTest
+-------------------------------------------------------------------------------
+Tests run: 12, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.133 s -- in com.bx.smpPlugin.coinflip.CoinFlipServiceTest

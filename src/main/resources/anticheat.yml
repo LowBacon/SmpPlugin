@@ -1,0 +1,418 @@
+# SmpPlugin anti-cheat
+#
+# Server-side checks: they judge what the server can observe (movement, hits, block actions,
+# inventory use, mining patterns). A server cannot switch off client mods; it refuses impossible
+# actions, collects evidence, and removes players who keep failing checks.
+#
+# Each flag adds to the player's violation level (VL) for that check. VL decays over time.
+#   ALERT-AT   staff with smpplugin.security.alerts are told
+#   ACTION-AT  the check corrects the player: movement is set back to the last safe position,
+#              a hit, block or inventory action is cancelled, skipped fall damage is applied.
+#              0 = never act, alert only.
+#   KICK-AT    the player is kicked (needs ENFORCEMENT.KICKS: true). 0 = never.
+#   BAN-AT     the player is banned or queued for a ban, see ENFORCEMENT.BANS. 0 = never.
+#
+# Changes apply with /anticheat reload. See docs/anticheat.md for what each check can and cannot catch.
+
+ENABLED: true
+
+ALERTS:
+  # Minimum seconds between alerts for the same player and check.
+  COOLDOWN-SECONDS: 3
+  # Also write alerts to the server console.
+  CONSOLE: true
+  # Placeholders: {player} {check} {detail} {vl} {ping} {id} {world} {x} {y} {z}
+  FORMAT: '&8[&cAC&8] &f{player} &7failed &c{check} &8(&7{detail}&8) &7vl &f{vl} &7ping &f{ping}ms &8#{id}'
+
+ACTIONS:
+  # Shown to kicked players. {id} is the evidence ID staff can look up with /anticheat evidence <id>.
+  KICK-MESSAGE: "&cYou were removed by the server anti-cheat.\n&7Evidence ID: &f{id}\n&7Contact staff if this was a mistake."
+
+ENFORCEMENT:
+  # Master switch for every KICK-AT value.
+  KICKS: true
+  # What happens when a check reaches BAN-AT:
+  #   OFF    never ban
+  #   QUEUE  kick the player and put them on the ban queue; staff review it with /anticheat bans
+  #          and approve or deny each ban (the safe default while thresholds are tuned for your server)
+  #   AUTO   kick the player and ban them in the next ban wave. Waves run every BAN-WAVE-MINUTES so a
+  #          cheater cannot tell which module was detected. Staff can still deny a ban before the wave.
+  BANS: QUEUE
+  # Console command used for a ban. Placeholders: {player} {uuid} {check} {id}
+  BAN-COMMAND: 'tempban {player} 30d Unfair advantage (anti-cheat #{id})'
+  BAN-WAVE-MINUTES: 20
+  # Kick a player at the moment they are put on the ban queue.
+  KICK-ON-QUEUE: true
+  # Several different checks at alert level within a short window is much stronger evidence than one
+  # check alone. Reaching DISTINCT-CHECKS puts the player on the ban queue (unless BANS is OFF).
+  MULTI-CHECK:
+    ENABLED: true
+    DISTINCT-CHECKS: 4
+    WINDOW-MINUTES: 10
+  # After the server itself lags, timing-based checks (timer, anti-knockback) pause for this long so
+  # server lag is never blamed on players.
+  SERVER-LAG-GRACE-MS: 2000
+
+CLIENT-SCAN:
+  # A few seconds after joining, compare the client's self-reported brand (Paper and Purpur only) and
+  # its registered mod channels with known cheat clients. Clients can hide this, so it only catches
+  # the ones that do not; it never clears anyone.
+  ENABLED: true
+  DELAY-TICKS: 60
+  # Case-insensitive substrings.
+  BLOCKED-BRANDS:
+  - wurst
+  - meteor
+  - aristois
+  - liquidbounce
+  - rusherhack
+  - thunderhack
+  - inertia
+  - boze
+  - konas
+  - salhack
+  - phobos
+  - future client
+  BLOCKED-CHANNELS:
+  - wurst
+  - meteor-client
+  - aristois
+  - liquidbounce
+  - rusherhack
+  - thunderhack
+  - boze
+
+EVIDENCE:
+  # Write every flag to plugins/SmpPlugin/anticheat/evidence-YYYY-MM-DD.log (one JSON object per line).
+  FILE-LOGGING: true
+  # Evidence files older than this are deleted at startup.
+  RETENTION-DAYS: 14
+  # Recent flags kept in memory per player for /anticheat history.
+  MEMORY-PER-PLAYER: 50
+
+BEDROCK:
+  # Bedrock players (via Floodgate) move, aim and use inventories differently from Java players.
+  # These checks are skipped for them to avoid false positives. Block and mining checks still apply.
+  SKIP-CHECKS:
+  - FLY
+  - SPEED
+  - KILLAURA
+  - AUTOCLICKER
+  - WALL-HIT
+  - TIMER
+  - NOFALL
+  - STEP
+  - JESUS
+  - VELOCITY
+  - CRITICALS
+  - SCAFFOLD
+  - INVENTORY
+  - AUTO-TOTEM
+
+# Short, automatic grace periods (milliseconds) after events that legitimately cause unusual movement.
+EXEMPTIONS:
+  TELEPORT-MS: 2000
+  JOIN-MS: 3000
+  RESPAWN-MS: 2000
+  DAMAGE-MS: 700
+  # Knockback, wind charges, explosions, mace wind burst, spear lunge: base + per block/tick of velocity.
+  VELOCITY-BASE-MS: 1000
+  VELOCITY-PER-BLOCK-MS: 700
+  FLIGHT-CHANGE-MS: 2500
+  VEHICLE-EXIT-MS: 1500
+  GLIDE-END-MS: 2500
+  RIPTIDE-MS: 3000
+  SPEAR-MS: 1500
+  GAMEMODE-CHANGE-MS: 2000
+
+CHECKS:
+  # ── Movement ────────────────────────────────────────────────────────────────
+  FLY:
+    ENABLED: true
+    ALERT-AT: 4
+    ACTION-AT: 6
+    KICK-AT: 25
+    BAN-AT: 50
+    DECAY-PER-SECOND: 1.0
+    # Extra blocks allowed above the highest jump the player's jump-strength attribute permits.
+    HEIGHT-TOLERANCE: 0.35
+    # Consecutive mid-air updates with no vertical movement before it counts as hovering.
+    MAX-HOVER-TICKS: 4
+    # Mid-air updates without real falling before it counts as gliding.
+    MAX-SLOW-AIR-TICKS: 30
+    AIR-JUMP-TOLERANCE: 0.03
+
+  SPEED:
+    ENABLED: true
+    ALERT-AT: 5
+    ACTION-AT: 8
+    KICK-AT: 30
+    BAN-AT: 60
+    DECAY-PER-SECOND: 1.5
+    # Extra blocks per tick allowed on top of the movement-speed attribute limit.
+    TOLERANCE: 0.06
+    # How much accumulated excess distance counts as one flag.
+    BALANCE-LIMIT: 0.6
+
+  TIMER:
+    ENABLED: true
+    ALERT-AT: 5
+    ACTION-AT: 8
+    KICK-AT: 25
+    BAN-AT: 50
+    DECAY-PER-SECOND: 1.0
+    # How far (ms) the client's movement updates may run ahead of the 20-per-second clock.
+    MAX-AHEAD-MS: 250
+    # How much a lagging player may "owe" before lag stops counting; prevents banking time by idling.
+    LAG-ALLOWANCE-MS: 1500
+
+  NOFALL:
+    ENABLED: true
+    ALERT-AT: 3
+    # At this level the fall damage the player skipped is applied when they really land.
+    ACTION-AT: 3
+    KICK-AT: 20
+    BAN-AT: 40
+    DECAY-PER-SECOND: 0.5
+    # Only falls faster than this (blocks per tick) are judged.
+    MIN-FALL-SPEED: 0.08
+
+  STEP:
+    ENABLED: true
+    ALERT-AT: 3
+    ACTION-AT: 3
+    KICK-AT: 15
+    BAN-AT: 30
+    DECAY-PER-SECOND: 0.5
+    TOLERANCE: 0.05
+
+  JESUS:
+    ENABLED: true
+    ALERT-AT: 4
+    ACTION-AT: 5
+    KICK-AT: 20
+    BAN-AT: 0
+    DECAY-PER-SECOND: 0.5
+    # Consecutive updates standing on top of liquid before a flag.
+    MIN-TICKS: 6
+
+  VEHICLE-FLY:
+    ENABLED: true
+    ALERT-AT: 3
+    # At this level the player is ejected from the boat.
+    ACTION-AT: 4
+    KICK-AT: 15
+    BAN-AT: 0
+    DECAY-PER-SECOND: 0.5
+    MIN-RISE-TICKS: 6
+
+  # ── Combat ──────────────────────────────────────────────────────────────────
+  REACH:
+    ENABLED: true
+    ALERT-AT: 3
+    ACTION-AT: 5
+    KICK-AT: 15
+    BAN-AT: 30
+    DECAY-PER-SECOND: 0.5
+    # Blocks allowed beyond the entity-interaction-range attribute.
+    TOLERANCE: 0.35
+    # Latency compensation is capped at this ping.
+    MAX-PING-MS: 400
+    # Spears reach further than the attribute says.
+    SPEAR-EXTRA-RANGE: 2.0
+
+  WALL-HIT:
+    ENABLED: true
+    ALERT-AT: 3
+    ACTION-AT: 5
+    KICK-AT: 15
+    BAN-AT: 0
+    DECAY-PER-SECOND: 0.5
+    MIN-DISTANCE: 1.0
+
+  KILLAURA:
+    ENABLED: true
+    ALERT-AT: 4
+    # Cancels the hit.
+    ACTION-AT: 6
+    KICK-AT: 20
+    BAN-AT: 40
+    DECAY-PER-SECOND: 0.5
+    # Degrees between the look direction and the target before a hit is suspicious.
+    MAX-ANGLE: 75
+    MIN-DISTANCE: 1.5
+    MAX-TARGETS-PER-TICK: 3
+    # Degrees between two different targets hit within one tick.
+    MAX-SWITCH-ANGLE: 60
+
+  AUTOCLICKER:
+    ENABLED: true
+    ALERT-AT: 6
+    # Fast clicking alone is not proof (butterfly clicking is legal), so this check only alerts.
+    ACTION-AT: 0
+    KICK-AT: 0
+    BAN-AT: 0
+    DECAY-PER-SECOND: 1.0
+    # Clicks per second (excluding mining and right-clicks) before a flag.
+    MAX-CPS: 22
+
+  VELOCITY:
+    ENABLED: true
+    ALERT-AT: 4
+    ACTION-AT: 0
+    KICK-AT: 20
+    BAN-AT: 40
+    DECAY-PER-SECOND: 0.3
+    # Fraction of the applied knockback the player must travel over SAMPLE-UPDATES movement updates.
+    MIN-RATIO: 0.2
+    # Weaker knockback is not judged: holding a movement key can legitimately cancel it.
+    MIN-VELOCITY: 0.3
+    SAMPLE-UPDATES: 5
+
+  CRITICALS:
+    ENABLED: true
+    ALERT-AT: 4
+    # Removes the faked critical-hit bonus.
+    ACTION-AT: 4
+    KICK-AT: 20
+    BAN-AT: 0
+    DECAY-PER-SECOND: 0.5
+    # A critical is fake when the player never rose more than this above the ground they stand on.
+    MAX-RISE: 0.12
+
+  # ── Blocks ──────────────────────────────────────────────────────────────────
+  FAST-BREAK:
+    ENABLED: true
+    ALERT-AT: 3
+    ACTION-AT: 4
+    KICK-AT: 15
+    BAN-AT: 30
+    DECAY-PER-SECOND: 0.3
+    # Fraction of the real breaking time that must pass (vanilla itself accepts 0.7).
+    PROGRESS-FLOOR: 0.7
+    LATENCY-TICKS: 2
+
+  NUKER:
+    ENABLED: true
+    ALERT-AT: 3
+    ACTION-AT: 4
+    KICK-AT: 10
+    BAN-AT: 20
+    DECAY-PER-SECOND: 0.5
+    MAX-PER-TICK: 4
+    MAX-PER-SECOND: 22
+
+  FAST-PLACE:
+    ENABLED: true
+    ALERT-AT: 3
+    ACTION-AT: 5
+    KICK-AT: 15
+    BAN-AT: 0
+    DECAY-PER-SECOND: 0.5
+    MAX-PER-TICK: 4
+    MAX-PER-SECOND: 15
+
+  BLOCK-REACH:
+    ENABLED: true
+    ALERT-AT: 3
+    ACTION-AT: 4
+    KICK-AT: 15
+    BAN-AT: 30
+    DECAY-PER-SECOND: 0.5
+    TOLERANCE: 0.5
+
+  SCAFFOLD:
+    ENABLED: true
+    ALERT-AT: 3
+    # Cancels the placement.
+    ACTION-AT: 3
+    KICK-AT: 15
+    BAN-AT: 30
+    DECAY-PER-SECOND: 0.5
+    # Slack (blocks) when deciding whether the eye is in front of the clicked face.
+    FACE-TOLERANCE: 0.05
+    # How far (blocks) the crosshair may miss the clicked block, for rotation timing.
+    LOOK-TOLERANCE: 0.6
+    # Blocks placed under the feet while rising, per second (Jump Boost adds 1.5 per level).
+    MAX-TOWER-PER-SECOND: 3.5
+
+  GHOST-HAND:
+    ENABLED: true
+    ALERT-AT: 3
+    # Cancels the container opening or block break.
+    ACTION-AT: 3
+    KICK-AT: 15
+    BAN-AT: 0
+    DECAY-PER-SECOND: 0.5
+    # Blocks closer than this are never judged.
+    MIN-DISTANCE: 1.5
+
+  XRAY:
+    ENABLED: true
+    ALERT-AT: 1
+    # Mining patterns are evidence for staff review only; this check never acts, kicks or bans by itself.
+    ACTION-AT: 0
+    KICK-AT: 0
+    BAN-AT: 0
+    DECAY-PER-SECOND: 0.0005
+    WINDOW-MINUTES: 60
+    # Hidden veins found in the window before the rate is judged at all.
+    MIN-HIDDEN-VEINS: 5
+    # Hidden veins per 1000 filler blocks mined. Branch miners usually stay well below this.
+    MAX-VEINS-PER-THOUSAND: 12
+    MIN-FILLER: 200
+    VEIN-RADIUS: 3
+    OVERWORLD-MAX-Y: 16
+    NETHER-MAX-Y: 119
+    ORE-FAMILIES:
+      DIAMOND:
+      - DIAMOND_ORE
+      - DEEPSLATE_DIAMOND_ORE
+      ANCIENT_DEBRIS:
+      - ANCIENT_DEBRIS
+    FILLER-BLOCKS:
+    - STONE
+    - DEEPSLATE
+    - TUFF
+    - GRANITE
+    - DIORITE
+    - ANDESITE
+    - CALCITE
+    - NETHERRACK
+    - BASALT
+    - BLACKSTONE
+    - SMOOTH_BASALT
+
+  # ── Player ──────────────────────────────────────────────────────────────────
+  INVENTORY:
+    ENABLED: true
+    ALERT-AT: 4
+    # Cancels the click, or closes the inventory of a player walking with it open.
+    ACTION-AT: 4
+    KICK-AT: 20
+    BAN-AT: 0
+    DECAY-PER-SECOND: 0.5
+    MAX-CLICKS-PER-TICK: 6
+    MAX-CLICKS-PER-SECOND: 30
+    # Inventory walk: ground speed at the click, and the share of it kept afterwards, that count as walking.
+    MIN-MOVE-SPEED: 0.2
+    MOVE-SPEED-RATIO: 0.9
+
+  AUTO-TOTEM:
+    ENABLED: true
+    ALERT-AT: 3
+    # Players who keep their inventory open and hover a totem are fast too, so this only alerts.
+    ACTION-AT: 0
+    KICK-AT: 0
+    BAN-AT: 0
+    DECAY-PER-SECOND: 0.2
+    MIN-REACTION-MS: 100
+
+  BAD-CLIENT:
+    ENABLED: true
+    ALERT-AT: 1
+    ACTION-AT: 0
+    # A known cheat-client brand or channel kicks immediately.
+    KICK-AT: 1
+    BAN-AT: 0
+    DECAY-PER-SECOND: 0.01

@@ -1,0 +1,95 @@
+package com.bx.smpPlugin.managers;
+
+import com.bx.smpPlugin.SmpPlugin;
+import com.bx.smpPlugin.models.PlayerData;
+import com.bx.smpPlugin.utils.PlayerSettingDefaults;
+import org.bukkit.entity.Player;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+public class PlayerDataManager {
+
+    private final SmpPlugin plugin;
+    private final Map<UUID, PlayerData> cache = new HashMap<>();
+
+    public PlayerDataManager(SmpPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    public PlayerData loadOrCreate(Player player) {
+        UUID uuid = player.getUniqueId();
+        PlayerData data = plugin.getDatabaseManager().loadPlayer(uuid);
+        if (data == null) {
+            data = new PlayerData(uuid, player.getName());
+            PlayerSettingDefaults.applyDefaults(plugin, data);
+            double startMoney = plugin.getConfigManager().getConfig()
+                    .getDouble("SETTINGS.MONEY-PER-DEFAULT", 1000.0);
+            data.setMoney(startMoney);
+            plugin.getDatabaseManager().savePlayer(data);
+        } else {
+            data.setUsername(player.getName());
+        }
+        PlayerSettingDefaults.applyDisabledOptions(plugin, data);
+        data.setSessionStartMillis(System.currentTimeMillis());
+        cache.put(uuid, data);
+        return data;
+    }
+
+    public void unload(UUID uuid) {
+        PlayerData data = cache.get(uuid);
+        if (data != null) {
+            data.commitSession();
+            plugin.getDatabaseManager().savePlayer(data);
+            cache.remove(uuid);
+        }
+    }
+
+    public void saveAll() {
+        for (PlayerData data : cache.values()) {
+            data.commitSession();
+            plugin.getDatabaseManager().savePlayer(data);
+        }
+    }
+
+    public PlayerData get(UUID uuid) {
+        return cache.get(uuid);
+    }
+
+    public PlayerData get(Player player) {
+        return cache.get(player.getUniqueId());
+    }
+
+    public Collection<PlayerData> getAll() {
+        return cache.values();
+    }
+
+    public void discardAllForServerWipe() {
+        cache.clear();
+    }
+
+    public boolean isLoaded(UUID uuid) {
+        return cache.containsKey(uuid);
+    }
+
+    /** Re-pins options removed with ENABLED: false after menus.yml was reloaded. */
+    public void refreshRemovedSettingOptions() {
+        for (PlayerData data : cache.values()) {
+            PlayerSettingDefaults.applyDisabledOptions(plugin, data);
+        }
+    }
+
+    /** Periodic dirty-save without committing sessions */
+    public void autoSaveDirty() {
+        if (plugin.getStatsWipeManager() != null && plugin.getStatsWipeManager().isWipeInProgress()) {
+            return;
+        }
+        for (PlayerData data : cache.values()) {
+            if (data.isDirty()) {
+                plugin.getDatabaseManager().savePlayer(data);
+            }
+        }
+    }
+}

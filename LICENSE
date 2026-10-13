@@ -1,21 +1,68 @@
-MIT License
+SmpPlugin Proprietary License
 
-Copyright (c) 2026 LowBacon
+Copyright (c) 2026 LowBacon. All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+SmpPlugin (the "Software"), including its source code, compiled builds,
+configuration files, language files, documentation, names and branding, is the
+exclusive property of LowBacon. The Software is licensed, not sold. Publishing
+the source code does not place it in the public domain or under an open-source
+license.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. PERMITTED USE
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+   You may download official builds of the Software released by LowBacon and
+   run them on Minecraft servers that you own or operate, and you may edit the
+   Software's configuration and language files for those servers.
+
+   You may read the source code for personal reference and to report issues or
+   suggest changes to LowBacon.
+
+2. RESTRICTIONS
+
+   Without prior written permission from LowBacon, you may NOT:
+
+   a. claim the Software, or any part of it, as your own work, or present
+      yourself or anyone other than LowBacon as its author or owner;
+   b. remove, hide or alter any copyright notice, author credit or license
+      text in the Software;
+   c. copy, reupload, mirror, redistribute, share or publish the Software or
+      its source code, in whole or in part, whether original or modified;
+   d. sell, rent, lease, sublicense or otherwise commercially exploit the
+      Software itself, including offering it as a paid product, as part of a
+      paid bundle or behind a paywall;
+   e. distribute modified versions, forks or derivative works of the Software,
+      or reuse its source code in other projects;
+   f. rebrand or rename the Software and distribute it under another name.
+
+   Forking the repository on GitHub only to propose changes back to LowBacon
+   through a pull request is allowed. Any contribution submitted this way may be
+   used by LowBacon in the Software without restriction.
+
+3. OWNERSHIP
+
+   All rights not expressly granted in this license are reserved by LowBacon.
+   Modifications you make for your own server do not give you any ownership of
+   the Software.
+
+4. TERMINATION
+
+   This license ends automatically if you break any of its terms. When it ends
+   you must stop using the Software and delete every copy you have.
+
+5. THIRD-PARTY COMPONENTS
+
+   Third-party libraries and any code owned by other authors that is included
+   in or used by the Software remain the property of their respective owners
+   and are covered by their own licenses. This license does not claim
+   ownership of them.
+
+6. NO WARRANTY
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   LOWBACON BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+   ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+For permission requests, contact LowBacon through https://github.com/LowBacon.

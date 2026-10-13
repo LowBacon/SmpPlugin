@@ -1,6 +1,8 @@
 name: SmpPlugin
 version: ${project.version}
 main: com.bx.smpPlugin.SmpPlugin
+authors: [LowBacon]
+website: https://github.com/LowBacon/SmpPlugin
 # Minimum Minecraft version; filled from minecraft.api.version in pom.xml.
 api-version: "${minecraft.api.version}"
 # No Folia 26.3 build has been tested. See COMPATIBILITY.md.

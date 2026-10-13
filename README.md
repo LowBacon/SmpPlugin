@@ -353,9 +353,10 @@ SmpPlugin is intended for:
 
 ## 📜 License
 
-This project is licensed under the **MIT License**.
+SmpPlugin is **proprietary software**. Copyright © 2026 LowBacon. All rights reserved.
 
-Copyright © 2026 LowBacon.
+* You may run official builds on your own server and edit its config and language files.
+* You may **not** claim it as your own, remove credits, reupload, redistribute, sell, rebrand, or publish modified versions or forks without written permission from LowBacon.
 
 See [`LICENSE`](LICENSE) for the complete license.
 

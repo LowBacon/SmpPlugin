@@ -51,7 +51,7 @@ public class SpawnerInteractListener implements Listener {
                 return;
             }
 
-            plugin.getSpawnerManager().openStorage(player, instance, 1);
+            plugin.getSpawnerManager().openMenu(player, instance);
             plugin.getAntiEspManager().updatePlayer(player);
             return;
         }
@@ -71,7 +71,7 @@ public class SpawnerInteractListener implements Listener {
             return;
         }
 
-        plugin.getSpawnerManager().openStorage(player, instance, 1);
+        plugin.getSpawnerManager().openMenu(player, instance);
         plugin.getAntiEspManager().updatePlayer(player);
     }
 }

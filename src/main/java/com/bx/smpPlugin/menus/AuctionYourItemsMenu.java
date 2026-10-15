@@ -23,7 +23,7 @@ import java.util.Map;
 
 /**
  * Auction -&gt; Your Items. Free rank matches the design screenshots:
- * page 1 is 18 List slots plus 27 Donut+ locks, page 2 is 45 Donut++ locks
+ * page 1 is 18 List slots plus 27 CustomSmp+ locks, page 2 is 45 CustomSmp++ locks
  * (all five content rows). Listing limits do not change that visual.
  */
 public class AuctionYourItemsMenu extends BaseMenu {

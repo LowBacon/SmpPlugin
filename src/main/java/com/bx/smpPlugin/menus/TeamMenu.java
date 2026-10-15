@@ -72,7 +72,7 @@ public class TeamMenu extends BaseMenu {
             int slot = index - startIndex;
             UUID memberUuid = members.get(index);
             OfflinePlayer member = Bukkit.getOfflinePlayer(memberUuid);
-            set(slot, createMemberItem(team, memberUuid, member));
+            set(slot, createMemberItem(player, team, memberUuid, member));
             slotMembers.put(slot, memberUuid);
         }
 
@@ -187,8 +187,12 @@ public class TeamMenu extends BaseMenu {
         new TeamEditMenu(plugin, targetUuid, page, sortMode, searchQuery).open(player);
     }
 
-    private ItemStack createMemberItem(Team team, UUID memberUuid, OfflinePlayer member) {
-        String name = member.getName() != null ? member.getName() : "unknown";
+    private ItemStack createMemberItem(Player viewer, Team team, UUID memberUuid, OfflinePlayer member) {
+        String rawName = member.getName() != null ? member.getName() : "unknown";
+        com.bx.smpPlugin.managers.HideManager hideManager = plugin.getHideManager();
+        // Disguised teammates show their alias and a blank head, like everywhere else.
+        String name = hideManager != null ? hideManager.publicName(memberUuid, rawName) : rawName;
+        boolean disguised = hideManager != null && hideManager.isHidden(memberUuid) && !hideManager.canSeeRealIdentity(viewer);
         boolean online = member.isOnline();
 
         List<String> lore = new ArrayList<>();
@@ -205,7 +209,9 @@ public class TeamMenu extends BaseMenu {
             lore.add(configuredLore);
         }
 
-        return ItemUtils.createPlayerHead(member, "&f" + name, lore);
+        return disguised
+                ? ItemUtils.createItem(Material.PLAYER_HEAD, "&f" + name, lore)
+                : ItemUtils.createPlayerHead(member, "&f" + name, lore);
     }
 
     private void renderSearchButton() {

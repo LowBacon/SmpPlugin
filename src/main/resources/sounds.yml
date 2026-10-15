@@ -232,3 +232,11 @@ CRATES:
   SPIN-TICK: minecraft:block.note_block.hat|0.55|1.55
   # The text or value for Spin End. Available options: Any valid string text
   SPIN-END: minecraft:entity.experience_orb.pickup|1.0|1.35
+# Configuration section for Chat.
+CHAT:
+  # Played to a player when somebody mentions their name in public chat.
+  MENTION: minecraft:entity.experience_orb.pickup|0.8|1.6
+# Configuration section for Private Message.
+PRIVATE_MESSAGE:
+  # Played to the receiver of a /msg or /reply.
+  RECEIVED: minecraft:block.note_block.bell|0.7|1.4

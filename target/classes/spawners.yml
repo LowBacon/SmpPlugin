@@ -18,6 +18,13 @@ SETTINGS:
   STORAGE_CAP_PER_LOOT_KEY: 1000000
   # Determines whether Drop On Break If Inventory Full is enabled or disabled. Available options: true, false
   DROP_ON_BREAK_IF_INVENTORY_FULL: true
+  # Spawners also store xp, collected from the spawner menu or handed over when it is broken (true / false)
+  STORE_XP: true
+  # Most xp one spawner can hold. 0 means no limit
+  XP_STORAGE_CAP: 10000000
+  # Refuse to break a spawner that still has loot in storage, so the loot is not lost (true / false).
+  # Admins can still remove it with /spawner remove
+  PROTECT_STORED_LOOT_ON_BREAK: true
 # Configuration section for Anti Esp.
 ANTI_ESP:
   # Determines whether Enabled is enabled or disabled. Available options: true, false
@@ -42,20 +49,33 @@ ANTI_ESP:
     THE_END: END_STONE
 # Configuration section for Gui.
 GUI:
+  # The small menu a right-click on a spawner opens (storage, sell all, collect xp, stack).
+  # ENABLED false opens the storage straight away
+  MAIN:
+    ENABLED: true
+    # {mob} is the spawner name, {stack} the stack size when the menu opened
+    TITLE: '&8{mob}'
+    FILLER: GRAY_STAINED_GLASS_PANE
+    # sound|volume|pitch for each button
+    SOUNDS:
+      OPEN: minecraft:block.chest.open|0.5|1.4
+      CLICK: minecraft:ui.button.click|0.6|1.0
+      SELL: minecraft:entity.player.levelup|0.6|1.8
+      XP: minecraft:entity.experience_orb.pickup|1.0|1.0
+      STACK: minecraft:block.anvil.use|0.4|1.6
+      ERROR: minecraft:entity.villager.no|0.8|1.0
   # Configuration section for Storage.
   STORAGE:
     TITLE: '&8{mob} Spawners - {page}/{max_page}'
     SIZE: 54
     # The numerical value for Items Per Page. Available options: Any valid integer
     ITEMS_PER_PAGE: 45
-  # Configuration section for Panel.
+  # /spawners, one world's spawners (always 54 slots)
   PANEL:
     TITLE: '&8Spawners - {world}'
-    SIZE: 54
-  # Configuration section for World List.
+  # /spawners, the world list (always 45 slots)
   WORLD_LIST:
     TITLE: '&8Spawners Panel'
-    SIZE: 27
 # Configuration section for Types.
 TYPES:
   # Configuration section for Pig.
@@ -68,6 +88,8 @@ TYPES:
     ICON_MATERIAL: PORKCHOP
     # The numerical value for Base Items Per Cycle. Available options: Any valid integer
     BASE_ITEMS_PER_CYCLE: 1
+    # XP stored per spawner per cycle. Leave it out to use the vanilla value for this mob
+    XP_PER_CYCLE: 2
     # Configuration section for Drops.
     DROPS:
       # Configuration section for Porkchop.
@@ -98,6 +120,8 @@ TYPES:
     ICON_MATERIAL: BEEF
     # The numerical value for Base Items Per Cycle. Available options: Any valid integer
     BASE_ITEMS_PER_CYCLE: 1
+    # XP stored per spawner per cycle. Leave it out to use the vanilla value for this mob
+    XP_PER_CYCLE: 2
     # Configuration section for Drops.
     DROPS:
       # Configuration section for Beef.
@@ -128,6 +152,8 @@ TYPES:
     ICON_MATERIAL: ROTTEN_FLESH
     # The numerical value for Base Items Per Cycle. Available options: Any valid integer
     BASE_ITEMS_PER_CYCLE: 1
+    # XP stored per spawner per cycle. Leave it out to use the vanilla value for this mob
+    XP_PER_CYCLE: 5
     # Configuration section for Drops.
     DROPS:
       # Configuration section for Rotten Flesh.
@@ -176,6 +202,8 @@ TYPES:
     ICON_MATERIAL: STRING
     # The numerical value for Base Items Per Cycle. Available options: Any valid integer
     BASE_ITEMS_PER_CYCLE: 1
+    # XP stored per spawner per cycle. Leave it out to use the vanilla value for this mob
+    XP_PER_CYCLE: 5
     # Configuration section for Drops.
     DROPS:
       # Configuration section for String.
@@ -206,6 +234,8 @@ TYPES:
     ICON_MATERIAL: BONE
     # The numerical value for Base Items Per Cycle. Available options: Any valid integer
     BASE_ITEMS_PER_CYCLE: 1
+    # XP stored per spawner per cycle. Leave it out to use the vanilla value for this mob
+    XP_PER_CYCLE: 5
     # Configuration section for Drops.
     DROPS:
       # Configuration section for Bone.
@@ -236,6 +266,8 @@ TYPES:
     ICON_MATERIAL: GUNPOWDER
     # The numerical value for Base Items Per Cycle. Available options: Any valid integer
     BASE_ITEMS_PER_CYCLE: 1
+    # XP stored per spawner per cycle. Leave it out to use the vanilla value for this mob
+    XP_PER_CYCLE: 5
     # Configuration section for Drops.
     DROPS:
       # Configuration section for Gunpowder.
@@ -257,6 +289,8 @@ TYPES:
     ICON_MATERIAL: GOLD_NUGGET
     # The numerical value for Base Items Per Cycle. Available options: Any valid integer
     BASE_ITEMS_PER_CYCLE: 1
+    # XP stored per spawner per cycle. Leave it out to use the vanilla value for this mob
+    XP_PER_CYCLE: 5
     # Configuration section for Drops.
     DROPS:
       # Configuration section for Rotten Flesh.
@@ -296,6 +330,8 @@ TYPES:
     ICON_MATERIAL: BLAZE_ROD
     # The numerical value for Base Items Per Cycle. Available options: Any valid integer
     BASE_ITEMS_PER_CYCLE: 1
+    # XP stored per spawner per cycle. Leave it out to use the vanilla value for this mob
+    XP_PER_CYCLE: 10
     # Configuration section for Drops.
     DROPS:
       # Configuration section for Blaze Rod.
@@ -317,6 +353,8 @@ TYPES:
     ICON_MATERIAL: IRON_INGOT
     # The numerical value for Base Items Per Cycle. Available options: Any valid integer
     BASE_ITEMS_PER_CYCLE: 1
+    # XP stored per spawner per cycle. Leave it out to use the vanilla value for this mob
+    XP_PER_CYCLE: 0
     # Configuration section for Drops.
     DROPS:
       # Configuration section for Iron Ingot.

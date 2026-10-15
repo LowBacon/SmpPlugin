@@ -209,48 +209,48 @@ WORLD-SETTINGS:
     # Required playtime in hours to use RTP in The End (0.0 = no requirement)
     REQUIRED-PLAYTIME-HOURS: 10.0
 
-# RTP GUI Menu configuration
+# RTP GUI Menu configuration. /rtp with no world opens this menu
 RTP-MENU:
-  TITLE: '&8RTP Menu'
+  # Open this menu on a plain /rtp. false makes /rtp teleport in the world you are standing in
+  OPEN-ON-COMMAND: true
+  TITLE: '&8ʀᴀɴᴅᴏᴍ ᴛᴇʟᴇᴘᴏʀᴛ'
   SIZE: 27
   # Enable background glass filler item in GUI (true / false)
   PLACEHOLDER: true
+  # The last line of each world button. It refreshes every second while the menu is open.
+  # {remaining} cooldown left, {required_hours} / {current_hours} playtime
+  STATUS:
+    READY: '&a➜ ᴄʟɪᴄᴋ ᴛᴏ ᴛᴇʟᴇᴘᴏʀᴛ'
+    COOLDOWN: '&c⌛ ᴄᴏᴏʟᴅᴏᴡɴ: &f{remaining}'
+    LOCKED: '&c✖ ɴᴇᴇᴅѕ &f{required_hours}h &cᴘʟᴀʏᴛɪᴍᴇ &7({current_hours}h)'
+    RUNNING: '&e⌛ ᴛᴇʟᴇᴘᴏʀᴛ ɪɴ ᴘʀᴏɢʀᴇѕѕ'
   BUTTONS:
     OVERWORLD:
-      DISPLAY-NAME: '&#4B72FFOverworld'
+      DISPLAY-NAME: '&#55FF55&lᴏᴠᴇʀᴡᴏʀʟᴅ'
       MATERIAL: GRASS_BLOCK
       SLOT: 11
       WORLD: world
       ENABLED: true
       LORE:
-      - '&fClick to randomly teleport'
-      - ''
-      - '&7Players: &b{players}'
-      - '&7Range: &b{min_radius}-{max_radius}'
-      - '&7Cooldown: &b{cooldown}s'
+      - '&7ᴘʟᴀʏᴇʀѕ: &f{players}'
+      - '&7ᴄᴏᴏʟᴅᴏᴡɴ: &f{cooldown}s'
     NETHER:
-      DISPLAY-NAME: '&#FF4B4BNether'
+      DISPLAY-NAME: '&#FF4B4B&lɴᴇᴛʜᴇʀ'
       MATERIAL: NETHERRACK
       SLOT: 13
       WORLD: world_nether
       ENABLED: true
       LORE:
-      - '&fClick to randomly teleport'
-      - ''
-      - '&7Players: &b{players}'
-      - '&7Range: &b{min_radius}-{max_radius}'
-      - '&7Cooldown: &b{cooldown}s'
-      - '&7Required playtime: &b{required_playtime}'
+      - '&7ᴘʟᴀʏᴇʀѕ: &f{players}'
+      - '&7ᴄᴏᴏʟᴅᴏᴡɴ: &f{cooldown}s'
+      - '&7ɴᴇᴇᴅѕ: &f{required_playtime}'
     THE_END:
-      DISPLAY-NAME: '&#A84BFFThe End'
+      DISPLAY-NAME: '&#A84BFF&lᴛʜᴇ ᴇɴᴅ'
       MATERIAL: END_STONE
       SLOT: 15
       WORLD: world_the_end
       ENABLED: true
       LORE:
-      - '&fClick to randomly teleport'
-      - ''
-      - '&7Players: &b{players}'
-      - '&7Range: &b{min_radius}-{max_radius}'
-      - '&7Cooldown: &b{cooldown}s'
-      - '&7Required playtime: &b{required_playtime}'
+      - '&7ᴘʟᴀʏᴇʀѕ: &f{players}'
+      - '&7ᴄᴏᴏʟᴅᴏᴡɴ: &f{cooldown}s'
+      - '&7ɴᴇᴇᴅѕ: &f{required_playtime}'

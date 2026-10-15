@@ -7,7 +7,9 @@ public enum StaffToolType {
     FREEZE("FREEZE"),
     STAFF_LIST("STAFF_LIST"),
     BETTER_VIEW("BETTER_VIEW"),
-    RANDOM_TELEPORT("RANDOM_TELEPORT");
+    RANDOM_TELEPORT("RANDOM_TELEPORT"),
+    INSPECT("INSPECT"),
+    SPECTATOR("SPECTATOR");
 
     private final String configKey;
 

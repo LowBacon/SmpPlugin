@@ -784,9 +784,9 @@ MENUS:
         - '&7Notify when players follow you'
         - '&fCurrently: {status}'
       DISPLAY_DONUT_PLUS:
-        DISPLAY-NAME: '&#6BF18DDisplay Donut+'
+        DISPLAY-NAME: '&#6BF18DDisplay CustomSmp+'
         LORE:
-        - '&7Display your premium Donut+ status'
+        - '&7Display your premium CustomSmp+ status'
         - '&fCurrently: {status}'
       CHAINMAIL_ON_RESPAWN:
         DISPLAY-NAME: '&#6BF18DChainmail on Respawn'
@@ -1264,58 +1264,6 @@ MENUS:
       LORE:
       - '&7This will sell all sellable'
       - '&7items in your inventory.'
-  AFK-MENU:
-    TITLE: '&8AFK Areas'
-    ENTRY:
-      LORE:
-      - '&8{bar} &7{players}&8/&7{capacity}'
-      - '&7World: &f{world}'
-      - '&7At: &f{x}, {y}, {z}'
-      - '&7Distance: &f{distance}'
-      - '&aClick to teleport'
-      HERE-TEXT: '&aYou are already in this zone'
-      DELETE-TEXT: '&cShift + right-click to delete'
-    EMPTY:
-      DISPLAY-NAME: '&cNo AFK Zones'
-      LORE:
-      - '&7No AFK zones have been set up yet.'
-    STATUS-BUTTON:
-      DISPLAY-NAME: '&fYour Status'
-      LORE:
-      - '&7State: {status}'
-      - '&7Idle for: &f{idle}'
-      - '&7Auto-AFK after: &f{timeout}'
-      - '&8of inactivity in spawn'
-    ADD-BUTTON:
-      DISPLAY-NAME: '&aSave an AFK zone here'
-      LORE:
-      - '&7Click to save your current'
-      - '&7position as a new AFK zone.'
-      - '&8Same as &7/setafk'
-    CLOSEST-BUTTON:
-      DISPLAY-NAME: '&fClosest AFK Zone'
-      LORE:
-      - '&7Nearest: &f{name}'
-      - '&7Distance: &f{distance}'
-      - '&aClick to teleport'
-    REFRESH-BUTTON:
-      DISPLAY-NAME: '&fRefresh'
-      LORE:
-      - '&7Zones: &f{areas}'
-      - '&7Page: &f{page}&7/&f{pages}'
-      - '&7Click to update player counts.'
-    PREV-PAGE:
-      DISPLAY-NAME: '&fPrevious Page'
-      LORE:
-      - '&7Page &f{page}&7/&f{pages}'
-    NEXT-PAGE:
-      DISPLAY-NAME: '&fNext Page'
-      LORE:
-      - '&7Page &f{page}&7/&f{pages}'
-    RANDOM-BUTTON:
-      DISPLAY-NAME: '&#A303F9AFK'
-      LORE:
-      - '&fCLICK TO TELEPORT TO A RANDOM AFK AREA'
   SPAWN-MENU:
     TITLE: '&8Spawn Areas'
     RANDOM-BUTTON:
@@ -1529,6 +1477,93 @@ MENUS:
       LORE:
       - '&7ARE YOU SURE YOU WANT'
       - '&7TO END YOUR LIFE?'
+  MAIN-MENU:
+    TITLE: '&8Menu'
+    BUTTONS:
+      HOMES:
+        NAME: '&bHomes'
+        LORE:
+        - '&7Your homes and team home'
+      RTP:
+        NAME: '&bRandom Teleport'
+        LORE:
+        - '&7Go somewhere new'
+      SPAWN:
+        NAME: '&bSpawn'
+        LORE:
+        - '&7Back to spawn'
+      WARPS:
+        NAME: '&bWarps'
+        LORE:
+        - '&7Server warps'
+      TEAM:
+        NAME: '&bTeam'
+        LORE:
+        - '&7Your team and its members'
+      FRIENDS:
+        NAME: '&bFriends'
+        LORE:
+        - '&7Friends and who you follow'
+      AFK:
+        NAME: '&bAFK Zone'
+        LORE:
+        - '&7Earn shards while you are away'
+      AUCTION:
+        NAME: '&6Auction House'
+        LORE:
+        - '&7Buy and sell with players'
+      SHOP:
+        NAME: '&6Shop'
+        LORE:
+        - '&7Buy items'
+      SELL:
+        NAME: '&6Sell'
+        LORE:
+        - '&7Sell your items'
+      ORDERS:
+        NAME: '&6Orders'
+        LORE:
+        - '&7Request items from other players'
+      SHARDS:
+        NAME: '&6Shards'
+        LORE:
+        - '&7Your shards and the shard shop'
+      CRATES:
+        NAME: '&6Crates'
+        LORE:
+        - '&7Your keys and crates'
+      COINFLIP:
+        NAME: '&6CoinFlip'
+        LORE:
+        - '&7Bet against other players'
+      LEADERBOARDS:
+        NAME: '&eLeaderboards'
+        LORE:
+        - '&7Who is on top'
+      DUELS:
+        NAME: '&eDuels'
+        LORE:
+        - '&7Fight another player'
+      FFA:
+        NAME: '&eFFA'
+        LORE:
+        - '&7Free-for-all arena'
+      BOUNTIES:
+        NAME: '&eBounties'
+        LORE:
+        - '&7Put a price on someone''s head'
+      ENDER-CHEST:
+        NAME: '&eEnder Chest'
+        LORE:
+        - '&7Open your ender chest'
+      SETTINGS:
+        NAME: '&eSettings'
+        LORE:
+        - '&7Your personal settings'
+      RULES:
+        NAME: '&eRules'
+        LORE:
+        - '&7Server rules'
 CONFIG:
   BILLFORD:
     ANNOUNCE_MESSAGE: '&6&l[billford] &etrade has rotated! &7new trade is live. &bneXt
@@ -1821,6 +1856,8 @@ CONFIG:
         TITLE: '&8Spawners - {world}'
       WORLD_LIST:
         TITLE: '&8Spawners Panel'
+      MAIN:
+        TITLE: '&8{mob}'
   SPAWN_STASH:
     MESSAGES:
       USAGE:
@@ -1912,6 +1949,16 @@ CONFIG:
         NAME: '&erandom teleport'
         LORE:
         - '&7click to teleport to a random player'
+      INSPECT:
+        NAME: '&eInspect Player'
+        LORE:
+        - '&7Right-click a player to see their'
+        - '&7profile, stats and inventory'
+      SPECTATOR:
+        NAME: '&eSpectator'
+        LORE:
+        - '&7Click to switch to spectator'
+        - '&7Sneak to switch back'
     MENUS:
       STAFF-LIST:
         TITLE: '&8Online Staff'
@@ -1942,6 +1989,11 @@ CONFIG:
         YOUR INVENTORY WAS RESTORED.'
       TOOL-LOCKED: '&cYOUR STAFF TOOLS ARE LOCKED WHILE STAFF MODE IS ACTIVE.'
       RELOAD-SUCCESS: '&aSTAFF MODE CONFIG RELOADED.'
+      SPECTATOR-ON: '&aSpectator on. &7Sneak to switch back.'
+      SPECTATOR-OFF: '&cSpectator off.'
+      INSPECT-HINT: '&7Right-click a player to inspect them.'
+      FAKE-LEAVE-MESSAGE: '&e{player} left the game'
+      FAKE-JOIN-MESSAGE: '&e{player} joined the game'
   SERVER_WIPE:
     MESSAGES:
       MAINTENANCE: '&cTHE SERVER IS PREPARING A SEASON RESET. TRY AGAIN AFTER THE
@@ -2638,6 +2690,16 @@ MESSAGES:
       &7BLACKLISTED BY: &f%issuer%
       &8&m----------------------------
       &4YOU CANNOT JOIN THE SERVER
+    TARGET-EXEMPT: '&cYou cannot punish that player.'
+    OFFEND-USAGE: '&cUsage: /offend <player> <offense> [time] &7| /offend <player>
+      &7| /offend list'
+    OFFEND-UNKNOWN: '&cUnknown offense &f{offense}&c. Use &f/offend list &cto see
+      them.'
+    OFFEND-SELF: '&cYou cannot punish yourself.'
+    OFFEND-SUCCESS: '&aIssued &f{type} &ato &b{player}&a for &f{offense}&a. &7(offense
+      #{count}, duration: &f{duration}&7, id: &f#{id}&7)'
+    OFFEND-LIST-HEADER: '&8&m----&r &bOffenses &8&m----'
+    OFFEND-PREVIEW-HEADER: '&8&m----&r &bNext punishment for &f{player} &8&m----'
   SOCIAL:
     DISCORD:
     - ''
@@ -3366,7 +3428,7 @@ BUILTIN:
   09b6442ff6ef46650a60: '&7for: &f'
   60a04e8f29a4432b7ee3: '&8&m-------- &bcrate chest &8&m--------'
   0e4645253a04bbe19e81: '&8&m---------- &boptimization &8&m----------'
-  6315f6d0d7a80c4f6361: '&8&m---------- &bfinnishsmp setup &8&m----------'
+  6315f6d0d7a80c4f6361: '&8&m---------- &bcustomsmp setup &8&m----------'
   2daa51c03918ee025c18: '&8&m---------- &bfsmp setup status &8&m----------'
   12a1e3ca62a43fcb4b8b: '&8&m---------- &bfsmp commands &8(&f'
   242781765539a8b7de21: '&8&m---------- &bfeature toggles &8&m----------'
@@ -3535,7 +3597,7 @@ BUILTIN:
   e6eceafdc278cd10cc7e: '&ateleported to ffa arena &f'
   e7f15ed2a97a97758e98: '&atemporary spawner registered.'
   87862e8d1aec2c4544cc: '&atemporary spawner removed.'
-  74a6795553c59e770a2c: '&afinnishsmp configuration reloaded.'
+  74a6795553c59e770a2c: '&acustomsmp configuration reloaded.'
   3d9c707c1f7693233a62: '&aupdated Queue status for &f'
   5444425106fd6b0e00cf: '&aupdated crate chest at &f'
   3f3161ba8813a61d9d07: '&aupdated display name for arena &f'

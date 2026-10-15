@@ -2,7 +2,7 @@
 
 A complete, feature-rich **Minecraft SMP core plugin** for **Minecraft 26.3** on **Paper, Purpur, Spigot and CraftBukkit**.
 
-> **2.0.0-alpha.4 is a test build.** It has not been boot-tested yet. See [COMPATIBILITY.md](COMPATIBILITY.md),
+> **2.0.0-alpha.5 is a test build.** It starts on Purpur 26.3 but has not been tested with players yet. See [COMPATIBILITY.md](COMPATIBILITY.md),
 > [CHANGELOG.md](CHANGELOG.md) and the upgrade status in [docs/UPGRADE-26.3-STATUS.md](docs/UPGRADE-26.3-STATUS.md).
 > Permissions changed; read [docs/permissions-migration-and-luckperms.md](docs/permissions-migration-and-luckperms.md) before upgrading.
 
@@ -163,7 +163,7 @@ Instead of running a small army of plugins just to make an SMP function, SmpPlug
 * Fake player utilities
 * Disguise systems
 * Safety systems
-* AFK lounge
+* AFK zones that pay shards
 * Spawn stash
 * Custom Amethyst tools
 
@@ -226,7 +226,7 @@ The project also uses Maven Shade with dependency relocation to reduce library c
 
 ## 🧩 PlaceholderAPI
 
-SmpPlugin provides custom PlaceholderAPI expansions for server and player information, including economy-related placeholders, rankings, leaderboards, and FinnishSMP-specific data.
+SmpPlugin provides custom PlaceholderAPI expansions for server and player information, including economy-related placeholders, rankings, leaderboards, AFK status and CustomSmp-specific data (`%economy_...%`, `%smpplugin_...%` or `%customsmp_...%`).
 
 This makes it possible to integrate SmpPlugin data into scoreboards, tablists, holograms, menus, chat formats, and other plugins supporting PlaceholderAPI.
 
@@ -343,7 +343,7 @@ SmpPlugin is intended for:
 
 * Survival SMP servers
 * Community servers
-* Finnish SMP servers
+* CustomSmp and similar SMP servers
 * Economy SMP servers
 * PvP SMP servers
 * Competitive survival servers
@@ -362,8 +362,8 @@ See [`LICENSE`](LICENSE) for the complete license.
 
 ---
 
-## ❤️ FinnishSMP
+## ❤️ CustomSmp
 
 SmpPlugin was built around the idea of creating a complete, polished SMP experience without requiring an excessive number of separate plugins.
 
-**One plugin. One core. A complete SMP.** ⛏️🇫🇮
+**One plugin. One core. A complete SMP.** ⛏️

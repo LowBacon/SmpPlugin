@@ -370,6 +370,32 @@ public class EnderChestManager {
         return true;
     }
 
+    /**
+     * Drops one player's Ender Chest state without saving it, so a player wipe of their stored items
+     * is not undone by an open session writing itself back afterwards.
+     */
+    public void discardForPlayerWipe(UUID ownerUuid) {
+        if (ownerUuid == null) {
+            return;
+        }
+        for (EnderChestInspectionSession session : List.copyOf(inspectionSessionsByViewer.values())) {
+            if (!ownerUuid.equals(session.getTargetUuid())) {
+                continue;
+            }
+            removeInspectionSession(session);
+            Player viewer = Bukkit.getPlayer(session.getViewerUuid());
+            if (viewer != null && viewer.getOpenInventory().getTopInventory() == session.getInventory()) {
+                viewer.closeInventory();
+            }
+        }
+        // Removed before closing, so the close handler finds no session to save.
+        activeSessions.remove(ownerUuid);
+        Player owner = Bukkit.getPlayer(ownerUuid);
+        if (owner != null && isCustomEnderChestView(owner.getOpenInventory())) {
+            owner.closeInventory();
+        }
+    }
+
     public void discardAllForServerWipe() {
         closeAllInspections(true);
         cancelInspectionRefreshTask();

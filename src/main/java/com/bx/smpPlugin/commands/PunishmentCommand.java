@@ -8,7 +8,7 @@ import com.bx.smpPlugin.models.PunishmentRecord;
 import com.bx.smpPlugin.models.PunishmentScope;
 import com.bx.smpPlugin.models.PunishmentType;
 import com.bx.smpPlugin.utils.ColorUtils;
-import com.bx.smpPlugin.utils.NumberUtils;
+import com.bx.smpPlugin.utils.PunishmentExemptPolicy;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -34,6 +34,8 @@ public class PunishmentCommand implements CommandExecutor {
     private static final String UNMUTE_PERMISSION = "smpplugin.staff.punishments.unmute";
     private static final String BLACKLIST_PERMISSION = "smpplugin.staff.punishments.blacklist";
     private static final String UNBLACKLIST_PERMISSION = "smpplugin.staff.punishments.unblacklist";
+    private static final String VCMUTE_PERMISSION = "smpplugin.staff.punishments.vcmute";
+    private static final String VCUNMUTE_PERMISSION = "smpplugin.staff.punishments.vcunmute";
     private static final Pattern DURATION_TOKEN = Pattern.compile("(\\d+)([smhdw])", Pattern.CASE_INSENSITIVE);
     private static final Map<String, String> USAGE_MESSAGES = Map.ofEntries(
             Map.entry("ban", "&cusage: /ban <player> [reason]"),
@@ -46,13 +48,17 @@ public class PunishmentCommand implements CommandExecutor {
             Map.entry("unban", "&cusage: /unban <player> [reason]"),
             Map.entry("pardon", "&cusage: /pardon <player> [reason]"),
             Map.entry("unmute", "&cusage: /unmute <player> [reason]"),
-            Map.entry("unblacklist", "&cusage: /unblacklist <player> [reason]")
+            Map.entry("unblacklist", "&cusage: /unblacklist <player> [reason]"),
+            Map.entry("vcmute", "&cusage: /vcmute <player> [time] [reason] &7(no time = permanent)"),
+            Map.entry("vcunmute", "&cusage: /vcunmute <player> [reason]")
     );
 
     private final SmpPlugin plugin;
+    private final PunishmentMessages messages;
 
     public PunishmentCommand(SmpPlugin plugin) {
         this.plugin = plugin;
+        this.messages = new PunishmentMessages(plugin);
     }
 
     @Override
@@ -70,6 +76,10 @@ public class PunishmentCommand implements CommandExecutor {
             case "unban", "pardon" -> handleRemove(sender, PunishmentType.BAN, args, action);
             case "unmute" -> handleRemove(sender, PunishmentType.MUTE, args, action);
             case "unblacklist" -> handleRemove(sender, PunishmentType.BLACKLIST, args, action);
+            // The time is optional here: "/vcmute Steve 1h spam" or "/vcmute Steve spam".
+            case "vcmute" -> handleCreate(sender, PunishmentType.VOICE_MUTE, args,
+                    args.length >= 2 && parseDuration(args, 1).millis() > 0L, false, action);
+            case "vcunmute" -> handleRemove(sender, PunishmentType.VOICE_MUTE, args, action);
             default -> false;
         };
     }
@@ -97,6 +107,8 @@ public class PunishmentCommand implements CommandExecutor {
             case "unmute" -> UNMUTE_PERMISSION;
             case "blacklist" -> BLACKLIST_PERMISSION;
             case "unblacklist" -> UNBLACKLIST_PERMISSION;
+            case "vcmute" -> VCMUTE_PERMISSION;
+            case "vcunmute" -> VCUNMUTE_PERMISSION;
             case "warn" -> WARN_PERMISSION;
             case "kick" -> KICK_PERMISSION;
             default -> null;
@@ -143,6 +155,14 @@ public class PunishmentCommand implements CommandExecutor {
             return true;
         }
 
+        if (!PunishmentExemptPolicy.canPunish(sender, onlineTarget)) {
+            send(sender, plugin.getConfigManager().getMessageOrDefault(
+                    "PUNISHMENTS.TARGET-EXEMPT",
+                    "&cYou cannot punish that player."
+            ));
+            return true;
+        }
+
         Long expiresAt = null;
         int reasonStart = 1;
         if (temporary) {
@@ -181,7 +201,7 @@ public class PunishmentCommand implements CommandExecutor {
             return true;
         }
 
-        applyRuntimeEffect(type, onlineTarget, record);
+        messages.applyRuntimeEffect(type, onlineTarget, record);
         plugin.getDiscordWebhookManager().sendPunishment(record);
         send(sender, plugin.getConfigManager().getMessageOrDefault(
                 "PUNISHMENTS.CREATED",
@@ -247,78 +267,6 @@ public class PunishmentCommand implements CommandExecutor {
                 "{player}", target.name()
         ));
         return true;
-    }
-
-    private void applyRuntimeEffect(PunishmentType type, Player onlineTarget, PunishmentRecord record) {
-        if (onlineTarget == null) {
-            return;
-        }
-
-        switch (type) {
-            case BAN, BLACKLIST, KICK -> onlineTarget.kickPlayer(ColorUtils.toComponent(buildPunishmentMessage(record)));
-            case WARN -> onlineTarget.sendMessage(ColorUtils.toComponent(
-                    plugin.getConfigManager().getMessageOrDefault(
-                            "PUNISHMENTS.WARN-RECEIVED",
-                            "&cᴡᴀʀɴɪɴɢ: &f{reason}",
-                            "{reason}", record.getReason()
-                    )
-            ));
-            case MUTE -> onlineTarget.sendMessage(ColorUtils.toComponent(buildPunishmentMessage(record)));
-        }
-    }
-
-    private String buildPunishmentMessage(PunishmentRecord record) {
-        return plugin.getConfigManager().getMessageOrDefault(
-                punishmentMessagePath(record.getType()),
-                defaultPunishmentMessage(record.getType()),
-                punishmentPlaceholders(record)
-        );
-    }
-
-    private String punishmentMessagePath(PunishmentType type) {
-        return switch (type) {
-            case BAN -> "PUNISHMENTS.BAN";
-            case KICK -> "PUNISHMENTS.KICK";
-            case MUTE -> "PUNISHMENTS.MUTE";
-            case BLACKLIST -> "PUNISHMENTS.BLACKLIST";
-            case WARN -> "PUNISHMENTS.WARN-RECEIVED";
-        };
-    }
-
-    private String defaultPunishmentMessage(PunishmentType type) {
-        return switch (type) {
-            case BAN -> "&c&lyou have been banned!\n&8&m----------------------------\n&7reason: &f%reason%\n&7expires: &f%nicest_expiration%\n&7banned by: &f%issuer%\n&8&m----------------------------\n&7appeal at: &fdiscord.example.space";
-            case KICK -> "&c&lyou have been kicked!\n&8&m----------------------------\n&7reason: &f%reason%\n&7kicked by: &f%issuer%\n&8&m----------------------------\n&7you may reconnect";
-            case MUTE -> "&c&lyou have been muted!\n&8&m----------------------------\n&7reason: &f%reason%\n&7expires: &f%nicest_expiration%\n&7muted by: &f%issuer%\n&8&m----------------------------\n&7you cannot speak in chat";
-            case BLACKLIST -> "&4&lyou have been blacklisted!\n&8&m----------------------------\n&7reason: &f%reason%\n&7blacklisted by: &f%issuer%\n&8&m----------------------------\n&4you cannot join the server";
-            case WARN -> "&cwarning: &f{reason}";
-        };
-    }
-
-    private String[] punishmentPlaceholders(PunishmentRecord record) {
-        String expires = formatExpires(record);
-        String issuer = formatIssuer(record);
-        return new String[]{
-                "%reason%", record.getReason(),
-                "%nicest_expiration%", expires,
-                "%issuer%", issuer,
-                "{reason}", record.getReason(),
-                "{expires}", expires,
-                "{issuer}", issuer
-        };
-    }
-
-    private String formatExpires(PunishmentRecord record) {
-        if (record.getExpiresAt() == null) {
-            return "Never";
-        }
-        long remainingSeconds = Math.max(0L, (record.getExpiresAt() - System.currentTimeMillis()) / 1000L);
-        return NumberUtils.formatCountdown(remainingSeconds);
-    }
-
-    private String formatIssuer(PunishmentRecord record) {
-        String issuer = record.getIssuerNameSnapshot();
-        return issuer == null || issuer.isBlank() ? "unknown" : issuer;
     }
 
     private ResolvedTarget resolveTarget(String input) {

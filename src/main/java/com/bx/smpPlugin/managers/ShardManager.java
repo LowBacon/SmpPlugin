@@ -54,11 +54,6 @@ public class ShardManager {
             String rewardMessage,
             String boostedRewardMessage,
             String leaveMessage,
-            int afkTimeoutSeconds,
-            String afkCuboidName,
-            Location afkLocation,
-            String afkMessage,
-            boolean teleportOnAfk,
             boolean resetOnLeave,
             int recentMovementWindowSeconds,
             int minimumMovementBlocks,
@@ -70,7 +65,6 @@ public class ShardManager {
         public ShardCuboidConfig {
             rewardLocation = rewardLocation == null ? null : rewardLocation.clone();
             rewardRadius = Math.max(0D, rewardRadius);
-            afkLocation = afkLocation == null ? null : afkLocation.clone();
             excludedWorlds = excludedWorlds == null ? Set.of() : Set.copyOf(excludedWorlds);
         }
 
@@ -429,22 +423,6 @@ public class ShardManager {
         return getHudState(uuid).cuboidName();
     }
 
-    public Location resolveAfkLocation(ShardCuboidConfig config) {
-        if (config == null) {
-            return plugin.getSpawnManager().getAfkLocation();
-        }
-        if (config.afkLocation() != null) {
-            return config.afkLocation();
-        }
-        if (config.afkCuboidName() != null && !config.afkCuboidName().isBlank()) {
-            Location cuboidDestination = plugin.getCuboidManager().getCuboidTeleportLocation(config.afkCuboidName());
-            if (cuboidDestination != null) {
-                return cuboidDestination;
-            }
-        }
-        return plugin.getSpawnManager().getAfkLocation();
-    }
-
     public String formatCountdown(ShardCuboidProgress progress) {
         return NumberUtils.formatCountdown(progress.getRemainingSeconds());
     }
@@ -609,10 +587,10 @@ public class ShardManager {
         if (isEverywhereExcludedWorld(player.getWorld().getName())) {
             return EverywhereEligibilityResult.EXCLUDED_WORLD;
         }
-        if (plugin.getAFKManager().isAfk(player.getUniqueId())) {
+        if (plugin.getAfkManager().isAfk(player.getUniqueId())) {
             return EverywhereEligibilityResult.AFK;
         }
-        if (!plugin.getAFKManager().hasRecentMovement(
+        if (!plugin.getAfkManager().hasRecentActivity(
                 player.getUniqueId(),
                 getEverywhereRecentMovementWindowSeconds())) {
             return EverywhereEligibilityResult.NO_RECENT_MOVEMENT;
@@ -716,12 +694,6 @@ public class ShardManager {
                     section.getString("REWARD-MESSAGE", "you received %amount_formatted% &7(total: %total_formatted%&7)"),
                     section.getString("BOOSTED-REWARD-MESSAGE", "you received %amount_formatted% &7(&ax%multiplier%&7) &7(total: %total_formatted%&7)"),
                     section.getString("LEAVE-MESSAGE", "&cshard reward cancelled &7(left %cuboid% zone)"),
-                    Math.max(1, section.getInt("AFK-TIME", cfg.getInt("AFK-SYSTEM.TIME", 180))),
-                    emptyToNull(section.getString("AFK-CUBOID")),
-                    parseExplicitLocation(section.getString("AFK-LOCATION")),
-                    section.getString("AFK-MESSAGE", cfg.getString("AFK-SYSTEM.MESSAGE",
-                            "&7you have been moved to the afk area for being inactive in the shard zone.")),
-                    section.getBoolean("TELEPORT-ON-AFK", true),
                     section.getBoolean("RESET-ON-LEAVE", cfg.getBoolean("SHARDS.RESET-ON-LEAVE", true)),
                     Math.max(0, section.getInt("RECENT-MOVEMENT-WINDOW", 15)),
                     Math.max(0, section.getInt("MIN-MOVEMENT-BLOCKS", 5)),
@@ -755,12 +727,6 @@ public class ShardManager {
                 cfg.getString("SHARDS.RECEIVED", "you received %amount_formatted% &7(total: %total_formatted%&7)"),
                 cfg.getString("SHARDS.RECEIVED-BOOSTED", "you received %amount_formatted% &7(&ax%multiplier%&7) &7(total: %total_formatted%&7)"),
                 cfg.getString("SHARDS.CANCELLED-MESSAGE", "&cshard reward cancelled &7(left %cuboid% zone)"),
-                Math.max(1, cfg.getInt("AFK-SYSTEM.TIME", 180)),
-                emptyToNull(cfg.getString("AFK-SYSTEM.AFK-CUBOID-NAME")),
-                plugin.getSpawnManager().getAfkLocation(),
-                cfg.getString("AFK-SYSTEM.MESSAGE",
-                        "&7you have been moved to the afk area for being inactive in the spawn."),
-                cfg.getBoolean("AFK-SYSTEM.ENABLED", true),
                 cfg.getBoolean("SHARDS.RESET-ON-LEAVE", true),
                 15,
                 5,

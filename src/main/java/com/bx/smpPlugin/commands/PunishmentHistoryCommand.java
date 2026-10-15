@@ -36,24 +36,31 @@ public class PunishmentHistoryCommand implements CommandExecutor {
             return true;
         }
 
+        // No name: the server-wide list of every punishment, newest first.
         if (args.length == 0) {
-            player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessageOrDefault(
-                    "PUNISHMENTS.USAGE",
-                    "&cᴜѕᴀɢᴇ: /" + label + " <player>"
-            )));
+            new PunishmentHistoryMenu(plugin, null, null, false).open(player);
             return true;
         }
 
-        UUID targetUuid = plugin.getPunishmentManager().resolveTargetUuid(args[0], true).orElse(null);
-        if (targetUuid == null) {
-            player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessageOrDefault(
-                    "PUNISHMENTS.NOT-FOUND",
-                    "&cᴘʟᴀʏᴇʀ ɴᴏᴛ ꜰᴏᴜɴᴅ."
-            )));
-            return true;
-        }
-
-        new PunishmentHistoryMenu(plugin, targetUuid, false).open(player);
+        // Name lookups can fall back to the database, so they run off the main thread.
+        String input = args[0];
+        plugin.getDatabaseManager().executeAsync(() -> {
+            UUID targetUuid = plugin.getPunishmentManager().resolveTargetUuid(input, true).orElse(null);
+            String targetName = targetUuid == null ? null : plugin.getPunishmentManager().resolveTargetName(targetUuid, input);
+            plugin.getSpigotScheduler().runEntity(player, () -> {
+                if (!player.isOnline()) {
+                    return;
+                }
+                if (targetUuid == null) {
+                    player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessageOrDefault(
+                            "PUNISHMENTS.NOT-FOUND",
+                            "&cᴘʟᴀʏᴇʀ ɴᴏᴛ ꜰᴏᴜɴᴅ."
+                    )));
+                    return;
+                }
+                new PunishmentHistoryMenu(plugin, targetUuid, targetName, false).open(player);
+            });
+        });
         return true;
     }
 }

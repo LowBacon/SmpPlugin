@@ -169,7 +169,7 @@ public abstract class TeleportAreaMenu extends BaseMenu {
     }
 
     private String getLocationLabel() {
-        return getAreaType() == SpawnManager.AreaType.AFK ? "afk" : "spawn";
+        return "spawn";
     }
 
     private boolean canDeleteArea(Player player, SpawnManager.TeleportArea area) {

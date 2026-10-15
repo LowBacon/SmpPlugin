@@ -1,5 +1,10 @@
 package com.bx.smpPlugin;
 
+import com.bx.smpPlugin.afk.AfkCommand;
+import com.bx.smpPlugin.afk.AfkListener;
+import com.bx.smpPlugin.afk.AfkManager;
+import com.bx.smpPlugin.afk.AfkTask;
+import com.bx.smpPlugin.afk.AfkZoneCommand;
 import com.bx.smpPlugin.amethyst.*;
 import com.bx.smpPlugin.anticheat.AntiCheatCommand;
 import com.bx.smpPlugin.anticheat.AntiCheatListener;
@@ -10,6 +15,7 @@ import com.bx.smpPlugin.api.EconomyLeaderboardExpansion;
 import com.bx.smpPlugin.api.EconomyRankExpansion;
 import com.bx.smpPlugin.api.HideExpansion;
 import com.bx.smpPlugin.api.SmpPluginExpansion;
+import com.bx.smpPlugin.api.CustomSmpExpansion;
 import com.bx.smpPlugin.api.FinnishSmpExpansion;
 import com.bx.smpPlugin.api.FsmpExpansion;
 import com.bx.smpPlugin.commands.*;
@@ -78,7 +84,6 @@ public final class SmpPlugin extends JavaPlugin {
     private WarpManager warpManager;
     private CuboidManager cuboidManager;
     private SpawnManager spawnManager;
-    private AfkPointManager afkPointManager;
     private LobbyManager lobbyManager;
     private CombatManager combatManager;
     private FastCrystalManager fastCrystalManager;
@@ -88,8 +93,8 @@ public final class SmpPlugin extends JavaPlugin {
     private CrateManager crateManager;
     private CrateVisualManager crateVisualManager;
     private KeyAllManager keyAllManager;
-    private AFKManager afkManager;
-    private AFKLoungeManager afkLoungeManager;
+    private AfkManager afkManager;
+    private com.bx.smpPlugin.listeners.JoinPreloadListener joinPreloadListener;
     private HoverStatsManager hoverStatsManager;
     private WorthManager worthManager;
     private ShopManager shopManager;
@@ -124,6 +129,10 @@ public final class SmpPlugin extends JavaPlugin {
     private InvseeManager invseeManager;
     private ProfileViewerManager profileViewerManager;
     private PunishmentManager punishmentManager;
+    private VoiceMuteManager voiceMuteManager;
+    private PlayerWipeManager playerWipeManager;
+    private PlayerUnwipeManager playerUnwipeManager;
+    private OffenseManager offenseManager;
     private StatsWipeManager statsWipeManager;
     private ServerWipeManager serverWipeManager;
     private SpawnerManager spawnerManager;
@@ -222,8 +231,6 @@ public final class SmpPlugin extends JavaPlugin {
 
         spawnManager = new SpawnManager(this);
         spawnManager.load();
-        afkPointManager = new AfkPointManager(this);
-        afkPointManager.load();
         lobbyManager = new LobbyManager(this);
 
         // 3. Gameplay managers
@@ -236,8 +243,7 @@ public final class SmpPlugin extends JavaPlugin {
         crateManager = new CrateManager(this);
         crateVisualManager = new CrateVisualManager(this);
         keyAllManager = new KeyAllManager(this);
-        afkManager = new AFKManager(this);
-        afkLoungeManager = new AFKLoungeManager(this);
+        afkManager = new AfkManager(this);
         hoverStatsManager = new HoverStatsManager(this);
         worthManager = new WorthManager(this);
         balancedPriceManager = new BalancedPriceManager(this);
@@ -275,6 +281,11 @@ public final class SmpPlugin extends JavaPlugin {
         invseeManager = new InvseeManager(this);
         profileViewerManager = new ProfileViewerManager(this);
         punishmentManager = new PunishmentManager(this);
+        voiceMuteManager = new VoiceMuteManager(this);
+        voiceMuteManager.registerHook();
+        playerWipeManager = new PlayerWipeManager(this);
+        playerUnwipeManager = new PlayerUnwipeManager(this);
+        offenseManager = new OffenseManager(this);
         anvilModerationManager = new AnvilModerationManager(this);
         anvilModerationManager.load();
         statsWipeManager = new StatsWipeManager(this);
@@ -342,7 +353,7 @@ public final class SmpPlugin extends JavaPlugin {
         ClearLagTask.start(this);
         KeyAllTask.start(this);
         AutoSaveTask.start(this);
-        AFKCheckTask.start(this);
+        AfkTask.start(this);
         LunarTeammatesTask.start(this);
         BillfordTask.start(this); // Billford trade rotation check (every 30 s)
         OrdersExpiryTask.start(this);
@@ -357,6 +368,7 @@ public final class SmpPlugin extends JavaPlugin {
         if (getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) {
             new EconomyExpansion(this).register();
             new SmpPluginExpansion(this).register();
+            new CustomSmpExpansion(this).register();
             new FinnishSmpExpansion(this).register();  // Legacy alias for compatibility
             new FsmpExpansion(this).register();
             new HideExpansion(this).register();
@@ -428,6 +440,9 @@ public final class SmpPlugin extends JavaPlugin {
         }
         if (rtpQueueManager != null) {
             rtpQueueManager.shutdown();
+        }
+        if (afkManager != null) {
+            afkManager.shutdown();
         }
         if (worthManager != null) {
             getServer().getOnlinePlayers().forEach(worthManager::clearWorthDisplay);
@@ -546,7 +561,7 @@ public final class SmpPlugin extends JavaPlugin {
     private void printStartupBanner() {
         var console = getServer().getConsoleSender();
         console.sendMessage("");
-        console.sendMessage("§b§lFinnishSMP §7v" + getDescription().getVersion());
+        console.sendMessage("§b§lCustomSmp §7v" + getDescription().getVersion());
         console.sendMessage("§aPlugin enabled successfully.");
         console.sendMessage("");
     }
@@ -605,6 +620,8 @@ public final class SmpPlugin extends JavaPlugin {
     private void registerListeners() {
         PluginManager pm = getServer().getPluginManager();
         registerListener("PlayerContextListener", () -> new PlayerContextListener(this));
+        joinPreloadListener = new com.bx.smpPlugin.listeners.JoinPreloadListener(this);
+        registerListener("JoinPreloadListener", () -> joinPreloadListener);
         registerListener("PlayerJoinQuitListener", () -> new PlayerJoinQuitListener(this));
         registerListener("PlayerDeathListener", () -> new PlayerDeathListener(this));
         registerListener("ChatListener", () -> new ChatListener(this));
@@ -614,6 +631,7 @@ public final class SmpPlugin extends JavaPlugin {
         registerListener("ExplosionDamageListener", () -> new ExplosionDamageListener(this));
         registerListener("PlayerRespawnListener", () -> new PlayerRespawnListener(this));
         registerListener("PlayerMoveListener", () -> new PlayerMoveListener(this));
+        registerListener("AfkListener", () -> new AfkListener(this));
         registerListener("LobbyListener", () -> new LobbyListener(this));
         if (pm.getPlugin("FancyNpcs") != null) {
             registerListener("LobbyNpcListener", () -> new LobbyNpcListener(this));
@@ -712,11 +730,13 @@ public final class SmpPlugin extends JavaPlugin {
         setExecutor("spawn", new SpawnCommand(this), FeatureManager.Feature.SPAWN);
         setExecutor("setspawn", new SetSpawnCommand(this), FeatureManager.Feature.SPAWN);
         setExecutor("setlobby", new SetLobbyCommand(this));
-        setExecutor("afk", new AFKCommand(this), FeatureManager.Feature.AFK);
-        AfkPointCommand afkPointCommand = new AfkPointCommand(this);
-        setExecutor("setafk", afkPointCommand, FeatureManager.Feature.AFK);
-        setExecutor("delafk", afkPointCommand, FeatureManager.Feature.AFK);
-        setExecutor("afklist", afkPointCommand, FeatureManager.Feature.AFK);
+        AfkCommand afkCommand = new AfkCommand(this);
+        setExecutor("afk", afkCommand, FeatureManager.Feature.AFK);
+        setTabCompleter("afk", afkCommand);
+        setExecutor("away", afkCommand, FeatureManager.Feature.AFK);
+        AfkZoneCommand afkZoneCommand = new AfkZoneCommand(this);
+        setExecutor("afkzone", afkZoneCommand, FeatureManager.Feature.AFK);
+        setTabCompleter("afkzone", afkZoneCommand);
 
         // Teleport
         TPACommand tpaCmd = new TPACommand(this);
@@ -797,6 +817,7 @@ public final class SmpPlugin extends JavaPlugin {
 
         // Stats / Leaderboard
         setExecutor("stats", new StatsCommand(this), FeatureManager.Feature.STATS);
+        setExecutor("menu", new com.bx.smpPlugin.commands.MenuCommand(this));
         setExecutor("ping", new PingCommand(this), FeatureManager.Feature.STATS);
         setExecutor("playtime", new PlaytimeCommand(this), FeatureManager.Feature.STATS);
         AddPlaytimeCommand addPlaytimeCommand = new AddPlaytimeCommand(this);
@@ -841,6 +862,12 @@ public final class SmpPlugin extends JavaPlugin {
         setExecutor("invsee", new InvseeCommand(this));
         setExecutor("profileviewer", new ProfileViewerCommand(this), FeatureManager.Feature.PROFILE_VIEWER);
         setExecutor("punishments", new PunishmentHistoryCommand(this), FeatureManager.Feature.PUNISHMENTS);
+        com.bx.smpPlugin.commands.ChatLogCommand chatLogCommand = new com.bx.smpPlugin.commands.ChatLogCommand(this);
+        setExecutor("chatlog", chatLogCommand);
+        setTabCompleter("chatlog", chatLogCommand);
+        com.bx.smpPlugin.commands.SeeHomesCommand seeHomesCommand = new com.bx.smpPlugin.commands.SeeHomesCommand(this);
+        setExecutor("seehomes", seeHomesCommand, FeatureManager.Feature.HOMES);
+        setTabCompleter("seehomes", seeHomesCommand);
         PunishmentCommand punishmentCommand = new PunishmentCommand(this);
         setExecutor("ban", punishmentCommand, FeatureManager.Feature.PUNISHMENTS);
         setExecutor("tempban", punishmentCommand, FeatureManager.Feature.PUNISHMENTS);
@@ -852,6 +879,17 @@ public final class SmpPlugin extends JavaPlugin {
         setExecutor("unban", punishmentCommand, FeatureManager.Feature.PUNISHMENTS);
         setExecutor("unmute", punishmentCommand, FeatureManager.Feature.PUNISHMENTS);
         setExecutor("unblacklist", punishmentCommand, FeatureManager.Feature.PUNISHMENTS);
+        setExecutor("vcmute", punishmentCommand, FeatureManager.Feature.PUNISHMENTS);
+        setExecutor("vcunmute", punishmentCommand, FeatureManager.Feature.PUNISHMENTS);
+        com.bx.smpPlugin.commands.PlayerWipeCommand playerWipeCommand = new com.bx.smpPlugin.commands.PlayerWipeCommand(this);
+        setExecutor("playerwipe", playerWipeCommand);
+        setTabCompleter("playerwipe", playerWipeCommand);
+        com.bx.smpPlugin.commands.PlayerUnwipeCommand playerUnwipeCommand = new com.bx.smpPlugin.commands.PlayerUnwipeCommand(this);
+        setExecutor("playerunwipe", playerUnwipeCommand);
+        setTabCompleter("playerunwipe", playerUnwipeCommand);
+        OffendCommand offendCommand = new OffendCommand(this);
+        setExecutor("offend", offendCommand, FeatureManager.Feature.PUNISHMENTS);
+        setTabCompleter("offend", offendCommand);
 
         // Bounty
         setExecutor("bounty", new BountyCommand(this), FeatureManager.Feature.BOUNTY);
@@ -916,7 +954,7 @@ public final class SmpPlugin extends JavaPlugin {
         setExecutor("amethysttool", amethystToolCommand, FeatureManager.Feature.AMETHYST_TOOLS);
         setTabCompleter("amethysttool", amethystToolCommand);
         SmpPluginCommand smpPluginCommand = new SmpPluginCommand(this);
-        // fsmp and finnishsmp are plugin.yml aliases of this command.
+        // csmp and customsmp are plugin.yml aliases of this command.
         setExecutor("smpplugin", smpPluginCommand);
         setTabCompleter("smpplugin", smpPluginCommand);
         MaintenanceCommand maintenanceCommand = new MaintenanceCommand(this);
@@ -1156,7 +1194,12 @@ public final class SmpPlugin extends JavaPlugin {
         optimizationManager.reload();
         warpManager.loadAll();
         spawnManager.load();
-        afkPointManager.load();
+        if (afkManager != null) {
+            afkManager.reload();
+        }
+        if (offenseManager != null) {
+            offenseManager.reload();
+        }
         worthManager.reload();
         if (balancedPriceManager != null) {
             balancedPriceManager.reload();
@@ -1335,10 +1378,6 @@ public final class SmpPlugin extends JavaPlugin {
         return spawnManager;
     }
 
-    public AfkPointManager getAfkPointManager() {
-        return afkPointManager;
-    }
-
     public LobbyManager getLobbyManager() {
         return lobbyManager;
     }
@@ -1387,12 +1426,12 @@ public final class SmpPlugin extends JavaPlugin {
         return keyAllManager;
     }
 
-    public AFKManager getAFKManager() {
-        return afkManager;
+    public com.bx.smpPlugin.listeners.JoinPreloadListener getJoinPreloadListener() {
+        return joinPreloadListener;
     }
 
-    public AFKLoungeManager getAFKLoungeManager() {
-        return afkLoungeManager;
+    public AfkManager getAfkManager() {
+        return afkManager;
     }
 
     public HoverStatsManager getHoverStatsManager() {
@@ -1540,8 +1579,24 @@ public final class SmpPlugin extends JavaPlugin {
         return profileViewerManager;
     }
 
+    public PlayerWipeManager getPlayerWipeManager() {
+        return playerWipeManager;
+    }
+
+    public PlayerUnwipeManager getPlayerUnwipeManager() {
+        return playerUnwipeManager;
+    }
+
+    public VoiceMuteManager getVoiceMuteManager() {
+        return voiceMuteManager;
+    }
+
     public PunishmentManager getPunishmentManager() {
         return punishmentManager;
+    }
+
+    public OffenseManager getOffenseManager() {
+        return offenseManager;
     }
 
     public AnvilModerationManager getAnvilModerationManager() {
@@ -1612,9 +1667,8 @@ public final class SmpPlugin extends JavaPlugin {
     public void syncCommands() {
         syncCommandState("spawn", FeatureManager.Feature.SPAWN);
         syncCommandState("afk", FeatureManager.Feature.AFK);
-        syncCommandState("setafk", FeatureManager.Feature.AFK);
-        syncCommandState("delafk", FeatureManager.Feature.AFK);
-        syncCommandState("afklist", FeatureManager.Feature.AFK);
+        syncCommandState("away", FeatureManager.Feature.AFK);
+        syncCommandState("afkzone", FeatureManager.Feature.AFK);
         syncCommandState("warp", FeatureManager.Feature.WARPS);
         syncCommandState("warpmanager", FeatureManager.Feature.WARPS);
         syncCommandState("setwarp", FeatureManager.Feature.WARPS);

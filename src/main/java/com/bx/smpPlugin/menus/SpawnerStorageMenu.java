@@ -64,9 +64,16 @@ public class SpawnerStorageMenu extends BaseMenu {
             var meta = display.getItemMeta();
             if (meta != null) {
                 boolean isFiltered = instance.isLootDisabled(entry.getKey());
+                double unitWorth = plugin.getSpawnerManager().getUnitWorth(entry.getMaterial());
+                long cap = plugin.getSpawnerManager().getStorageCapPerLootKey();
                 meta.setDisplayName(ColorUtils.toComponent("&b" + plugin.getWorthManager().prettifyMaterial(entry.getMaterial())));
                 meta.setLore(ColorUtils.toComponentList(List.of(
-                        "&7ѕᴛᴏʀᴇᴅ: &f" + NumberUtils.format(entry.getAmount()),
+                        "&7ѕᴛᴏʀᴇᴅ: &f" + NumberUtils.format(entry.getAmount())
+                                + (entry.getAmount() >= cap ? " &c(ꜰᴜʟʟ)" : ""),
+                        "&7ᴡᴏʀᴛʜ: " + (unitWorth > 0D
+                                ? "&a" + plugin.getCurrencyManager().formatMoneyCompact(unitWorth) + " &7each, &a"
+                                        + plugin.getCurrencyManager().formatMoneyCompact(unitWorth * entry.getAmount()) + " &7total"
+                                : "&8can't be sold"),
                         "&7ꜰɪʟᴛᴇʀ ѕᴛᴀᴛᴜѕ: " + (isFiltered ? "&cᴅɪѕᴀʙʟᴇᴅ &7(ɴᴏᴛ ѕᴛᴏʀɪɴɢ)" : "&aᴇɴᴀʙʟᴇᴅ &7(ѕᴛᴏʀɪɴɢ)"),
                         "",
                         "&eʟᴇꜰᴛ-ᴄʟɪᴄᴋ &7ᴛᴏ ᴄᴏʟʟᴇᴄᴛ ᴏɴᴇ ѕᴛᴀᴄᴋ",
@@ -94,12 +101,15 @@ public class SpawnerStorageMenu extends BaseMenu {
         set(lastRow + 5, ItemUtils.createItem(Material.SPAWNER, "&bѕᴘᴀᴡɴᴇʀ ɪɴꜰᴏ", List.of(
                 "&7ᴛʏᴘᴇ: &f" + plugin.getSpawnerManager().getPlainTypeDisplayName(instance.getMobTypeKey()),
                 "&7ѕᴛᴀᴄᴋ: &f" + NumberUtils.format(instance.getStackAmount()),
-                "&7ѕᴛᴏʀᴇᴅ ɪᴛᴇᴍѕ: &f" + NumberUtils.format(instance.getTotalStoredItems())
+                "&7ѕᴛᴏʀᴇᴅ ɪᴛᴇᴍѕ: &f" + NumberUtils.format(instance.getTotalStoredItems()),
+                "&7ѕᴛᴏʀᴇᴅ xᴘ: &f" + NumberUtils.format(instance.getStoredXp())
         )));
         set(lastRow + 7, safePage < totalPages
                 ? ItemUtils.createItem(Material.ARROW, "&aɴᴇxᴛ ᴘᴀɢᴇ", List.of("&7ɢᴏ ᴛᴏ ᴘᴀɢᴇ &f" + (safePage + 1)))
                 : ItemUtils.createPlaceholder(Material.BLACK_STAINED_GLASS_PANE));
-        set(lastRow + 8, ItemUtils.createItem(Material.BARRIER, "&cᴄʟᴏѕᴇ", List.of("&7ᴄʟᴏѕᴇ ᴛʜɪѕ ᴍᴇɴᴜ.")));
+        set(lastRow + 8, plugin.getSpawnerManager().isMainMenuEnabled()
+                ? ItemUtils.createItem(Material.OAK_DOOR, "&cʙᴀᴄᴋ", List.of("&7ʙᴀᴄᴋ ᴛᴏ ᴛʜᴇ ѕᴘᴀᴡɴᴇʀ ᴏᴠᴇʀᴠɪᴇᴡ."))
+                : ItemUtils.createItem(Material.BARRIER, "&cᴄʟᴏѕᴇ", List.of("&7ᴄʟᴏѕᴇ ᴛʜɪѕ ᴍᴇɴᴜ.")));
     }
 
     @Override
@@ -140,7 +150,11 @@ public class SpawnerStorageMenu extends BaseMenu {
             return;
         }
         if (slot == lastRow + 8) {
-            player.closeInventory();
+            if (plugin.getSpawnerManager().isMainMenuEnabled()) {
+                plugin.getSpawnerManager().openMenu(player, instance);
+            } else {
+                player.closeInventory();
+            }
             return;
         }
 

@@ -106,7 +106,7 @@ SETTINGS_DIALOG:
       NAME: "Visuals"
       LABEL: "<item:spyglass> Visuals"
       BUTTONS:
-        - LABEL: "Display Donut+: %economy_setting_displaydonutplus%"
+        - LABEL: "Display CustomSmp+: %economy_setting_displaydonutplus%"
           ACTION: "smpplugin:toggle_displaydonutplus"
         - LABEL: "Item Worth Lore: %economy_setting_worthdisplay%"
           ACTION: "smpplugin:toggle_worthdisplay"

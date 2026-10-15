@@ -144,7 +144,7 @@ BOTS:
   MAX_DURATION_HOURS: 48
   # List of bot names displayed as sellers
   BOT_NAMES:
-    - "DonutBot"
+    - "CustomBot"
     - "AuctionBot"
     - "ShopKeeper"
   # Items that bots can list on the Auction House

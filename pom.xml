@@ -7,7 +7,7 @@
 
     <groupId>com.bx</groupId>
     <artifactId>smpplugin</artifactId>
-    <version>2.0.0-alpha.4</version>
+    <version>2.0.0-alpha.5</version>
     <packaging>jar</packaging>
 
     <name>SmpPlugin</name>
@@ -124,6 +124,13 @@
             <id>fancyinnovations</id>
             <name>FancyInnovations Repository</name>
             <url>https://repo.fancyinnovations.com/releases</url>
+        </repository>
+
+        <!-- Simple Voice Chat API -->
+        <repository>
+            <id>maxhenkel</id>
+            <name>Max Henkel Repository</name>
+            <url>https://maven.maxhenkel.de/repository/public</url>
         </repository>
 
     </repositories>
@@ -326,6 +333,17 @@
             <groupId>de.oliver</groupId>
             <artifactId>FancyNpcs</artifactId>
             <version>2.9.2</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- ===================================================== -->
+        <!-- SIMPLE VOICE CHAT (optional, for /vcmute)               -->
+        <!-- ===================================================== -->
+
+        <dependency>
+            <groupId>de.maxhenkel.voicechat</groupId>
+            <artifactId>voicechat-api</artifactId>
+            <version>2.6.24</version>
             <scope>provided</scope>
         </dependency>
 

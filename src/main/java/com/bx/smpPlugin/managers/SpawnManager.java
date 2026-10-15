@@ -28,9 +28,9 @@ public class SpawnManager {
     private static final String LEGACY_MENU_LOCATION_KEY = "location";
     private static final String SETUP_SHARD_REGION_PATH = "SHARDS.CUBOIDS.REGIONS.spawn";
 
+    /** Only spawn areas are left; AFK destinations moved to the AFK zones (com.bx.smpPlugin.afk). */
     public enum AreaType {
-        SPAWN,
-        AFK
+        SPAWN
     }
 
     public record TeleportArea(
@@ -76,14 +76,12 @@ public class SpawnManager {
 
     private final SmpPlugin plugin;
     private String spawnLocationRaw;
-    private String afkLocationRaw;
     private Location spawnLocation;
-    private Location afkLocation;
     private List<TeleportArea> configuredSpawnAreas = List.of();
-    private List<TeleportArea> configuredAfkAreas = List.of();
     private Location cachedSpawnLocation;
-    private Location cachedAfkLocation;
     private final java.util.Map<String, Location> cachedAreaDestinations = new java.util.concurrent.ConcurrentHashMap<>();
+    private volatile Set<String> cachedSpawnCuboids;
+    private volatile long cachedSpawnCuboidsAt;
 
     public SpawnManager(SmpPlugin plugin) {
         this.plugin = plugin;
@@ -92,14 +90,11 @@ public class SpawnManager {
     public void load() {
         FileConfiguration config = plugin.getConfigManager().getConfig();
         spawnLocationRaw = config.getString("LOCATIONS.SPAWN-LOCATION", "");
-        afkLocationRaw = config.getString("LOCATIONS.AFK-LOCATION", "");
         spawnLocation = LocationUtils.parse(spawnLocationRaw);
-        afkLocation = LocationUtils.parse(afkLocationRaw);
         configuredSpawnAreas = loadAreas("SPAWN-MENU", AreaType.SPAWN);
-        configuredAfkAreas = loadAreas("AFK-MENU", AreaType.AFK);
         cachedSpawnLocation = null;
-        cachedAfkLocation = null;
         cachedAreaDestinations.clear();
+        cachedSpawnCuboids = null;
     }
 
     public SetupLocationResult setSpawnLocation(Location loc) {
@@ -132,16 +127,8 @@ public class SpawnManager {
         return true;
     }
 
-    public SetupLocationResult setAfkLocation(Location loc) {
-        return setSetupLocation(AreaType.AFK, loc, "LOCATIONS.AFK-LOCATION");
-    }
-
     public List<TeleportArea> getSpawnAreas() {
         return getValidAreas(AreaType.SPAWN);
-    }
-
-    public List<TeleportArea> getAfkAreas() {
-        return getValidAreas(AreaType.AFK);
     }
 
     public List<TeleportArea> getValidAreas(AreaType type) {
@@ -153,7 +140,7 @@ public class SpawnManager {
     }
 
     private List<TeleportArea> buildAreas(AreaType type, boolean requireDestination) {
-        List<TeleportArea> configured = type == AreaType.SPAWN ? configuredSpawnAreas : configuredAfkAreas;
+        List<TeleportArea> configured = configuredSpawnAreas;
         List<String> existingBoundCuboids = getExistingBoundCuboids(type);
 
         if (configured.isEmpty()) {
@@ -233,7 +220,7 @@ public class SpawnManager {
 
     public Set<String> getAreaCuboidNames(AreaType type) {
         LinkedHashSet<String> cuboidNames = new LinkedHashSet<>(getBoundCuboidNames(type));
-        List<TeleportArea> configured = type == AreaType.SPAWN ? configuredSpawnAreas : configuredAfkAreas;
+        List<TeleportArea> configured = configuredSpawnAreas;
         for (TeleportArea area : configured) {
             String cuboidName = trimToNull(area.cuboidName());
             if (cuboidName != null) {
@@ -248,7 +235,7 @@ public class SpawnManager {
     }
 
     public boolean isMenuEnabled(AreaType type) {
-        String path = type == AreaType.SPAWN ? "SETTINGS.SPAWN-MENU" : "SETTINGS.AFK-MENU";
+        String path = "SETTINGS.SPAWN-MENU";
         return plugin.getConfigManager().getConfig().getBoolean(path, true);
     }
 
@@ -258,7 +245,7 @@ public class SpawnManager {
 
     public boolean hasMenuDefinition(AreaType type) {
         FileConfiguration menus = plugin.getConfigManager().getMenus();
-        String menuPath = type == AreaType.SPAWN ? "SPAWN-MENU" : "AFK-MENU";
+        String menuPath = "SPAWN-MENU";
         return menus.getConfigurationSection(menuPath) != null;
     }
 
@@ -365,7 +352,7 @@ public class SpawnManager {
     }
 
     public Location resolveCommandDestination(AreaType type) {
-        Location legacyLocation = type == AreaType.SPAWN ? getSpawnLocation() : getAfkLocation();
+        Location legacyLocation = getSpawnLocation();
         if (!isMenuEnabled(type)) {
             return legacyLocation != null ? legacyLocation : resolveBoundCuboidDestination(type);
         }
@@ -412,39 +399,33 @@ public class SpawnManager {
         return resolveBoundCuboidDestination(AreaType.SPAWN);
     }
 
-    public Location getAfkLocation() {
-        if (cachedAfkLocation != null) {
-            return cachedAfkLocation;
-        }
-        Location resolved = resolveAfkLocationDirect();
-        if (resolved != null) {
-            cachedAfkLocation = resolved;
-        }
-        return resolved;
-    }
-
-    private Location resolveAfkLocationDirect() {
-        if (afkLocation == null && afkLocationRaw != null && !afkLocationRaw.isBlank()) {
-            afkLocation = LocationUtils.parse(afkLocationRaw);
-        }
-        if (afkLocation != null) {
-            return afkLocation;
-        }
-
-        Location areaDestination = getFirstAreaDestination(AreaType.AFK);
-        if (areaDestination != null) {
-            return areaDestination;
-        }
-
-        return resolveBoundCuboidDestination(AreaType.AFK);
-    }
-
     public boolean hasSpawn() {
         return getSpawnLocation() != null;
     }
 
-    public boolean hasAfk() {
-        return getAfkLocation() != null;
+    /** True when the player stands in a spawn area cuboid (or the legacy spawn cuboid). */
+    public boolean isInSpawnArea(Player player) {
+        Set<String> names = getSpawnCuboidNames();
+        return !names.isEmpty() && plugin.getCuboidManager().isInAnyCuboid(player, names.toArray(String[]::new));
+    }
+
+    /** Spawn areas can be edited in game without a reload, so the cached names expire. */
+    private Set<String> getSpawnCuboidNames() {
+        Set<String> cached = cachedSpawnCuboids;
+        if (cached != null && System.currentTimeMillis() - cachedSpawnCuboidsAt < 10_000L) {
+            return cached;
+        }
+        LinkedHashSet<String> names = new LinkedHashSet<>(getAreaCuboidNames(AreaType.SPAWN));
+        if (names.isEmpty()) {
+            String legacy = plugin.getConfigManager().getConfig().getString("AFK-SYSTEM.SPAWN-CUBOID-NAME", "spawn");
+            if (legacy != null && !legacy.isBlank()) {
+                names.add(legacy.toLowerCase());
+            }
+        }
+        Set<String> resolved = Set.copyOf(names);
+        cachedSpawnCuboids = resolved;
+        cachedSpawnCuboidsAt = System.currentTimeMillis();
+        return resolved;
     }
 
     private List<TeleportArea> loadAreas(String menuPath, AreaType type) {
@@ -496,7 +477,7 @@ public class SpawnManager {
                     type,
                     slot,
                     ItemUtils.parseMaterial(section.getString("MATERIAL", "ITEM_FRAME")),
-                    section.getString("DISPLAY-NAME", type == AreaType.SPAWN ? "&bspawn" : "&#A303F9afk"),
+                    section.getString("DISPLAY-NAME", "&bspawn"),
                     section.getStringList("LORE"),
                     cuboidName,
                     Math.max(1, section.getInt("CAPACITY", 200)),
@@ -567,7 +548,7 @@ public class SpawnManager {
     }
 
     private String getMenuTogglePath(AreaType type) {
-        return type == AreaType.SPAWN ? "SETTINGS.SPAWN-MENU" : "SETTINGS.AFK-MENU";
+        return "SETTINGS.SPAWN-MENU";
     }
 
     private void configureSetupShardRegion(
@@ -597,15 +578,12 @@ public class SpawnManager {
             if (config.getDouble(SETUP_SHARD_REGION_PATH + ".RADIUS", 0D) <= 0D) {
                 config.set(SETUP_SHARD_REGION_PATH + ".RADIUS", LOCATION_COUNT_RADIUS);
             }
-        } else if (type == AreaType.AFK) {
-            config.set(SETUP_SHARD_REGION_PATH + ".AFK-CUBOID", cuboidName);
-            config.set(SETUP_SHARD_REGION_PATH + ".AFK-LOCATION", serialized);
         }
     }
 
     private SetupAreaTarget findNextSetupAreaTarget(AreaType type) {
         FileConfiguration menus = plugin.getConfigManager().getOriginalMenus();
-        String menuPath = type == AreaType.SPAWN ? "SPAWN-MENU" : "AFK-MENU";
+        String menuPath = "SPAWN-MENU";
         if (menus.getConfigurationSection(menuPath) == null) {
             return null;
         }
@@ -710,7 +688,7 @@ public class SpawnManager {
 
         FileConfiguration menus = plugin.getConfigManager().getOriginalMenus();
         FileConfiguration config = plugin.getConfigManager().getConfig();
-        String menuPath = area.type() == AreaType.SPAWN ? "SPAWN-MENU" : "AFK-MENU";
+        String menuPath = "SPAWN-MENU";
         String areaPath = menuPath + ".AREAS." + area.id();
         ConfigurationSection areaSection = menus.getConfigurationSection(areaPath);
         Location deletedLocation = areaSection == null ? null : parseConfiguredAreaLocation(area.type(), areaSection, areaPath);
@@ -726,9 +704,6 @@ public class SpawnManager {
 
         boolean configChanged = clearMatchingSetupLocation(config, area.type(), deletedLocation);
         configChanged = clearMatchingCuboidBind(config, area.type(), area.cuboidName()) || configChanged;
-        if (area.type() == AreaType.AFK) {
-            configChanged = clearMatchingSetupShardRegion(config, deletedLocation) || configChanged;
-        }
 
         if (configChanged) {
             try {
@@ -759,7 +734,7 @@ public class SpawnManager {
         }
 
         FileConfiguration menus = plugin.getConfigManager().getMenus();
-        String menuPath = area.type() == AreaType.SPAWN ? "SPAWN-MENU" : "AFK-MENU";
+        String menuPath = "SPAWN-MENU";
         return menus.getConfigurationSection(menuPath + ".AREAS." + area.id()) != null;
     }
 
@@ -772,7 +747,7 @@ public class SpawnManager {
             return false;
         }
 
-        String path = type == AreaType.SPAWN ? "LOCATIONS.SPAWN-LOCATION" : "LOCATIONS.AFK-LOCATION";
+        String path = "LOCATIONS.SPAWN-LOCATION";
         Location configuredLocation = LocationUtils.parse(config.getString(path, ""));
         if (!sameStoredLocation(configuredLocation, deletedLocation)) {
             return false;
@@ -799,26 +774,7 @@ public class SpawnManager {
             }
             return changed;
         }
-
-        boolean changed = removeFromConfigStringList(config, "CUBOID-BINDS.AFK", normalizedCuboid);
-        List<String> afkBinds = config.getStringList("CUBOID-BINDS.AFK");
-        String legacyAfk = trimToNull(config.getString("AFK-SYSTEM.AFK-CUBOID-NAME"));
-        if (changed || (legacyAfk != null && legacyAfk.equalsIgnoreCase(normalizedCuboid))) {
-            config.set("AFK-SYSTEM.AFK-CUBOID-NAME", afkBinds.isEmpty() ? "" : afkBinds.get(0));
-            changed = true;
-        }
-
-        String shardCuboid = trimToNull(config.getString(SETUP_SHARD_REGION_PATH + ".CUBOID"));
-        if (shardCuboid != null && shardCuboid.equalsIgnoreCase(normalizedCuboid)) {
-            config.set(SETUP_SHARD_REGION_PATH + ".CUBOID", "");
-            config.set(SETUP_SHARD_REGION_PATH + ".WORLD", "");
-            if (trimToNull(config.getString(SETUP_SHARD_REGION_PATH + "." + MENU_LOCATION_KEY)) == null) {
-                config.set(SETUP_SHARD_REGION_PATH + ".ENABLED", false);
-                config.set(SETUP_SHARD_REGION_PATH + ".BOUND", false);
-            }
-            changed = true;
-        }
-        return changed;
+        return false;
     }
 
     private boolean removeFromConfigStringList(FileConfiguration config, String path, String value) {
@@ -830,27 +786,6 @@ public class SpawnManager {
         }
 
         config.set(path, current);
-        return true;
-    }
-
-    private boolean clearMatchingSetupShardRegion(FileConfiguration config, Location deletedLocation) {
-        if (deletedLocation == null) {
-            return false;
-        }
-
-        Location configuredLocation = LocationUtils.parse(config.getString(SETUP_SHARD_REGION_PATH + "." + MENU_LOCATION_KEY, ""));
-        if (!sameStoredLocation(configuredLocation, deletedLocation)) {
-            return false;
-        }
-
-        config.set(SETUP_SHARD_REGION_PATH + "." + MENU_LOCATION_KEY, "");
-        config.set(SETUP_SHARD_REGION_PATH + ".AFK-LOCATION", "");
-
-        String cuboidName = trimToNull(config.getString(SETUP_SHARD_REGION_PATH + ".CUBOID"));
-        if (cuboidName == null || !plugin.getCuboidManager().exists(cuboidName)) {
-            config.set(SETUP_SHARD_REGION_PATH + ".ENABLED", false);
-            config.set(SETUP_SHARD_REGION_PATH + ".BOUND", false);
-        }
         return true;
     }
 
@@ -978,11 +913,11 @@ public class SpawnManager {
     }
 
     private String defaultCuboidName(AreaType type, int areaNumber) {
-        return (type == AreaType.SPAWN ? "spawn" : "afk") + areaNumber;
+        return "spawn" + areaNumber;
     }
 
     private String getLocationLabel(AreaType type) {
-        return type == AreaType.AFK ? "AFK" : "spawn";
+        return "spawn";
     }
 
     public Location makeSafeDestination(Location location) {
@@ -1125,19 +1060,7 @@ public class SpawnManager {
             String legacySpawn = trimToNull(config.getString("AFK-SYSTEM.SPAWN-CUBOID-NAME"));
             return legacySpawn == null ? Set.of() : Set.of(legacySpawn.toLowerCase());
         }
-
-        Set<String> afkBinds = readBoundList(config, "CUBOID-BINDS.AFK");
-        if (!afkBinds.isEmpty()) {
-            return afkBinds;
-        }
-
-        String legacyAfk = trimToNull(config.getString("AFK-SYSTEM.AFK-CUBOID-NAME"));
-        if (legacyAfk != null) {
-            return Set.of(legacyAfk.toLowerCase());
-        }
-
-        String shardAfk = trimToNull(config.getString("SHARDS.CUBOIDS.REGIONS.spawn.AFK-CUBOID"));
-        return shardAfk == null ? Set.of() : Set.of(shardAfk.toLowerCase());
+        return Set.of();
     }
 
     private String trimToNull(String value) {
@@ -1246,7 +1169,7 @@ public class SpawnManager {
         }
 
         FileConfiguration menus = plugin.getConfigManager().getMenus();
-        String menuPath = type == AreaType.SPAWN ? "SPAWN-MENU" : "AFK-MENU";
+        String menuPath = "SPAWN-MENU";
         int menuSize = normalizeSize(menus.getInt(menuPath + ".SIZE", 54));
         int randomSlot = menus.getInt(menuPath + ".RANDOM-BUTTON.SLOT", -1);
 
@@ -1302,9 +1225,7 @@ public class SpawnManager {
     }
 
     private String defaultDisplayName(AreaType type, int areaNumber) {
-        return type == AreaType.SPAWN
-                ? "&#00A4FCspawn #" + areaNumber
-                : "&#A303F9afk #" + areaNumber;
+        return "&#00A4FCspawn #" + areaNumber;
     }
 
     private List<String> defaultLore(AreaType type) {

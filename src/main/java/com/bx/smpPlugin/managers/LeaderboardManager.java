@@ -6,7 +6,6 @@ import com.bx.smpPlugin.utils.NumberUtils;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -17,6 +16,11 @@ import java.util.UUID;
 public class LeaderboardManager {
 
     private static final long CACHE_TTL_MS = 2_000L;
+    /**
+     * How long offline players' rows are reused. Online players are always merged in fresh; an admin
+     * edit to an offline player shows up within this window, or at once after invalidateAll().
+     */
+    private static final long STORED_ROWS_TTL_MS = 30_000L;
 
     public enum LeaderboardType {
         MONEY("money"),
@@ -53,7 +57,9 @@ public class LeaderboardManager {
     }
 
     private final SmpPlugin plugin;
-    private final Map<LeaderboardType, CachedLeaderboard> leaderboardCache = new EnumMap<>(LeaderboardType.class);
+    private final Map<LeaderboardType, CachedLeaderboard> leaderboardCache = new java.util.concurrent.ConcurrentHashMap<>();
+    /** One read of the players table shared by every leaderboard type, instead of one read each. */
+    private volatile CachedLeaderboard storedRows;
 
     public LeaderboardManager(SmpPlugin plugin) {
         this.plugin = plugin;
@@ -150,7 +156,16 @@ public class LeaderboardManager {
         return numericValue(type, data);
     }
 
+    /** After an edit that may have touched an offline player's row: re-read the table next time. */
     public void invalidate(LeaderboardType type) {
+        if (type != null) {
+            leaderboardCache.remove(type);
+        }
+        storedRows = null;
+    }
+
+    /** After a change to an online player only: their live copy is merged in, so no re-read is needed. */
+    public void invalidateLive(LeaderboardType type) {
         if (type != null) {
             leaderboardCache.remove(type);
         }
@@ -158,6 +173,7 @@ public class LeaderboardManager {
 
     public void invalidateAll() {
         leaderboardCache.clear();
+        storedRows = null;
     }
 
     private List<PlayerData> getSortedPlayers(LeaderboardType type) {
@@ -167,8 +183,13 @@ public class LeaderboardManager {
             return cachedLeaderboard.players();
         }
 
+        CachedLeaderboard rows = storedRows;
+        if (rows == null || now - rows.cachedAtMillis() >= STORED_ROWS_TTL_MS) {
+            rows = new CachedLeaderboard(now, List.copyOf(plugin.getDatabaseManager().loadAllPlayers()));
+            storedRows = rows;
+        }
         Map<UUID, PlayerData> merged = new LinkedHashMap<>();
-        for (PlayerData stored : plugin.getDatabaseManager().loadAllPlayers()) {
+        for (PlayerData stored : rows.players()) {
             merged.put(stored.getUuid(), stored);
         }
         for (PlayerData live : plugin.getPlayerDataManager().getAll()) {

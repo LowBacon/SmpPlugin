@@ -49,6 +49,7 @@ public class TeamCommand implements CommandExecutor {
             case "delhome" -> handleDeleteHome(player);
             case "chat" -> handleChat(player);
             case "pvp" -> handlePvp(player);
+            case "info" -> handleInfo(player, args);
             default -> new TeamMenu(plugin).open(player);
         }
         return true;
@@ -269,9 +270,39 @@ public class TeamCommand implements CommandExecutor {
             return;
         }
 
+        if ((plugin.getDuelManager() != null && plugin.getDuelManager().isInDuel(player.getUniqueId()))
+                || (plugin.getFfaManager() != null && plugin.getFfaManager().isInSession(player.getUniqueId()))) {
+            send(player, "&cYou can't set the team home inside a duel or FFA arena.");
+            return;
+        }
+
         team.setHome(player.getLocation());
         plugin.getTeamManager().save(team);
         send(player, plugin.getConfigManager().getMessage("TEAM.TEAM-HOME-SET"));
+        // Everyone else in the team learns where home moved, so nobody walks to the old one.
+        String notice = "&b" + player.getName() + " &7moved the team home to &f"
+                + player.getLocation().getBlockX() + ", " + player.getLocation().getBlockY() + ", "
+                + player.getLocation().getBlockZ() + " &7in &f" + player.getWorld().getName() + "&7.";
+        for (java.util.UUID memberUuid : team.getMemberUuids()) {
+            Player member = org.bukkit.Bukkit.getPlayer(memberUuid);
+            if (member != null && !member.equals(player)) {
+                plugin.getSpigotScheduler().runEntity(member, () -> send(member, notice));
+            }
+        }
+    }
+
+    /** /team info [team]: a read-only roster anyone can open, your own team by default. */
+    private void handleInfo(Player player, String[] args) {
+        Team team = args.length >= 2
+                ? plugin.getTeamManager().getTeam(args[1])
+                : plugin.getTeamManager().getTeam(player);
+        if (team == null) {
+            send(player, args.length >= 2
+                    ? plugin.getConfigManager().getMessage("TEAM.TEAM-NOT-EXIST")
+                    : plugin.getConfigManager().getMessage("TEAM.NO-TEAM"));
+            return;
+        }
+        new com.bx.smpPlugin.menus.TeamInfoMenu(plugin, team).open(player);
     }
 
     private void handleDeleteHome(Player player) {

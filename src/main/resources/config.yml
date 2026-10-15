@@ -2,8 +2,6 @@
 LOCATIONS:
   # The text or value for Spawn Location. Available options: Any valid string text
   SPAWN-LOCATION: ''
-  # The text or value for Afk Location. Available options: Any valid string text
-  AFK-LOCATION: ''
 # Configuration section for Portal System.
 PORTAL-SYSTEM:
   # Determines whether Enabled is enabled or disabled. Available options: true, false
@@ -70,6 +68,11 @@ SETTINGS:
     AMOUNT: 16
   # The numerical value for Home Default. Available options: Any valid integer
   HOME-DEFAULT: 2
+  # Extra homes by permission, so ranks need no numbered nodes. The highest one a player has wins.
+  # smpplugin.homes.<number> and smpplugin.homes.page.<pages> still work too.
+  HOME-PERMISSIONS: {}
+  #   group.vip: 5
+  #   group.mvp: 10
   # The numerical value for Shards Per Kill. Available options: Any valid integer
   SHARDS-PER-KILL: 1
   # The text or value for Shards Kill Message. Available options: Any valid string text
@@ -80,8 +83,6 @@ SETTINGS:
   SELL-MESSAGE: '&a+$%price%'
   # Determines whether Spawn Menu is enabled or disabled. Available options: true, false
   SPAWN-MENU: true
-  # Determines whether Afk Menu is enabled or disabled. Available options: true, false
-  AFK-MENU: true
   # The decimal value for Worth Default Value. Available options: Any decimal number
   WORTH-DEFAULT-VALUE: 1.0
   # The numerical value for Mob Spawn Radius. Available options: Any valid integer
@@ -124,6 +125,18 @@ CHAT:
     - '&7ᴄʟɪᴄᴋ ᴛᴏ ᴠɪᴇᴡ ѕᴛᴀᴛѕ'
     # The text or value for Suggest Command. Available options: Any valid string text
     SUGGEST-COMMAND: '/msg <player> '
+  # Writing someone's name in chat (with or without @) lights it up for them and plays a sound.
+  # Players who /ignore the speaker get nothing.
+  MENTIONS:
+    ENABLED: true
+    COLOR: '&e&l'
+    ACTIONBAR: '&e%player% &7mentioned you in chat'
+  # What /chatlog can show staff. Stored in the database with the other player logs.
+  LOGGING:
+    ENABLED: true
+    PUBLIC-MESSAGES: true
+    TEAM-MESSAGES: true
+    PRIVATE-MESSAGES: true
   # Determines whether Global Chat Muted is enabled or disabled. Available options: true, false
   GLOBAL-CHAT-MUTED: false
   # Determines whether Global Chat Delay Enabled is enabled or disabled. Available options: true, false
@@ -201,23 +214,15 @@ CHAT:
         VALUE: 100
         # The text or value for Block Message. Available options: Any valid string text
         BLOCK-MESSAGE: '&cYour message is too long! (Max: %max%)'
-# Configuration section for Afk System.
+# The AFK system lives in afk.yml. Only the old spawn cuboid name is still read here:
+# the cuboid treated as spawn when CUBOID-BINDS.SPAWN is empty.
 AFK-SYSTEM:
-  # Determines whether Enabled is enabled or disabled. Available options: true, false
-  ENABLED: true
-  # The numerical value for Time. Available options: Any valid integer
-  TIME: 180
-  # The text or value for Spawn Cuboid Name. Available options: Any valid string text
   SPAWN-CUBOID-NAME: spawn
-  # The text or value for Afk Cuboid Name. Available options: Any valid string text
-  AFK-CUBOID-NAME: ''
-  # The text or value for Message. Available options: Any valid string text
-  MESSAGE: '&7You have been moved to the AFK area for being inactive in the spawn.'
 # Configuration section for Item Drop Prevention.
 PREVENT-ITEM-DROP:
   # Prevent players from dropping items while in the spawn region.
   SPAWN: true
-  # Prevent players from dropping items while AFK (either in the AFK area or has AFK status).
+  # Prevent players from dropping items inside an AFK zone (see afk.yml).
   AFK: true
   # Bypass permission for admins/staff to allow item dropping.
   BYPASS-PERMISSION: 'smpplugin.preventdrop.bypass'
@@ -227,8 +232,6 @@ PREVENT-ITEM-DROP:
 CUBOID-BINDS:
   # A list configuration for Spawn. Available options: Multiple items
   SPAWN: []
-  # A list configuration for Afk. Available options: Multiple items
-  AFK: []
 # Configuration section for Fly System.
 FLY-SYSTEM:
   # The permission required for regular players/ranks to fly in spawn or cuboids.
@@ -368,17 +371,6 @@ SHARDS:
           &#A303F9%total%&7)'
         # The text or value for Leave Message. Available options: Any valid string text
         LEAVE-MESSAGE: '&cShard reward cancelled &7(Left %cuboid% zone)'
-        # The numerical value for Afk Time. Available options: Any valid integer
-        AFK-TIME: 120
-        # The text or value for Afk Cuboid. Available options: Any valid string text
-        AFK-CUBOID: ''
-        # The text or value for Afk Location. Available options: Any valid string text
-        AFK-LOCATION: ''
-        # The text or value for Afk Message. Available options: Any valid string text
-        AFK-MESSAGE: '&7You have been moved to the AFK area for being inactive in
-          the shard zone.'
-        # Determines whether Teleport On Afk is enabled or disabled. Available options: true, false
-        TELEPORT-ON-AFK: true
         # Configuration section for Excluded Worlds.
         EXCLUDED-WORLDS:
         - duels
@@ -487,17 +479,44 @@ TABLIST:
   MEDIA-BADGE-PERMISSION: rank.media
   # The text or value for Name Format. Available options: Any valid string text
   NAME-FORMAT: <media_badge>%prefix%&f<nick>%team_suffix%
-  # Configuration section for Header.
+  # Header and footer lines. Besides PlaceholderAPI placeholders these work:
+  # %animated_title% (the shining title below), %online%, %max_players%, %player%,
+  # %ping% / %ping_colored%, %tps% / %tps_colored%, %afk_count%, %tip% (the rotating TIPS below)
   HEADER:
   - ''
-  - <#00ADFC>&lServer Name</#00FCFC>
-  - '&f%online% Players'
+  - '%animated_title%'
+  - '&7Welcome, &f%player%&7!'
   - ''
-  # Configuration section for Footer.
   FOOTER:
   - ''
-  - '   &#37BFF9/discord  /guide  /store   '
+  - '&7Online &f%online%&8/&7%max_players%  &8•  &7Ping %ping_colored%  &8•  &7TPS %tps_colored%'
+  - '%tip%'
   - ''
+  # A band of light that sweeps across the title, used by %animated_title%
+  ANIMATION:
+    ENABLED: true
+    TEXT: CustomSmp
+    # Base colour of the letters and the colour of the passing shine (hex)
+    COLOR: '#00ADFC'
+    SHINE: '#FFFFFF'
+    BOLD: true
+    # Ticks between frames (20 ticks = 1 second). Lower is smoother but sends more updates.
+    # Read at start-up. Pauses by itself while the server is lagging
+    INTERVAL-TICKS: 3
+  # Lines shown one at a time by %tip%, changing every TIPS-SECONDS
+  TIPS:
+  - '&#37BFF9/discord &8• &7Join our community'
+  - '&#37BFF9/afk &8• &7Earn shards while you are away'
+  - '&#37BFF9/rtp &8• &7Teleport somewhere new'
+  - '&#37BFF9/store &8• &7Support the server'
+  TIPS-SECONDS: 8
+  # Order of the tab list
+  SORTING:
+    ENABLED: true
+    # Highest LuckPerms group weight first (owner at the top, then staff, then ranks)
+    BY-RANK: true
+    # AFK players and players in an AFK zone drop to the bottom
+    AFK-AT-BOTTOM: true
 # Configuration section for Optimization.
 OPTIMIZATION:
   # Determines whether Enabled is enabled or disabled. Available options: true, false

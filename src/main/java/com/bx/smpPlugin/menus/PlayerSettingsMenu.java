@@ -287,7 +287,7 @@ public final class PlayerSettingsMenu extends BaseMenu {
                     !data.isFollowAlertsEnabled(), data::setFollowAlertsEnabled);
             case "EXPLOSION_SOUNDS" -> toggle(player, "Explosion Sounds",
                     !data.isExplosionSoundsEnabled(), data::setExplosionSoundsEnabled);
-            case "DISPLAY_DONUT_PLUS" -> toggle(player, "Display Donut+",
+            case "DISPLAY_DONUT_PLUS" -> toggle(player, "Display CustomSmp+",
                     !data.isDisplayDonutPlusEnabled(), data::setDisplayDonutPlusEnabled);
             case "COMBAT_TIMER" -> toggle(player, "Combat Timer",
                     !data.isCombatTimerEnabled(), data::setCombatTimerEnabled);

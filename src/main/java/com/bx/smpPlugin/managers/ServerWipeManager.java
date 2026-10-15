@@ -449,12 +449,16 @@ public class ServerWipeManager {
 
         if (plugin.getSpawnManager() != null) {
             addLocationWorld(protectedWorlds, plugin.getSpawnManager().getSpawnLocation());
-            addLocationWorld(protectedWorlds, plugin.getSpawnManager().getAfkLocation());
             for (SpawnManager.TeleportArea area : plugin.getSpawnManager().getSpawnAreas()) {
                 addLocationWorld(protectedWorlds, plugin.getSpawnManager().resolveDestination(area));
             }
-            for (SpawnManager.TeleportArea area : plugin.getSpawnManager().getAfkAreas()) {
-                addLocationWorld(protectedWorlds, plugin.getSpawnManager().resolveDestination(area));
+        }
+        if (plugin.getAfkManager() != null) {
+            for (com.bx.smpPlugin.afk.AfkZone zone : plugin.getAfkManager().getZones()) {
+                addLocationWorld(protectedWorlds, zone.spawnLocation());
+                if (zone.hasRegion()) {
+                    addWorldName(protectedWorlds, zone.region().world());
+                }
             }
         }
 

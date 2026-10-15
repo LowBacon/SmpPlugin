@@ -26,6 +26,7 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.coinflip.join` | Join CoinFlip matches and accept challenges. | everyone | New in 2.0. |
 | `smpplugin.coinflip.challenge` | Send private CoinFlip challenges and rematches. | everyone | New in 2.0. |
 | `smpplugin.coinflip.practice` | Flip practice coins (no currency). | everyone | New in 2.0. |
+| `smpplugin.afk.away` | Mark yourself AFK where you stand with /away. | everyone | New in 2.0.0-alpha.5. |
 | `smpplugin.findplayer` | See which dimension and biome another online player is in with /findplayer. | everyone | New in 2.0. /findplayer had no permission check in 1.5; default true keeps that behaviour. |
 | `smpplugin.friends` | Use /friends to add, remove and follow friends. | everyone | Declared in 2.0 with default true. It was undeclared in 1.5, which made it op-only unless granted. |
 | `smpplugin.lobby` | Use /lobby and /lobby survival. | everyone | Declared in 2.0 with default true. It was undeclared in 1.5, which made it op-only unless granted. |
@@ -42,11 +43,12 @@ including destructive actions and bypasses. Only use one when you mean that.
 
 | Node | Allows | Default | Notes |
 |---|---|---|---|
+| `smpplugin.chat.color` | Keep colour codes typed into /msg and staff chat. | nobody | New in 2.0.0-alpha.5. Without it the codes are removed. |
 | `smpplugin.auctionhouse.fastbuy` | Allow the quick-purchase setting that skips the Auction House buy confirmation. | nobody | Declared in 2.0; previously undeclared (op-only unless granted). |
 | `smpplugin.auctionhouse.fastsell` | Allow the quick-sell setting for Auction House listings. | nobody | Declared in 2.0; previously undeclared (op-only unless granted). |
-| `smpplugin.donutplus` | Show the Donut+ badge (player setting). | nobody | Declared in 2.0; previously undeclared (op-only unless granted). |
-| `smpplugin.donutplusplus` | Donut++ rank: unlocks the second page of Auction House listing slots. | nobody | New in 2.0 with the merged Auction House. |
-| `smpplugin.donutplusplusplus` | Donut+++ rank: same Auction House slots as Donut++. | nobody | New in 2.0 with the merged Auction House. |
+| `smpplugin.donutplus` | Show the CustomSmp+ badge (player setting). | nobody | Declared in 2.0; previously undeclared (op-only unless granted). |
+| `smpplugin.donutplusplus` | CustomSmp++ rank: unlocks the second page of Auction House listing slots. | nobody | New in 2.0 with the merged Auction House. |
+| `smpplugin.donutplusplusplus` | CustomSmp+++ rank: same Auction House slots as CustomSmp++. | nobody | New in 2.0 with the merged Auction House. |
 | `smpplugin.rtp.priority.vip++` | RTP waiting-queue priority 30 (rtp.yml PRIORITY-QUEUE). | nobody | New in 2.0 with the merged RTP. |
 | `smpplugin.rtp.priority.vip+` | RTP waiting-queue priority 20 (rtp.yml PRIORITY-QUEUE). | nobody | New in 2.0 with the merged RTP. |
 | `smpplugin.rtp.priority.vip` | RTP waiting-queue priority 10 (rtp.yml PRIORITY-QUEUE). | nobody | New in 2.0 with the merged RTP. |
@@ -59,6 +61,7 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.servers` | Open the network server status menu with /servers. | nobody |  |
 | `smpplugin.hide.scramble` | Scramble your displayed name with /hide scramble. | nobody | Declared in 2.0; previously undeclared (op-only unless granted). |
 | `smpplugin.hide.disguise` | Disguise as a configured alias with /hide disguise. | nobody | Declared in 2.0; previously undeclared (op-only unless granted). |
+| `smpplugin.afk.statusbypass` | Never get the automatic [AFK] status after idling. | nobody | New in 2.0.0-alpha.5. |
 
 ## Staff tools (default: nobody; ops via smpplugin.admin)
 
@@ -69,6 +72,7 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.staff.mode.stafflist` | Open the staff list. | nobody |  |
 | `smpplugin.staff.mode.betterview` | Toggle better view from the staff-mode hotbar. | nobody |  |
 | `smpplugin.staff.mode.randomtp` | Teleport to a random player from the staff-mode hotbar. | nobody |  |
+| `smpplugin.staff.mode.spectator` | Switch to spectator from the staff-mode hotbar; sneak to switch back. | nobody | New in 2.0.0-alpha.5. |
 | `smpplugin.staff.mode.seevanished` | See vanished staff members. | nobody |  |
 | `smpplugin.staff.mode.others` | Toggle staff mode for other players. | nobody |  |
 | `smpplugin.staff.freeze` | Freeze and unfreeze players. | nobody |  |
@@ -92,7 +96,10 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.staff.alts` | See accounts that share an IP address with /alts. | nobody |  |
 | `smpplugin.staff.invsee` | View another player's inventory (read-only). | nobody | Upgrade spec name: smpplugin.staff.invsee.view. |
 | `smpplugin.staff.profileviewer` | View player profiles and homes with /profileviewer. | nobody |  |
-| `smpplugin.staff.punishments.view` | View punishment history with /punishments. | nobody |  |
+| `smpplugin.staff.punishments.view` | View punishment history with /punishments, or everyone's with no name. | nobody |  |
+| `smpplugin.staff.punishments.vcmute` | Mute players in Simple Voice Chat with /vcmute, for a time or for good. | nobody | New in 2.0.0-alpha.5. |
+| `smpplugin.staff.punishments.vcunmute` | Lift voice mutes with /vcunmute. | nobody | New in 2.0.0-alpha.5. |
+| `smpplugin.staff.seehomes` | View another player's homes with /seehomes. | nobody | New in 2.0.0-alpha.5. |
 | `smpplugin.staff.punishments.ban` | Permanently ban players with /ban. Also grants /tempban. | nobody | Grants smpplugin.staff.punishments.tempban as a child, matching 1.5. Grants: `smpplugin.staff.punishments.tempban` |
 | `smpplugin.staff.punishments.tempban` | Temporarily ban players with /tempban. | nobody | New in 2.0; in 1.5 /tempban used smpplugin.staff.punishments.ban. |
 | `smpplugin.staff.punishments.mute` | Permanently mute players with /mute. Also grants /tempmute. | nobody | Grants smpplugin.staff.punishments.tempmute as a child, matching 1.5. Grants: `smpplugin.staff.punishments.tempmute` |
@@ -103,6 +110,7 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.staff.punishments.unban` | Lift bans with /unban (/pardon). | nobody |  |
 | `smpplugin.staff.punishments.unmute` | Lift mutes with /unmute. | nobody |  |
 | `smpplugin.staff.punishments.unblacklist` | Lift blacklists with /unblacklist. | nobody |  |
+| `smpplugin.staff.punishments.offend` | Punish players with the preset offense rules in offenses.yml using /offend. | nobody | New in 2.0.0-alpha.5. |
 | `smpplugin.staff.fakeplayer` | Spawn fake players with /fakeplayer. | nobody | Declared in 2.0; previously undeclared. |
 | `smpplugin.staff.fakeplayer.alert` | Receive fake-player alerts. | nobody | Declared in 2.0; previously undeclared. |
 | `smpplugin.staff.spawnstash` | Spawn and manage bait stashes with /spawnstash. | nobody | Declared in 2.0; previously undeclared. |
@@ -135,9 +143,8 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.admin.delwarp` | Delete warps with /delwarp. | nobody |  |
 | `smpplugin.admin.portalmanager` | Manage RTP portals. | nobody |  |
 | `smpplugin.admin.setspawn` | Set the server spawn. | nobody |  |
-| `smpplugin.admin.setafk` | Create, delete and list AFK zones. | nobody |  |
-| `smpplugin.admin.teleportareas.delete` | Delete AFK and teleport areas from their menus. | nobody | Declared in 2.0; previously undeclared. |
-| `smpplugin.admin.afklounge` | Configure the AFK Lounge. | nobody |  |
+| `smpplugin.admin.afkzone` | Build and edit AFK zones with /afkzone. | nobody | New in 2.0.0-alpha.5. |
+| `smpplugin.admin.teleportareas.delete` | Delete spawn areas from the spawn menu. | nobody | Declared in 2.0; previously undeclared. |
 | `smpplugin.admin.amethysttool` | Give amethyst tools. | nobody |  |
 | `smpplugin.admin.worth` | Reload worth settings. | nobody |  |
 | `smpplugin.admin.sellstats` | View and export sell statistics with /topsell. Resetting them needs smpplugin.admin.statswipe. | nobody | New in 2.0 with the merged sell system. |
@@ -161,6 +168,7 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.admin.lobby.reload` | Reload lobby.yml. | nobody |  |
 | `smpplugin.admin.lobby.debug` | Toggle lobby debug output. | nobody |  |
 | `smpplugin.admin.logs` | View a player's activity log with /logs. | nobody | Declared in 2.0; previously undeclared. |
+| `smpplugin.admin.chatlog` | Browse logged public and team chat with /chatlog. | nobody | New in 2.0.0-alpha.5. |
 | `smpplugin.admin.spawnstash` | Administer bait stashes (reload, remove any). | nobody | Declared in 2.0; previously undeclared. |
 | `smpplugin.admin.anvilmod` | Manage anvil moderation words (/amod) and bypass its filter. | nobody | Renamed from anvilmod.admin in 2.0. |
 | `smpplugin.admin.safety.reload` | Reload the safety book. | nobody | Renamed from safety.reload in 2.0. |
@@ -172,6 +180,8 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.coinflip.admin.recover` | Retry stuck CoinFlip payouts and reconcile held matches from the journal. | nobody | New in 2.0. |
 | `smpplugin.coinflip.admin.reload` | Reload coinflip.yml and coinflip-messages.yml and refresh leaderboards. | nobody | New in 2.0. |
 | `smpplugin.coinflip.admin.toggle` | Pause or resume CoinFlip wagering for everyone. | nobody | New in 2.0. |
+| `smpplugin.admin.playerwipe` | Wipe one player's stats, homes, items and progress with /playerwipe (backed up first). | nobody | New in 2.0.0-alpha.5. |
+| `smpplugin.admin.playerunwipe` | Restore a wiped player from their backup with /playerunwipe. | nobody | New in 2.0.0-alpha.5. |
 
 ## Operational bypasses (default: nobody; ops via smpplugin.admin)
 
@@ -179,12 +189,15 @@ including destructive actions and bypasses. Only use one when you mean that.
 |---|---|---|---|
 | `smpplugin.bypass.lobby` | Ignore lobby protection and the lobby border (needed to build the lobby). | nobody |  |
 | `smpplugin.bypass.lobby.border` | Ignore only the lobby border. | nobody |  |
+| `smpplugin.afk.kickbypass` | Never get kicked for being AFK (afk.yml IDLE-ACTIONS.KICK-SECONDS). | nobody | New in 2.0.0-alpha.5. |
 | `smpplugin.admin.maintenance.bypass` | Join and stay on the server during maintenance. | nobody | Declared in 2.0; previously undeclared. |
 
 ## Security and privacy bypasses (default: nobody; never bundled)
 
 | Node | Allows | Default | Notes |
 |---|---|---|---|
+| `smpplugin.admin.punishments.exempt` | Cannot be punished by staff unless they hold the exempt bypass. | nobody | New in 2.0.0-alpha.5. Not granted by smpplugin.admin, so moderators cannot make each other exempt. |
+| `smpplugin.admin.punishments.exempt.bypass` | Punish players who hold smpplugin.admin.punishments.exempt. | nobody | New in 2.0.0-alpha.5. |
 | `smpplugin.ignore.bypass` | Message players who ignore you. | nobody | Removed from smpplugin.admin in 2.0; grant explicitly. |
 | `smpplugin.message.bypass-disabled` | Message players who turned private messages off. | nobody | Removed from smpplugin.admin in 2.0; grant explicitly. |
 | `smpplugin.staff.chat.bypass.mute` | Talk while global chat is muted. | nobody | Removed from smpplugin.admin in 2.0; grant explicitly. |
@@ -222,7 +235,7 @@ including destructive actions and bypasses. Only use one when you mean that.
 
 | Node | Allows | Default | Notes |
 |---|---|---|---|
-| `smpplugin.admin` | Default-op administrator bundle: staff tools, administration and operational bypasses. Excludes destructive actions and security bypasses. | ops | In 2.0 this no longer includes destructive actions or security bypasses. Contains 106 nodes: every node in the staff, administration and operational-bypass tables. |
+| `smpplugin.admin` | Default-op administrator bundle: staff tools, administration and operational bypasses. Excludes destructive actions and security bypasses. | ops | In 2.0 this no longer includes destructive actions or security bypasses. Contains 114 nodes: every node in the staff, administration and operational-bypass tables. |
 
 ## Legacy names and bundles
 

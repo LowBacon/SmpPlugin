@@ -78,7 +78,7 @@ public class ProfileViewerManager {
         Team team = plugin.getTeamManager().getTeam(uuid);
         String teamName = team == null ? null : team.getName();
 
-        boolean afk = isOnline && plugin.getAFKManager().isAfk(uuid);
+        boolean afk = isOnline && plugin.getAfkManager().isAfk(uuid);
 
         if ((username == null || username.isBlank())
                 && playerData == null

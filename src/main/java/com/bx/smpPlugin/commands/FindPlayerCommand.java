@@ -49,13 +49,13 @@ public class FindPlayerCommand implements CommandExecutor {
     }
 
     private LocationMessage resolveLocationMessage(Player target) {
-        if (plugin.getAFKManager().isAfk(target.getUniqueId())) {
+        if (plugin.getAfkManager().zoneAt(target.getLocation()) != null) {
             return new LocationMessage("FINDPLAYER.AFK", DEFAULT_AFK);
         }
         if (plugin.getRtpZoneManager().isInZone(target)) {
             return new LocationMessage("FINDPLAYER.RTP_ZONE", DEFAULT_RTP_ZONE);
         }
-        if (plugin.getAFKManager().isInSpawnCuboid(target)) {
+        if (plugin.getSpawnManager().isInSpawnArea(target)) {
             return new LocationMessage("FINDPLAYER.SPAWN", DEFAULT_SPAWN);
         }
 

@@ -1,5 +1,291 @@
 # Changelog
 
+## 2.0.0-alpha.5 — 15 October 2026
+
+Rebuilds the AFK system from scratch, adds `/offend`, renames the server branding to **CustomSmp**,
+and makes the built-in anti-cheat step aside for the new TitanGuard anti-cheat plugin. It also adds a
+simple RTP world menu, a better spawner menu and a better tab list. The best parts of
+UltimateDonutSMP v2 came across for stats, chat, homes, teams and staff tools, reworked to be lighter
+on the server. Boot-tested on Purpur 26.3 (it enables, commands answer, and an existing AFK Lounge
+migrates); not yet tested with players.
+
+### Main menu (`/menu`)
+- **`/menu`** (alias `/mainmenu`) is one chest screen that reaches the main features: homes, RTP,
+  spawn, warps, team, friends, AFK, auction house, shop, sell, orders, shards, crates, CoinFlip,
+  leaderboards, duels, FFA, bounties, ender chest, settings and rules.
+- The top shows your head with money, shards, kills, playtime and team. Click it for `/stats`.
+- Each button runs its command as you, so permissions and feature toggles still apply. Buttons for
+  commands you can't use are hidden.
+- Every button, slot, item and text is set in `menus.yml MAIN-MENU`.
+- It is a chest menu, so it also works on Spigot. (v2's was a Paper dialog.)
+
+### Stats
+- **`/stats [player]` opens a stats menu** instead of printing chat lines:
+  - **Player head:** rank, online or offline, team, K/D and playtime.
+  - **Stats:** money, shards, kills (with deaths and K/D), kill streak and best streak, playtime,
+    team, money earned and spent, blocks broken and placed, and mobs killed.
+  - **Leaderboard place** (for example "#3 on the leaderboard") under money, shards, kills,
+    playtime, best streak and blocks broken.
+  - **Buttons:** Refresh, and Leaderboards.
+- Offline players and leaderboard places are read on the database thread, so the server never waits.
+- Disguised players are looked up by their alias and show a plain head.
+- The console still gets a short text summary.
+
+### Chat
+- **Mentions:** writing a player's name (with or without `@`) lights it up for them, plays a sound
+  and shows "X mentioned you" in their action bar. Set it up under `CHAT.MENTIONS`.
+- **Public chat now respects `/ignore`.** Before, it only blocked private messages.
+- **Private messages:**
+  - click a received message to reply
+  - a sound plays when one arrives (`sounds.yml PRIVATE_MESSAGE.RECEIVED`)
+- **Colour codes:** typed colour codes are removed from `/msg` and staff chat unless the sender has
+  `smpplugin.chat.color`. Before, anyone could colour their messages or hide them with `&k`.
+- **Chat log:** public, team and private messages are saved (`CHAT.LOGGING`).
+  - `/chatlog [player]` (`smpplugin.admin.chatlog`) shows public or team chat, newest first.
+  - Pages are read in the background.
+- **Mute messages:** expiry shows "Permanent" or "Expired" correctly. More placeholders work:
+  `%staff%`, `%duration%`, `%id%`.
+
+### Staff and moderation
+- **`/punishments` with no name lists every punishment on the server**, with the same state and type
+  filters. Each entry says whose it is.
+  - Both lists load in the background.
+  - The player's name is looked up once, instead of up to 50 times on every page.
+- **Staff mode tools:**
+  - **Inspect** (book): right-click a player to open their profile, or their inventory without
+    profile access.
+  - **Spectator** (ender eye, `smpplugin.staff.mode.spectator`): sneak to switch back.
+- **Vanish** sends regular players a fake "left the game" and "joined the game" message
+  (`STAFF-MODE.VANISH-FAKE-MESSAGES`). Staff who can see vanished players don't get them.
+- **Random teleport** no longer tells the player when the staff member is vanished
+  (`RANDOM-TELEPORT.NOTIFY-TARGET`).
+- Staff tools ignore the double right-click the client sends, so vanish no longer toggles twice.
+
+### Player wipe (`/playerwipe`, `/playerunwipe`)
+- **`/playerwipe <player>`** shows what would be cleared for one player. **`/playerwipe <player>
+  confirm`** clears it:
+  - stats and balance
+  - homes and team membership (a team leader's team is disbanded)
+  - ender chest and crate keys
+  - sell records, shop favourites and bounties
+  - auction listings and claims, and orders
+  - duel and FFA stats
+  - friends, ignores and activity logs
+- **Kept:** punishments, IP history, freeze and staff-mode records, and spawners they placed.
+- **Backups:** every wipe writes a backup to `player-wipe-backups/` first. **`/playerunwipe
+  <player> confirm`** puts them back.
+- The whole wipe runs in one database transaction, so a failure changes nothing.
+- **Permissions:** `smpplugin.admin.playerwipe` and `smpplugin.admin.playerunwipe`. Operators have
+  them through `smpplugin.admin`, and the console can always use them.
+- A player who has just left is refused for a few seconds, until their quit save has finished.
+  Otherwise that save could write the old data back.
+
+### Voice mute (`/vcmute`, `/vcunmute`)
+- **`/vcmute <player> [time] [reason]`** mutes a player in Simple Voice Chat. With no time it is
+  permanent; `/vcmute Steve 1h spam` lasts an hour.
+- **`/vcunmute <player> [reason]`** lifts it.
+- **While muted,** nobody hears them, and their action bar says so (at most every 4 seconds).
+  - A timed mute ends on its own, without a relog.
+  - Text chat is not affected.
+- **History:** voice mutes show in `/punishments` (note block icon) and go to the Discord punishment
+  webhook like other punishments.
+- **Permissions:** `smpplugin.staff.punishments.vcmute` and `.vcunmute`.
+- **Simple Voice Chat is optional.** Without it, `/vcmute` is still recorded but has nothing to
+  block. The startup log says "Hooked into Simple Voice Chat" when it is active.
+- **Build:** the Maven build now uses `voicechat-api` 2.6.24 (provided, not bundled).
+
+### Homes
+- **`/seehomes <player>`** (`smpplugin.staff.seehomes`, or profile viewer access): staff view of
+  someone's homes, with click to teleport.
+- **`/home`** with no name goes to your only home, or to the one called "home", or opens the menu.
+- **`/sethome`:**
+  - says how many homes you have used, for example "(3/3)"
+  - is refused inside duel and FFA arenas
+  - takes names of up to 16 letters, digits, `_` and `-`
+- **`SETTINGS.HOME-PERMISSIONS`** gives ranks extra homes by permission (for example `group.vip: 5`),
+  next to the numbered `smpplugin.homes.<n>` nodes.
+- Homes are saved in the background and loaded while the player logs in.
+
+### Teams
+- **`/team info [team]`** shows any team's roster, leader, PvP setting and home status, read-only.
+- Moving the team home tells the rest of the team where it went.
+- The team home can't be set inside duel or FFA arenas.
+- Disguised teammates show their alias and a plain head in the team menu.
+
+### Performance
+- A joining player's stats and homes are read while they log in, off the main thread. The join no
+  longer waits on the database.
+- Quitting saves the player in the background. A quick rejoin reuses the copy still being saved, so
+  nothing is lost.
+- Leaderboards share one read of the players table (refreshed every 30 seconds) instead of reading
+  the whole table again for every leaderboard type every 2 seconds. That also speeds up leaderboard
+  placeholders on scoreboards.
+- IP history, chat logs and offline money changes are written on the database thread.
+
+### AFK (rebuilt)
+
+The old AFK pieces are removed:
+- `AFKManager`
+- the AFK Lounge
+- `/setafk` points and the 600-line AFK menu
+- AFK teleport areas in `menus.yml`
+- the shard regions' own "send idle players to the AFK area"
+
+These overlapped and half of them did not work. They are replaced by one system configured in the new
+**`afk.yml`**:
+
+- **AFK status:**
+  - After `STATUS.IDLE-SECONDS` (300) without input a player is AFK.
+  - The tab list tags them `&7[AFK]`, greys their name out and moves them to the bottom.
+  - Chat says "is now AFK" and "is back (AFK for 4m 10s)". Vanished staff are only told themselves.
+  - `/away` sets or clears it by hand (`smpplugin.afk.away`, default on).
+  - `smpplugin.afk.statusbypass` is never marked automatically.
+- **Real input only.** Head turns, walking, chat, commands, clicks, building and attacking count.
+  Riding something or drifting in water does not, so water-stream AFK pools can't fake activity.
+- **AFK zones.** An area where players earn shards (1 every minute by default) just for being there,
+  plus the point `/afk` drops them at:
+  - **On screen:** a boss bar counts down to the next shard. Each reward shows a "+1 Shard" title
+    and a sound. A particle outline appears at the edge for players nearby.
+  - **Rewards:** progress only counts inside the zone, and an active shard booster multiplies it.
+  - **Getting there:** `/afk` goes straight to the zone when there is one, or opens a small menu
+    with player counts and rewards when there are several. `/afk <zone>` goes to a specific zone.
+  - **Staff:** `/afkzone` (`smpplugin.admin.afkzone`):
+    - `pos1` / `pos2` mark two corners.
+    - `create <name> [radius]` makes a zone from them, or a square around you.
+    - `setregion`, `setspawn`, `reward <name> <shards> <time>` (e.g. `1 1m`), `rename`, `delete`,
+      `list`, `show`, `reload`.
+- **Idle actions** (both off by default):
+  - Move long-idle players into the nearest paying zone (`SEND-TO-ZONE-SECONDS`).
+  - Kick them (`KICK-SECONDS`, with a warning). Players inside a zone or with
+    `smpplugin.afk.kickbypass` are never kicked.
+- **Shard regions** still pause while a player is AFK.
+- **Migration:** on the first start the old setup is moved into `afk.yml` once:
+  - the AFK Lounge with its border, spawn and reward
+  - AFK-bound cuboids
+  - `/setafk` points and the AFK location (a point inside an imported zone is skipped)
+- **Other places that follow the new zones:**
+  - portals with an `AFK` destination (`AFK:<zone>` or the nearest zone)
+  - `/smpplugin setup setafk`
+  - the server wipe's protected worlds
+  - the item drop guard (no drops inside a zone)
+  - `/findplayer` ("in the afk")
+- **Placeholders:** `%economy_afk%`, `%economy_afk_tag%`, `%economy_afk_time%`, `%economy_afk_zone%`,
+  `%economy_afk_next%`, `%economy_afk_earned%`.
+- **Removed:**
+  - commands: `/setafk`, `/delafk`, `/afklist`, `/afklounge`, `/afk toggle`
+  - permissions: `smpplugin.admin.setafk`, `smpplugin.afklounge.use`, `smpplugin.admin.afklounge`,
+    `smpplugin.afk.toggle`
+  - config: the `AFK-SYSTEM` settings and the `AFK-MENU` in `menus.yml`. Only `AFK-SYSTEM.SPAWN-CUBOID-NAME`
+    is still read, as the fallback spawn cuboid.
+### `/offend`
+
+- `/offend <player> <offense> [time]` punishes with a preset from the new `offenses.yml`: 62 offenses from
+  UltimateDonutSMP-V2, each with a type and a ladder of durations (permission
+  `smpplugin.staff.punishments.offend`).
+- The ladder rung comes from the player's earlier punishments **for the same offense**. In v2, earlier
+  punishments of any kind counted. Removed punishments do not count. A typed time overrides the ladder.
+- A `0s` rung is issued as a warning.
+- `/offend <player>` previews what each offense would give that player; `/offend list` lists them.
+- **Protected players**: holders of `smpplugin.admin.punishments.exempt` cannot be punished by `/offend`,
+  `/ban`, `/mute` and the rest unless the staff member has `smpplugin.admin.punishments.exempt.bypass`.
+  Both are security bypasses: `smpplugin.admin` does not grant them, and the console is never blocked.
+- v2's `wipe` option is not included: SmpPlugin has no per-player wipe and restore system yet.
+
+### CustomSmp branding
+
+- Tab list header, `/smpplugin` aliases (`/customsmp`, `/csmp`), the console start-up banner, the update
+  notice, the server info menu, the rules menu's Discord line, the auction bot name (`CustomBot`) and the
+  premium rank name (**CustomSmp+**, formerly Donut+) now say CustomSmp.
+- New PlaceholderAPI identifier `%customsmp_<placeholder>%`. `%finnishsmp_...%` still works.
+- Unchanged so existing data keeps working: permission nodes (`smpplugin.donutplus`), setting ids,
+  MySQL/MongoDB database names, the Redis channel and entity tags.
+- **Existing servers:** files already in `plugins/SmpPlugin/` keep their old text, because admin edits are
+  never overwritten. Replace `Donut+`, `DonutSMP` and `Server Name` in `config.yml`, `menus.yml`,
+  `dialog.yml` and `languages/*.yml` by hand, or delete those files to get the new defaults.
+
+### Anti-cheat
+
+- New `anticheat.yml DEFER-TO-TITANGUARD` (default true): while the TitanGuard plugin is running, the
+  built-in anti-cheat stands down, so players are never checked or set back twice. `/anticheat status`
+  and the start-up report say so.
+
+### RTP world menu
+
+- `/rtp` now opens a small world picker: **Overworld**, **Nether** and **End**. `/rtp <world>` still
+  teleports straight away. The menu existed in `rtp.yml` but nothing opened it.
+  `RTP-MENU.OPEN-ON-COMMAND: false` brings back the old "RTP in the world you are in".
+- Each world shows its player count and cooldown, and one status line that refreshes every second:
+  - ready to teleport
+  - cooldown left
+  - playtime needed
+  - teleport already running
+- Clicking a world you can't use yet keeps the menu open.
+- The menu respects `DENIED-WORLDS`, like `/rtp <world>` does.
+
+### Tab list
+
+- **Sorted:** highest LuckPerms rank (group weight) at the top, AFK players at the bottom
+  (`TABLIST.SORTING`). Needs 1.21.2+; older servers stay alphabetical.
+- **Animated title:**
+  - `%animated_title%` draws `TABLIST.ANIMATION.TEXT` with a band of light sweeping across it.
+  - The colours, bold and speed are configurable.
+  - It pauses by itself while the server is lagging.
+- **Live footer:** online count, your ping and the server TPS, each coloured green, yellow or red by how
+  good they are. `%tip%` rotates through `TABLIST.TIPS` every 8 seconds.
+- **New placeholders for the header and footer:** `%ping%`, `%ping_colored%`, `%tps%`, `%tps_colored%`,
+  `%afk_count%`, `%tip%`, `%animated_title%`.
+- **AFK players** get the `[AFK]` tag and a greyed-out name.
+- **Existing servers** keep their own `HEADER` and `FOOTER`. Add `%animated_title%` and the other
+  placeholders to use the new look.
+- **Stat placeholders** for the header and footer: `%money%`, `%shards%`, `%kills%`, `%deaths%`,
+  `%playtime%`, `%team%`.
+- **Ranks show up after joining.** LuckPerms sometimes finished loading a moment after the tab list
+  was drawn, so new players showed no rank. Two refreshes 1 and 3 seconds after joining catch it.
+
+### Spawners
+
+- **New spawner menu.** Right-clicking a spawner opens one small screen instead of the raw storage
+  (`spawners.yml GUI.MAIN`; `ENABLED: false` keeps the old behaviour). It has:
+  - **Info:** owner, items per hour, and a live countdown to the next drop. It says when the spawner
+    is paused (chunk not loaded, or nobody nearby).
+  - **Storage**
+  - **Sell all**, showing what it's worth with your sell multipliers
+  - **Collect XP**, showing how many levels it gives you
+  - **Stack:** left-click adds every matching spawner from your inventory; right-click takes 1 out
+    (owner only).
+- **Spawners store XP.** Each type has `XP_PER_CYCLE`; without it the mob's vanilla value is used:
+  - 2 for animals
+  - 5 for monsters
+  - 10 for blazes
+  - 0 for golems
+
+  XP is collected from the menu or handed over when the spawner is broken. Cap it with
+  `SETTINGS.XP_STORAGE_CAP`, or turn it off with `SETTINGS.STORE_XP: false`.
+- **Breaking no longer deletes stored loot.** Before, any loot still in storage was silently lost.
+  `SETTINGS.PROTECT_STORED_LOOT_ON_BREAK` (default on) refuses the break until it is sold or
+  collected. Admins can still use `/spawner remove`.
+- **Storage menu:**
+  - shows each item's sell price and total worth
+  - marks full slots
+  - its corner button goes back to the spawner menu
+- **`/spawners` admin panel fixed:**
+  - **World list:**
+    - shows only worlds that have spawners, including unloaded ones, not every duel arena
+    - fits 21 worlds, says so when there are more, and shows a message when there are none
+    - has server-wide totals at the top
+  - **Spawner lists:**
+    - no longer overlap the page buttons; the old `GUI.PANEL.SIZE` / `GUI.WORLD_LIST.SIZE` options
+      are gone
+    - show spawners as spawner icons with their stack size
+    - left-click teleports on top of a spawner; right-click opens it
+    - can be sorted by stack size, stored loot or owner
+  - temporary staff-bait spawners are left out
+- **Loot filter:** a new button in the spawner menu lists every drop the spawner can make. Click one to
+  stop or start storing it. Drops that are off never fill up storage, and they can be switched back
+  on even when none are stored.
+- Database: `spawners` gains `stored_xp`, `lifetime_items` and `lifetime_earnings`, added automatically
+  on start.
+
 ## 2.0.0-alpha.4 — 13 October 2026
 
 Merges the settings, Auction House, selling and RTP systems from UltimateDonutSMP-V2 into SmpPlugin.

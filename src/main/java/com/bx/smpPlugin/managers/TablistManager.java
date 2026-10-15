@@ -65,6 +65,8 @@ public class TablistManager {
     private final Map<UUID, SkinTexture> skinHeadTextures = new ConcurrentHashMap<>();
     private final Map<UUID, Long> skinHeadTextureRefreshTimes = new ConcurrentHashMap<>();
     private final Map<UUID, Map<String, PermissionOverride>> luckPermsCommandOverrides = new ConcurrentHashMap<>();
+    private final Map<UUID, Integer> listOrders = new ConcurrentHashMap<>();
+    private volatile long animationFrame;
 
     public TablistManager(SmpPlugin plugin) {
         this.plugin = plugin;
@@ -112,6 +114,7 @@ public class TablistManager {
             return;
         }
 
+        updateListOrder(player);
         String nameFormat = resolveNameFormat(player);
         refreshSkinHeadTextureIfNeeded(player, nameFormat, false);
         Component adventureComponent = parseTabComponent(nameFormat, player);
@@ -120,6 +123,108 @@ public class TablistManager {
         }
 
         player.setPlayerListName(parseTabText(nameFormat, player));
+    }
+
+    // ── Sorting ──────────────────────────────────────────────────────────────
+
+    /**
+     * Puts higher ranks at the top of the tab list (LuckPerms group weight) and AFK players at the
+     * bottom. Only sends a change when the position actually moves.
+     */
+    private void updateListOrder(Player player) {
+        if (!config().getBoolean("TABLIST.SORTING.ENABLED", true)) {
+            return;
+        }
+        int order = TablistEffects.listOrder(
+                config().getBoolean("TABLIST.SORTING.BY-RANK", true) ? resolveRankWeight(player) : 0,
+                config().getBoolean("TABLIST.SORTING.AFK-AT-BOTTOM", true)
+                        && plugin.getAfkManager() != null && plugin.getAfkManager().isShownAsAfk(player));
+        Integer previous = listOrders.put(player.getUniqueId(), order);
+        if (previous != null && previous == order) {
+            return;
+        }
+        try {
+            player.setPlayerListOrder(order);
+        } catch (NoSuchMethodError | UnsupportedOperationException ignored) {
+            // Servers before 1.21.2 have no list order; the tab list stays alphabetical there.
+        }
+    }
+
+    /** The weight of the player's primary LuckPerms group, 0 without LuckPerms. */
+    private int resolveRankWeight(Player player) {
+        try {
+            Class<?> providerClass = findOptionalPluginClass("LuckPerms", "net.luckperms.api.LuckPermsProvider");
+            Object luckPerms = invokeStaticNoArg(providerClass, "get");
+            Object adapter = invokeCompatible(luckPerms, "getPlayerAdapter", Player.class);
+            Object user = invokeCompatible(adapter, "getUser", player);
+            String primaryGroup = readStringNoArg(user, "getPrimaryGroup");
+            if (primaryGroup == null || primaryGroup.isBlank()) {
+                return 0;
+            }
+            Object groupManager = invokeNoArg(luckPerms, "getGroupManager");
+            Object group = invokeCompatible(groupManager, "getGroup", primaryGroup);
+            Object weight = group == null ? null : invokeNoArg(group, "getWeight");
+            return weight instanceof java.util.OptionalInt optional && optional.isPresent() ? optional.getAsInt() : 0;
+        } catch (ReflectiveOperationException | RuntimeException | LinkageError ignored) {
+            return 0;
+        }
+    }
+
+    // ── Animated title, tips and live placeholders ───────────────────────────
+
+    /** Advances the title animation one step and redraws headers and footers. */
+    public void animate() {
+        if (!isEnabled() || !config().getBoolean("TABLIST.ANIMATION.ENABLED", true)) {
+            return;
+        }
+        // Only worth redrawing this often when the header or footer actually animates.
+        if (!getMultilineText("TABLIST.HEADER").contains("%animated_title%")
+                && !getMultilineText("TABLIST.FOOTER").contains("%animated_title%")) {
+            return;
+        }
+        animationFrame++;
+        updateAll();
+    }
+
+    public long getAnimationIntervalTicks() {
+        return Math.max(2L, config().getLong("TABLIST.ANIMATION.INTERVAL-TICKS", 3L));
+    }
+
+    private String animatedTitle() {
+        String text = config().getString("TABLIST.ANIMATION.TEXT", "CustomSmp");
+        int base = TablistEffects.parseRgb(config().getString("TABLIST.ANIMATION.COLOR", "#00ADFC"), 0x00ADFC);
+        int shine = TablistEffects.parseRgb(config().getString("TABLIST.ANIMATION.SHINE", "#FFFFFF"), 0xFFFFFF);
+        return TablistEffects.shimmer(text, base, shine, animationFrame, config().getBoolean("TABLIST.ANIMATION.BOLD", true));
+    }
+
+    /** The tip for this moment: they rotate every TABLIST.TIPS-SECONDS. */
+    private String currentTip() {
+        List<String> tips = config().getStringList("TABLIST.TIPS");
+        if (tips.isEmpty()) {
+            return "";
+        }
+        long seconds = Math.max(1L, config().getLong("TABLIST.TIPS-SECONDS", 8L));
+        return tips.get((int) ((System.currentTimeMillis() / 1000L / seconds) % tips.size()));
+    }
+
+    private double currentTps() {
+        OptimizationManager optimization = plugin.getOptimizationManager();
+        double tps = optimization == null ? 20D : optimization.getLastTps();
+        return tps <= 0D ? 20D : tps;
+    }
+
+    private int countAfkPlayers() {
+        com.bx.smpPlugin.afk.AfkManager afk = plugin.getAfkManager();
+        if (afk == null) {
+            return 0;
+        }
+        int count = 0;
+        for (Player online : Bukkit.getOnlinePlayers()) {
+            if (afk.isShownAsAfk(online)) {
+                count++;
+            }
+        }
+        return count;
     }
 
     public void refreshSkinHeads(Player player) {
@@ -467,6 +572,7 @@ public class TablistManager {
         removeCachedSkinTexture(playerId);
         skinHeadTextureRefreshTimes.remove(playerId);
         luckPermsCommandOverrides.remove(playerId);
+        listOrders.remove(playerId);
     }
 
     public String createPermissionRefreshSnapshot(Player player) {
@@ -532,13 +638,16 @@ public class TablistManager {
         boolean showTeam = config().getBoolean("TABLIST.SHOW-TEAM-NAME", true);
         String teamName = showTeam ? rawTeamName : null;
         String prefix = resolvePrefix(player);
-        
-        // Add purple AFK indicator if player is in AFK Lounge
-        String afkIndicator = "";
-        if (plugin.getAFKLoungeManager() != null && plugin.getAFKLoungeManager().isPlayerInLounge(player)) {
-            afkIndicator = "&d[AFK] ";
+
+        // AFK players get a tag and, by default, a greyed-out name.
+        com.bx.smpPlugin.afk.AfkManager afk = plugin.getAfkManager();
+        boolean shownAfk = afk != null && afk.isShownAsAfk(player);
+        String afkIndicator = shownAfk ? afk.getTabTag(player) : "";
+        boolean greyName = shownAfk && afk.greysOutNames();
+        if (greyName) {
+            prefix = "&7" + ColorUtils.strip(ColorUtils.colorize(prefix == null ? "" : prefix));
         }
-        
+
         String teamSuffix = "";
         String iconMedia = config().getString("TABLIST.ICON-MEDIA", "");
         String normalizedIconMedia = iconMedia == null ? "" : iconMedia;
@@ -553,6 +662,10 @@ public class TablistManager {
         String iconHeadSkin = config().getString("TABLIST.ICON-HEAD-SKIN", "<head:%player_name%>")
                 .replace("%player_name%", player.getName())
                 .replace("%player%", publicName);
+        if (greyName) {
+            nickname = "&7" + ColorUtils.strip(ColorUtils.colorize(nickname));
+            publicName = "&7" + publicName;
+        }
 
         if (showTeam && teamName != null && !teamName.isBlank()) {
             teamSuffix = " &7[&b" + teamName.toUpperCase() + "&7]";
@@ -973,6 +1086,25 @@ public class TablistManager {
         String publicName = plugin.getHideManager() == null
                 ? player.getName()
                 : plugin.getHideManager().publicName(player);
+        if (text.contains("%animated_title%")) {
+            text = text.replace("%animated_title%", animatedTitle());
+        }
+        if (text.contains("%tip%")) {
+            text = text.replace("%tip%", currentTip());
+        }
+        if (text.contains("%ping")) {
+            text = text.replace("%ping_colored%", TablistEffects.colorPing(player.getPing()))
+                    .replace("%ping%", String.valueOf(player.getPing()));
+        }
+        if (text.contains("%tps")) {
+            double tps = currentTps();
+            text = text.replace("%tps_colored%", TablistEffects.colorTps(tps))
+                    .replace("%tps%", String.format(Locale.ROOT, "%.1f", Math.min(20D, tps)));
+        }
+        if (text.contains("%afk_count%")) {
+            text = text.replace("%afk_count%", String.valueOf(countAfkPlayers()));
+        }
+        text = applyStatPlaceholders(text, player);
         return text
                 .replace("%online%", String.valueOf(Bukkit.getOnlinePlayers().size()))
                 .replace("%max_players%", String.valueOf(Bukkit.getMaxPlayers()))
@@ -981,6 +1113,57 @@ public class TablistManager {
                 .replace("<player>", publicName)
                 .replace("%nick%", resolveNickname(player))
                 .replace("<nick>", resolveNickname(player));
+    }
+
+    /** Per-player stats for the header and footer, e.g. "%money% | %kills% kills". */
+    private String applyStatPlaceholders(String text, Player player) {
+        if (!text.contains("%")) {
+            return text;
+        }
+        com.bx.smpPlugin.models.PlayerData data = plugin.getPlayerDataManager().get(player);
+        if (data == null) {
+            return text;
+        }
+        if (text.contains("%money%") || text.contains("%balance%")) {
+            String money = plugin.getCurrencyManager().formatCompactAmount(
+                    CurrencyManager.CurrencyType.MONEY, data.getMoney());
+            text = text.replace("%money%", money).replace("%balance%", money);
+        }
+        if (text.contains("%shards%")) {
+            text = text.replace("%shards%", plugin.getCurrencyManager().formatCompactAmount(
+                    CurrencyManager.CurrencyType.SHARDS, data.getShards()));
+        }
+        if (text.contains("%team%")) {
+            com.bx.smpPlugin.models.Team team = plugin.getTeamManager().getTeam(player);
+            text = text.replace("%team%", team == null ? "none" : team.getName().toUpperCase(Locale.ROOT));
+        }
+        return text
+                .replace("%kills%", String.valueOf(data.getKills()))
+                .replace("%deaths%", String.valueOf(data.getDeaths()))
+                .replace("%playtime%", com.bx.smpPlugin.utils.NumberUtils.formatTime(data.getTotalPlaytimeSeconds()));
+    }
+
+    /**
+     * LuckPerms can finish loading a player's groups a moment after they join, which left new
+     * players without their rank in the tab list until something else refreshed it. Two late
+     * refreshes catch that.
+     */
+    public void scheduleJoinRefresh(Player player) {
+        if (player == null) {
+            return;
+        }
+        UUID playerId = player.getUniqueId();
+        for (long delay : new long[]{20L, 60L}) {
+            plugin.getSpigotScheduler().runEntityLater(player, () -> {
+                Player online = Bukkit.getPlayer(playerId);
+                if (online == null || !online.isOnline()) {
+                    return;
+                }
+                invalidateLuckPermsCachedData(online);
+                updateTablistName(online);
+                update(online);
+            }, delay);
+        }
     }
 
     private String resolveNickname(Player player) {

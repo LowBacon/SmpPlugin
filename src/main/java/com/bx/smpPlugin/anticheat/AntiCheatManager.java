@@ -62,6 +62,9 @@ public final class AntiCheatManager {
     private BukkitTask banWaveTask;
     private long lastTickMillis;
     private long lastServerLagMillis;
+    private volatile boolean deferToTitanGuard;
+    private volatile boolean titanGuardPresent;
+    private volatile long titanGuardCheckedAt;
 
     public AntiCheatManager(SmpPlugin plugin) {
         this.plugin = plugin;
@@ -69,7 +72,9 @@ public final class AntiCheatManager {
         if (!configFile.exists()) {
             plugin.saveResource(CONFIG_FILE, false);
         }
-        this.config = AntiCheatConfig.from(YamlConfiguration.loadConfiguration(configFile));
+        YamlConfiguration initialYaml = YamlConfiguration.loadConfiguration(configFile);
+        this.config = AntiCheatConfig.from(initialYaml);
+        this.deferToTitanGuard = initialYaml.getBoolean("DEFER-TO-TITANGUARD", true);
         File folder = new File(plugin.getDataFolder(), "anticheat");
         this.evidence = new EvidenceLog(folder.toPath(), plugin.getLogger(),
                 config.evidenceFileLogging(), config.evidenceMemoryPerPlayer());
@@ -92,7 +97,10 @@ public final class AntiCheatManager {
         if (problem.isPresent()) {
             return problem;
         }
-        AntiCheatConfig loaded = AntiCheatConfig.from(YamlConfiguration.loadConfiguration(configFile));
+        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(configFile);
+        AntiCheatConfig loaded = AntiCheatConfig.from(yaml);
+        this.deferToTitanGuard = yaml.getBoolean("DEFER-TO-TITANGUARD", true);
+        this.titanGuardCheckedAt = 0L;
         this.config = loaded;
         evidence.configure(loaded.evidenceFileLogging(), loaded.evidenceMemoryPerPlayer());
         scheduleBanWave();
@@ -120,7 +128,25 @@ public final class AntiCheatManager {
 
     public boolean isActive() {
         FeatureManager features = plugin.getFeatureManager();
-        return config.enabled() && (features == null || features.isEnabled(FeatureManager.Feature.ANTICHEAT));
+        return config.enabled() && (features == null || features.isEnabled(FeatureManager.Feature.ANTICHEAT))
+                && !isDeferringToTitanGuard();
+    }
+
+    /**
+     * True while the TitanGuard anti-cheat plugin is running and anticheat.yml DEFER-TO-TITANGUARD is
+     * on, so the two anti-cheats never set back or punish the same player twice. The plugin lookup is
+     * cached for a few seconds because this runs on every move event.
+     */
+    public boolean isDeferringToTitanGuard() {
+        if (!deferToTitanGuard) {
+            return false;
+        }
+        long now = System.currentTimeMillis();
+        if (now - titanGuardCheckedAt > 5_000L) {
+            titanGuardCheckedAt = now;
+            titanGuardPresent = plugin.getServer().getPluginManager().isPluginEnabled("TitanGuard");
+        }
+        return titanGuardPresent;
     }
 
     PlayerState state(Player player) {

@@ -146,15 +146,18 @@ public class PlayerJoinQuitListener implements Listener {
         NightVisionUtils.restoreIfEnabled(plugin, player);
         plugin.getShopManager().loadPreference(player.getUniqueId());
         plugin.getIgnoreManager().loadPlayer(player.getUniqueId());
+        if (plugin.getVoiceMuteManager() != null) {
+            plugin.getVoiceMuteManager().handleJoin(player);
+        }
         if (plugin.getFriendsManager() != null) {
             plugin.getFriendsManager().handleJoin(player);
         }
         if (player.getAddress() != null && player.getAddress().getAddress() != null) {
-            plugin.getDatabaseManager().savePlayerIpAddress(
-                    player.getUniqueId(),
-                    player.getAddress().getAddress().getHostAddress(),
-                    System.currentTimeMillis()
-            );
+            UUID ipOwner = player.getUniqueId();
+            String ipAddress = player.getAddress().getAddress().getHostAddress();
+            long seenAt = System.currentTimeMillis();
+            plugin.getDatabaseManager().executeAsync(() ->
+                    plugin.getDatabaseManager().savePlayerIpAddress(ipOwner, ipAddress, seenAt));
         }
         plugin.getKeyAllManager().handleJoin(player);
         if (plugin.getHideManager() != null) {
@@ -164,6 +167,10 @@ public class PlayerJoinQuitListener implements Listener {
 
         // Load homes
         plugin.getHomeManager().loadHomes(player);
+        // Both preloaded rows have been used; drop the login copy.
+        if (plugin.getJoinPreloadListener() != null) {
+            plugin.getJoinPreloadListener().discard(player.getUniqueId());
+        }
 
         // Setup scoreboard
         plugin.getScoreboardManager().setupPlayer(player);
@@ -172,9 +179,8 @@ public class PlayerJoinQuitListener implements Listener {
         plugin.getTablistManager().updateTablistName(player);
         plugin.getTablistManager().update(player);
         plugin.getTablistManager().refreshSkinHeads(player);
+        plugin.getTablistManager().scheduleJoinRefresh(player);
 
-        // Track for AFK
-        plugin.getAFKManager().trackPlayer(player);
         plugin.getShardManager().syncBooster(player);
         plugin.getAmethystToolsManager().sanitizePlayerInventory(player, true);
         plugin.getCrateVisualManager().handleJoin(player);
@@ -244,7 +250,7 @@ public class PlayerJoinQuitListener implements Listener {
                         String currentVer = plugin.getDescription().getVersion();
                         String latestVer = plugin.getUpdateManager().getLatestVersion();
                         player.sendMessage(ColorUtils.colorize("&8&m--------------------------------------------------", player));
-                        player.sendMessage(ColorUtils.colorize("&9&lFinnishSmp &7» &c&lA new update is available!", player));
+                        player.sendMessage(ColorUtils.colorize("&9&lCustomSmp &7» &c&lA new update is available!", player));
                         player.sendMessage(ColorUtils.colorize("&7Current version: &c" + currentVer + " &8| &7Latest version: &a" + latestVer, player));
                         player.sendMessage(ColorUtils.colorize("&cPlease download the update from the official repository:", player));
                         player.sendMessage(ColorUtils.colorize("&bhttps://github.com/BeestoXd/SmpPlugin", player));
@@ -331,9 +337,6 @@ public class PlayerJoinQuitListener implements Listener {
         plugin.getScoreboardManager().removePlayer(player.getUniqueId());
         plugin.getTablistManager().removePlayer(player.getUniqueId());
 
-        // Remove AFK tracking
-        plugin.getAFKManager().removePlayer(player.getUniqueId());
-
         // Clean up cuboid-shard countdown state
         plugin.getShardManager().removeCountdown(player.getUniqueId());
         plugin.getShardManager().clearBoosterCache(player.getUniqueId());
@@ -355,6 +358,9 @@ public class PlayerJoinQuitListener implements Listener {
         plugin.getStaffModeManager().handleQuit(player);
         plugin.getChatManager().clearPlayerState(player.getUniqueId());
         plugin.getPrivateMessageManager().clearPlayer(player.getUniqueId());
+        if (plugin.getVoiceMuteManager() != null) {
+            plugin.getVoiceMuteManager().handleQuit(player.getUniqueId());
+        }
         plugin.getIgnoreManager().unloadPlayer(player.getUniqueId());
         if (plugin.getFriendsManager() != null) {
             plugin.getFriendsManager().handleQuit(player);

@@ -915,7 +915,7 @@ QUICK-BUY:
   #     AMOUNT: 1
 
 # Auction -> Your Items menu configuration
-# Page 1 (free rank): 18 List slots + 27 Donut+ locks. Page 2: 45 Donut++ locks
+# Page 1 (free rank): 18 List slots + 27 CustomSmp+ locks. Page 2: 45 CustomSmp++ locks
 # (all five content rows), Previous page on the left. Visual slots follow rank, not listing limit.
 YOUR-ITEMS:
   TITLE: 'Auction -> Your Items'

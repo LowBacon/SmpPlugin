@@ -5,10 +5,18 @@ import com.bx.smpPlugin.utils.PermissionUtils;
 import com.bx.smpPlugin.SmpPlugin;
 import com.bx.smpPlugin.models.PlayerData;
 import com.bx.smpPlugin.utils.ColorUtils;
+import com.bx.smpPlugin.utils.PlayerSettingUtils;
+import com.bx.smpPlugin.utils.SoundUtils;
+import com.bx.smpPlugin.utils.TypedColorPolicy;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,6 +34,13 @@ public class PrivateMessageManager {
 
     public boolean sendPrivateMessage(CommandSender sender, Player target, String message) {
         if (sender == null || target == null || message == null || message.isBlank()) {
+            return false;
+        }
+
+        // Formats colour the whole line after the message goes in, so typed codes come out here for
+        // anyone not allowed to colour their own text. reply() lands here too.
+        message = TypedColorPolicy.apply(sender, message);
+        if (message == null || message.isBlank()) {
             return false;
         }
 
@@ -106,13 +121,45 @@ public class PrivateMessageManager {
         );
 
         send(sender, applyPlaceholders(sentFormat, targetName, message));
-        target.sendMessage(ColorUtils.toComponent(applyPlaceholders(receivedFormat, senderName, message), target));
+        String replyName = sender instanceof Player playerSender ? plugin.getHideManager().plainPublicName(playerSender) : null;
+        deliverReceived(target, applyPlaceholders(receivedFormat, senderName, message), replyName);
+        SoundUtils.play(plugin, target, plugin.getConfigManager().getSound("PRIVATE_MESSAGE.RECEIVED"),
+                PlayerSettingUtils.SoundChannel.NOTIFICATION);
 
         if (sender instanceof Player player) {
             replyTargets.put(player.getUniqueId(), target.getUniqueId());
             replyTargets.put(target.getUniqueId(), player.getUniqueId());
         }
+        logPrivateMessage(sender, target, message);
         return true;
+    }
+
+    /** The received line suggests "/msg sender " when clicked, so answering is one click away. */
+    private void deliverReceived(Player target, String received, String replyName) {
+        if (replyName == null || replyName.isBlank()) {
+            target.sendMessage(ColorUtils.toComponent(received, target));
+            return;
+        }
+        TextComponent component = ColorUtils.toBaseComponent(received, target);
+        component.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/msg " + replyName + " "));
+        component.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                ColorUtils.toBaseComponents(configuredMessage("MESSAGES.CLICK_TO_REPLY", null, "&7Click to reply"), target)));
+        target.spigot().sendMessage(component);
+    }
+
+    private void logPrivateMessage(CommandSender sender, Player target, String message) {
+        if (!plugin.getChatManager().isPrivateChatLoggingEnabled()) {
+            return;
+        }
+        List<DatabaseManager.PlayerLogRecord> records = new ArrayList<>(2);
+        if (sender instanceof Player player) {
+            records.add(new DatabaseManager.PlayerLogRecord(player.getUniqueId(), player.getName(),
+                    "messages", "MSG_SENT", "To " + target.getName() + ": " + message));
+        }
+        String from = sender instanceof Player player ? player.getName() : "Console";
+        records.add(new DatabaseManager.PlayerLogRecord(target.getUniqueId(), target.getName(),
+                "messages", "MSG_RECEIVED", "From " + from + ": " + message));
+        plugin.getPlayerLogsManager().logBatch(records);
     }
 
     public boolean reply(Player sender, String message) {

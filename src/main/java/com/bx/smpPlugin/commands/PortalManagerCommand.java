@@ -186,17 +186,9 @@ public class PortalManagerCommand implements CommandExecutor {
                 return;
             }
         } else if (destinationType.equals("AFK")) {
-            boolean valid = false;
-            if (destinationValue.isBlank()) {
-                valid = plugin.getSpawnManager().hasAfk();
-            } else {
-                for (SpawnManager.TeleportArea area : plugin.getSpawnManager().getValidAreas(SpawnManager.AreaType.AFK)) {
-                    if (area.id().equalsIgnoreCase(destinationValue)) {
-                        valid = true;
-                        break;
-                    }
-                }
-            }
+            boolean valid = destinationValue.isBlank()
+                    ? !plugin.getAfkManager().getZones().isEmpty()
+                    : plugin.getAfkManager().getZone(destinationValue) != null;
             if (!valid) {
                 sendMessage(sender, message("PORTALMANAGER.INVALID-DESTINATION",
                         "&cᴀꜰᴋ ᴅᴇѕᴛɪɴᴀᴛɪᴏɴ '&e{destination}&c' ɪѕ ᴜɴᴀᴠᴀɪʟᴀʙʟᴇ.")
@@ -307,17 +299,9 @@ public class PortalManagerCommand implements CommandExecutor {
                 return;
             }
         } else if (destinationType.equals("AFK")) {
-            boolean valid = false;
-            if (destinationValue.isBlank()) {
-                valid = plugin.getSpawnManager().hasAfk();
-            } else {
-                for (SpawnManager.TeleportArea area : plugin.getSpawnManager().getValidAreas(SpawnManager.AreaType.AFK)) {
-                    if (area.id().equalsIgnoreCase(destinationValue)) {
-                        valid = true;
-                        break;
-                    }
-                }
-            }
+            boolean valid = destinationValue.isBlank()
+                    ? !plugin.getAfkManager().getZones().isEmpty()
+                    : plugin.getAfkManager().getZone(destinationValue) != null;
             if (!valid) {
                 sendMessage(sender, message("PORTALMANAGER.INVALID-DESTINATION",
                         "&cᴀꜰᴋ ᴅᴇѕᴛɪɴᴀᴛɪᴏɴ '&e{destination}&c' ɪѕ ᴜɴᴀᴠᴀɪʟᴀʙʟᴇ.")

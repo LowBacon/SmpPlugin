@@ -63,7 +63,7 @@ public class ItemDropListener implements Listener {
 
     private boolean isInSpawnArea(Player player) {
         // Check if player is in spawn cuboids
-        if (plugin.getAFKManager().isInSpawnCuboid(player)) {
+        if (plugin.getSpawnManager().isInSpawnArea(player)) {
             return true;
         }
         // Fallback or additional check for other Spawn areas configured in SpawnManager
@@ -75,20 +75,6 @@ public class ItemDropListener implements Listener {
     }
 
     private boolean isInAfkArea(Player player) {
-        // Check if player is in AFK state
-        if (plugin.getAFKManager().isAfk(player.getUniqueId())) {
-            return true;
-        }
-        // Check if player is in AFK cuboids
-        Set<String> afkCuboids = plugin.getSpawnManager().getAreaCuboidNames(SpawnManager.AreaType.AFK);
-        if (!afkCuboids.isEmpty() && plugin.getCuboidManager().isInAnyCuboid(player, afkCuboids.toArray(String[]::new))) {
-            return true;
-        }
-        // Check legacy AFK cuboid name from config
-        String legacyAfk = plugin.getConfigManager().getConfig().getString("AFK-SYSTEM.AFK-CUBOID-NAME");
-        if (legacyAfk != null && !legacyAfk.isBlank() && plugin.getCuboidManager().isInCuboid(player, legacyAfk.toLowerCase())) {
-            return true;
-        }
-        return false;
+        return plugin.getAfkManager().zoneAt(player.getLocation()) != null;
     }
 }

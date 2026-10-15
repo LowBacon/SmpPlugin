@@ -1,4 +1,4 @@
-# FinnishSMP CoinFlip Nexus
+# CustomSmp CoinFlip Nexus
 #
 # A 1v1 coin flip for the server's in-game currency. Two players stake the same amount, the server flips a
 # fair coin (50/50, never influenced by stakes, ranks or history) and the winner receives both stakes minus

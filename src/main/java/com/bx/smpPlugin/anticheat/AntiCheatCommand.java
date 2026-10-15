@@ -177,6 +177,9 @@ public final class AntiCheatCommand implements CommandExecutor, TabCompleter {
         send(sender, "&8&m-----&r &cAnti-cheat status &8&m-----");
         send(sender, "&7Active: " + (manager.isActive() ? "&ayes" : "&cno")
                 + " &8| &7checks enabled: &f" + manager.enabledCheckCount() + "/" + CheckType.values().length);
+        if (manager.isDeferringToTitanGuard()) {
+            send(sender, "&7Standing down: &eTitanGuard is running &8(anticheat.yml DEFER-TO-TITANGUARD)");
+        }
         send(sender, "&7Kicks: " + (manager.config().kicksEnabled() ? "&aon" : "&coff")
                 + " &8| &7bans: &f" + manager.config().banMode().name().toLowerCase(Locale.ROOT)
                 + " &8| &7ban queue: &f" + manager.queuedBans().size());

@@ -18,13 +18,24 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+import org.bukkit.event.player.PlayerToggleSneakEvent;
+import org.bukkit.GameMode;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
 public class StaffModeListener implements Listener {
 
+    /** Right-clicking a block fires the interact event for air and block; one press, one action. */
+    private static final long INTERACT_COOLDOWN_MS = 200L;
+
     private final SmpPlugin plugin;
+    private final Map<UUID, Long> lastInteractTimes = new ConcurrentHashMap<>();
 
     public StaffModeListener(SmpPlugin plugin) {
         this.plugin = plugin;
@@ -130,13 +141,14 @@ public class StaffModeListener implements Listener {
         event.setUseInteractedBlock(org.bukkit.event.Event.Result.DENY);
 
         Action action = event.getAction();
-        if ((action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK)
-                && toolType == StaffToolType.FREEZE) {
-            plugin.getStaffModeManager().openFrozenPlayers(player);
+        boolean leftClickFreeze = (action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK)
+                && toolType == StaffToolType.FREEZE;
+        boolean rightClick = action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK;
+        if ((!leftClickFreeze && !rightClick) || isOnInteractCooldown(player)) {
             return;
         }
-
-        if (action != Action.RIGHT_CLICK_AIR && action != Action.RIGHT_CLICK_BLOCK) {
+        if (leftClickFreeze) {
+            plugin.getStaffModeManager().openFrozenPlayers(player);
             return;
         }
 
@@ -181,9 +193,44 @@ public class StaffModeListener implements Listener {
                     ));
                 }
             }
+            case SPECTATOR -> {
+                if (!plugin.getStaffModeManager().canUseSpectator(player)) {
+                    player.sendMessage(ColorUtils.toComponent(
+                            plugin.getStaffModeManager().getMessage("NO-PERMISSION", "&cYou do not have permission.")
+                    ));
+                    return;
+                }
+                plugin.getStaffModeManager().toggleSpectator(player);
+            }
+            case INSPECT -> player.sendMessage(ColorUtils.toComponent(
+                    plugin.getStaffModeManager().getMessage("INSPECT-HINT", "&7Right-click a player to inspect them.")));
             default -> {
             }
         }
+    }
+
+    /** Spectators cannot use hotbar items, so sneaking is the way back to the staff tools. */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onSneak(PlayerToggleSneakEvent event) {
+        Player player = event.getPlayer();
+        if (!event.isSneaking()
+                || player.getGameMode() != GameMode.SPECTATOR
+                || !plugin.getStaffModeManager().isInStaffMode(player.getUniqueId())
+                || isOnInteractCooldown(player)) {
+            return;
+        }
+        plugin.getStaffModeManager().toggleSpectator(player);
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        lastInteractTimes.remove(event.getPlayer().getUniqueId());
+    }
+
+    private boolean isOnInteractCooldown(Player player) {
+        long now = System.currentTimeMillis();
+        Long last = lastInteractTimes.put(player.getUniqueId(), now);
+        return last != null && now - last < INTERACT_COOLDOWN_MS;
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -200,7 +247,14 @@ public class StaffModeListener implements Listener {
         }
 
         event.setCancelled(true);
-        if (toolType != StaffToolType.FREEZE || !(event.getRightClicked() instanceof Player target)) {
+        if (!(event.getRightClicked() instanceof Player target) || isOnInteractCooldown(player)) {
+            return;
+        }
+        if (toolType == StaffToolType.INSPECT) {
+            plugin.getStaffModeManager().inspect(player, target);
+            return;
+        }
+        if (toolType != StaffToolType.FREEZE) {
             return;
         }
 

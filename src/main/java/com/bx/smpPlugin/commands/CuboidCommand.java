@@ -166,8 +166,6 @@ public class CuboidCommand implements CommandExecutor {
             case "shard" -> {
                 config.set("SHARDS.CUBOIDS.REGIONS.spawn.ENABLED", enabled);
                 config.set("SHARDS.CUBOIDS.REGIONS.spawn.BOUND", enabled);
-                updateBindList(config, "CUBOID-BINDS.AFK", cuboidName, enabled);
-                List<String> afkBinds = config.getStringList("CUBOID-BINDS.AFK");
                 if (enabled) {
                     config.set("SHARDS.CUBOIDS.REGIONS.spawn.CUBOID", cuboidName);
                     config.set("SHARDS.CUBOIDS.REGIONS.spawn.WORLD", cuboid.world());
@@ -182,7 +180,6 @@ public class CuboidCommand implements CommandExecutor {
                         config.set("SHARDS.CUBOIDS.REGIONS.spawn.BOUND", false);
                     }
                 }
-                config.set("AFK-SYSTEM.AFK-CUBOID-NAME", afkBinds.isEmpty() ? "" : afkBinds.get(0));
             }
             case "rtp-zone" -> config.set("RTP-ZONE.CUBOID", enabled ? cuboidName : "");
             default -> {
@@ -211,16 +208,10 @@ public class CuboidCommand implements CommandExecutor {
     private void clearDeletedCuboidReferences(String cuboidName) {
         FileConfiguration config = plugin.getConfigManager().getConfig();
         updateBindList(config, "CUBOID-BINDS.SPAWN", cuboidName, false);
-        updateBindList(config, "CUBOID-BINDS.AFK", cuboidName, false);
 
         List<String> spawnBinds = config.getStringList("CUBOID-BINDS.SPAWN");
         if (cuboidName.equalsIgnoreCase(config.getString("AFK-SYSTEM.SPAWN-CUBOID-NAME", ""))) {
             config.set("AFK-SYSTEM.SPAWN-CUBOID-NAME", spawnBinds.isEmpty() ? "" : spawnBinds.get(0));
-        }
-
-        List<String> afkBinds = config.getStringList("CUBOID-BINDS.AFK");
-        if (cuboidName.equalsIgnoreCase(config.getString("AFK-SYSTEM.AFK-CUBOID-NAME", ""))) {
-            config.set("AFK-SYSTEM.AFK-CUBOID-NAME", afkBinds.isEmpty() ? "" : afkBinds.get(0));
         }
 
         if (cuboidName.equalsIgnoreCase(config.getString("SHARDS.CUBOIDS.REGIONS.spawn.CUBOID", ""))) {

@@ -42,7 +42,9 @@ public class PunishmentHistoryMenu extends BaseMenu {
     private static final int NEXT_PAGE_SLOT = 52;
 
     private final UUID targetUuid;
+    private final String targetName;
     private final boolean returnToProfileViewer;
+    private int loadToken;
 
     private PunishmentQuery query = PunishmentQuery.defaultQuery();
     private int page;
@@ -53,29 +55,68 @@ public class PunishmentHistoryMenu extends BaseMenu {
     private final Map<Integer, Long> visibleRecordIds = new HashMap<>();
 
     public PunishmentHistoryMenu(SmpPlugin plugin, UUID targetUuid, boolean returnToProfileViewer) {
-        super(plugin, configuredTitle(plugin, targetUuid), configuredSize(plugin));
+        this(plugin, targetUuid,
+                targetUuid == null ? null : plugin.getPunishmentManager().resolveTargetName(targetUuid),
+                returnToProfileViewer);
+    }
+
+    /** A null {@code targetUuid} lists every player's punishments, newest first. */
+    public PunishmentHistoryMenu(SmpPlugin plugin, UUID targetUuid, String targetName, boolean returnToProfileViewer) {
+        super(plugin, configuredTitle(plugin, targetName), configuredSize(plugin));
         this.targetUuid = targetUuid;
+        this.targetName = targetName == null ? "everyone" : targetName;
         this.returnToProfileViewer = returnToProfileViewer;
     }
 
+    private boolean isServerWide() {
+        return targetUuid == null;
+    }
+
+    /**
+     * Shows the controls straight away and reads the page on the database thread. A history can be
+     * long and the server-wide list reads the whole table, so neither belongs on the main thread.
+     */
     @Override
     public void build(Player player) {
         clear();
         visibleRecordIds.clear();
         fill(Material.GRAY_STAINED_GLASS_PANE);
+        set(22, ItemUtils.createItem(Material.CLOCK, "&7Loading...", List.of("&8Reading punishment records.")));
+        buildControls();
 
         int maxItems = Math.max(1, Math.min(45, menus().getInt(MENU_PATH + ".MAX-ITEMS-PER-PAGE", 45)));
-        totalItems = plugin.getPunishmentManager().countHistory(targetUuid, query);
-        totalPages = Math.max(1, (int) Math.ceil(totalItems / (double) maxItems));
-        if (page >= totalPages) {
-            page = totalPages - 1;
-        }
+        int token = ++loadToken;
+        int requestedPage = page;
+        PunishmentQuery requestedQuery = query;
+        PunishmentManager manager = plugin.getPunishmentManager();
+        plugin.getDatabaseManager().executeAsync(() -> {
+            int count = isServerWide()
+                    ? manager.countAll(requestedQuery, null)
+                    : manager.countHistory(targetUuid, requestedQuery);
+            int pages = Math.max(1, (count + maxItems - 1) / maxItems);
+            int safePage = Math.max(0, Math.min(requestedPage, pages - 1));
+            int offset = safePage * maxItems;
+            List<PunishmentRecord> records = isServerWide()
+                    ? manager.getAll(requestedQuery, null, maxItems, offset)
+                    : manager.getHistory(targetUuid, maxItems, offset, requestedQuery);
+            plugin.getSpigotScheduler().runEntity(player, () -> {
+                if (token != loadToken || player.getOpenInventory().getTopInventory().getHolder() != this) {
+                    return;
+                }
+                totalItems = count;
+                totalPages = pages;
+                page = safePage;
+                hasPreviousPage = page > 0;
+                hasNextPage = offset + maxItems < totalItems;
+                render(records);
+            });
+        });
+    }
 
-        int offset = page * maxItems;
-        hasPreviousPage = page > 0;
-        hasNextPage = offset + maxItems < totalItems;
-
-        List<PunishmentRecord> records = plugin.getPunishmentManager().getHistory(targetUuid, maxItems, offset, query);
+    private void render(List<PunishmentRecord> records) {
+        clear();
+        visibleRecordIds.clear();
+        fill(Material.GRAY_STAINED_GLASS_PANE);
         if (records.isEmpty()) {
             buildEmptyState();
         } else {
@@ -85,7 +126,10 @@ public class PunishmentHistoryMenu extends BaseMenu {
                 set(index, createPunishmentItem(record));
             }
         }
+        buildControls();
+    }
 
+    private void buildControls() {
         buildBackButton();
         buildFilterStateButton();
         buildFilterTypeButton();
@@ -103,7 +147,7 @@ public class PunishmentHistoryMenu extends BaseMenu {
 
         if (slot == BACK_SLOT) {
             SoundUtils.play(player, plugin.getConfigManager().getSound("MENUS.BUTTON-CLICK"));
-            if (returnToProfileViewer && plugin.getProfileViewerManager().canView(player)) {
+            if (returnToProfileViewer && targetUuid != null && plugin.getProfileViewerManager().canView(player)) {
                 new ProfileViewerMenu(plugin, targetUuid).open(player);
             } else {
                 player.closeInventory();
@@ -160,23 +204,24 @@ public class PunishmentHistoryMenu extends BaseMenu {
             return;
         }
 
-        boolean deleted = plugin.getPunishmentManager().deleteRecord(recordId);
-        if (!deleted) {
-            player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessageOrDefault(
-                    "PUNISHMENTS.DELETE-FAILED",
-                    "&cꜰᴀɪʟᴇᴅ ᴛᴏ ᴅᴇʟᴇᴛᴇ ᴘᴜɴɪѕʜᴍᴇɴᴛ ʀᴇᴄᴏʀᴅ #{id}.",
-                    "{id}", String.valueOf(recordId)
-            )));
-            return;
-        }
-
-        player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessageOrDefault(
-                "PUNISHMENTS.DELETED-RECORD",
-                "&aᴅᴇʟᴇᴛᴇᴅ ᴘᴜɴɪѕʜᴍᴇɴᴛ ʜɪѕᴛᴏʀʏ ʀᴇᴄᴏʀᴅ &f#{id}&a.",
-                "{id}", String.valueOf(recordId)
-        )));
-        SoundUtils.play(player, plugin.getConfigManager().getSound("MENUS.BUTTON-CLICK"));
-        build(player);
+        plugin.getDatabaseManager().executeAsync(() -> {
+            boolean deleted = plugin.getPunishmentManager().deleteRecord(recordId);
+            plugin.getSpigotScheduler().runEntity(player, () -> {
+                String key = deleted ? "PUNISHMENTS.DELETED-RECORD" : "PUNISHMENTS.DELETE-FAILED";
+                String fallback = deleted
+                        ? "&aDeleted punishment record &f#{id}&a."
+                        : "&cFailed to delete punishment record #{id}.";
+                player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessageOrDefault(
+                        key, fallback, "{id}", String.valueOf(recordId))));
+                if (!deleted) {
+                    return;
+                }
+                SoundUtils.play(player, plugin.getConfigManager().getSound("MENUS.BUTTON-CLICK"));
+                if (player.getOpenInventory().getTopInventory().getHolder() == this) {
+                    build(player);
+                }
+            });
+        });
     }
 
     private void buildEmptyState() {
@@ -289,10 +334,15 @@ public class PunishmentHistoryMenu extends BaseMenu {
                 )
         );
 
+        List<String> lore = new ArrayList<>(replacePunishmentPlaceholders(loreTemplate, record, state));
+        if (isServerWide()) {
+            // Everyone's records share this list, so each one has to say whose it is.
+            lore.add(0, "&7Player: &f" + safeText(record.getTargetNameSnapshot()));
+        }
         return ItemUtils.createItem(
                 material,
                 replacePunishmentPlaceholders(displayNameTemplate, record, state),
-                replacePunishmentPlaceholders(loreTemplate, record, state)
+                lore
         );
     }
 
@@ -302,7 +352,7 @@ public class PunishmentHistoryMenu extends BaseMenu {
         }
 
         return value
-                .replace("{player}", plugin.getPunishmentManager().resolveTargetName(targetUuid))
+                .replace("{player}", targetName)
                 .replace("{type_filter}", currentTypeFilterLabel())
                 .replace("{state_filter}", query.stateFilter().getDisplayName())
                 .replace("{page}", String.valueOf(page + 1))
@@ -372,6 +422,7 @@ public class PunishmentHistoryMenu extends BaseMenu {
         return switch (type) {
             case BAN -> "IRON_BARS";
             case MUTE -> "PAPER";
+            case VOICE_MUTE -> "NOTE_BLOCK";
             case WARN -> "YELLOW_DYE";
             case KICK -> "LEATHER_BOOTS";
             case BLACKLIST -> "BARRIER";
@@ -389,6 +440,7 @@ public class PunishmentHistoryMenu extends BaseMenu {
         return switch (record.getType()) {
             case BAN, BLACKLIST -> "&c";
             case MUTE -> "&d";
+            case VOICE_MUTE -> "&b";
             case WARN -> "&e";
             case KICK -> "&6";
         };
@@ -453,9 +505,12 @@ public class PunishmentHistoryMenu extends BaseMenu {
         return plugin.getConfigManager().getMenus();
     }
 
-    private static String configuredTitle(SmpPlugin plugin, UUID targetUuid) {
-        String template = plugin.getConfigManager().getMenus().getString(MENU_PATH + ".TITLE", "&8ᴘᴜɴɪѕʜᴍᴇɴᴛѕ ({player})");
-        return template.replace("{player}", plugin.getPunishmentManager().resolveTargetName(targetUuid));
+    private static String configuredTitle(SmpPlugin plugin, String targetName) {
+        if (targetName == null) {
+            return plugin.getConfigManager().getMenus().getString(MENU_PATH + ".SERVER-WIDE-TITLE", "&8Punishments (everyone)");
+        }
+        String template = plugin.getConfigManager().getMenus().getString(MENU_PATH + ".TITLE", "&8Punishments ({player})");
+        return template.replace("{player}", targetName);
     }
 
     private static int configuredSize(SmpPlugin plugin) {

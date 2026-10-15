@@ -40,6 +40,16 @@ public class RTPCommand implements CommandExecutor {
         }
 
         if (args.length == 0) {
+            // The world picker; RTP-MENU.OPEN-ON-COMMAND false keeps the old "RTP in this world".
+            if (plugin.getConfigManager().getRtp().getBoolean("RTP-MENU.OPEN-ON-COMMAND", true)
+                    && plugin.getRtpManager().hasMenuDestinations()) {
+                if (plugin.getRtpManager().isDeniedWorld(player.getWorld().getName())) {
+                    player.sendMessage(ColorUtils.toComponent("&cYou cannot RTP in this world."));
+                    return true;
+                }
+                new RTPMenu(plugin).open(player);
+                return true;
+            }
             plugin.getRtpManager().queueCommandTeleport(player, player.getWorld().getName());
             return true;
         }

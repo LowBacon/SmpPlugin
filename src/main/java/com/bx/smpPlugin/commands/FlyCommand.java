@@ -59,7 +59,7 @@ public class FlyCommand implements CommandExecutor {
                 }
 
                 // Check location (spawn or cuboids)
-                boolean inSpawn = plugin.getAFKManager().isInSpawnCuboid(player);
+                boolean inSpawn = plugin.getSpawnManager().isInSpawnArea(player);
                 boolean inCuboid = false;
                 for (String name : plugin.getCuboidManager().getCuboidNames()) {
                     if (plugin.getCuboidManager().isInCuboid(player, name)) {

@@ -236,7 +236,7 @@ public final class PlayerSettingToggles {
                 PlayerData::isCombatTimerEnabled, PlayerData::setCombatTimerEnabled);
 
         // Visuals — Design/Dialog API/Settings/Visuals
-        addFlag("displaydonutplus", "Display Donut+",
+        addFlag("displaydonutplus", "Display CustomSmp+",
                 PlayerData::isDisplayDonutPlusEnabled, PlayerData::setDisplayDonutPlusEnabled);
         addFlag("worthdisplay", "Item Worth Lore",
                 PlayerData::isWorthDisplayEnabled, PlayerData::setWorthDisplayEnabled,

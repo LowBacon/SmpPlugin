@@ -12,11 +12,11 @@ import java.util.*;
 public class TeamManager {
 
     private final SmpPlugin plugin;
-    private final Map<String, Team> teams = new HashMap<>();
-    private final Map<UUID, String> playerTeamMap = new HashMap<>();
+    private final Map<String, Team> teams = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<UUID, String> playerTeamMap = new java.util.concurrent.ConcurrentHashMap<>();
     private final Map<UUID, List<String>> pendingInvites = new HashMap<>();
-    private final Set<UUID> teamChatEnabled = new HashSet<>();
-    private final Map<UUID, PendingTeamSearch> pendingSearchInputs = new HashMap<>();
+    private final Set<UUID> teamChatEnabled = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    private final Map<UUID, PendingTeamSearch> pendingSearchInputs = new java.util.concurrent.ConcurrentHashMap<>();
     private final Map<UUID, String> activeSearchQueries = new HashMap<>();
 
     public TeamManager(SmpPlugin plugin) {

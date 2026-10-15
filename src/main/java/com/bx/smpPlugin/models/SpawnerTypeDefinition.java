@@ -11,7 +11,8 @@ public record SpawnerTypeDefinition(
         EntityType entityType,
         Material iconMaterial,
         long baseItemsPerCycle,
-        List<DropDefinition> drops
+        List<DropDefinition> drops,
+        double xpPerCycle
 ) {
 
     public SpawnerTypeDefinition {
@@ -19,6 +20,25 @@ public record SpawnerTypeDefinition(
         iconMaterial = iconMaterial == null ? Material.SPAWNER : iconMaterial;
         baseItemsPerCycle = Math.max(1L, baseItemsPerCycle);
         drops = List.copyOf(drops == null ? List.of() : drops);
+        xpPerCycle = Double.isFinite(xpPerCycle) ? Math.max(0D, xpPerCycle) : 0D;
+    }
+
+    /** Roughly what killing one of these mobs drops in vanilla, used when a type sets no XP_PER_CYCLE. */
+    public static double defaultXpPerCycle(EntityType entityType) {
+        if (entityType == null) {
+            return 0D;
+        }
+        return switch (entityType) {
+            case IRON_GOLEM, SNOW_GOLEM, VILLAGER, WANDERING_TRADER -> 0D;
+            case BLAZE, GUARDIAN, ELDER_GUARDIAN, EVOKER -> 10D;
+            default -> {
+                Class<?> type = entityType.getEntityClass();
+                if (type != null && org.bukkit.entity.Monster.class.isAssignableFrom(type)) {
+                    yield 5D;
+                }
+                yield 2D;
+            }
+        };
     }
 
     public record DropDefinition(

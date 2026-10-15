@@ -269,6 +269,60 @@ public class ChatManager {
         nextAllowedGlobalChatAtByPlayer.put(player.getUniqueId(), nextAllowed);
     }
 
+    public boolean isChatLoggingEnabled() {
+        return config().getBoolean(CHAT_ROOT + ".LOGGING.ENABLED", true);
+    }
+
+    public boolean isPublicChatLoggingEnabled() {
+        return isChatLoggingEnabled() && config().getBoolean(CHAT_ROOT + ".LOGGING.PUBLIC-MESSAGES", true);
+    }
+
+    public boolean isPrivateChatLoggingEnabled() {
+        return isChatLoggingEnabled() && config().getBoolean(CHAT_ROOT + ".LOGGING.PRIVATE-MESSAGES", true);
+    }
+
+    public boolean isTeamChatLoggingEnabled() {
+        return isChatLoggingEnabled() && config().getBoolean(CHAT_ROOT + ".LOGGING.TEAM-MESSAGES", true);
+    }
+
+    /** Stores one public chat line for /chatlog. Runs on the database thread. */
+    public void logPublicChat(Player player, String rawMessage) {
+        if (player == null || rawMessage == null || rawMessage.isBlank() || !isPublicChatLoggingEnabled()) {
+            return;
+        }
+        plugin.getPlayerLogsManager().log(player.getUniqueId(), player.getName(),
+                PlayerLogsManager.CHAT_CATEGORY, PlayerLogsManager.PUBLIC_CHAT_TYPE, rawMessage.trim());
+    }
+
+    public void logTeamChat(Player player, String teamName, String rawMessage) {
+        if (player == null || rawMessage == null || rawMessage.isBlank() || !isTeamChatLoggingEnabled()) {
+            return;
+        }
+        plugin.getPlayerLogsManager().log(player.getUniqueId(), player.getName(),
+                PlayerLogsManager.CHAT_CATEGORY, PlayerLogsManager.TEAM_CHAT_TYPE,
+                "[" + teamName + "] " + rawMessage.trim());
+    }
+
+    public boolean isMentionsEnabled() {
+        return config().getBoolean(CHAT_ROOT + ".MENTIONS.ENABLED", true);
+    }
+
+    /**
+     * The message as {@code mentioned} should see it: their name lit up in the mention colour, then
+     * back to the speaker's own message colour. Returns the message unchanged when they are not in it.
+     */
+    public String highlightMention(Player speaker, String rawMessage, String mentionedName) {
+        String highlight = ColorUtils.colorize(config().getString(CHAT_ROOT + ".MENTIONS.COLOR", "&e&l"));
+        String messageColor = resolveMessageColor(speaker);
+        String resume = "§r" +ColorUtils.colorize(messageColor == null || messageColor.isBlank() ? "&f" : messageColor);
+        return com.bx.smpPlugin.utils.ChatMentions.highlight(rawMessage, mentionedName, highlight, resume);
+    }
+
+    public String mentionActionBar(String speakerName) {
+        return config().getString(CHAT_ROOT + ".MENTIONS.ACTIONBAR", "&e%player% &7mentioned you in chat")
+                .replace("%player%", speakerName == null ? "" : speakerName);
+    }
+
     public void clearChatForAllPlayers() {
         int clearLines = Math.max(1, config().getInt(CHAT_ROOT + ".CLEAR-LINES", 150));
         for (Player player : Bukkit.getOnlinePlayers()) {

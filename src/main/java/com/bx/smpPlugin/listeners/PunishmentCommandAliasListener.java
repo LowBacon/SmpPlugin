@@ -24,6 +24,9 @@ public class PunishmentCommandAliasListener implements Listener {
             Map.entry("pardon", "unban"),
             Map.entry("unmute", "unmute"),
             Map.entry("unblacklist", "unblacklist"),
+            Map.entry("vcmute", "vcmute"),
+            Map.entry("vcunmute", "vcunmute"),
+            Map.entry("offend", "offend"),
             Map.entry("punishments", "punishments"),
             Map.entry("phistory", "punishments")
     );

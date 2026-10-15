@@ -16,6 +16,10 @@
 
 ENABLED: true
 
+# When the TitanGuard anti-cheat plugin is installed and running, this built-in anti-cheat stands down so
+# players are not checked, set back or punished twice. Set to false to run both.
+DEFER-TO-TITANGUARD: true
+
 ALERTS:
   # Minimum seconds between alerts for the same player and check.
   COOLDOWN-SECONDS: 3

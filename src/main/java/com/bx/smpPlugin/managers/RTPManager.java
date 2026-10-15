@@ -877,6 +877,21 @@ public class RTPManager {
         return lowest == Integer.MAX_VALUE ? worldCooldown : lowest;
     }
 
+    /** Seconds left on this player's cooldown for a world, 0 when they can RTP there now. */
+    public long getCooldownRemainingSeconds(Player player, String worldName) {
+        long remaining = getCooldownRemainingMillis(player, worldName);
+        return remaining <= 0L ? 0L : Math.max(1L, (long) Math.ceil(remaining / 1000.0D));
+    }
+
+    /** Total playtime in hours, the figure REQUIRED-PLAYTIME-HOURS is checked against. */
+    public double getPlaytimeHours(Player player) {
+        if (player == null || plugin.getPlayerDataManager() == null) {
+            return 0.0D;
+        }
+        com.bx.smpPlugin.models.PlayerData data = plugin.getPlayerDataManager().get(player);
+        return data == null ? 0.0D : data.getTotalPlaytimeSeconds() / 3600.0D;
+    }
+
     public SearchSettings getWorldSearchSettings(String worldName) {
         ConfigurationSection worldSettings = getWorldSettingsSection(worldName);
         if (worldSettings == null) {
@@ -2489,7 +2504,7 @@ public class RTPManager {
         return hasConfiguredDestination;
     }
 
-    private boolean isDeniedWorld(String worldName) {
+    public boolean isDeniedWorld(String worldName) {
         for (String deniedWorld : plugin.getConfigManager().getRtp().getStringList("DENIED-WORLDS")) {
             if (deniedWorld.equalsIgnoreCase(worldName)) {
                 return true;

@@ -72,7 +72,7 @@ public class NetworkStaffChatManager {
             return;
         }
 
-        String message = rawMessage == null ? "" : rawMessage.trim();
+        String message = rawMessage == null ? "" : com.bx.smpPlugin.utils.TypedColorPolicy.apply(sender, rawMessage.trim());
         if (message.isBlank()) {
             sender.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessageOrDefault(
                     "STAFFCHAT.USAGE",

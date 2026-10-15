@@ -49,6 +49,9 @@ public class SpawnerInstance {
     private long updatedAt;
     private final Map<String, SpawnerLootEntry> storedLoot = new LinkedHashMap<>();
     private final Set<String> disabledLootKeys = new LinkedHashSet<>();
+    private long storedXp;
+    private long lifetimeItems;
+    private double lifetimeEarnings;
 
     public SpawnerInstance(
             long id,
@@ -213,6 +216,56 @@ public class SpawnerInstance {
 
     public void clearStoredLoot() {
         storedLoot.clear();
+    }
+
+    public long getStoredXp() {
+        return storedXp;
+    }
+
+    public void setStoredXp(long storedXp) {
+        this.storedXp = Math.max(0L, storedXp);
+    }
+
+    /** Adds XP up to the cap, 0 or less means no cap. */
+    public void addStoredXp(long amount, long cap) {
+        if (amount <= 0L) {
+            return;
+        }
+        long target = storedXp + amount;
+        if (target < 0L) {
+            target = Long.MAX_VALUE;
+        }
+        storedXp = cap > 0L ? Math.min(cap, target) : target;
+    }
+
+    /** Every item this spawner has ever made, including what was sold, collected or capped. */
+    public long getLifetimeItems() {
+        return lifetimeItems;
+    }
+
+    public void setLifetimeItems(long lifetimeItems) {
+        this.lifetimeItems = Math.max(0L, lifetimeItems);
+    }
+
+    public void addLifetimeItems(long amount) {
+        if (amount > 0L) {
+            lifetimeItems = lifetimeItems + amount < 0L ? Long.MAX_VALUE : lifetimeItems + amount;
+        }
+    }
+
+    /** Money earned by selling this spawner's loot from its menu. */
+    public double getLifetimeEarnings() {
+        return lifetimeEarnings;
+    }
+
+    public void setLifetimeEarnings(double lifetimeEarnings) {
+        this.lifetimeEarnings = Double.isFinite(lifetimeEarnings) ? Math.max(0D, lifetimeEarnings) : 0D;
+    }
+
+    public void addLifetimeEarnings(double amount) {
+        if (Double.isFinite(amount) && amount > 0D) {
+            lifetimeEarnings += amount;
+        }
     }
 
     public long getTotalStoredItems() {

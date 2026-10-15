@@ -10,28 +10,47 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.regex.Pattern;
 
 public class HomeManager {
 
     private static final int HOMES_PER_PAGE = 5;
     private static final int MAX_PERMISSION_VALUE = 100;
+    /** Letters, digits, _ and -, up to 16 characters: fits a menu title and a command argument. */
+    private static final Pattern HOME_NAME = Pattern.compile("^[A-Za-z0-9_-]{1,16}$");
 
     private final SmpPlugin plugin;
     /** UUID → list of homes */
-    private final Map<UUID, List<Home>> cache = new HashMap<>();
-    private final Map<UUID, PendingHomeInput> pendingInputs = new HashMap<>();
+    private final Map<UUID, List<Home>> cache = new ConcurrentHashMap<>();
+    private final Map<UUID, PendingHomeInput> pendingInputs = new ConcurrentHashMap<>();
 
     public HomeManager(SmpPlugin plugin) {
         this.plugin = plugin;
     }
 
+    /** Uses the rows read at login when there are any, so the join does not touch the database. */
     public void loadHomes(Player player) {
-        List<Home> homes = plugin.getDatabaseManager().loadHomes(player.getUniqueId());
-        cache.put(player.getUniqueId(), homes);
+        UUID uuid = player.getUniqueId();
+        List<Home> homes = plugin.getJoinPreloadListener() == null
+                ? null
+                : plugin.getJoinPreloadListener().takeHomes(uuid);
+        if (homes == null) {
+            homes = plugin.getDatabaseManager().loadHomes(uuid);
+        }
+        cache.put(uuid, new CopyOnWriteArrayList<>(homes == null ? List.of() : homes));
+    }
+
+    /** Reads someone else's homes, live when they are online. Runs on the database thread. */
+    public List<Home> loadHomesFor(UUID uuid) {
+        List<Home> live = cache.get(uuid);
+        return live != null ? List.copyOf(live) : plugin.getDatabaseManager().loadHomes(uuid);
     }
 
     public void unloadHomes(UUID uuid) {
         cache.remove(uuid);
+        pendingInputs.remove(uuid);
     }
 
     public void clearAllCaches() {
@@ -63,6 +82,17 @@ public class HomeManager {
         int homesByPagePermission = pagesByPermission * HOMES_PER_PAGE;
         int permissionHomes = Math.max(homesByAmountPermission, homesByPagePermission);
 
+        // Rank tiers from config.yml, e.g. "group.vip: 10", so ranks need no numbered nodes.
+        org.bukkit.configuration.ConfigurationSection tiers = plugin.getConfigManager().getConfig()
+                .getConfigurationSection("SETTINGS.HOME-PERMISSIONS");
+        if (tiers != null) {
+            for (String node : tiers.getKeys(true)) {
+                if (tiers.isInt(node) && PermissionUtils.hasExact(player, node)) {
+                    permissionHomes = Math.max(permissionHomes, Math.min(MAX_PERMISSION_VALUE, tiers.getInt(node)));
+                }
+            }
+        }
+
         return permissionHomes > 0 ? permissionHomes : defaultHomes;
     }
 
@@ -80,12 +110,12 @@ public class HomeManager {
     }
 
     public boolean setHome(UUID uuid, String name, Location location) {
-        List<Home> homes = cache.computeIfAbsent(uuid, k -> new ArrayList<>());
+        List<Home> homes = cache.computeIfAbsent(uuid, k -> new CopyOnWriteArrayList<>());
         // Update existing
         for (Home h : homes) {
             if (h.getName().equalsIgnoreCase(name)) {
                 h.setLocation(location.clone());
-                plugin.getDatabaseManager().saveHome(h);
+                saveAsync(h);
                 return true;
             }
         }
@@ -94,15 +124,31 @@ public class HomeManager {
         if (player != null && homes.size() >= getMaxHomes(player)) return false;
         Home home = new Home(uuid, name, location.clone());
         homes.add(home);
-        plugin.getDatabaseManager().saveHome(home);
+        saveAsync(home);
         return true;
+    }
+
+    /**
+     * The cache is what players see, so writes go to the database thread. They queue there in
+     * order, which keeps a rename's delete ahead of its save.
+     */
+    private void saveAsync(Home home) {
+        if (home.getLocation() == null) {
+            return;
+        }
+        Home copy = new Home(home.getOwnerUuid(), home.getName(), home.getLocation().clone(), home.getCreatedAt());
+        plugin.getDatabaseManager().executeAsync(() -> plugin.getDatabaseManager().saveHome(copy));
+    }
+
+    private void deleteAsync(UUID uuid, String name) {
+        plugin.getDatabaseManager().executeAsync(() -> plugin.getDatabaseManager().deleteHome(uuid, name));
     }
 
     public boolean deleteHome(UUID uuid, String name) {
         List<Home> homes = cache.get(uuid);
         if (homes == null) return false;
         boolean removed = homes.removeIf(h -> h.getName().equalsIgnoreCase(name));
-        if (removed) plugin.getDatabaseManager().deleteHome(uuid, name);
+        if (removed) deleteAsync(uuid, name);
         return removed;
     }
 
@@ -111,9 +157,9 @@ public class HomeManager {
         if (getHome(uuid, newName) != null) return false;
         Home home = getHome(uuid, oldName);
         if (home == null) return false;
-        plugin.getDatabaseManager().deleteHome(uuid, oldName);
+        deleteAsync(uuid, home.getName());
         home.setName(newName);
-        plugin.getDatabaseManager().saveHome(home);
+        saveAsync(home);
         return true;
     }
 
@@ -182,8 +228,8 @@ public class HomeManager {
         new HomeMenu(plugin).open(player);
     }
 
-    private boolean isValidHomeName(String input) {
-        return !input.isBlank() && !input.contains(" ");
+    public static boolean isValidHomeName(String input) {
+        return input != null && HOME_NAME.matcher(input).matches();
     }
 
     private void resendPrompt(Player player, PendingHomeInput pending) {

@@ -6,10 +6,12 @@ import com.bx.smpPlugin.managers.FeatureManager;
 import com.bx.smpPlugin.models.PunishmentRecord;
 import com.bx.smpPlugin.models.PunishmentType;
 import com.bx.smpPlugin.models.Team;
+import com.bx.smpPlugin.utils.ChatMentions;
 import com.bx.smpPlugin.utils.ColorUtils;
 import com.bx.smpPlugin.utils.NumberUtils;
 import com.bx.smpPlugin.utils.PlayerSettingUtils;
 import com.bx.smpPlugin.utils.RolePrefixResolver;
+import com.bx.smpPlugin.utils.SoundUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -99,6 +101,7 @@ public class ChatListener implements Listener {
             }
             String teamFormat = "&8[&b" + team.getName().toUpperCase() + "&8] &7%player%&8: &f%message%";
             var component = plugin.getHoverStatsManager().buildChatComponent(player, "", rawMessage, teamFormat);
+            chatManager.logTeamChat(player, team.getName(), rawMessage);
             for (java.util.UUID uuid : team.getMemberUuids()) {
                 Player member = Bukkit.getPlayer(uuid);
                 if (member != null) {
@@ -155,13 +158,32 @@ public class ChatListener implements Listener {
                 .buildChatComponent(player, prefix, rawMessage, chatFormat);
 
         final var finalMsg = chatComponent;
+        boolean bypassIgnore = plugin.getIgnoreManager() == null || plugin.getIgnoreManager().canBypassIgnore(player);
+        boolean mentionsEnabled = chatManager.isMentionsEnabled();
+        String speakerName = plugin.getHideManager().plainPublicName(player);
         plugin.getSpigotScheduler().forEachOnlinePlayer(p -> {
-            if (!plugin.getLobbyManager().isInLobby(p)
-                    && PlayerSettingUtils.notificationEnabled(plugin, p, PlayerSettingUtils.NotificationChannel.PUBLIC_CHAT)) {
-                p.spigot().sendMessage(finalMsg);
+            if (plugin.getLobbyManager().isInLobby(p)
+                    || !PlayerSettingUtils.notificationEnabled(plugin, p, PlayerSettingUtils.NotificationChannel.PUBLIC_CHAT)) {
+                return;
             }
+            boolean self = p.getUniqueId().equals(player.getUniqueId());
+            if (!self && !bypassIgnore && plugin.getIgnoreManager().isIgnoring(p.getUniqueId(), player.getUniqueId())) {
+                return;
+            }
+            String mentionName = self || !mentionsEnabled ? null : plugin.getHideManager().plainPublicName(p);
+            if (mentionName != null && ChatMentions.mentions(rawMessage, mentionName)) {
+                String highlighted = chatManager.highlightMention(player, rawMessage, mentionName);
+                p.spigot().sendMessage(plugin.getHoverStatsManager()
+                        .buildChatComponent(player, prefix, highlighted, chatFormat));
+                SoundUtils.play(plugin, p, plugin.getConfigManager().getSound("CHAT.MENTION"),
+                        PlayerSettingUtils.SoundChannel.NOTIFICATION);
+                PlayerSettingUtils.sendActionBar(plugin, p, chatManager.mentionActionBar(speakerName));
+                return;
+            }
+            p.spigot().sendMessage(finalMsg);
         });
         chatManager.trackAcceptedGlobalMessage(player, rawMessage);
+        chatManager.logPublicChat(player, rawMessage);
     }
 
     private String resolvePrefix(Player player) {
@@ -209,20 +231,35 @@ public class ChatListener implements Listener {
         return plugin.getConfigManager().getMessageOrDefault(
                 "PUNISHMENTS.MUTE",
                 "&c&lʏᴏᴜ ʜᴀᴠᴇ ʙᴇᴇɴ ᴍᴜᴛᴇᴅ!\n&8&m----------------------------\n&7ʀᴇᴀѕᴏɴ: &f%reason%\n&7ᴇxᴘɪʀᴇѕ: &f%nicest_expiration%\n&7ᴍᴜᴛᴇᴅ ʙʏ: &f%issuer%\n&8&m----------------------------\n&7ʏᴏᴜ ᴄᴀɴɴᴏᴛ ѕᴘᴇᴀᴋ ɪɴ ᴄʜᴀᴛ",
-                "%reason%", record.getReason(),
-                "%nicest_expiration%", formatExpires(record),
-                "%issuer%", formatIssuer(record),
-                "{reason}", record.getReason(),
-                "{expires}", formatExpires(record),
-                "{issuer}", formatIssuer(record)
+                punishmentPlaceholders(record)
         );
+    }
+
+    /** Every spelling of the mute placeholders older configs and other plugins' templates use. */
+    private String[] punishmentPlaceholders(PunishmentRecord record) {
+        String expires = formatExpires(record);
+        String issuer = formatIssuer(record);
+        String reason = record.getReason() == null ? "" : record.getReason();
+        String id = String.valueOf(record.getId());
+        return new String[]{
+                "%reason%", reason, "{reason}", reason,
+                "%nicest_expiration%", expires, "{nicest_expiration}", expires,
+                "%expires%", expires, "{expires}", expires,
+                "%duration%", expires, "{duration}", expires,
+                "%issuer%", issuer, "{issuer}", issuer,
+                "%staff%", issuer, "{staff}", issuer,
+                "%id%", id, "{id}", id
+        };
     }
 
     private String formatExpires(PunishmentRecord record) {
         if (record.getExpiresAt() == null) {
-            return "Never";
+            return "Permanent";
         }
         long remainingSeconds = Math.max(0L, (record.getExpiresAt() - System.currentTimeMillis()) / 1000L);
+        if (remainingSeconds <= 0L) {
+            return "Expired";
+        }
         return NumberUtils.formatCountdown(remainingSeconds);
     }
 

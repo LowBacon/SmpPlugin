@@ -91,8 +91,8 @@ public class ShardsCommand implements CommandExecutor {
         String requiredPermission = shardManager.getEverywhereRequiredPermission();
         boolean hasPermission = shardManager.hasEverywherePermission(target);
         boolean excludedWorld = shardManager.isEverywhereExcludedWorld(target.getWorld().getName());
-        boolean afk = plugin.getAFKManager().isAfk(target.getUniqueId());
-        boolean recentMovement = plugin.getAFKManager().hasRecentMovement(
+        boolean afk = plugin.getAfkManager().isAfk(target.getUniqueId());
+        boolean recentMovement = plugin.getAfkManager().hasRecentActivity(
                 target.getUniqueId(),
                 shardManager.getEverywhereRecentMovementWindowSeconds()
         );
@@ -120,7 +120,7 @@ public class ShardsCommand implements CommandExecutor {
         sender.sendMessage(ColorUtils.toComponent("&7ᴍᴜʟᴛɪᴘʟɪᴇʀ: &f" + multiplier + "x"));
 
         if (debug) {
-            long secondsSinceMovement = plugin.getAFKManager().getSecondsSinceLastMovement(target.getUniqueId());
+            long secondsSinceMovement = plugin.getAfkManager().getIdleSeconds(target.getUniqueId());
             sender.sendMessage(ColorUtils.toComponent("&7ᴍᴏᴠᴇᴍᴇɴᴛ ᴡɪɴᴅᴏᴡ: &f" + shardManager.getEverywhereRecentMovementWindowSeconds() + "ѕ"));
             sender.sendMessage(ColorUtils.toComponent("&7ѕᴇᴄᴏɴᴅѕ ѕɪɴᴄᴇ ᴍᴏᴠᴇᴍᴇɴᴛ: &f" + secondsSinceMovement));
             sender.sendMessage(ColorUtils.toComponent("&7ᴄᴜʀʀᴇɴᴛ "

@@ -123,6 +123,18 @@ public class PunishmentManager {
         );
     }
 
+    /** Server-wide count, optionally narrowed to target or staff names containing {@code search}. */
+    public int countAll(PunishmentQuery query, String search) {
+        return plugin.getDatabaseManager().countAllPunishments(
+                query == null ? PunishmentQuery.defaultQuery() : query, search, System.currentTimeMillis());
+    }
+
+    public List<PunishmentRecord> getAll(PunishmentQuery query, String search, int limit, int offset) {
+        return plugin.getDatabaseManager().loadAllPunishments(
+                query == null ? PunishmentQuery.defaultQuery() : query, search,
+                Math.max(1, limit), Math.max(0, offset), System.currentTimeMillis());
+    }
+
     public Optional<PunishmentRecord> getActiveRecord(UUID targetUuid, PunishmentType type) {
         if (targetUuid == null || type == null) {
             return Optional.empty();
@@ -203,7 +215,7 @@ public class PunishmentManager {
             return null;
         }
 
-        return new PunishmentRecord(
+        PunishmentRecord saved = new PunishmentRecord(
                 id,
                 unsaved.getTargetUuid(),
                 unsaved.getTargetNameSnapshot(),
@@ -220,6 +232,17 @@ public class PunishmentManager {
                 unsaved.getSourceServer(),
                 unsaved.getScope()
         );
+        if (saved.getType() == PunishmentType.VOICE_MUTE) {
+            refreshVoiceMute(saved.getTargetUuid());
+        }
+        return saved;
+    }
+
+    /** The microphone gate reads a cache, so every change to a voice mute has to reach it. */
+    private void refreshVoiceMute(UUID targetUuid) {
+        if (plugin.getVoiceMuteManager() != null) {
+            plugin.getVoiceMuteManager().refresh(targetUuid);
+        }
     }
 
     public boolean markRemoved(long punishmentId, PunishmentRemovalRequest request) {
@@ -239,17 +262,27 @@ public class PunishmentManager {
             removalReason = getState(existing) == PunishmentState.EXPIRED ? "Expired" : "Removed";
         }
 
-        return plugin.getDatabaseManager().markPunishmentRemoved(
+        boolean removed = plugin.getDatabaseManager().markPunishmentRemoved(
                 punishmentId,
                 request.removedByUuid(),
                 removedByName,
                 removedAt,
                 removalReason
         );
+        if (removed && existing.getType() == PunishmentType.VOICE_MUTE) {
+            refreshVoiceMute(existing.getTargetUuid());
+        }
+        return removed;
     }
 
     public boolean deleteRecord(long punishmentId) {
-        return plugin.getDatabaseManager().deletePunishmentRecord(punishmentId);
+        // Read first: after the delete there is nothing left to learn the type from.
+        PunishmentRecord existing = plugin.getDatabaseManager().loadPunishmentRecord(punishmentId);
+        boolean deleted = plugin.getDatabaseManager().deletePunishmentRecord(punishmentId);
+        if (deleted && existing != null && existing.getType() == PunishmentType.VOICE_MUTE) {
+            refreshVoiceMute(existing.getTargetUuid());
+        }
+        return deleted;
     }
 
     public PunishmentState getState(PunishmentRecord record) {
@@ -279,6 +312,7 @@ public class PunishmentManager {
         return switch (record.getType()) {
             case BAN -> "TEMPBAN";
             case MUTE -> "TEMPMUTE";
+            case VOICE_MUTE -> "TEMP VOICE MUTE";
             default -> record.getType().name();
         };
     }

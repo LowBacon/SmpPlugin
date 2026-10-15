@@ -1,6 +1,8 @@
 package com.bx.smpPlugin.api;
 
 import com.bx.smpPlugin.SmpPlugin;
+import com.bx.smpPlugin.afk.AfkManager;
+import com.bx.smpPlugin.afk.AfkZone;
 import com.bx.smpPlugin.managers.CurrencyManager;
 import com.bx.smpPlugin.models.PlayerData;
 import com.bx.smpPlugin.utils.NumberUtils;
@@ -190,6 +192,28 @@ public class EconomyExpansion extends PlaceholderExpansion {
             return currencyManager.plural(CurrencyManager.CurrencyType.SHARDS);
         }
 
+        // AFK: %economy_afk%, afk_tag, afk_time, afk_zone, afk_next, afk_earned
+        String lowerParams = params.toLowerCase(java.util.Locale.ROOT);
+        if (lowerParams.equals("afk") || lowerParams.startsWith("afk_")) {
+            org.bukkit.entity.Player online = offlinePlayer == null ? null : offlinePlayer.getPlayer();
+            AfkManager afk = plugin.getAfkManager();
+            if (online == null || afk == null) {
+                return lowerParams.equals("afk") ? "false" : "";
+            }
+            AfkZone zone = afk.getCurrentZone(online);
+            return switch (lowerParams) {
+                case "afk" -> String.valueOf(afk.isShownAsAfk(online));
+                case "afk_tag" -> afk.getTabTag(online);
+                case "afk_time" -> afk.isAfk(online.getUniqueId())
+                        ? NumberUtils.formatCountdown(afk.getAfkSeconds(online.getUniqueId())) : "";
+                case "afk_zone" -> zone == null ? "" : zone.displayName();
+                case "afk_next" -> zone == null || !zone.paysRewards() ? ""
+                        : NumberUtils.formatCountdown(afk.getSecondsToNextReward(online));
+                case "afk_earned" -> String.valueOf(afk.getEarnedThisVisit(online.getUniqueId()));
+                default -> "";
+            };
+        }
+
         // Team
         if (params.equalsIgnoreCase("team")) {
             if (offlinePlayer == null) return "none";
@@ -225,7 +249,7 @@ public class EconomyExpansion extends PlaceholderExpansion {
                 if (offlinePlayer == null || !offlinePlayer.isOnline()) yield "";
                 org.bukkit.entity.Player p = offlinePlayer.getPlayer();
                 if (p != null && data.isDisplayDonutPlusEnabled() && (p.hasPermission("smpplugin.donutplus") || p.hasPermission("donutplus"))) {
-                    yield "&d&lDonut+ &r";
+                    yield "&d&lCustomSmp+ &r";
                 }
                 yield "";
             }

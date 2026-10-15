@@ -34,7 +34,7 @@ public class UniversalCommandTabCompleter implements TabCompleter {
     private static final List<String> DURATIONS = List.of("30s", "15m", "1h", "2h", "1d", "7d");
     private static final List<String> TOGGLES = List.of("true", "false", "on", "off");
     private static final List<String> TEAM_SUBCOMMANDS = List.of(
-            "create", "disband", "invite", "join", "leave", "kick", "home", "sethome", "delhome", "chat", "pvp"
+            "create", "disband", "invite", "join", "leave", "kick", "home", "sethome", "delhome", "chat", "pvp", "info"
     );
     private static final List<String> ARENA_SUBCOMMANDS = List.of(
             "create", "delete", "setpos1", "setpos2", "setreturn", "setdisplay", "enable", "disable", "queue", "list", "reload"

@@ -36,6 +36,13 @@ STAFF-MODE:
   SEE-VANISHED-PERMISSION: smpplugin.staff.mode.seevanished
   # The text or value for Others Permission. Available options: Any valid string text
   OTHERS-PERMISSION: smpplugin.staff.mode.others
+  # Permission for the spectator tool. Sneak while spectating to get your staff tools back.
+  SPECTATOR-PERMISSION: smpplugin.staff.mode.spectator
+  # Fake "joined/left the game" lines so vanishing looks like logging off to regular players.
+  # Staff who can see vanished players never get them.
+  VANISH-FAKE-MESSAGES:
+    FAKE-LEAVE-ON-VANISH: true
+    FAKE-JOIN-ON-UNVANISH: true
   # Configuration section for Hotbar Slots.
   HOTBAR-SLOTS:
     # The numerical value for Vanish. Available options: Any valid integer
@@ -48,6 +55,10 @@ STAFF-MODE:
     BETTER_VIEW: 7
     # The numerical value for Random Teleport. Available options: Any valid integer
     RANDOM_TELEPORT: 8
+    # Right-click a player to open their profile (or inventory without profile access).
+    INSPECT: 2
+    # Switch to spectator. Sneak to switch back.
+    SPECTATOR: 6
   # Configuration section for Better View.
   BETTER-VIEW:
     # Determines whether Enable Night Vision is enabled or disabled. Available options: true, false
@@ -68,6 +79,8 @@ STAFF-MODE:
     EXCLUDE-DUELS: true
     # Determines whether Exclude Ffa is enabled or disabled. Available options: true, false
     EXCLUDE-FFA: true
+    # Tell the player a staff member appeared near them. Never sent while the staff member is vanished.
+    NOTIFY-TARGET: true
 ITEMS:
   # Configuration section for Vanish.
   VANISH:
@@ -108,6 +121,20 @@ ITEMS:
     NAME: '&eRandom Teleport'
     LORE:
     - '&7Click to teleport to a random player'
+  # Configuration section for Inspect.
+  INSPECT:
+    MATERIAL: BOOK
+    NAME: '&eInspect Player'
+    LORE:
+    - '&7Right-click a player to see their'
+    - '&7profile, stats and inventory'
+  # Configuration section for Spectator.
+  SPECTATOR:
+    MATERIAL: ENDER_EYE
+    NAME: '&eSpectator'
+    LORE:
+    - '&7Click to switch to spectator'
+    - '&7Sneak to switch back'
 # Configuration section for Menus.
 MENUS:
   # Configuration section for Staff List.
@@ -189,6 +216,12 @@ MENUS:
 MESSAGES:
   # The text or value for No Permission. Available options: Any valid string text
   NO-PERMISSION: '&cYou do not have permission.'
+  SPECTATOR-ON: '&aSpectator on. &7Sneak to switch back.'
+  SPECTATOR-OFF: '&cSpectator off.'
+  INSPECT-HINT: '&7Right-click a player to inspect them.'
+  # Sent to regular players when a staff member vanishes or reappears. {player} is their name.
+  FAKE-LEAVE-MESSAGE: '&e{player} left the game'
+  FAKE-JOIN-MESSAGE: '&e{player} joined the game'
   # The text or value for Feature Disabled. Available options: Any valid string text
   FEATURE-DISABLED: '&cStaff mode is currently disabled.'
   # The text or value for Player Only. Available options: Any valid string text

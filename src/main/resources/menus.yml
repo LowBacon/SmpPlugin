@@ -664,11 +664,11 @@ SETTINGS-MENU:
       - '&7Notify when players follow you'
       - '&fCurrently: {status}'
     DISPLAY_DONUT_PLUS:
-      DISPLAY-NAME: '&#6BF18DDisplay Donut+'
+      DISPLAY-NAME: '&#6BF18DDisplay CustomSmp+'
       MATERIAL: END_CRYSTAL
       SLOT: 18
       LORE:
-      - '&7Display your premium Donut+ status'
+      - '&7Display your premium CustomSmp+ status'
       - '&fCurrently: {status}'
     CHAINMAIL_ON_RESPAWN:
       DISPLAY-NAME: '&#6BF18DChainmail on Respawn'
@@ -1443,7 +1443,7 @@ SERVER-INFO-MENU:
     SERVER:
       MATERIAL: LANTERN
       SLOT: 10
-      NAME: '&#00A4FCDonutSMP'
+      NAME: '&#00A4FCCustomSmp'
       LORE:
       - '&fBuild a base, fight players,'
       - '&fand become the richest.'
@@ -1523,7 +1523,7 @@ SERVER-INFO-MENU:
         SERVER:
           MATERIAL: LANTERN
           SLOT: 10
-          NAME: '&#00A4FCDonutSMP'
+          NAME: '&#00A4FCCustomSmp'
           LORE:
           - '&fBuild a base, fight players,'
           - '&fand become the richest.'
@@ -1797,100 +1797,7 @@ RULES-MENU:
       - "&#00A4FC● &fNo Ban Evasion"
       - "&#00A4FC● &fNo Lying to Staff Members"
       - "&#00A4FC● &fReport All Bugs, Glitches, and Cheaters"
-      - '  &fin the discord &&#F97603(discord.gg/donutsmp)'
-AFK-MENU:
-  TITLE: '&8AFK Zones'
-  SIZE: 54
-  FILLER-MATERIAL: GRAY_STAINED_GLASS_PANE
-  # One card per AFK zone. Placeholders: {name} {id} {world} {x} {y} {z}
-  # {players} {capacity} {distance} {bar} {cuboid}
-  ENTRY:
-    LORE:
-    - '&8{bar} &7{players}&8/&7{capacity}'
-    - '&7World: &f{world}'
-    - '&7At: &f{x}, {y}, {z}'
-    - '&7Distance: &f{distance}'
-    - '&aClick to teleport'
-    HERE-TEXT: '&aYou are already in this zone'
-    DELETE-TEXT: '&cShift + right-click to delete'
-  EMPTY:
-    MATERIAL: BARRIER
-    DISPLAY-NAME: '&cNo AFK Zones'
-    LORE:
-    - '&7No AFK zones have been set up yet.'
-  # Placeholders: {status} {idle} {timeout} {player}
-  STATUS-BUTTON:
-    MATERIAL: CLOCK
-    DISPLAY-NAME: '&fYour Status'
-    LORE:
-    - '&7State: {status}'
-    - '&7Idle for: &f{idle}'
-    - '&7Auto-AFK after: &f{timeout}'
-    - '&8of inactivity in spawn'
-  # Only shown to players with smpplugin.admin.setafk
-  ADD-BUTTON:
-    MATERIAL: AMETHYST_SHARD
-    DISPLAY-NAME: '&aSave an AFK zone here'
-    LORE:
-    - '&7Click to save your current'
-    - '&7position as a new AFK zone.'
-    - '&8Same as &7/setafk'
-  # Placeholders: {name} {distance}
-  CLOSEST-BUTTON:
-    MATERIAL: RECOVERY_COMPASS
-    DISPLAY-NAME: '&fClosest AFK Zone'
-    LORE:
-    - '&7Nearest: &f{name}'
-    - '&7Distance: &f{distance}'
-    - '&aClick to teleport'
-  # Placeholders: {areas} {page} {pages}
-  REFRESH-BUTTON:
-    MATERIAL: SUNFLOWER
-    DISPLAY-NAME: '&fRefresh'
-    LORE:
-    - '&7Zones: &f{areas}'
-    - '&7Page: &f{page}&7/&f{pages}'
-    - '&7Click to update player counts.'
-  PREV-PAGE:
-    MATERIAL: ARROW
-    DISPLAY-NAME: '&fPrevious Page'
-    LORE:
-    - '&7Page &f{page}&7/&f{pages}'
-  NEXT-PAGE:
-    MATERIAL: ARROW
-    DISPLAY-NAME: '&fNext Page'
-    LORE:
-    - '&7Page &f{page}&7/&f{pages}'
-  RANDOM-BUTTON:
-    SLOT: 49
-    MATERIAL: AMETHYST_BLOCK
-    DISPLAY-NAME: '&#A303F9Random AFK Zone'
-    LORE:
-    - '&7Picks one of &f{areas}&7 zones.'
-    - '&aClick to teleport'
-  # Legacy cuboid-backed AFK areas. Zones created with /setafk live in
-  # config.yml under AFK-SYSTEM.POINTS and do not need an entry here.
-  AREAS:
-    '1':
-      SLOT: 0
-      MATERIAL: ITEM_FRAME
-      DISPLAY-NAME: '&#A303F9AFK #1'
-      LORE:
-      - '&8{players}/200'
-      - '&7Click to go to this'
-      - '&7AFK zone area.'
-      CUBOID: afk1
-      LOCATION: 1
-    '2':
-      SLOT: 1
-      MATERIAL: ITEM_FRAME
-      DISPLAY-NAME: '&#A303F9AFK #2'
-      LORE:
-      - '&8{players}/200'
-      - '&7Click to go to this'
-      - '&7AFK zone area.'
-      CUBOID: afk2
-      LOCATION: 2
+      - '  &fin the discord &&#F97603(/discord)'
 SPAWN-MENU:
   TITLE: '&8Spawn Areas'
   SIZE: 54
@@ -2173,3 +2080,139 @@ SERVERS-MENU:
   SERVERS:
     crystal:
       SLOT: 13
+# /menu: one screen that reaches the main features. Each button runs COMMAND as the player, so
+# permissions and feature toggles still apply. Buttons for commands the player can't use are hidden.
+# {player} works in names and lore. Slot 4 shows the player's own head and opens /stats.
+MAIN-MENU:
+  TITLE: '&8Menu'
+  SIZE: 45
+  FILLER: GRAY_STAINED_GLASS_PANE
+  PROFILE-SLOT: 4
+  CLOSE-SLOT: 40
+  BUTTONS:
+    HOMES:
+      SLOT: 10
+      MATERIAL: RED_BED
+      NAME: '&bHomes'
+      LORE: ['&7Your homes and team home']
+      COMMAND: homes
+    RTP:
+      SLOT: 11
+      MATERIAL: ENDER_PEARL
+      NAME: '&bRandom Teleport'
+      LORE: ['&7Go somewhere new']
+      COMMAND: rtp
+    SPAWN:
+      SLOT: 12
+      MATERIAL: NETHER_STAR
+      NAME: '&bSpawn'
+      LORE: ['&7Back to spawn']
+      COMMAND: spawn
+    WARPS:
+      SLOT: 13
+      MATERIAL: COMPASS
+      NAME: '&bWarps'
+      LORE: ['&7Server warps']
+      COMMAND: warp
+    TEAM:
+      SLOT: 14
+      MATERIAL: WHITE_BANNER
+      NAME: '&bTeam'
+      LORE: ['&7Your team and its members']
+      COMMAND: team
+    FRIENDS:
+      SLOT: 15
+      MATERIAL: PLAYER_HEAD
+      NAME: '&bFriends'
+      LORE: ['&7Friends and who you follow']
+      COMMAND: friends
+    AFK:
+      SLOT: 16
+      MATERIAL: CLOCK
+      NAME: '&bAFK Zone'
+      LORE: ['&7Earn shards while you are away']
+      COMMAND: afk
+    AUCTION:
+      SLOT: 19
+      MATERIAL: GOLD_INGOT
+      NAME: '&6Auction House'
+      LORE: ['&7Buy and sell with players']
+      COMMAND: auctionhouse
+    SHOP:
+      SLOT: 20
+      MATERIAL: EMERALD
+      NAME: '&6Shop'
+      LORE: ['&7Buy items']
+      COMMAND: shop
+    SELL:
+      SLOT: 21
+      MATERIAL: CHEST
+      NAME: '&6Sell'
+      LORE: ['&7Sell your items']
+      COMMAND: sell
+    ORDERS:
+      SLOT: 22
+      MATERIAL: WRITABLE_BOOK
+      NAME: '&6Orders'
+      LORE: ['&7Request items from other players']
+      COMMAND: orders
+    SHARDS:
+      SLOT: 23
+      MATERIAL: AMETHYST_SHARD
+      NAME: '&6Shards'
+      LORE: ['&7Your shards and the shard shop']
+      COMMAND: shards
+    CRATES:
+      SLOT: 24
+      MATERIAL: TRIPWIRE_HOOK
+      NAME: '&6Crates'
+      LORE: ['&7Your keys and crates']
+      COMMAND: crates
+    COINFLIP:
+      SLOT: 25
+      MATERIAL: SUNFLOWER
+      NAME: '&6CoinFlip'
+      LORE: ['&7Bet against other players']
+      COMMAND: coinflip
+    LEADERBOARDS:
+      SLOT: 28
+      MATERIAL: GOLDEN_HELMET
+      NAME: '&eLeaderboards'
+      LORE: ['&7Who is on top']
+      COMMAND: leaderboard
+    DUELS:
+      SLOT: 29
+      MATERIAL: IRON_SWORD
+      NAME: '&eDuels'
+      LORE: ['&7Fight another player']
+      COMMAND: duel
+    FFA:
+      SLOT: 30
+      MATERIAL: DIAMOND_SWORD
+      NAME: '&eFFA'
+      LORE: ['&7Free-for-all arena']
+      COMMAND: ffa
+    BOUNTIES:
+      SLOT: 31
+      MATERIAL: SKELETON_SKULL
+      NAME: '&eBounties'
+      LORE: ['&7Put a price on someone''s head']
+      COMMAND: bounty
+    ENDER-CHEST:
+      SLOT: 32
+      MATERIAL: ENDER_CHEST
+      NAME: '&eEnder Chest'
+      LORE: ['&7Open your ender chest']
+      COMMAND: enderchest
+    SETTINGS:
+      SLOT: 33
+      MATERIAL: COMPARATOR
+      NAME: '&eSettings'
+      LORE: ['&7Your personal settings']
+      COMMAND: settings
+    RULES:
+      SLOT: 34
+      MATERIAL: BOOK
+      NAME: '&eRules'
+      LORE: ['&7Server rules']
+      COMMAND: rules

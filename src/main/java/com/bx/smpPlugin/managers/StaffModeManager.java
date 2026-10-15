@@ -51,7 +51,9 @@ public class StaffModeManager {
             StaffToolType.FREEZE,
             StaffToolType.STAFF_LIST,
             StaffToolType.BETTER_VIEW,
-            StaffToolType.RANDOM_TELEPORT
+            StaffToolType.RANDOM_TELEPORT,
+            StaffToolType.INSPECT,
+            StaffToolType.SPECTATOR
     };
 
     private final SmpPlugin plugin;
@@ -135,6 +137,22 @@ public class StaffModeManager {
 
     public String getRandomTeleportPermission() {
         return getConfig().getString("STAFF-MODE.RANDOM-TELEPORT-PERMISSION", "smpplugin.STAFF.MODE.RANDOMTP");
+    }
+
+    public String getSpectatorPermission() {
+        return getConfig().getString("STAFF-MODE.SPECTATOR-PERMISSION", "smpplugin.staff.mode.spectator");
+    }
+
+    public boolean canUseSpectator(Player player) {
+        return player != null && PermissionUtils.has(player, getSpectatorPermission());
+    }
+
+    public boolean shouldSendFakeLeaveOnVanish() {
+        return getConfig().getBoolean("STAFF-MODE.VANISH-FAKE-MESSAGES.FAKE-LEAVE-ON-VANISH", true);
+    }
+
+    public boolean shouldSendFakeJoinOnUnvanish() {
+        return getConfig().getBoolean("STAFF-MODE.VANISH-FAKE-MESSAGES.FAKE-JOIN-ON-UNVANISH", true);
     }
 
     public String getSeeVanishedPermission() {
@@ -351,6 +369,60 @@ public class StaffModeManager {
         return true;
     }
 
+    /**
+     * Switches between spectator and staff mode's creative. Spectators cannot use hotbar items, so
+     * sneaking switches back (see StaffModeListener#onSneak).
+     */
+    public boolean toggleSpectator(Player player) {
+        if (player == null || !isInStaffMode(player.getUniqueId()) || !canUseSpectator(player)) {
+            return false;
+        }
+
+        boolean enable = player.getGameMode() != GameMode.SPECTATOR;
+        if (enable) {
+            player.setGameMode(GameMode.SPECTATOR);
+            player.sendMessage(ColorUtils.toComponent(getMessage("SPECTATOR-ON",
+                    "&aSpectator on. &7Sneak to switch back."), player));
+        } else {
+            player.setGameMode(GameMode.CREATIVE);
+            player.setAllowFlight(true);
+            player.setFlying(true);
+            player.sendMessage(ColorUtils.toComponent(getMessage("SPECTATOR-OFF", "&cSpectator off."), player));
+        }
+        return true;
+    }
+
+    /** Right-click a player with the inspect tool: their profile, or their inventory as a fallback. */
+    public void inspect(Player staff, Player target) {
+        if (staff == null || target == null) {
+            return;
+        }
+        if (plugin.getProfileViewerManager() != null && plugin.getProfileViewerManager().canView(staff)) {
+            new com.bx.smpPlugin.menus.ProfileViewerMenu(plugin, target.getUniqueId()).open(staff);
+            return;
+        }
+        if (PermissionUtils.has(staff, "smpplugin.staff.invsee")) {
+            staff.performCommand("invsee " + target.getName());
+            return;
+        }
+        staff.sendMessage(ColorUtils.toComponent(getMessage("NO-PERMISSION", "&cYou do not have permission."), staff));
+    }
+
+    private void broadcastFakeVanishMessage(Player staff, boolean joined) {
+        String template = joined
+                ? getMessage("FAKE-JOIN-MESSAGE", "&e{player} joined the game")
+                : getMessage("FAKE-LEAVE-MESSAGE", "&e{player} left the game");
+        String name = plugin.getHideManager() == null ? staff.getName() : plugin.getHideManager().plainPublicName(staff);
+        String message = template.replace("{player}", name).replace("%player%", name);
+        for (Player viewer : Bukkit.getOnlinePlayers()) {
+            // Staff who can see vanished players already know, and would only be confused.
+            if (viewer.getUniqueId().equals(staff.getUniqueId()) || canSeeVanished(viewer, staff)) {
+                continue;
+            }
+            viewer.sendMessage(ColorUtils.toComponent(message, viewer));
+        }
+    }
+
     public Player teleportToRandomPlayer(Player viewer) {
         Player target = findRandomTeleportTarget(viewer);
         if (viewer == null || target == null) {
@@ -378,6 +450,11 @@ public class StaffModeManager {
                     PlayerSettingUtils.sendActionBar(plugin, viewer, message);
                 }
             });
+            // A vanished staff member is checking on the player; telling them would give it away.
+            if (isVanished(viewer.getUniqueId())
+                    || !getConfig().getBoolean("STAFF-MODE.RANDOM-TELEPORT.NOTIFY-TARGET", true)) {
+                return;
+            }
             plugin.getSpigotScheduler().runEntity(target, () -> {
                 if (target.isOnline()) {
                     target.sendMessage(ColorUtils.toComponent(
@@ -581,7 +658,7 @@ public class StaffModeManager {
         if (player == null) {
             return "offline";
         }
-        if (plugin.getAFKManager().isAfk(player.getUniqueId())) {
+        if (plugin.getAfkManager().isAfk(player.getUniqueId())) {
             return "online (afk)";
         }
         return "online";
@@ -867,6 +944,9 @@ public class StaffModeManager {
 
         if (state.isVanishActive()) {
             applyVanish(player, false);
+            if (player.isOnline() && shouldSendFakeJoinOnUnvanish()) {
+                broadcastFakeVanishMessage(player, true);
+            }
         } else {
             refreshViewerVisibility(player);
         }
@@ -930,11 +1010,19 @@ public class StaffModeManager {
             return false;
         }
 
+        boolean wasVanished = currentState.isVanishActive();
         StaffModeState updatedState = currentState.withVanishActive(active);
         activeStates.put(player.getUniqueId(), updatedState);
         plugin.getDatabaseManager().saveStaffModeState(updatedState);
         applyVanish(player, active);
         refreshTool(player, StaffToolType.VANISH);
+        if (wasVanished != active) {
+            if (active && shouldSendFakeLeaveOnVanish()) {
+                broadcastFakeVanishMessage(player, false);
+            } else if (!active && shouldSendFakeJoinOnUnvanish()) {
+                broadcastFakeVanishMessage(player, true);
+            }
+        }
 
         if (notify) {
             String path = active ? "VANISH-ON" : "VANISH-OFF";
@@ -1210,6 +1298,8 @@ public class StaffModeManager {
             case STAFF_LIST -> 4;
             case BETTER_VIEW -> 7;
             case RANDOM_TELEPORT -> 8;
+            case INSPECT -> 2;
+            case SPECTATOR -> 6;
         };
     }
 

@@ -394,6 +394,13 @@ public class DuelManager {
         return statsCache.computeIfAbsent(uuid, this::loadStats);
     }
 
+    /** Forgets the cached copy so the next read comes from the database (after a player wipe). */
+    public void forgetStats(UUID uuid) {
+        if (uuid != null) {
+            statsCache.remove(uuid);
+        }
+    }
+
     public List<DuelClaim> getClaims(UUID uuid) {
         List<DuelClaim> claims = new ArrayList<>();
         if (uuid == null || connection() == null) {

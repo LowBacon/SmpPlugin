@@ -131,8 +131,9 @@ public class InventoryClickListener implements Listener {
                 return;
             }
 
+            // RTPMenu closes itself when a click teleports, so a locked or cooling-down world can
+            // be clicked without losing the menu.
             player.setItemOnCursor(originalCursor);
-            player.closeInventory();
             player.updateInventory();
 
             if (validTopClick) {

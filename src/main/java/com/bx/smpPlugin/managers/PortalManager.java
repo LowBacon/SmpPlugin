@@ -383,9 +383,9 @@ public class PortalManager {
                 return false;
             }
 
-            Location destination = resolveAfkDestinationLocation(portal);
-            if (destination == null) {
-                player.sendMessage(ColorUtils.toComponent("&cᴀꜰᴋ ʟᴏᴄᴀᴛɪᴏɴ ɪѕ ɴᴏᴛ ѕᴇᴛ."));
+            com.bx.smpPlugin.afk.AfkZone zone = resolveAfkZone(portal, player);
+            if (zone == null) {
+                player.sendMessage(ColorUtils.toComponent("&cᴛʜᴇʀᴇ ᴀʀᴇ ɴᴏ ᴀꜰᴋ ᴢᴏɴᴇѕ ʏᴇᴛ."));
                 return false;
             }
 
@@ -397,7 +397,7 @@ public class PortalManager {
                     .replace("{portal}", portal.effectiveDisplayName())
                     .replace("{destination}", destinationLabel);
 
-            plugin.getAFKManager().sendToAfk(player, destination, resolvedMessage);
+            plugin.getAfkManager().teleport(player, zone, resolvedMessage);
         } else {
             return false;
         }
@@ -409,19 +409,22 @@ public class PortalManager {
         return portal != null && plugin.getCuboidManager().exists(portal.cuboidName());
     }
 
-    private Location resolveAfkDestinationLocation(PortalDefinition portal) {
+    /** The named AFK zone, or the best zone for this player when the portal names none. */
+    private com.bx.smpPlugin.afk.AfkZone resolveAfkZone(PortalDefinition portal, org.bukkit.entity.Player player) {
         String value = portal.destinationValue();
         if (value != null && !value.isBlank()) {
-            for (SpawnManager.TeleportArea area : plugin.getSpawnManager().getValidAreas(SpawnManager.AreaType.AFK)) {
-                if (area.id().equalsIgnoreCase(value)) {
-                    Location loc = plugin.getSpawnManager().resolveDestination(area);
-                    if (loc != null) {
-                        return loc;
-                    }
-                }
+            com.bx.smpPlugin.afk.AfkZone zone = plugin.getAfkManager().getZone(value);
+            if (zone != null && zone.spawnLocation() != null) {
+                return zone;
             }
         }
-        return plugin.getSpawnManager().resolveCommandDestination(SpawnManager.AreaType.AFK);
+        java.util.List<com.bx.smpPlugin.afk.AfkZone> zones = plugin.getAfkManager().destinationsFor(player);
+        return zones.isEmpty() ? null : zones.getFirst();
+    }
+
+    private Location resolveAfkDestinationLocation(PortalDefinition portal) {
+        com.bx.smpPlugin.afk.AfkZone zone = resolveAfkZone(portal, null);
+        return zone == null ? null : zone.spawnLocation();
     }
 
     public boolean isDestinationUsable(PortalDefinition portal) {

@@ -514,15 +514,16 @@ public class EconomyManager {
     private void saveLoadedAccount(LoadedAccount loadedAccount) {
         if (loadedAccount.reference().isOnline()) {
             if (plugin.getLeaderboardManager() != null) {
-                plugin.getLeaderboardManager().invalidate(LeaderboardManager.LeaderboardType.MONEY);
+                plugin.getLeaderboardManager().invalidateLive(LeaderboardManager.LeaderboardType.MONEY);
             }
         } else {
-            plugin.getSpigotScheduler().runAsync(() -> {
+            // Invalidate after the row is written, or the next read would cache the old balance.
+            plugin.getDatabaseManager().executeAsync(() -> {
                 plugin.getDatabaseManager().savePlayer(loadedAccount.data());
+                if (plugin.getLeaderboardManager() != null) {
+                    plugin.getLeaderboardManager().invalidate(LeaderboardManager.LeaderboardType.MONEY);
+                }
             });
-            if (plugin.getLeaderboardManager() != null) {
-                plugin.getLeaderboardManager().invalidate(LeaderboardManager.LeaderboardType.MONEY);
-            }
         }
     }
 

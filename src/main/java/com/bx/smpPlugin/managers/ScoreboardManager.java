@@ -627,9 +627,6 @@ public class ScoreboardManager {
         if (plugin.getLobbyManager() != null && plugin.getLobbyManager().isInLobby(player)) {
             return ColorUtils.toTitleCaseSmart(ColorUtils.colorize(plugin.getLobbyManager().getScoreboardTitle(), player));
         }
-        if (plugin.getAFKLoungeManager() != null && plugin.getAFKLoungeManager().isPlayerInLounge(player)) {
-            return ColorUtils.toTitleCaseSmart(ColorUtils.colorize(plugin.getAFKLoungeManager().getScoreboardTitle(), player));
-        }
         List<String> titles = plugin.getConfigManager().getScoreboard().getStringList("SCOREBOARD.TITLE");
         if (titles.isEmpty()) {
             return ColorUtils.toTitleCaseSmart(ColorUtils.colorize("SmpPlugin", player));

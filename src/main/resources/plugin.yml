@@ -18,6 +18,7 @@ softdepend:
 - Multiverse-Core
 - floodgate
 - FancyNpcs
+- voicechat
 loadbefore:
 - EconomyShopGUI
 - EconomyShopGUI-Premium
@@ -91,26 +92,18 @@ commands:
     usage: /setlobby
     permission: smpplugin.admin.lobby.setlobby
   afk:
-    description: Go to AFK zone
-    usage: /afk
-  setafk:
-    description: Save an AFK zone at your current location
-    usage: /setafk [name]
+    description: Go to an AFK zone and earn shards while you wait
+    usage: /afk [zone]
+  away:
+    description: Mark yourself AFK, or come back
+    usage: /away
+    permission: smpplugin.afk.away
+  afkzone:
+    description: Build and edit AFK zones
+    usage: /afkzone <pos1|pos2|create|setregion|setspawn|reward|rename|delete|list|show|reload>
     aliases:
-    - afkset
-    permission: smpplugin.admin.setafk
-  delafk:
-    description: Delete a saved AFK zone
-    usage: /delafk <name>
-    aliases:
-    - afkdel
-    permission: smpplugin.admin.setafk
-  afklist:
-    description: List every configured AFK destination
-    usage: /afklist
-    aliases:
-    - afkpoints
-    permission: smpplugin.admin.setafk
+    - afkzones
+    permission: smpplugin.admin.afkzone
   rtp:
     description: Random teleport
     usage: /rtp [world]
@@ -286,6 +279,11 @@ commands:
   keys:
     description: Open your crate keys menu
     usage: /keys
+  menu:
+    description: Open the main menu
+    usage: /menu
+    aliases:
+    - mainmenu
   stats:
     description: View player stats
     usage: /stats [player]
@@ -392,10 +390,17 @@ commands:
     usage: /profileviewer <player>
     aliases:
     - pv
+  chatlog:
+    description: Browse logged public and team chat
+    usage: /chatlog [player]
+    permission: smpplugin.admin.chatlog
+  seehomes:
+    description: View another player's homes
+    usage: /seehomes <player>
   punishments:
     permission: smpplugin.staff.punishments.view
-    description: View a player's punishment history
-    usage: /punishments <player>
+    description: View a player's punishment history, or everyone's with no name
+    usage: /punishments [player]
     aliases:
     - phistory
   ban:
@@ -440,6 +445,18 @@ commands:
     description: Remove active blacklist records for a player
     usage: /unblacklist <player> [reason]
     permission: smpplugin.staff.punishments.unblacklist
+  vcmute:
+    description: Mute a player in Simple Voice Chat, for a time or for good
+    usage: /vcmute <player> [time] [reason]
+    permission: smpplugin.staff.punishments.vcmute
+  vcunmute:
+    description: Lift a voice mute
+    usage: /vcunmute <player> [reason]
+    permission: smpplugin.staff.punishments.vcunmute
+  offend:
+    description: Punish a player with a preset offense from offenses.yml
+    usage: /offend <player> <offense> [time] | /offend <player> | /offend list
+    permission: smpplugin.staff.punishments.offend
   bounty:
     description: Manage bounties
     usage: /bounty <add|set|info|list> [player] [amount]
@@ -582,12 +599,22 @@ commands:
     description: SmpPlugin administration
     usage: /smpplugin <status|reload|statswipe|optimize|setup|features|maintenance>
     aliases:
-    - fsmp
-    - finnishsmp
+    - csmp
+    - customsmp
   maintenance:
     permission: smpplugin.admin.maintenance
     description: Turn maintenance mode on or off
     usage: /maintenance <on|off|status|setlobby>
+  playerwipe:
+    description: Wipe everything this plugin stores about one player (backed up first)
+    usage: /playerwipe <player> [confirm]
+    aliases:
+    - pwipe
+  playerunwipe:
+    description: Restore a wiped player from the backup their wipe left behind
+    usage: /playerunwipe <player> [confirm]
+    aliases:
+    - punwipe
   serverwipe:
     description: Prepare and run a season wipe (backs up worlds first)
     usage: /serverwipe <preview|status|prepare|confirm|cancel>
@@ -614,10 +641,6 @@ commands:
     permission: smpplugin.coinflip.inspect
     aliases:
     - cfadmin
-  afklounge:
-    description: Manage AFK Lounge settings
-    usage: /afklounge <setlocation|border|info>
-    permission: smpplugin.admin.afklounge
 # BEGIN GENERATED PERMISSIONS - edit PermissionRegistry.java, not this section
 permissions:
   smpplugin.admin:
@@ -629,6 +652,7 @@ permissions:
       smpplugin.staff.mode.stafflist: true
       smpplugin.staff.mode.betterview: true
       smpplugin.staff.mode.randomtp: true
+      smpplugin.staff.mode.spectator: true
       smpplugin.staff.mode.seevanished: true
       smpplugin.staff.mode.others: true
       smpplugin.staff.freeze: true
@@ -653,6 +677,9 @@ permissions:
       smpplugin.staff.invsee: true
       smpplugin.staff.profileviewer: true
       smpplugin.staff.punishments.view: true
+      smpplugin.staff.punishments.vcmute: true
+      smpplugin.staff.punishments.vcunmute: true
+      smpplugin.staff.seehomes: true
       smpplugin.staff.punishments.ban: true
       smpplugin.staff.punishments.tempban: true
       smpplugin.staff.punishments.mute: true
@@ -663,6 +690,7 @@ permissions:
       smpplugin.staff.punishments.unban: true
       smpplugin.staff.punishments.unmute: true
       smpplugin.staff.punishments.unblacklist: true
+      smpplugin.staff.punishments.offend: true
       smpplugin.staff.fakeplayer: true
       smpplugin.staff.fakeplayer.alert: true
       smpplugin.staff.spawnstash: true
@@ -690,9 +718,8 @@ permissions:
       smpplugin.admin.delwarp: true
       smpplugin.admin.portalmanager: true
       smpplugin.admin.setspawn: true
-      smpplugin.admin.setafk: true
+      smpplugin.admin.afkzone: true
       smpplugin.admin.teleportareas.delete: true
-      smpplugin.admin.afklounge: true
       smpplugin.admin.amethysttool: true
       smpplugin.admin.worth: true
       smpplugin.admin.sellstats: true
@@ -716,6 +743,7 @@ permissions:
       smpplugin.admin.lobby.reload: true
       smpplugin.admin.lobby.debug: true
       smpplugin.admin.logs: true
+      smpplugin.admin.chatlog: true
       smpplugin.admin.spawnstash: true
       smpplugin.admin.anvilmod: true
       smpplugin.admin.safety.reload: true
@@ -729,7 +757,10 @@ permissions:
       smpplugin.coinflip.admin.toggle: true
       smpplugin.bypass.lobby: true
       smpplugin.bypass.lobby.border: true
+      smpplugin.afk.kickbypass: true
       smpplugin.admin.maintenance.bypass: true
+      smpplugin.admin.playerwipe: true
+      smpplugin.admin.playerunwipe: true
   smpplugin.message:
     description: 'Send private messages with /msg and reply with /reply.'
     default: true
@@ -762,6 +793,12 @@ permissions:
     default: true
   smpplugin.coinflip.practice:
     description: 'Flip practice coins (no currency).'
+    default: true
+  smpplugin.chat.color:
+    description: 'Keep colour codes typed into /msg and staff chat.'
+    default: false
+  smpplugin.afk.away:
+    description: 'Mark yourself AFK where you stand with /away.'
     default: true
   smpplugin.findplayer:
     description: 'See which dimension and biome another online player is in with /findplayer.'
@@ -803,13 +840,13 @@ permissions:
     description: 'Allow the quick-sell setting for Auction House listings.'
     default: false
   smpplugin.donutplus:
-    description: 'Show the Donut+ badge (player setting).'
+    description: 'Show the CustomSmp+ badge (player setting).'
     default: false
   smpplugin.donutplusplus:
-    description: 'Donut++ rank: unlocks the second page of Auction House listing slots.'
+    description: 'CustomSmp++ rank: unlocks the second page of Auction House listing slots.'
     default: false
   smpplugin.donutplusplusplus:
-    description: 'Donut+++ rank: same Auction House slots as Donut++.'
+    description: 'CustomSmp+++ rank: same Auction House slots as CustomSmp++.'
     default: false
   smpplugin.rtp.priority.vip++:
     description: 'RTP waiting-queue priority 30 (rtp.yml PRIORITY-QUEUE).'
@@ -861,6 +898,9 @@ permissions:
     default: false
   smpplugin.staff.mode.randomtp:
     description: 'Teleport to a random player from the staff-mode hotbar.'
+    default: false
+  smpplugin.staff.mode.spectator:
+    description: 'Switch to spectator from the staff-mode hotbar; sneak to switch back.'
     default: false
   smpplugin.staff.mode.seevanished:
     description: 'See vanished staff members.'
@@ -935,7 +975,16 @@ permissions:
     description: 'View player profiles and homes with /profileviewer.'
     default: false
   smpplugin.staff.punishments.view:
-    description: 'View punishment history with /punishments.'
+    description: 'View punishment history with /punishments, or everyone''s with no name.'
+    default: false
+  smpplugin.staff.punishments.vcmute:
+    description: 'Mute players in Simple Voice Chat with /vcmute, for a time or for good.'
+    default: false
+  smpplugin.staff.punishments.vcunmute:
+    description: 'Lift voice mutes with /vcunmute.'
+    default: false
+  smpplugin.staff.seehomes:
+    description: 'View another player''s homes with /seehomes.'
     default: false
   smpplugin.staff.punishments.ban:
     description: 'Permanently ban players with /ban. Also grants /tempban.'
@@ -970,6 +1019,9 @@ permissions:
     default: false
   smpplugin.staff.punishments.unblacklist:
     description: 'Lift blacklists with /unblacklist.'
+    default: false
+  smpplugin.staff.punishments.offend:
+    description: 'Punish players with the preset offense rules in offenses.yml using /offend.'
     default: false
   smpplugin.staff.fakeplayer:
     description: 'Spawn fake players with /fakeplayer.'
@@ -1052,14 +1104,11 @@ permissions:
   smpplugin.admin.setspawn:
     description: 'Set the server spawn.'
     default: false
-  smpplugin.admin.setafk:
-    description: 'Create, delete and list AFK zones.'
+  smpplugin.admin.afkzone:
+    description: 'Build and edit AFK zones with /afkzone.'
     default: false
   smpplugin.admin.teleportareas.delete:
-    description: 'Delete AFK and teleport areas from their menus.'
-    default: false
-  smpplugin.admin.afklounge:
-    description: 'Configure the AFK Lounge.'
+    description: 'Delete spawn areas from the spawn menu.'
     default: false
   smpplugin.admin.amethysttool:
     description: 'Give amethyst tools.'
@@ -1130,6 +1179,9 @@ permissions:
   smpplugin.admin.logs:
     description: 'View a player''s activity log with /logs.'
     default: false
+  smpplugin.admin.chatlog:
+    description: 'Browse logged public and team chat with /chatlog.'
+    default: false
   smpplugin.admin.spawnstash:
     description: 'Administer bait stashes (reload, remove any).'
     default: false
@@ -1169,8 +1221,20 @@ permissions:
   smpplugin.bypass.lobby.border:
     description: 'Ignore only the lobby border.'
     default: false
+  smpplugin.afk.kickbypass:
+    description: 'Never get kicked for being AFK (afk.yml IDLE-ACTIONS.KICK-SECONDS).'
+    default: false
+  smpplugin.afk.statusbypass:
+    description: 'Never get the automatic [AFK] status after idling.'
+    default: false
   smpplugin.admin.maintenance.bypass:
     description: 'Join and stay on the server during maintenance.'
+    default: false
+  smpplugin.admin.punishments.exempt:
+    description: 'Cannot be punished by staff unless they hold the exempt bypass.'
+    default: false
+  smpplugin.admin.punishments.exempt.bypass:
+    description: 'Punish players who hold smpplugin.admin.punishments.exempt.'
     default: false
   smpplugin.ignore.bypass:
     description: 'Message players who ignore you.'
@@ -1225,6 +1289,12 @@ permissions:
     default: false
   smpplugin.coinflip.admin.resetstats:
     description: 'Reset a player''s CoinFlip statistics (a reason is required and audited).'
+    default: false
+  smpplugin.admin.playerwipe:
+    description: 'Wipe one player''s stats, homes, items and progress with /playerwipe (backed up first).'
+    default: false
+  smpplugin.admin.playerunwipe:
+    description: 'Restore a wiped player from their backup with /playerunwipe.'
     default: false
   smpplugin.admin.serverwipe:
     description: 'Run the season wipe workflow (/serverwipe).'

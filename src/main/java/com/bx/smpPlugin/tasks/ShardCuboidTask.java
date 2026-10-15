@@ -68,7 +68,7 @@ public class ShardCuboidTask implements Runnable {
             return;
         }
 
-        if (plugin.getAFKManager() != null && plugin.getAFKManager().isAfk(uuid)) {
+        if (plugin.getAfkManager() != null && plugin.getAfkManager().isAfk(uuid)) {
             PlayerSettingUtils.sendActionBar(plugin, player,
                     shardManager.replaceCommonPlaceholders(current.afkPausedMessage(), current, progress.getRemainingSeconds(), 0, 1, progress));
             shardManager.setHudState(uuid, new ShardManager.ShardCuboidHudState(

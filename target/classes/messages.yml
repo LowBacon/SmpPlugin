@@ -591,7 +591,6 @@ SHARD_PAY:
   SUCCESS-SENDER: '&7You paid &b{player} &#A303F9{amount}&7 shards.'
   # The text or value for Success Receiver. Available options: Any valid string text
   SUCCESS-RECEIVER: '&7You received &#A303F9{amount}&7 shards from &b{player}&7.'
-# Configuration section for Findplayer.
 FINDPLAYER:
   # The text or value for Afk. Available options: Any valid string text
   AFK: '&7{player}''s in the &#A303F9afk'
@@ -655,6 +654,20 @@ PUNISHMENTS:
     5d 15m 30s.'
   # The text or value for Create Failed. Available options: Any valid string text
   CREATE-FAILED: '&cFailed to create punishment record.'
+  # The target holds smpplugin.admin.punishments.exempt and you lack the bypass.
+  TARGET-EXEMPT: '&cYou cannot punish that player.'
+  # /offend usage.
+  OFFEND-USAGE: '&cUsage: /offend <player> <offense> [time] &7| /offend <player> &7| /offend list'
+  # /offend with an offense key that is not in offenses.yml. {offense}
+  OFFEND-UNKNOWN: '&cUnknown offense &f{offense}&c. Use &f/offend list &cto see them.'
+  # /offend on yourself.
+  OFFEND-SELF: '&cYou cannot punish yourself.'
+  # /offend succeeded. {type}, {player}, {offense}, {count}, {duration}, {id}
+  OFFEND-SUCCESS: '&aIssued &f{type} &ato &b{player}&a for &f{offense}&a. &7(offense #{count}, duration: &f{duration}&7, id: &f#{id}&7)'
+  # Header of /offend list.
+  OFFEND-LIST-HEADER: '&8&m----&r &bOffenses &8&m----'
+  # Header of /offend <player>. {player}
+  OFFEND-PREVIEW-HEADER: '&8&m----&r &bNext punishment for &f{player} &8&m----'
   # The text or value for Delete Failed. Available options: Any valid string text
   DELETE-FAILED: '&cFailed to delete punishment record #{id}.'
   # The text or value for Created. Available options: Any valid string text

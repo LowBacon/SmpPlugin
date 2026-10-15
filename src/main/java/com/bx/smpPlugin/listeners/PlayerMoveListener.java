@@ -40,7 +40,7 @@ public class PlayerMoveListener implements Listener {
                             .getString("FLY-SYSTEM.PLAYER-FLY-PERMISSION", "smpplugin.player.fly");
 
                     if (PermissionUtils.has(player, playerFlyPerm)) {
-                        boolean inSpawn = plugin.getAFKManager().isInSpawnCuboid(player);
+                        boolean inSpawn = plugin.getSpawnManager().isInSpawnArea(player);
                         boolean inCuboid = false;
                         for (String name : plugin.getCuboidManager().getCuboidNames()) {
                             if (plugin.getCuboidManager().isInCuboid(player, name)) {
@@ -69,8 +69,6 @@ public class PlayerMoveListener implements Listener {
             }
         }
 
-        // Reset AFK timer
-        plugin.getAFKManager().recordMovement(player.getUniqueId());
         plugin.getShardManager().recordMovement(
                 player.getUniqueId(),
                 event.getFrom(),

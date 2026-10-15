@@ -783,9 +783,9 @@ MENUS:
         - '&7Notify when players follow you'
         - '&fCurrently: {status}'
       DISPLAY_DONUT_PLUS:
-        DISPLAY-NAME: '&#6BF18DDisplay Donut+'
+        DISPLAY-NAME: '&#6BF18DDisplay CustomSmp+'
         LORE:
-        - '&7Display your premium Donut+ status'
+        - '&7Display your premium CustomSmp+ status'
         - '&fCurrently: {status}'
       CHAINMAIL_ON_RESPAWN:
         DISPLAY-NAME: '&#6BF18DChainmail on Respawn'
@@ -1197,12 +1197,6 @@ MENUS:
       LORE:
         - "&7Ini akan menjual semua barang"
         - "&7yang dapat dijual di inventaris Anda."
-  AFK-MENU:
-    TITLE: "&8AFK Areas"
-    RANDOM-BUTTON:
-      DISPLAY-NAME: "&#A303F9AFK"
-      LORE:
-        - "&fCLICK TO TELEPORT TO A RANDOM AFK AREA"
   SPAWN-MENU:
     TITLE: "&8Spawn Areas"
     RANDOM-BUTTON:
@@ -2949,7 +2943,7 @@ BUILTIN:
   09b6442ff6ef46650a60: '&7for: &f'
   60a04e8f29a4432b7ee3: '&8&m-------- &bcrate chest &8&m--------'
   0e4645253a04bbe19e81: '&8&m---------- &boptimization &8&m----------'
-  6315f6d0d7a80c4f6361: '&8&m---------- &bfinnishsmp setup &8&m----------'
+  6315f6d0d7a80c4f6361: '&8&m---------- &bcustomsmp setup &8&m----------'
   2daa51c03918ee025c18: '&8&m---------- &bfsmp setup status &8&m----------'
   12a1e3ca62a43fcb4b8b: '&8&m---------- &bfsmp commands &8(&f'
   242781765539a8b7de21: '&8&m---------- &bfeature toggles &8&m----------'
@@ -3111,7 +3105,7 @@ BUILTIN:
   e6eceafdc278cd10cc7e: '&ateleported to ffa arena &f'
   e7f15ed2a97a97758e98: '&atemporary spawner registered.'
   87862e8d1aec2c4544cc: '&atemporary spawner removed.'
-  74a6795553c59e770a2c: '&afinnishsmp configuration reloaded.'
+  74a6795553c59e770a2c: '&acustomsmp configuration reloaded.'
   3d9c707c1f7693233a62: '&aupdated Queue status for &f'
   5444425106fd6b0e00cf: '&aupdated crate chest at &f'
   3f3161ba8813a61d9d07: '&aupdated display name for arena &f'

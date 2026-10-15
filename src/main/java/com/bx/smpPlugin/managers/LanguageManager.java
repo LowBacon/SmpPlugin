@@ -55,7 +55,7 @@ public class LanguageManager {
     );
     private static final List<String> MENU_EXCLUDED_PATHS = List.of(
             "MEDIA-MENU", "RULES-MENU", "SERVER-INFO-MENU", "SERVERS-MENU",
-            "SPAWN-MENU.AREAS", "AFK-MENU.AREAS"
+            "SPAWN-MENU.AREAS"
     );
 
     private final SmpPlugin plugin;

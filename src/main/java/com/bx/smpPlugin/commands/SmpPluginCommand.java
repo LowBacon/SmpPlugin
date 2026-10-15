@@ -133,9 +133,9 @@ public class SmpPluginCommand implements CommandExecutor, TabCompleter {
 
         try {
             plugin.reloadAllPluginConfigurations();
-            sender.sendMessage(ColorUtils.toComponent("&aꜰɪɴɴɪѕʜѕᴍᴘ ᴄᴏɴꜰɪɢᴜʀᴀᴛɪᴏɴ ʀᴇʟᴏᴀᴅᴇᴅ."));
+            sender.sendMessage(ColorUtils.toComponent("&aᴄᴜѕᴛᴏᴍѕᴍᴘ ᴄᴏɴꜰɪɢᴜʀᴀᴛɪᴏɴ ʀᴇʟᴏᴀᴅᴇᴅ."));
         } catch (Exception exception) {
-            plugin.getLogger().log(Level.SEVERE, "failed to reload finnishsmp configuration.", exception);
+            plugin.getLogger().log(Level.SEVERE, "failed to reload customsmp configuration.", exception);
             sender.sendMessage(ColorUtils.toComponent("&cꜰᴀɪʟᴇᴅ ᴛᴏ ʀᴇʟᴏᴀᴅ ᴄᴏɴꜰɪɢᴜʀᴀᴛɪᴏɴ. ᴄʜᴇᴄᴋ ᴄᴏɴѕᴏʟᴇ ꜰᴏʀ ᴅᴇᴛᴀɪʟѕ."));
         }
     }
@@ -334,7 +334,6 @@ public class SmpPluginCommand implements CommandExecutor, TabCompleter {
             FileConfiguration discord = plugin.getConfigManager().getDiscord();
 
             config.set("SETTINGS.SPAWN-MENU", true);
-            config.set("SETTINGS.AFK-MENU", true);
             config.set("LUNAR-CLIENT.RICH-PRESENCE.ENABLED", false);
 
             database.set("DATABASE.TYPE", "SQLITE");
@@ -390,15 +389,17 @@ public class SmpPluginCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        SpawnManager.SetupLocationResult result = plugin.getSpawnManager().setAfkLocation(location);
-        if (!result.success()) {
-            plugin.getLogger().warning("failed to save setup AFK location at "
-                    + describeLocation(location) + ": " + result.message());
-            sender.sendMessage(ColorUtils.toComponent("&cᴀꜰᴋ ʟᴏᴄᴀᴛɪᴏɴ ᴄᴏᴜʟᴅ ɴᴏᴛ ʙᴇ ѕᴀᴠᴇᴅ: &f" + result.message()));
+        // The AFK destination is now an AFK zone; "afk" is created or moved here.
+        com.bx.smpPlugin.afk.AfkZone existing = plugin.getAfkManager().getZone("afk");
+        com.bx.smpPlugin.afk.AfkZone zone = existing != null
+                ? existing.withSpawn(location)
+                : new com.bx.smpPlugin.afk.AfkZone("afk", "&dAFK", "", null, 0L, 60).withSpawn(location);
+        if (!plugin.getAfkManager().saveZone(zone)) {
+            sender.sendMessage(ColorUtils.toComponent("&cᴀꜰᴋ ʟᴏᴄᴀᴛɪᴏɴ ᴄᴏᴜʟᴅ ɴᴏᴛ ʙᴇ ѕᴀᴠᴇᴅ. &7ᴄʜᴇᴄᴋ ᴀꜰᴋ.ʏᴍʟ."));
             return;
         }
         sender.sendMessage(ColorUtils.toComponent("&aᴀꜰᴋ ʟᴏᴄᴀᴛɪᴏɴ ѕᴀᴠᴇᴅ ᴀᴛ &f" + describeLocation(location)
-                + "&a. &7ᴀʀᴇᴀ &f" + result.areaId() + " &7ѕʟᴏᴛ &f" + result.slot() + "&7."));
+                + "&a. &7To pay shards there, give it an area: &f/afkzone setregion afk <radius>&7."));
     }
 
     private void sendSetupStatus(CommandSender sender, String label) {
@@ -406,7 +407,7 @@ public class SmpPluginCommand implements CommandExecutor, TabCompleter {
         FileConfiguration database = plugin.getConfigManager().getDatabase();
         FileConfiguration discord = plugin.getConfigManager().getDiscord();
 
-        sender.sendMessage(ColorUtils.toComponent("&8&m---------- &bꜰɪɴɴɪѕʜѕᴍᴘ ѕᴇᴛᴜᴘ &8&m----------"));
+        sender.sendMessage(ColorUtils.toComponent("&8&m---------- &bᴄᴜѕᴛᴏᴍѕᴍᴘ ѕᴇᴛᴜᴘ &8&m----------"));
         sendCheck(sender, isJava21OrNewer(), "java",
                 System.getProperty("java.version", "unknown") + " (java 21+ required)");
         sendCheck(sender, isPaperLikeServer(), "server",
@@ -419,8 +420,8 @@ public class SmpPluginCommand implements CommandExecutor, TabCompleter {
                 discordWebhookDetail(discord));
         sendCheck(sender, plugin.getSpawnManager().hasSpawn(), "spawn",
                 plugin.getSpawnManager().hasSpawn() ? "ready" : "use /" + label + " setup setspawn");
-        sendCheck(sender, plugin.getSpawnManager().hasAfk(), "afk",
-                plugin.getSpawnManager().hasAfk() ? "ready" : "use /" + label + " setup setafk");
+        sendCheck(sender, !plugin.getAfkManager().getZones().isEmpty(), "afk",
+                !plugin.getAfkManager().getZones().isEmpty() ? "ready" : "use /" + label + " setup setafk or /afkzone");
         List<String> rtpWorlds = availableRtpWorlds();
         sendCheck(sender, plugin.getRtpManager().isEnabled()
                         && !rtpWorlds.isEmpty(),
@@ -531,7 +532,7 @@ public class SmpPluginCommand implements CommandExecutor, TabCompleter {
                     "warn", "kick", "blacklist", "unban", "unmute", "unblacklist", "findplayer", "rename"
             );
             case "admin" -> List.of(
-                    "finnishsmp", "clearlag", "cuboid", "setwarp", "delwarp", "warpmanager",
+                    "customsmp", "clearlag", "cuboid", "setwarp", "delwarp", "warpmanager",
                     "portalmanager", "amethysttool", "arena", "ffaarena", "crate", "spawner",
                     "shop", "orders", "auctionhouse", "enderchest", "freeze", "staffmode", "invsee", "worth"
             );

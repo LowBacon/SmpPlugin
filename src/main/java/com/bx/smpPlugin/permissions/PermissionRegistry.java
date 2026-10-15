@@ -82,6 +82,9 @@ public final class PermissionRegistry {
         player("smpplugin.coinflip.join", "Join CoinFlip matches and accept challenges.", "New in 2.0.");
         player("smpplugin.coinflip.challenge", "Send private CoinFlip challenges and rematches.", "New in 2.0.");
         player("smpplugin.coinflip.practice", "Flip practice coins (no currency).", "New in 2.0.");
+        node("smpplugin.chat.color", "Keep colour codes typed into /msg and staff chat.", PermissionCategory.PERK,
+                List.of(), "New in 2.0.0-alpha.5. Without it the codes are removed.");
+        player("smpplugin.afk.away", "Mark yourself AFK where you stand with /away.", "New in 2.0.0-alpha.5.");
         player("smpplugin.findplayer", "See which dimension and biome another online player is in with /findplayer.",
                 "New in 2.0. /findplayer had no permission check in 1.5; default true keeps that behaviour.");
         player("smpplugin.friends", "Use /friends to add, remove and follow friends.",
@@ -110,11 +113,11 @@ public final class PermissionRegistry {
                 "Declared in 2.0; previously undeclared (op-only unless granted).");
         perk("smpplugin.auctionhouse.fastsell", "Allow the quick-sell setting for Auction House listings.",
                 "Declared in 2.0; previously undeclared (op-only unless granted).");
-        perk("smpplugin.donutplus", "Show the Donut+ badge (player setting).",
+        perk("smpplugin.donutplus", "Show the CustomSmp+ badge (player setting).",
                 "Declared in 2.0; previously undeclared (op-only unless granted).");
-        perk("smpplugin.donutplusplus", "Donut++ rank: unlocks the second page of Auction House listing slots.",
+        perk("smpplugin.donutplusplus", "CustomSmp++ rank: unlocks the second page of Auction House listing slots.",
                 "New in 2.0 with the merged Auction House.");
-        perk("smpplugin.donutplusplusplus", "Donut+++ rank: same Auction House slots as Donut++.",
+        perk("smpplugin.donutplusplusplus", "CustomSmp+++ rank: same Auction House slots as CustomSmp++.",
                 "New in 2.0 with the merged Auction House.");
         // Example rank nodes named in the default rtp.yml (PRIORITY-QUEUE and RANK-COOLDOWNS).
         perk("smpplugin.rtp.priority.vip++", "RTP waiting-queue priority 30 (rtp.yml PRIORITY-QUEUE).", "New in 2.0 with the merged RTP.");
@@ -141,6 +144,8 @@ public final class PermissionRegistry {
         staff("smpplugin.staff.mode.stafflist", "Open the staff list.", "");
         staff("smpplugin.staff.mode.betterview", "Toggle better view from the staff-mode hotbar.", "");
         staff("smpplugin.staff.mode.randomtp", "Teleport to a random player from the staff-mode hotbar.", "");
+        staff("smpplugin.staff.mode.spectator", "Switch to spectator from the staff-mode hotbar; sneak to switch back.",
+                "New in 2.0.0-alpha.5.");
         staff("smpplugin.staff.mode.seevanished", "See vanished staff members.", "");
         staff("smpplugin.staff.mode.others", "Toggle staff mode for other players.", "");
         staff("smpplugin.staff.freeze", "Freeze and unfreeze players.", "");
@@ -166,7 +171,11 @@ public final class PermissionRegistry {
         staff("smpplugin.staff.invsee", "View another player's inventory (read-only).",
                 "Upgrade spec name: smpplugin.staff.invsee.view.");
         staff("smpplugin.staff.profileviewer", "View player profiles and homes with /profileviewer.", "");
-        staff("smpplugin.staff.punishments.view", "View punishment history with /punishments.", "");
+        staff("smpplugin.staff.punishments.view", "View punishment history with /punishments, or everyone's with no name.", "");
+        staff("smpplugin.staff.punishments.vcmute", "Mute players in Simple Voice Chat with /vcmute, for a time or for good.",
+                "New in 2.0.0-alpha.5.");
+        staff("smpplugin.staff.punishments.vcunmute", "Lift voice mutes with /vcunmute.", "New in 2.0.0-alpha.5.");
+        staff("smpplugin.staff.seehomes", "View another player's homes with /seehomes.", "New in 2.0.0-alpha.5.");
         staff("smpplugin.staff.punishments.ban", "Permanently ban players with /ban. Also grants /tempban.",
                 "Grants smpplugin.staff.punishments.tempban as a child, matching 1.5.");
         staff("smpplugin.staff.punishments.tempban", "Temporarily ban players with /tempban.",
@@ -183,6 +192,8 @@ public final class PermissionRegistry {
         staff("smpplugin.staff.punishments.unban", "Lift bans with /unban (/pardon).", "");
         staff("smpplugin.staff.punishments.unmute", "Lift mutes with /unmute.", "");
         staff("smpplugin.staff.punishments.unblacklist", "Lift blacklists with /unblacklist.", "");
+        staff("smpplugin.staff.punishments.offend", "Punish players with the preset offense rules in offenses.yml using /offend.",
+                "New in 2.0.0-alpha.5.");
         staff("smpplugin.staff.fakeplayer", "Spawn fake players with /fakeplayer.", "Declared in 2.0; previously undeclared.");
         staff("smpplugin.staff.fakeplayer.alert", "Receive fake-player alerts.", "Declared in 2.0; previously undeclared.");
         staff("smpplugin.staff.spawnstash", "Spawn and manage bait stashes with /spawnstash.", "Declared in 2.0; previously undeclared.");
@@ -214,10 +225,9 @@ public final class PermissionRegistry {
         admin("smpplugin.admin.delwarp", "Delete warps with /delwarp.", "");
         admin("smpplugin.admin.portalmanager", "Manage RTP portals.", "");
         admin("smpplugin.admin.setspawn", "Set the server spawn.", "");
-        admin("smpplugin.admin.setafk", "Create, delete and list AFK zones.", "");
-        admin("smpplugin.admin.teleportareas.delete", "Delete AFK and teleport areas from their menus.",
+        admin("smpplugin.admin.afkzone", "Build and edit AFK zones with /afkzone.", "New in 2.0.0-alpha.5.");
+        admin("smpplugin.admin.teleportareas.delete", "Delete spawn areas from the spawn menu.",
                 "Declared in 2.0; previously undeclared.");
-        admin("smpplugin.admin.afklounge", "Configure the AFK Lounge.", "");
         admin("smpplugin.admin.amethysttool", "Give amethyst tools.", "");
         admin("smpplugin.admin.worth", "Reload worth settings.", "");
         admin("smpplugin.admin.sellstats", "View and export sell statistics with /topsell. Resetting them needs smpplugin.admin.statswipe.",
@@ -243,6 +253,7 @@ public final class PermissionRegistry {
         admin("smpplugin.admin.lobby.reload", "Reload lobby.yml.", "");
         admin("smpplugin.admin.lobby.debug", "Toggle lobby debug output.", "");
         admin("smpplugin.admin.logs", "View a player's activity log with /logs.", "Declared in 2.0; previously undeclared.");
+        admin("smpplugin.admin.chatlog", "Browse logged public and team chat with /chatlog.", "New in 2.0.0-alpha.5.");
         admin("smpplugin.admin.spawnstash", "Administer bait stashes (reload, remove any).", "Declared in 2.0; previously undeclared.");
         admin("smpplugin.admin.anvilmod", "Manage anvil moderation words (/amod) and bypass its filter.",
                 "Renamed from anvilmod.admin in 2.0.");
@@ -261,10 +272,16 @@ public final class PermissionRegistry {
         // ── Operational bypasses (default false, in smpplugin.admin) ───────────────
         operationalBypass("smpplugin.bypass.lobby", "Ignore lobby protection and the lobby border (needed to build the lobby).", "");
         operationalBypass("smpplugin.bypass.lobby.border", "Ignore only the lobby border.", "");
+        operationalBypass("smpplugin.afk.kickbypass", "Never get kicked for being AFK (afk.yml IDLE-ACTIONS.KICK-SECONDS).", "New in 2.0.0-alpha.5.");
+        perk("smpplugin.afk.statusbypass", "Never get the automatic [AFK] status after idling.", "New in 2.0.0-alpha.5.");
         operationalBypass("smpplugin.admin.maintenance.bypass", "Join and stay on the server during maintenance.",
                 "Declared in 2.0; previously undeclared.");
 
         // ── Security and privacy bypasses (default false, never bundled) ───────────
+        securityBypass("smpplugin.admin.punishments.exempt", "Cannot be punished by staff unless they hold the exempt bypass.",
+                "New in 2.0.0-alpha.5. Not granted by smpplugin.admin, so moderators cannot make each other exempt.");
+        securityBypass("smpplugin.admin.punishments.exempt.bypass", "Punish players who hold smpplugin.admin.punishments.exempt.",
+                "New in 2.0.0-alpha.5.");
         securityBypass("smpplugin.ignore.bypass", "Message players who ignore you.",
                 "Removed from smpplugin.admin in 2.0; grant explicitly.");
         securityBypass("smpplugin.message.bypass-disabled", "Message players who turned private messages off.",
@@ -307,6 +324,10 @@ public final class PermissionRegistry {
                 "Decide unknown CoinFlip transactions (applied or not); can create claims, so it is never bundled.", "New in 2.0.");
         destructive("smpplugin.coinflip.admin.resetstats", "Reset a player's CoinFlip statistics (a reason is required and audited).",
                 "New in 2.0.");
+        admin("smpplugin.admin.playerwipe", "Wipe one player's stats, homes, items and progress with /playerwipe (backed up first).",
+                "New in 2.0.0-alpha.5.");
+        admin("smpplugin.admin.playerunwipe", "Restore a wiped player from their backup with /playerunwipe.",
+                "New in 2.0.0-alpha.5.");
         destructive("smpplugin.admin.serverwipe", "Run the season wipe workflow (/serverwipe).",
                 "Declared in 2.0 with default false; previously undeclared (op-only).");
         destructive("smpplugin.admin.statswipe", "Wipe stats with /smpplugin statswipe.",

@@ -60,9 +60,13 @@ disable itself. See [COMPATIBILITY.md](COMPATIBILITY.md).
 - Lobby NPCs through **FancyNpcs**
 - Bypass permissions: `smpplugin.bypass.lobby`, `smpplugin.bypass.lobby.border`
 
+### Main Menu
+- `/menu` (`/mainmenu`): one screen with every main feature; set it up in `menus.yml MAIN-MENU`
+
 ### Homes
 - `/home [name]`, `/homes` (GUI), `/sethome [name]`, `/delhome <name>`, `/renamehome <old> <new>`
-- Multiple named homes per player
+- Multiple named homes per player; extra homes by rank with `SETTINGS.HOME-PERMISSIONS`
+- `/seehomes <player>` *(staff)*: view and teleport to someone's homes
 
 ### Warps
 - `/warp [name]`: teleport or open the warp list
@@ -70,11 +74,20 @@ disable itself. See [COMPATIBILITY.md](COMPATIBILITY.md).
 - `/warpmanager <create|delete|list> [name]` *(admin)*
 
 ### AFK
-- `/afk`: go to an AFK zone (menu if there are several)
-- `/setafk [name]`, `/delafk <name>`, `/afklist` *(admin)*: manage AFK zones
-- Automatic AFK detection task
-- **AFK Lounge**: an area with a border that pays **shards** every X seconds while you stay inside
-  - `/afklounge <setlocation|border|info|help>` *(admin)*
+Everything is configured in `afk.yml`.
+- `/afk [zone]`: go to an AFK zone (a small menu when there are several)
+- `/away`: mark yourself AFK where you stand, or come back
+- **AFK status**:
+  - After 5 minutes without input you get an `[AFK]` tag, a grey name, and a place at the bottom of
+    the tab list.
+  - Chat is told "is now AFK" / "is back" (vanished staff are never announced).
+  - Only real input counts: water streams and vehicles don't keep you active.
+- **AFK zones**: stand inside and earn **1 shard every minute** (per zone, configurable).
+  - A boss bar counts down; each shard pops up as a title with a sound.
+  - A particle outline marks the edge; shard boosters multiply the reward.
+- `/afkzone pos1|pos2|create|setregion|setspawn|reward|rename|delete|list|show|reload` *(admin)*: build zones in game
+- Optional idle actions: move idle players into a zone, or kick them (both off by default)
+- Placeholders: `%economy_afk%`, `_tag%`, `_time%`, `_zone%`, `_next%`, `_earned%`
 
 ### Player Utilities
 - `/stats [player]`: player statistics
@@ -104,7 +117,8 @@ disable itself. See [COMPATIBILITY.md](COMPATIBILITY.md).
 - Teleport cooldown and "don't move" warmup
 
 ### Random Teleport (RTP)
-- `/rtp [world]`: RTP menu or directly into a world
+- `/rtp`: simple world picker for Overworld, Nether and End, with your cooldown counting down live
+- `/rtp <world>`: straight into a world
 - Safe-location search with an action-bar progress display, plus a cache of ready safe spots so most teleports are instant
 - Per-player cooldowns (lower per rank), a limit on concurrent RTP players and a priority waiting queue
 - `/rtpq` (`/rtpqueue`): **RTP queue**, wait with other players and get dropped together at one shared random spot
@@ -161,7 +175,7 @@ The plugin registers itself as a **Vault economy provider**, so other plugins ca
 - Browse by category and filter, list items, see your listings, claim expired or sold items
 - Smarter search: partial names (`neth`) and enchant shortcuts (`prot 4`)
 - **Quick Buy**: pin items and buy the cheapest listing in one click (dialogs on Paper/Purpur, forms on Bedrock)
-- **Your Items** page with extra listing slots for Donut+ / Donut++ ranks, and a transaction history
+- **Your Items** page with extra listing slots for CustomSmp+ / CustomSmp++ ranks, and a transaction history
 - Optional quick purchase and quick sell (player settings), optional server announcements for listings and sales
 - Automatic expiry and an **Auction order bot**
 
@@ -196,7 +210,7 @@ The plugin registers itself as a **Vault economy provider**, so other plugins ca
 - `/shards everywhere <status|debug> [player]` *(admin)*: inspect passive income
 - **Shards Everywhere**: passive shard income per minute (permission `smpplugin.shards.everywhere`)
 - **Shard Cuboids**: regions (for example at spawn) with a countdown that reward players standing inside
-- **AFK Lounge** shard rewards
+- **AFK zone** shard rewards (`/afk`)
 - **Shard Booster** item (see Amethyst Tools)
 - `/shardshop`: spend shards
 
@@ -253,7 +267,8 @@ The plugin registers itself as a **Vault economy provider**, so other plugins ca
 - `/team create | disband | invite | kick | join | leave`
 - `/team home | sethome | delhome`: team home
 - `/team chat`: toggle team chat
-- `/team info`, `/team pvp`: friendly-fire toggle
+- `/team info [team]`: read-only roster of any team
+- `/team pvp`: friendly-fire toggle
 - Team menus (edit, kick confirm, disband confirm)
 - **Lunar Client teammate overlay** (Apollo)
 - Team name placeholder for the scoreboard
@@ -266,11 +281,15 @@ The plugin registers itself as a **Vault economy provider**, so other plugins ca
 - `/chat <help|mute|unmute|delay|clear|off>` *(staff)*
 - Global mute, slow mode (delay), clear chat
 - Chat filter with bypass permissions
+- **Mentions**: your name in chat lights up with a sound
+- Public chat respects `/ignore`
+- `/chatlog [player]` *(admin)*: browse logged public and team chat
 
 ### Private Messages
 - `/msg <player> <message>` (`/message`, `/tell`, `/whisper`, `/w`)
 - `/reply` (`/r`)
 - `/pm` (`/togglepm`): toggle receiving messages
+- Click a received message to reply; a sound plays when one arrives
 
 ### Ignore
 - `/ignore <player|list>`, `/unignore <player>`
@@ -303,8 +322,15 @@ Special items, optionally **time-limited**, given with `/amethysttool give <play
 - `/spawner` (`/spawners`) `[give|info|panel|split|remove|reload]`
 - Stacked spawners (up to 100,000 per block by default)
 - **Internal loot storage**: spawners generate drops into storage instead of spawning mobs
-- Storage GUI, panel, and a list of spawners per world
-- Owner-only access mode
+- **Spawner menu** (right-click): one small screen with the spawner's info and a next-drop timer, plus
+  Storage, Sell all, Collect XP, and add or take spawners from the stack
+- **`/spawners` panel** *(staff)*: worlds with spawners and server totals.
+  - Each world's spawners can be sorted.
+  - Left-click teleports to a spawner; right-click opens it.
+- **Stored XP** per spawner (`XP_PER_CYCLE`, vanilla values by default)
+- Stored loot is protected: a spawner with loot inside can't be broken until it is emptied
+- Storage GUI with item worth, admin panel, and a list of spawners per world
+- Access modes: owner only, owner and team, or everyone
 - **Anti-ESP**: spawners are hidden from players outside a reveal radius (stops X-ray and ESP finding bases)
 
 ---
@@ -313,7 +339,8 @@ Special items, optionally **time-limited**, given with `/amethysttool give <play
 
 ### Staff Mode
 - `/staffmode [player|reload]` (`/staff`)
-- Hotbar tools: **Vanish**, **Freeze**, **Staff List**, **Better View**, **Random Teleport**
+- Hotbar tools: **Vanish**, **Freeze**, **Inspect**, **Staff List**, **Spectator**, **Better View**, **Random Teleport**
+- Vanishing sends regular players a fake leave message, and a fake join message when you reappear
 - Saves your inventory and restores it afterwards; can persist through quitting and restarts
 - `/vanish`, `/stafflist`
 
@@ -360,6 +387,10 @@ Special items, optionally **time-limited**, given with `/amethysttool give <play
 
 ## 🔨 Punishments
 
+- `/vcmute <player> [time] [reason]` and `/vcunmute <player>`: mute someone in Simple Voice Chat
+- `/playerwipe <player> [confirm]` and `/playerunwipe <player> [confirm]` *(admin)*: wipe one player's
+  progress, backed up first and restorable
+
 | Command | Permission |
 |---|---|
 | `/ban <player> [reason]` | `smpplugin.staff.punishments.ban` |
@@ -372,9 +403,17 @@ Special items, optionally **time-limited**, given with `/amethysttool give <play
 | `/unban` (`/pardon`) | `smpplugin.staff.punishments.unban` |
 | `/unmute` | `smpplugin.staff.punishments.unmute` |
 | `/unblacklist` | `smpplugin.staff.punishments.unblacklist` |
-| `/punishments <player>` (`/phistory`) | `smpplugin.staff.punishments.view` |
+| `/punishments [player]` (`/phistory`): one player, or everyone with no name | `smpplugin.staff.punishments.view` |
+| `/offend <player> <offense> [time]` | `smpplugin.staff.punishments.offend` |
 
 `…ban` also grants `…tempban` and `…mute` also grants `…tempmute`. The 1.5 bundles `…create` and `…remove` still work.
+
+- **`/offend`**: 62 preset offenses in `offenses.yml` (cheating, chat spam, duping, X-ray, racism…). Each has a
+  punishment type and a ladder of durations; the player's earlier punishments **for the same offense** pick the
+  rung, so a first chat-spam offense is a warning and a third is a 30-day mute. `/offend <player>` previews
+  what every offense would give that player; `/offend list` lists them.
+- **Protected players**: `smpplugin.admin.punishments.exempt` cannot be punished unless the staff member has
+  `smpplugin.admin.punishments.exempt.bypass` (applies to every punishment command)
 
 - Time formats: `30s`, `15m`, `2h`, `5d`, or combined like `5d 15m 30s`
 - Full history GUI with filtering and sorting, plus deleting records (`smpplugin.staff.punishments.delete`)
@@ -416,6 +455,13 @@ Chat · Ignore · Messaging · Bounty · Cuboids · AFK · Shards · Warps · Te
 
 ### Tablist
 - Custom header and footer, LuckPerms role prefixes, and live refresh when ranks or skins change (LuckPerms and SkinsRestorer bridges)
+- **Sorted by rank** (LuckPerms group weight), AFK players at the bottom with a grey name
+- **Animated title** (`%animated_title%`): a band of light sweeps across the server name
+- **Live footer**: coloured ping and TPS, online count, and rotating tips (`%tip%`)
+- Stat placeholders: `%money%`, `%shards%`, `%kills%`, `%deaths%`, `%playtime%`, `%team%`
+
+### Stats
+- `/stats [player]`: stats menu with every stat and the player's leaderboard places
 
 ### Leaderboards
 - `/leaderboard [type]` (`/lb`, `/top`, `/leaderboards`) with a GUI
@@ -440,7 +486,7 @@ options, including:
 | Team Chat Visibility | Team Chat Mode | Lunar Teammates |
 | TPA Confirm Menus | Quick Auction Purchase / Sell | Destroy Pearl on Death |
 | Pay Confirm Menus | TP Auto | Hotbar Messages |
-| Notification Sounds | Follow Alerts | Display Donut+ |
+| Notification Sounds | Follow Alerts | Display CustomSmp+ |
 | Chainmail on Respawn | Explosion Particles / Sounds | Teleport Alerts |
 | Fast Crystals | Totem Particles | Randomized Coords |
 | TPA / TPA-Here Requests | Payments | Worth Display |
@@ -553,7 +599,7 @@ Set in `database.yml`:
 | `duels.yml`, `ffa.yml` | PvP modes |
 | `rtp.yml` | Random teleport, rank cooldowns and priorities, RTP queue |
 | `lobby.yml` | Lobby |
-| `afk-lounge.yml` | AFK Lounge |
+| `afk.yml` | AFK status, AFK zones and their rewards |
 | `amethyst-tools.yml` | Amethyst tools |
 | `spawners.yml` | Spawners and anti-ESP |
 | `spawn-stash.yml` | Bait stashes |
@@ -580,7 +626,7 @@ Set in `database.yml`:
 6. **Network** connects: Redis, BungeeCord channel, staff chat and alerts, maintenance, cross-server duels, Discord webhooks
 7. **Display** starts: scoreboard, tablist, hide, teleports, RTP, portals
 8. **Listeners and commands** are registered (disabled features are skipped)
-9. **18 background tasks** start: scoreboard, tablist, shard income, shard cuboids, RTP zones, clearlag, key-all, auto-save, AFK check, Lunar teammates, Billford rotation, order and auction expiry, auction bot, amethyst tool expiry, spawner generation, duel and FFA match timers
+9. **18 background tasks** start: scoreboard, tablist, shard income, shard cuboids, RTP zones, clearlag, key-all, auto-save, AFK, Lunar teammates, Billford rotation, order and auction expiry, auction bot, amethyst tool expiry, spawner generation, duel and FFA match timers
 10. **PlaceholderAPI** expansions are registered
 11. **Update check** runs asynchronously
 

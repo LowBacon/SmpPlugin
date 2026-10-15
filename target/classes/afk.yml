@@ -1,0 +1,78 @@
+# ==============================================================================
+# SmpPlugin - AFK
+# ==============================================================================
+# Players who stop playing are marked AFK. AFK zones are areas where players earn shards just for
+# being there; /afk takes players to one. Staff build zones in game with /afkzone.
+
+STATUS:
+  # Mark a player AFK after this many seconds with no input. 0 turns automatic AFK off (/away still works).
+  # Looking around, walking, chatting, commands, clicking and building all count as input.
+  # smpplugin.afk.statusbypass is never marked AFK automatically
+  IDLE-SECONDS: 300
+  # Tell everyone when someone goes AFK or comes back. false tells only the player
+  BROADCAST: true
+  # Shown in front of the name in the tab list while AFK or standing in an AFK zone
+  TAB-TAG: '&7[AFK] '
+  # Grey out the whole tab list name while AFK
+  GREY-NAME: true
+
+DETECTION:
+  # Movement the player is not driving (riding something, drifting in water) is not input, so water
+  # streams and AFK pools cannot keep a player active
+  IGNORE-PASSIVE-MOVEMENT: true
+
+IDLE-ACTIONS:
+  # Move idle players into the nearest paying AFK zone after this many seconds. 0 = off
+  SEND-TO-ZONE-SECONDS: 0
+  # Kick players idle this long. 0 = off. Never kicks players inside an AFK zone or with
+  # smpplugin.afk.kickbypass
+  KICK-SECONDS: 0
+  # Warn this many seconds before the kick
+  KICK-WARNING-SECONDS: 60
+  # Only kick while at least this many players are online
+  KICK-MIN-PLAYERS: 0
+
+DISPLAY:
+  # Countdown to the next shard while in a zone: BOSSBAR, ACTIONBAR or NONE
+  MODE: BOSSBAR
+  BOSSBAR-TITLE: '&d&l{zone} &8» &fnext shard in &b{time} &8| &7earned &b{earned}'
+  # PINK, BLUE, RED, GREEN, YELLOW, PURPLE or WHITE
+  BOSSBAR-COLOR: PURPLE
+  ACTIONBAR: '&dNext shard in &f{time}'
+  # Particle outline at the edge of a zone, only for players standing near it
+  PARTICLES: true
+  PARTICLE: HAPPY_VILLAGER
+
+REWARD:
+  # Multiply zone rewards by an active shard booster
+  USE-SHARD-BOOSTER: true
+  # Shown on screen for every reward. Empty both to turn it off
+  TITLE: '&b&l+{shards} Shard'
+  SUBTITLE: '&7You now have &b{total} &7shards'
+  # Chat line for every reward, empty = off
+  CHAT: ''
+  # sound|volume|pitch, empty = off
+  SOUND: minecraft:entity.experience_orb.pickup|0.8|1.4
+
+MENU:
+  # /afk opens this when there is more than one zone
+  TITLE: '&8AFK Zones'
+
+MESSAGES:
+  NOW-AFK: '&7* &f{player} &7is now AFK.'
+  NO-LONGER-AFK: '&7* &f{player} &7is back. &8(AFK for {time})'
+  NOW-AFK-SELF: '&7You are now AFK.'
+  NO-LONGER-AFK-SELF: '&7Welcome back! You were AFK for &f{time}&7.'
+  ENTER-ZONE: '&aYou entered &f{zone}&a. &7Earning &b{amount} shard(s) &7every &f{interval}&7.'
+  LEAVE-ZONE: '&cYou left &f{zone}&c. &7Shard rewards paused.'
+  TELEPORTED: '&aTeleported to &f{zone}&a.'
+  SENT-TO-ZONE: '&7You were idle, so you were moved to &f{zone}&7.'
+  NO-ZONES: '&cThere are no AFK zones yet.'
+  UNKNOWN-ZONE: '&cThere is no AFK zone called &f{zone}&c.'
+  ZONE-UNAVAILABLE: '&cThat AFK zone''s world is not loaded.'
+  KICK-WARNING: '&cYou will be kicked for being AFK in &f{time}&c. Move to stay online.'
+  KICK: '&cYou were kicked for being AFK too long.'
+
+# Written by /afkzone. Editing by hand works too, then /afkzone reload. Each zone has a SPAWN (where /afk
+# drops players), an optional REGION (the box where shards are paid) and a REWARD.
+ZONES: {}

@@ -3,6 +3,7 @@ package com.bx.smpPlugin.managers;
 import com.bx.smpPlugin.SmpPlugin;
 import com.bx.smpPlugin.utils.ItemSerializationUtils;
 import com.bx.smpPlugin.utils.LazyLocation;
+import com.bx.smpPlugin.models.PlayerWipeArchive;
 import com.bx.smpPlugin.models.Bounty;
 import com.bx.smpPlugin.models.PlayerLogEntry;
 import com.bx.smpPlugin.models.FreezeState;
@@ -566,6 +567,9 @@ public class DatabaseManager {
             "  created_at INTEGER NOT NULL," +
             "  updated_at INTEGER NOT NULL," +
             "  disabled_loot_keys TEXT DEFAULT ''," +
+            "  stored_xp INTEGER DEFAULT 0," +
+            "  lifetime_items INTEGER DEFAULT 0," +
+            "  lifetime_earnings REAL DEFAULT 0," +
             "  UNIQUE(world, x, y, z)" +
             ")"
         );
@@ -636,6 +640,7 @@ public class DatabaseManager {
             ")"
         );
         execute("CREATE INDEX IF NOT EXISTS idx_player_logs_uuid_time ON player_logs(player_uuid, timestamp)");
+        execute("CREATE INDEX IF NOT EXISTS idx_player_logs_type_time ON player_logs(log_type, timestamp)");
         execute("CREATE INDEX IF NOT EXISTS idx_sell_history_player ON sell_history(player_uuid)");
         execute("CREATE INDEX IF NOT EXISTS idx_sell_history_timestamp ON sell_history(timestamp)");
         execute("CREATE INDEX IF NOT EXISTS idx_sell_history_item ON sell_history(item_name)");
@@ -737,6 +742,9 @@ public class DatabaseManager {
 
     private void ensureSpawnerColumns() throws SQLException {
         ensureColumnExists("spawners", "disabled_loot_keys", "TEXT DEFAULT ''");
+        ensureColumnExists("spawners", "stored_xp", "INTEGER DEFAULT 0");
+        ensureColumnExists("spawners", "lifetime_items", "INTEGER DEFAULT 0");
+        ensureColumnExists("spawners", "lifetime_earnings", "REAL DEFAULT 0");
     }
 
     private void ensureColumnExists(String table, String column, String definition) throws SQLException {
@@ -1395,6 +1403,13 @@ public class DatabaseManager {
         private AltAccountAccumulator(UUID uuid, String username) {
             this.uuid = uuid;
             this.username = username;
+        }
+    }
+
+    /** Writes the row on the database thread so a join or a save never waits on disk. */
+    public void savePlayerAsync(PlayerData data) {
+        if (data != null) {
+            executeAsync(() -> savePlayer(data));
         }
     }
 
@@ -2376,6 +2391,59 @@ public class DatabaseManager {
             plugin.getLogger().log(Level.WARNING, "Failed to get player logs", e);
         }
         return list;
+    }
+
+    /** One page of a single log type, newest first. A null uuid reads every player's entries. */
+    public List<PlayerLogEntry> getLogsByType(UUID uuid, String logType, int limit, int offset) {
+        List<PlayerLogEntry> list = new ArrayList<>();
+        String where = uuid == null ? "log_type = ?" : "player_uuid = ? AND log_type = ?";
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT id, player_uuid, player_name, category, log_type, details, timestamp FROM player_logs " +
+                "WHERE " + where + " ORDER BY timestamp DESC, id DESC LIMIT ? OFFSET ?")) {
+            int index = 1;
+            if (uuid != null) {
+                ps.setString(index++, uuid.toString());
+            }
+            ps.setString(index++, logType);
+            ps.setInt(index++, limit);
+            ps.setInt(index, offset);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new PlayerLogEntry(
+                            rs.getLong("id"),
+                            UUID.fromString(rs.getString("player_uuid")),
+                            rs.getString("player_name"),
+                            rs.getString("category"),
+                            rs.getString("log_type"),
+                            rs.getString("details"),
+                            rs.getLong("timestamp")
+                    ));
+                }
+            }
+        } catch (SQLException | IllegalArgumentException e) {
+            plugin.getLogger().log(Level.WARNING, "Failed to get logs by type", e);
+        }
+        return list;
+    }
+
+    public int getLogsByTypeCount(UUID uuid, String logType) {
+        String where = uuid == null ? "log_type = ?" : "player_uuid = ? AND log_type = ?";
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT COUNT(*) FROM player_logs WHERE " + where)) {
+            int index = 1;
+            if (uuid != null) {
+                ps.setString(index++, uuid.toString());
+            }
+            ps.setString(index, logType);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.WARNING, "Failed to count logs by type", e);
+        }
+        return 0;
     }
 
     public int getPlayerLogsCount(UUID uuid) {
@@ -3450,6 +3518,545 @@ public class DatabaseManager {
         return records;
     }
 
+    public int countAllPunishments(PunishmentQuery query, String search, long now) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM punishments");
+        List<Object> parameters = new ArrayList<>();
+        appendGlobalPunishmentFilters(sql, parameters, search, query, now);
+
+        try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+            bindParameters(ps, parameters);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.WARNING, "Failed to count server-wide punishments", e);
+        }
+        return 0;
+    }
+
+    public List<PunishmentRecord> loadAllPunishments(PunishmentQuery query, String search, int limit, int offset, long now) {
+        List<PunishmentRecord> records = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("SELECT * FROM punishments");
+        List<Object> parameters = new ArrayList<>();
+        appendGlobalPunishmentFilters(sql, parameters, search, query, now);
+
+        PunishmentSortOrder sortOrder = query == null ? PunishmentSortOrder.NEWEST : query.sortOrder();
+        sql.append(sortOrder == PunishmentSortOrder.OLDEST
+                ? " ORDER BY issued_at ASC, id ASC"
+                : " ORDER BY issued_at DESC, id DESC");
+        sql.append(" LIMIT ? OFFSET ?");
+        parameters.add(Math.max(1, limit));
+        parameters.add(Math.max(0, offset));
+
+        try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+            bindParameters(ps, parameters);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    records.add(mapPunishmentRow(rs));
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.WARNING, "Failed to load server-wide punishments", e);
+        }
+        return records;
+    }
+
+    // Player wipe (/playerwipe, /playerunwipe)
+
+    public record PlayerWipePreview(Map<String, Integer> counts) {
+        public int count(String key) {
+            return counts.getOrDefault(key, 0);
+        }
+
+        public int total() {
+            int total = 0;
+            for (int value : counts.values()) {
+                total += value;
+            }
+            return total;
+        }
+    }
+
+    public record PlayerWipeResult(Map<String, Integer> affectedCounts) {
+        public int affected(String key) {
+            return affectedCounts.getOrDefault(key, 0);
+        }
+
+        public int total() {
+            int total = 0;
+            for (int value : affectedCounts.values()) {
+                total += value;
+            }
+            return total;
+        }
+    }
+
+    private static final Map<String, List<String>> PLAYER_WIPE_TABLES = playerWipeTables();
+
+    private static Map<String, List<String>> playerWipeTables() {
+        Map<String, List<String>> tables = new LinkedHashMap<>();
+        tables.put("homes", List.of("player_uuid"));
+        tables.put("team_members", List.of("player_uuid"));
+        tables.put("ender_chest_items", List.of("player_uuid"));
+        tables.put("ender_chest_profiles", List.of("player_uuid"));
+        tables.put("player_crate_keys", List.of("player_uuid"));
+        tables.put("sell_history", List.of("player_uuid"));
+        tables.put("sell_progress", List.of("player_uuid"));
+        tables.put("sell_summary_players", List.of("player_uuid"));
+        tables.put("shop_favorites", List.of("player_uuid"));
+        tables.put("player_logs", List.of("player_uuid"));
+        tables.put("bounties", List.of("target_uuid", "placer_uuid"));
+        tables.put("player_friends", List.of("follower_uuid", "followed_uuid"));
+        tables.put("player_ignores", List.of("owner_uuid", "ignored_uuid"));
+        tables.put("auction_listings", List.of("seller_uuid"));
+        tables.put("auction_claims", List.of("owner_uuid"));
+        tables.put("player_auction_preferences", List.of("player_uuid"));
+        tables.put("orders", List.of("owner_uuid"));
+        tables.put("order_deliveries", List.of("deliverer_uuid"));
+        tables.put("order_claims", List.of("owner_uuid"));
+        tables.put("order_ui_preferences", List.of("player_uuid"));
+        tables.put("duel_stats", List.of("player_uuid"));
+        tables.put("duel_matches", List.of("player_one_uuid", "player_two_uuid"));
+        tables.put("duel_claims", List.of("player_uuid"));
+        tables.put("ffa_stats", List.of("player_uuid"));
+        tables.put("ffa_matches", List.of("player_one_uuid", "player_two_uuid"));
+        return Collections.unmodifiableMap(tables);
+    }
+
+    private static final Map<String, String> PLAYER_WIPE_GROUPS = playerWipeGroups();
+
+    private static final Map<String, Object> WIPE_STAT_RESETS = wipeStatResets();
+
+    /**
+     * The player columns a wipe resets, each beside the value it goes back to. Both wipes read this
+     * one map, and so do the backup and restore behind {@code /playerunwipe}, so a column added here
+     * cannot be reset by one wipe and missed by the other, or drop out of a backup and leave a
+     * restored player short. {@code money} is the exception: it is overwritten with the configured
+     * starting balance rather than the placeholder below.
+     */
+    private static Map<String, Object> wipeStatResets() {
+        Map<String, Object> resets = new LinkedHashMap<>();
+        resets.put("money", 0D);
+        resets.put("shards", 0);
+        resets.put("kills", 0);
+        resets.put("deaths", 0);
+        resets.put("playtime_seconds", 0);
+        resets.put("blocks_placed", 0);
+        resets.put("blocks_broken", 0);
+        resets.put("mobs_killed", 0);
+        resets.put("kill_streak", 0);
+        resets.put("highest_kill_streak", 0);
+        resets.put("money_spent", 0);
+        resets.put("money_made", 0);
+        resets.put("keyall_remaining_seconds", -1);
+        resets.put("shard_booster_expiry", 0);
+        resets.put("mob_spawn_disabled_until", 0);
+        resets.put("phantom_disabled_until", 0);
+        return Collections.unmodifiableMap(resets);
+    }
+
+    private static Map<String, String> playerWipeGroups() {
+        Map<String, String> groups = new LinkedHashMap<>();
+        groups.put("homes", "homes");
+        groups.put("team_members", "team");
+        groups.put("ender_chest_items", "ender_chest");
+        groups.put("ender_chest_profiles", "ender_chest");
+        groups.put("player_crate_keys", "crate_keys");
+        groups.put("sell_history", "sell_records");
+        groups.put("sell_progress", "sell_records");
+        groups.put("sell_summary_players", "sell_records");
+        groups.put("shop_favorites", "shop_favorites");
+        groups.put("player_logs", "logs");
+        groups.put("bounties", "bounties");
+        groups.put("player_friends", "friends");
+        groups.put("player_ignores", "ignores");
+        groups.put("auction_listings", "auctions");
+        groups.put("auction_claims", "auctions");
+        groups.put("player_auction_preferences", "auctions");
+        groups.put("orders", "orders");
+        groups.put("order_deliveries", "orders");
+        groups.put("order_claims", "orders");
+        groups.put("order_ui_preferences", "orders");
+        groups.put("duel_stats", "duels");
+        groups.put("duel_matches", "duels");
+        groups.put("duel_claims", "duels");
+        groups.put("ffa_stats", "ffa");
+        groups.put("ffa_matches", "ffa");
+        return Collections.unmodifiableMap(groups);
+    }
+
+    /**
+     * Counts everything a player wipe would clear for one player. Punishments, IP history and staff
+     * records are deliberately left out: they are moderation evidence rather than player progress.
+     */
+    public PlayerWipePreview previewPlayerWipe(UUID playerUuid) {
+        if (playerUuid == null) {
+            return new PlayerWipePreview(Map.of());
+        }
+
+        String uuid = playerUuid.toString();
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        counts.put("stats", countPlayerRows("players", List.of("uuid"), uuid));
+        for (Map.Entry<String, List<String>> entry : PLAYER_WIPE_TABLES.entrySet()) {
+            String group = PLAYER_WIPE_GROUPS.get(entry.getKey());
+            counts.merge(group, countPlayerRows(entry.getKey(), entry.getValue(), uuid), Integer::sum);
+        }
+        return new PlayerWipePreview(Map.copyOf(counts));
+    }
+
+    /**
+     * Clears one player's progress in a single transaction: their stored stats and balances go back
+     * to a fresh account, and every row they own in the per-player tables is deleted. Moderation
+     * records and world objects such as their spawners are left alone.
+     */
+    public PlayerWipeResult resetForPlayerWipe(UUID playerUuid, double startingMoney) throws SQLException {
+        Objects.requireNonNull(playerUuid, "playerUuid");
+        if (connection == null || connection.isClosed()) {
+            throw new SQLException("Database connection is not available.");
+        }
+
+        String uuid = playerUuid.toString();
+        Map<String, Integer> affected = new LinkedHashMap<>();
+        boolean autoCommitDisabled = false;
+        boolean originalAutoCommit = connection.getAutoCommit();
+        try {
+            connection.setAutoCommit(false);
+            autoCommitDisabled = true;
+
+            if (serverWipeTableExists("players")) {
+                try (PreparedStatement statement = connection.prepareStatement(
+                        "UPDATE players SET " + wipeStatAssignments() + " WHERE uuid = ?")) {
+                    int index = bindWipeStatResets(statement, startingMoney);
+                    statement.setString(index, uuid);
+                    affected.put("stats", statement.executeUpdate());
+                }
+            }
+
+            for (Map.Entry<String, List<String>> entry : PLAYER_WIPE_TABLES.entrySet()) {
+                String group = PLAYER_WIPE_GROUPS.get(entry.getKey());
+                affected.merge(group, deletePlayerRows(entry.getKey(), entry.getValue(), uuid), Integer::sum);
+            }
+
+            connection.commit();
+            return new PlayerWipeResult(Map.copyOf(affected));
+        } catch (SQLException exception) {
+            if (autoCommitDisabled) {
+                try {
+                    connection.rollback();
+                } catch (SQLException ignored) {
+                }
+            }
+            throw exception;
+        } finally {
+            if (autoCommitDisabled) {
+                try {
+                    connection.setAutoCommit(originalAutoCommit);
+                } catch (SQLException ignored) {
+                }
+            }
+        }
+    }
+
+    /** The count group a player wipe prints one table's rows under, so callers can label a restore. */
+    public static String playerWipeGroup(String table) {
+        return PLAYER_WIPE_GROUPS.get(table);
+    }
+
+    /**
+     * Reads back every row a player wipe is about to delete, along with the player stats it is about
+     * to reset. Nothing is modified here: the caller writes the result to disk first, so a wipe that
+     * fails halfway leaves an unused backup rather than an unrecoverable player.
+     */
+    public PlayerWipeArchive capturePlayerWipeArchive(UUID playerUuid, String playerName, String actorName)
+            throws SQLException {
+        Objects.requireNonNull(playerUuid, "playerUuid");
+        if (connection == null || connection.isClosed()) {
+            throw new SQLException("Database connection is not available.");
+        }
+
+        String uuid = playerUuid.toString();
+        List<String> statColumns = List.copyOf(WIPE_STAT_RESETS.keySet());
+        List<Object> statValues = readPlayerStats(uuid, statColumns);
+
+        Map<String, PlayerWipeArchive.TableRows> tables = new LinkedHashMap<>();
+        for (Map.Entry<String, List<String>> entry : PLAYER_WIPE_TABLES.entrySet()) {
+            PlayerWipeArchive.TableRows rows = readPlayerRows(entry.getKey(), entry.getValue(), uuid);
+            if (rows != null && !rows.rows().isEmpty()) {
+                tables.put(entry.getKey(), rows);
+            }
+        }
+
+        return new PlayerWipeArchive(
+                playerUuid,
+                playerName,
+                System.currentTimeMillis(),
+                actorName,
+                statValues.isEmpty() ? List.of() : statColumns,
+                statValues,
+                tables
+        );
+    }
+
+    /**
+     * Puts an archived player back in a single transaction. Every table a wipe touches is cleared for
+     * them first, so they land on the state the backup holds instead of a merge of that and whatever
+     * they picked up since. Rows belonging to anybody else are never read or written.
+     */
+    public PlayerWipeResult restorePlayerWipeArchive(PlayerWipeArchive archive) throws SQLException {
+        Objects.requireNonNull(archive, "archive");
+        if (connection == null || connection.isClosed()) {
+            throw new SQLException("Database connection is not available.");
+        }
+
+        String uuid = archive.playerUuid().toString();
+        Map<String, Integer> affected = new LinkedHashMap<>();
+        boolean autoCommitDisabled = false;
+        boolean originalAutoCommit = connection.getAutoCommit();
+        try {
+            connection.setAutoCommit(false);
+            autoCommitDisabled = true;
+
+            if (archive.hasStats() && serverWipeTableExists("players")) {
+                affected.put("stats", restorePlayerStats(uuid, archive));
+            }
+
+            for (Map.Entry<String, List<String>> entry : PLAYER_WIPE_TABLES.entrySet()) {
+                String table = entry.getKey();
+                if (!serverWipeTableExists(table)) {
+                    continue;
+                }
+                deletePlayerRows(table, entry.getValue(), uuid);
+
+                PlayerWipeArchive.TableRows archived = archive.tables().get(table);
+                if (archived == null) {
+                    continue;
+                }
+                if ("team_members".equals(table)) {
+                    archived = withoutDisbandedTeams(archived);
+                }
+                affected.merge(PLAYER_WIPE_GROUPS.get(table), insertArchivedRows(table, archived), Integer::sum);
+            }
+
+            connection.commit();
+            return new PlayerWipeResult(Map.copyOf(affected));
+        } catch (SQLException exception) {
+            if (autoCommitDisabled) {
+                try {
+                    connection.rollback();
+                } catch (SQLException ignored) {
+                }
+            }
+            throw exception;
+        } finally {
+            if (autoCommitDisabled) {
+                try {
+                    connection.setAutoCommit(originalAutoCommit);
+                } catch (SQLException ignored) {
+                }
+            }
+        }
+    }
+
+    private List<Object> readPlayerStats(String uuid, List<String> columns) throws SQLException {
+        if (!serverWipeTableExists("players")) {
+            return List.of();
+        }
+
+        StringJoiner selected = new StringJoiner(", ");
+        for (String column : columns) {
+            selected.add(quoteIdentifier(column));
+        }
+        try (PreparedStatement statement = connection.prepareStatement(
+                "SELECT " + selected + " FROM players WHERE uuid = ?")) {
+            statement.setString(1, uuid);
+            try (ResultSet rs = statement.executeQuery()) {
+                if (!rs.next()) {
+                    return List.of();
+                }
+                List<Object> values = new ArrayList<>(columns.size());
+                for (int index = 1; index <= columns.size(); index++) {
+                    values.add(rs.getObject(index));
+                }
+                return values;
+            }
+        }
+    }
+
+    private PlayerWipeArchive.TableRows readPlayerRows(String table, List<String> owners, String uuid)
+            throws SQLException {
+        if (owners.isEmpty() || !serverWipeTableExists(table)) {
+            return null;
+        }
+        try (PreparedStatement statement = connection.prepareStatement(
+                "SELECT * FROM " + quoteIdentifier(table) + " WHERE " + ownerPredicate(owners))) {
+            bindOwnerUuid(statement, owners, uuid);
+            try (ResultSet rs = statement.executeQuery()) {
+                ResultSetMetaData metadata = rs.getMetaData();
+                int columnCount = metadata.getColumnCount();
+
+                List<String> columns = new ArrayList<>(columnCount);
+                for (int index = 1; index <= columnCount; index++) {
+                    columns.add(metadata.getColumnName(index));
+                }
+
+                List<List<Object>> rows = new ArrayList<>();
+                while (rs.next()) {
+                    List<Object> row = new ArrayList<>(columnCount);
+                    for (int index = 1; index <= columnCount; index++) {
+                        row.add(rs.getObject(index));
+                    }
+                    rows.add(row);
+                }
+                return new PlayerWipeArchive.TableRows(columns, rows);
+            }
+        }
+    }
+
+    private int restorePlayerStats(String uuid, PlayerWipeArchive archive) throws SQLException {
+        StringJoiner assignments = new StringJoiner(", ");
+        for (String column : archive.statColumns()) {
+            assignments.add(quoteIdentifier(column) + " = ?");
+        }
+        try (PreparedStatement statement = connection.prepareStatement(
+                "UPDATE players SET " + assignments + " WHERE uuid = ?")) {
+            List<Object> values = archive.statValues();
+            for (int index = 0; index < values.size(); index++) {
+                statement.setObject(index + 1, values.get(index));
+            }
+            statement.setString(values.size() + 1, uuid);
+            return statement.executeUpdate();
+        }
+    }
+
+    /**
+     * Drops archived team memberships whose team is gone. Wiping a team leader disbands the team, so
+     * restoring the row unchanged would leave the player holding the only membership of a team that
+     * no longer exists — and because that row owns their primary key, it would block them from ever
+     * joining another one.
+     */
+    private PlayerWipeArchive.TableRows withoutDisbandedTeams(PlayerWipeArchive.TableRows archived)
+            throws SQLException {
+        int nameIndex = archived.columns().indexOf("team_name");
+        if (nameIndex < 0 || !serverWipeTableExists("teams")) {
+            return archived;
+        }
+
+        List<List<Object>> kept = new ArrayList<>();
+        try (PreparedStatement statement = connection.prepareStatement("SELECT 1 FROM teams WHERE name = ?")) {
+            for (List<Object> row : archived.rows()) {
+                Object teamName = row.get(nameIndex);
+                if (teamName == null) {
+                    continue;
+                }
+                statement.setString(1, String.valueOf(teamName));
+                try (ResultSet rs = statement.executeQuery()) {
+                    if (rs.next()) {
+                        kept.add(row);
+                    }
+                }
+            }
+        }
+        return new PlayerWipeArchive.TableRows(archived.columns(), kept);
+    }
+
+    private int insertArchivedRows(String table, PlayerWipeArchive.TableRows archived) throws SQLException {
+        if (archived.columns().isEmpty() || archived.rows().isEmpty()) {
+            return 0;
+        }
+
+        StringJoiner columns = new StringJoiner(", ");
+        StringJoiner placeholders = new StringJoiner(", ");
+        for (String column : archived.columns()) {
+            columns.add(quoteIdentifier(column));
+            placeholders.add("?");
+        }
+
+        int inserted = 0;
+        try (PreparedStatement statement = connection.prepareStatement(
+                "INSERT INTO " + quoteIdentifier(table) + " (" + columns + ") VALUES (" + placeholders + ")")) {
+            for (List<Object> row : archived.rows()) {
+                for (int index = 0; index < row.size(); index++) {
+                    statement.setObject(index + 1, row.get(index));
+                }
+                inserted += statement.executeUpdate();
+            }
+        }
+        return inserted;
+    }
+
+    /** The {@code column = ?} list both wipes assign, in the order {@link #bindWipeStatResets} binds. */
+    private String wipeStatAssignments() {
+        StringJoiner assignments = new StringJoiner(", ");
+        for (String column : WIPE_STAT_RESETS.keySet()) {
+            assignments.add(quoteIdentifier(column) + " = ?");
+        }
+        return assignments.toString();
+    }
+
+    /**
+     * Binds every stat column back to the value a wipe resets it to, with {@code money} taking the
+     * configured starting balance. Returns the next free parameter index, which a player wipe uses
+     * for the {@code WHERE uuid = ?} a server wipe does not have.
+     */
+    private int bindWipeStatResets(PreparedStatement statement, double startingMoney) throws SQLException {
+        int index = 1;
+        for (Map.Entry<String, Object> reset : WIPE_STAT_RESETS.entrySet()) {
+            statement.setObject(index++, "money".equals(reset.getKey())
+                    ? Math.max(0D, startingMoney)
+                    : reset.getValue());
+        }
+        return index;
+    }
+
+    private int deletePlayerRows(String table, List<String> columns, String uuid) throws SQLException {
+        if (columns.isEmpty() || !serverWipeTableExists(table)) {
+            return 0;
+        }
+        try (PreparedStatement statement = connection.prepareStatement(
+                "DELETE FROM " + quoteIdentifier(table) + " WHERE " + ownerPredicate(columns))) {
+            bindOwnerUuid(statement, columns, uuid);
+            return statement.executeUpdate();
+        }
+    }
+
+    private int countPlayerRows(String table, List<String> columns, String uuid) {
+        if (columns.isEmpty()) {
+            return 0;
+        }
+        try {
+            if (!serverWipeTableExists(table)) {
+                return 0;
+            }
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "SELECT COUNT(*) FROM " + quoteIdentifier(table) + " WHERE " + ownerPredicate(columns))) {
+                bindOwnerUuid(statement, columns, uuid);
+                try (ResultSet rs = statement.executeQuery()) {
+                    return rs.next() ? rs.getInt(1) : 0;
+                }
+            }
+        } catch (SQLException exception) {
+            plugin.getLogger().log(Level.WARNING, "Failed to count player wipe rows in " + table, exception);
+            return 0;
+        }
+    }
+
+    private String ownerPredicate(List<String> columns) {
+        StringJoiner predicate = new StringJoiner(" OR ");
+        for (String column : columns) {
+            predicate.add(quoteIdentifier(column) + " = ?");
+        }
+        return predicate.toString();
+    }
+
+    private void bindOwnerUuid(PreparedStatement statement, List<String> columns, String uuid) throws SQLException {
+        for (int index = 0; index < columns.size(); index++) {
+            statement.setString(index + 1, uuid);
+        }
+    }
+
+
     // â”€â”€ Cuboids â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     public record CuboidData(String world, int x1, int y1, int z1, int x2, int y2, int z2) {}
@@ -3523,6 +4130,9 @@ public class DatabaseManager {
                 if (disabledKeysRaw != null && !disabledKeysRaw.isBlank()) {
                     instance.setDisabledLootKeys(List.of(disabledKeysRaw.split(",")));
                 }
+                instance.setStoredXp(rs.getLong("stored_xp"));
+                instance.setLifetimeItems(rs.getLong("lifetime_items"));
+                instance.setLifetimeEarnings(rs.getDouble("lifetime_earnings"));
                 spawners.add(instance);
             }
         } catch (SQLException e) {
@@ -3553,8 +4163,8 @@ public class DatabaseManager {
 
     public long createSpawner(SpawnerInstance instance) {
         try (PreparedStatement ps = connection.prepareStatement(
-                "INSERT INTO spawners (world, x, y, z, owner_uuid, owner_name, mob_type, stack_amount, access_mode, last_processed_at, created_at, updated_at, disabled_loot_keys) " +
-                        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "INSERT INTO spawners (world, x, y, z, owner_uuid, owner_name, mob_type, stack_amount, access_mode, last_processed_at, created_at, updated_at, disabled_loot_keys, stored_xp, lifetime_items, lifetime_earnings) " +
+                        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 Statement.RETURN_GENERATED_KEYS
         )) {
             ps.setString(1, instance.getWorld());
@@ -3570,6 +4180,9 @@ public class DatabaseManager {
             ps.setLong(11, instance.getCreatedAt());
             ps.setLong(12, instance.getUpdatedAt());
             ps.setString(13, String.join(",", instance.getDisabledLootKeys()));
+            ps.setLong(14, instance.getStoredXp());
+            ps.setLong(15, instance.getLifetimeItems());
+            ps.setDouble(16, instance.getLifetimeEarnings());
             ps.executeUpdate();
 
             try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
@@ -3594,8 +4207,8 @@ public class DatabaseManager {
 
         try (PreparedStatement ps = connection.prepareStatement(
                 "REPLACE INTO spawners " +
-                        "(id, world, x, y, z, owner_uuid, owner_name, mob_type, stack_amount, access_mode, last_processed_at, created_at, updated_at, disabled_loot_keys) " +
-                        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
+                        "(id, world, x, y, z, owner_uuid, owner_name, mob_type, stack_amount, access_mode, last_processed_at, created_at, updated_at, disabled_loot_keys, stored_xp, lifetime_items, lifetime_earnings) " +
+                        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
             ps.setLong(1, instance.getId());
             ps.setString(2, instance.getWorld());
             ps.setInt(3, instance.getX());
@@ -3610,6 +4223,9 @@ public class DatabaseManager {
             ps.setLong(12, instance.getCreatedAt());
             ps.setLong(13, instance.getUpdatedAt());
             ps.setString(14, String.join(",", instance.getDisabledLootKeys()));
+            ps.setLong(15, instance.getStoredXp());
+            ps.setLong(16, instance.getLifetimeItems());
+            ps.setDouble(17, instance.getLifetimeEarnings());
             ps.executeUpdate();
         } catch (SQLException e) {
             plugin.getLogger().log(Level.WARNING, "Failed to save managed spawner " + instance.getId(), e);
@@ -3839,7 +4455,32 @@ public class DatabaseManager {
                                          long now) {
         sql.append(" WHERE target_uuid = ?");
         parameters.add(targetUuid.toString());
+        appendPunishmentQueryFilters(sql, parameters, query, now);
+    }
 
+    /** Server-wide list: everyone's punishments, optionally narrowed to a player or staff name. */
+    private void appendGlobalPunishmentFilters(StringBuilder sql,
+                                               List<Object> parameters,
+                                               String search,
+                                               PunishmentQuery query,
+                                               long now) {
+        String term = search == null ? "" : search.trim();
+        if (term.isEmpty()) {
+            sql.append(" WHERE 1=1");
+        } else {
+            sql.append(" WHERE (LOWER(target_name_snapshot) LIKE LOWER(?) ESCAPE '!'"
+                    + " OR LOWER(issuer_name_snapshot) LIKE LOWER(?) ESCAPE '!')");
+            String like = "%" + term.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
+            parameters.add(like);
+            parameters.add(like);
+        }
+        appendPunishmentQueryFilters(sql, parameters, query, now);
+    }
+
+    private void appendPunishmentQueryFilters(StringBuilder sql,
+                                              List<Object> parameters,
+                                              PunishmentQuery query,
+                                              long now) {
         if (query == null) {
             return;
         }

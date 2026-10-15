@@ -68,8 +68,8 @@ public class PortalTabCompleter implements TabCompleter {
                 if (type.equals("RTP")) {
                     return partialMatches(args[3], plugin.getRtpManager().getPortalSelectorSuggestions());
                 } else if (type.equals("AFK")) {
-                    List<String> areas = plugin.getSpawnManager().getValidAreas(SpawnManager.AreaType.AFK)
-                            .stream().map(SpawnManager.TeleportArea::id).toList();
+                    List<String> areas = plugin.getAfkManager().getZones().stream()
+                            .map(com.bx.smpPlugin.afk.AfkZone::id).toList();
                     return partialMatches(args[3], areas);
                 }
             }
@@ -81,8 +81,8 @@ public class PortalTabCompleter implements TabCompleter {
                 if (type.equals("RTP")) {
                     return partialMatches(args[4], plugin.getRtpManager().getPortalSelectorSuggestions());
                 } else if (type.equals("AFK")) {
-                    List<String> areas = plugin.getSpawnManager().getValidAreas(SpawnManager.AreaType.AFK)
-                            .stream().map(SpawnManager.TeleportArea::id).toList();
+                    List<String> areas = plugin.getAfkManager().getZones().stream()
+                            .map(com.bx.smpPlugin.afk.AfkZone::id).toList();
                     return partialMatches(args[4], areas);
                 }
             }

@@ -53,6 +53,7 @@ public class ConfigManager {
             "ffa.yml",
             "crates.yml",
             "spawners.yml",
+            "afk.yml",
             "spawn-stash.yml",
             "network.yml",
             "staff-mode.yml",
@@ -92,6 +93,7 @@ public class ConfigManager {
     private FileConfiguration ffa;
     private FileConfiguration crates;
     private FileConfiguration spawners;
+    private FileConfiguration afk;
     private FileConfiguration spawnStash;
     private FileConfiguration network;
     private FileConfiguration staffMode;
@@ -140,6 +142,7 @@ public class ConfigManager {
         ffa          = load("ffa.yml", ffa);
         crates       = load("crates.yml", crates);
         spawners     = load("spawners.yml", spawners);
+        afk          = load("afk.yml", afk);
         spawnStash   = load("spawn-stash.yml", spawnStash);
         network      = load("network.yml", network);
         staffMode    = load("staff-mode.yml", staffMode);
@@ -2012,6 +2015,7 @@ public class ConfigManager {
     public FileConfiguration getOriginalFfa() { return ffa; }
     public FileConfiguration getOriginalMenus() { return menus; }
     public FileConfiguration getSpawners()      { return localized("CONFIG.SPAWNERS", spawners); }
+    public FileConfiguration getAfk()           { return afk; }
     public FileConfiguration getSpawnStash()    { return localized("CONFIG.SPAWN_STASH", spawnStash); }
     public FileConfiguration getNetwork()       { return localized("CONFIG.NETWORK", network); }
     public FileConfiguration getStaffMode()     { return localized("CONFIG.STAFF_MODE", staffMode); }
@@ -2043,6 +2047,7 @@ public class ConfigManager {
     public void reloadFfa() { ffa = load("ffa.yml", ffa); }
     public void reloadCrates() { crates = load("crates.yml", crates); }
     public void reloadSpawners() { spawners = load("spawners.yml", spawners); }
+    public void reloadAfk() { afk = load("afk.yml", afk); }
     public void reloadSpawnStash() { spawnStash = load("spawn-stash.yml", spawnStash); }
     public void reloadNetwork() { network = load("network.yml", network); }
     public void reloadStaffMode() { staffMode = load("staff-mode.yml", staffMode); }
@@ -2053,6 +2058,7 @@ public class ConfigManager {
     public void reloadEnchantments() { enchantments = load("enchantments.yml", enchantments); }
     public void reloadFilter() { filter = load("filter.yml", filter); }
     public boolean saveConfig() { return save("config.yml", config); }
+    public boolean saveAfk() { return save("afk.yml", afk); }
     public boolean saveLobby() { return save("lobby.yml", lobby); }
     public boolean saveDuels() { return save("duels.yml", duels); }
     public boolean saveFfa() { return save("ffa.yml", ffa); }

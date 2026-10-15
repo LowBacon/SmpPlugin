@@ -130,6 +130,10 @@ public final class PlatformReport {
         if (antiCheat == null) {
             return new Capability("Anti-cheat", CapabilityStatus.UNAVAILABLE, "failed to start; see the startup log.");
         }
+        if (antiCheat.isDeferringToTitanGuard()) {
+            return new Capability("Anti-cheat", CapabilityStatus.SUPPORTED,
+                    "standing down: TitanGuard is running (anticheat.yml DEFER-TO-TITANGUARD).");
+        }
         if (!antiCheat.isActive()) {
             return new Capability("Anti-cheat", CapabilityStatus.UNAVAILABLE,
                     "turned off (anticheat.yml ENABLED or /smpplugin features).");

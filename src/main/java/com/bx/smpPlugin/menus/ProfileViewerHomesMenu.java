@@ -33,6 +33,7 @@ public class ProfileViewerHomesMenu extends BaseMenu {
     private static final int LAST_PAGE_SLOT = 53;
 
     private final UUID targetUuid;
+    private final boolean returnToProfile;
     private final Map<Integer, Home> slotHomes = new HashMap<>();
 
     private ProfileSnapshot snapshot;
@@ -42,8 +43,14 @@ public class ProfileViewerHomesMenu extends BaseMenu {
     private boolean hasNextPage;
 
     public ProfileViewerHomesMenu(SmpPlugin plugin, UUID targetUuid) {
+        this(plugin, targetUuid, true);
+    }
+
+    /** {@code returnToProfile} false (opened with /seehomes): the back button closes instead. */
+    public ProfileViewerHomesMenu(SmpPlugin plugin, UUID targetUuid, boolean returnToProfile) {
         super(plugin, configuredTitle(plugin, targetUuid), configuredSize(plugin));
         this.targetUuid = targetUuid;
+        this.returnToProfile = returnToProfile;
     }
 
     @Override
@@ -98,7 +105,11 @@ public class ProfileViewerHomesMenu extends BaseMenu {
     public void handleClick(int slot, Player player) {
         if (slot == BACK_SLOT) {
             SoundUtils.play(player, plugin.getConfigManager().getSound("MENUS.BUTTON-CLICK"));
-            new ProfileViewerMenu(plugin, targetUuid).open(player);
+            if (returnToProfile && plugin.getProfileViewerManager().canView(player)) {
+                new ProfileViewerMenu(plugin, targetUuid).open(player);
+            } else {
+                player.closeInventory();
+            }
             return;
         }
 

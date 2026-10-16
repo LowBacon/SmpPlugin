@@ -2,7 +2,6 @@ package com.bx.smpPlugin.commands;
 
 import com.bx.smpPlugin.SmpPlugin;
 import com.bx.smpPlugin.managers.HomeManager;
-import com.bx.smpPlugin.menus.HomeMenu;
 import com.bx.smpPlugin.models.Home;
 import com.bx.smpPlugin.utils.ColorUtils;
 import com.bx.smpPlugin.utils.CommandLabelUtils;
@@ -36,7 +35,7 @@ public class HomeCommand implements CommandExecutor {
         HomeManager homes = plugin.getHomeManager();
 
         if (sub.equals("homes")) {
-            new HomeMenu(plugin).open(player);
+            homes.openHomes(player);
             return true;
         }
 
@@ -46,7 +45,7 @@ public class HomeCommand implements CommandExecutor {
                 player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage("HOME.INVALID-NAME")));
                 return true;
             }
-            if (isInArena(player)) {
+            if (homes.isInArena(player)) {
                 player.sendMessage(ColorUtils.toComponent("&cYou can't set a home inside a duel or FFA arena."));
                 return true;
             }
@@ -97,7 +96,7 @@ public class HomeCommand implements CommandExecutor {
             List<Home> owned = homes.getHomes(player.getUniqueId());
             home = owned.size() == 1 ? owned.get(0) : homes.getHome(player.getUniqueId(), "home");
             if (home == null) {
-                new HomeMenu(plugin).open(player);
+                homes.openHomes(player);
                 return true;
             }
         }
@@ -108,12 +107,5 @@ public class HomeCommand implements CommandExecutor {
         }
         plugin.getTeleportManager().queue(player, home.getLocation(), "HOME", null);
         return true;
-    }
-
-    private boolean isInArena(Player player) {
-        return (plugin.getDuelManager() != null && (plugin.getDuelManager().isInDuel(player.getUniqueId())
-                || plugin.getDuelManager().isTransitioning(player.getUniqueId())))
-                || (plugin.getFfaManager() != null && (plugin.getFfaManager().isInSession(player.getUniqueId())
-                || plugin.getFfaManager().isInMatch(player.getUniqueId())));
     }
 }

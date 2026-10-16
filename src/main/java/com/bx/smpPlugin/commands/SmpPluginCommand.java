@@ -61,6 +61,7 @@ public class SmpPluginCommand implements CommandExecutor, TabCompleter {
 
     private static Map<String, String> rootCompletions() {
         Map<String, String> completions = new java.util.LinkedHashMap<>();
+        completions.put("version", STATUS_PERMISSION);
         completions.put("status", STATUS_PERMISSION);
         completions.put("reload", RELOAD_PERMISSION);
         completions.put("statswipe", STATS_WIPE_PERMISSION);
@@ -103,6 +104,7 @@ public class SmpPluginCommand implements CommandExecutor, TabCompleter {
 
         switch (args[0].toLowerCase(Locale.ROOT)) {
             case "status", "diagnostics" -> handleStatus(sender);
+            case "version", "ver", "about" -> handleVersion(sender);
             case "reload" -> handleReload(sender);
             case "statswipe" -> handleStatsWipe(sender, label, args);
             case "optimize", "optimization" -> handleOptimize(sender, label, args);
@@ -700,7 +702,30 @@ public class SmpPluginCommand implements CommandExecutor, TabCompleter {
     }
 
     private void sendUsage(CommandSender sender, String label) {
-        sender.sendMessage(ColorUtils.toComponent("&cᴜѕᴀɢᴇ: /" + label + " <status|reload|statswipe|optimize|setup|features|maintenance>"));
+        sender.sendMessage(ColorUtils.toComponent("&cᴜѕᴀɢᴇ: /" + label + " <version|status|reload|statswipe|optimize|setup|features|maintenance>"));
+    }
+
+    /** /smpplugin version: what is installed, what it was built for, and whether a newer one is out. */
+    private void handleVersion(CommandSender sender) {
+        String version = plugin.getDescription().getVersion();
+        com.bx.smpPlugin.platform.BuildInfo build = com.bx.smpPlugin.platform.BuildInfo.load(plugin.getClass().getClassLoader());
+        sender.sendMessage(ColorUtils.toComponent("&8&m----------&r &9&lCustomSmp &8&m----------"));
+        sender.sendMessage(ColorUtils.toComponent("&7Version: &f" + version
+                + (version.contains("-") ? " &e(test build)" : " &a(release)")));
+        sender.sendMessage(ColorUtils.toComponent("&7Jar: &f" + build.flavor() + " &8(" + build.serverApi() + ")"));
+        sender.sendMessage(ColorUtils.toComponent("&7Server: &f" + org.bukkit.Bukkit.getName() + " " + org.bukkit.Bukkit.getBukkitVersion()));
+        sender.sendMessage(ColorUtils.toComponent("&7Java: &f" + System.getProperty("java.version")));
+        com.bx.smpPlugin.managers.UpdateManager updates = plugin.getUpdateManager();
+        String latest = updates == null ? null : updates.getLatestVersion();
+        if (latest == null) {
+            sender.sendMessage(ColorUtils.toComponent("&7Latest: &8not checked yet"));
+        } else if (updates.isUpdateAvailable()) {
+            sender.sendMessage(ColorUtils.toComponent("&7Latest: &a" + latest + " &e- update available!"));
+        } else {
+            sender.sendMessage(ColorUtils.toComponent("&7Latest: &f" + latest + " &a- up to date"));
+        }
+        sender.sendMessage(ColorUtils.toComponent("&7Author: &f" + String.join(", ", plugin.getDescription().getAuthors())
+                + " &8| &b" + com.bx.smpPlugin.managers.UpdateManager.DOWNLOAD_URL));
     }
 
     private void sendSetupUsage(CommandSender sender, String label) {

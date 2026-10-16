@@ -31,6 +31,26 @@ final class TablistEffects {
         return out.toString();
     }
 
+    /**
+     * {@code length} copies of {@code character}, fading from {@code from} to {@code to} along the
+     * bar, with a {@code shine} band sweeping across it as {@code frame} counts up.
+     */
+    static String gradientLine(String character, int length, int from, int to, int shine, long frame) {
+        if (character == null || character.isEmpty() || length <= 0) {
+            return "";
+        }
+        int width = 4;
+        int cycle = length + width * 2 + 10;
+        double center = Math.floorMod(frame, cycle) - width;
+        StringBuilder out = new StringBuilder(length * (character.length() + 8));
+        for (int i = 0; i < length; i++) {
+            int base = mix(from, to, length == 1 ? 0D : i / (double) (length - 1));
+            double amount = Math.max(0D, 1D - Math.abs(i - center) / width) * 0.85D;
+            out.append("&#").append(String.format("%06X", mix(base, shine, amount))).append(character);
+        }
+        return out.toString();
+    }
+
     static int mix(int from, int to, double amount) {
         int r = (int) Math.round(((from >> 16) & 0xFF) + ((((to >> 16) & 0xFF) - ((from >> 16) & 0xFF)) * amount));
         int g = (int) Math.round(((from >> 8) & 0xFF) + ((((to >> 8) & 0xFF) - ((from >> 8) & 0xFF)) * amount));

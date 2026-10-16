@@ -29,6 +29,8 @@ ENABLED: true
 SCREENS:
   SETTINGS: true
   RTP-QUEUE: true
+  # /homes as a grid of slots with a manage screen per home. false uses the chest menu.
+  HOMES: true
 
 SETTINGS_DIALOG:
   TITLE: "Settings"
@@ -162,3 +164,105 @@ RTP_QUEUE_DIALOG:
   NO-ACTION: "smpplugin:rtp_queue_deny"
   YES-LABEL: "&#00FC00Yes"
   YES-ACTION: "smpplugin:rtp_queue_accept"
+
+# /homes: filled homes first, then the empty slots the player has, then locked ones.
+HOMES_DIALOG:
+  TITLE: "Homes"
+  EXTERNAL-TITLE: "Homes"
+  ITEM: "WHITE_BED"
+  COLUMNS: 4
+  EXPANDED-COLUMNS: 6
+  BUTTON-WIDTH: 65
+  # %icon% is the home's icon drawn in the button. A material the server no longer knows leaves it
+  # blank, and the entry falls back to ENTRY-FORMAT-NO-ICON.
+  ENTRY-FORMAT: "%icon% %name%"
+  ENTRY-FORMAT-NO-ICON: "%name%"
+  HOME-TOOLTIP: "%name%\nClick to manage"
+  NEW-HOME-LABEL: "&aNew Home"
+  NEW-HOME-TOOLTIP: "Click to set a home where you stand"
+  TEAM-HOME-LABEL: "&bTeam Home"
+  LOCKED-LABEL: "&cLocked"
+  # Shown on locked slots. LOCKED-TOOLTIP-1, -2, ... override it for the slots of each tier below,
+  # so you can name the rank that unlocks them, e.g. LOCKED-TOOLTIP-2: "&7Unlocked by &bVIP".
+  LOCKED-TOOLTIP: "&7Get a higher rank for more home slots"
+  SHOW-MORE-LABEL: "Show More"
+  TOTAL-SLOTS: 90
+  # How many slots each "Show More" press reveals in total.
+  TIERS:
+    - 3
+    - 9
+    - 27
+    - 90
+
+CREATE_HOME_DIALOG:
+  TITLE: "Create Home"
+  EXTERNAL-TITLE: "Create Home"
+  ITEM: "WHITE_BED"
+  INPUTS:
+    - ID: "home_name"
+      LABEL: "Home Name"
+      WIDTH: 200
+      MAX-LENGTH: 16
+  BUTTONS:
+    - LABEL: "&#00FC00Save Home"
+      ACTION: "smpplugin:execute_create_home"
+    - LABEL: "Cancel"
+      ACTION: "smpplugin:homes_menu"
+
+HOME_MANAGE_DIALOG:
+  TITLE: "%name%"
+  EXTERNAL-TITLE: "%name%"
+  COLUMNS: 2
+  BUTTON-WIDTH: 150
+  BUTTONS:
+    - LABEL: "&aTeleport"
+      ACTION: "smpplugin:teleport_home_%slot%"
+    - LABEL: "Change Icon"
+      ACTION: "smpplugin:change_icon_prompt_%slot%"
+    - LABEL: "Rename"
+      ACTION: "smpplugin:rename_home_prompt_%slot%"
+    - LABEL: "&cDelete"
+      ACTION: "smpplugin:delete_home_prompt_%slot%"
+    - LABEL: "Back"
+      ACTION: "smpplugin:homes_menu"
+
+CHANGE_HOME_ICON_DIALOG:
+  TITLE: "Choose Icon"
+  EXTERNAL-TITLE: "Choose Icon"
+  INPUT-LABEL: "Search"
+  SEARCH-LABEL: "Search"
+  DEFAULT-LABEL: "Default"
+  BACK-LABEL: "Back"
+  # BUTTON-WIDTH sizes the three controls; results are wider so long item names fit.
+  BUTTON-WIDTH: 96
+  RESULT-WIDTH: 128
+  COLUMNS: 4
+  # Results shown per search. Lower it if the full item list is slow to open on your server.
+  MAX-RESULTS: 2000
+
+RENAME_HOME_DIALOG:
+  TITLE: "Rename"
+  EXTERNAL-TITLE: "Rename"
+  ITEM: ""
+  INPUTS:
+    - ID: "new_name"
+      LABEL: "New Name"
+      WIDTH: 200
+      MAX-LENGTH: 16
+  BUTTONS:
+    - LABEL: "Save"
+      ACTION: "smpplugin:execute_rename_home_%slot%"
+    - LABEL: "Cancel"
+      ACTION: "smpplugin:manage_home_%slot%"
+
+DELETE_HOME_CONFIRM_DIALOG:
+  TITLE: "&cDelete %name%?"
+  EXTERNAL-TITLE: "&cDelete %name%?"
+  ITEM: ""
+  COLUMNS: 2
+  BUTTON-WIDTH: 100
+  BUTTONS:
+    - LABEL: "Cancel"
+      ACTION: "smpplugin:manage_home_%slot%"
+    - LABEL: "&cDelete"
+      ACTION: "smpplugin:execute_delete_home_%slot%"

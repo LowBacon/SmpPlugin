@@ -21,6 +21,11 @@ public interface DialogGateway {
 
     boolean openRtpQueue(Player player);
 
+    /** The homes grid; false when dialogs or that screen are off, so the chest menu is used. */
+    default boolean openHomes(Player player) {
+        return false;
+    }
+
     /** The item search used by the Auction House and Quick Buy. */
     boolean openQuickBuySearch(Player player, String currentQuery, String source);
 

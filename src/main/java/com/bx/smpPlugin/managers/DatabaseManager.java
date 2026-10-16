@@ -742,6 +742,7 @@ public class DatabaseManager {
 
     private void ensureSpawnerColumns() throws SQLException {
         ensureColumnExists("spawners", "disabled_loot_keys", "TEXT DEFAULT ''");
+        ensureColumnExists("homes", "icon", "TEXT DEFAULT ''");
         ensureColumnExists("spawners", "stored_xp", "INTEGER DEFAULT 0");
         ensureColumnExists("spawners", "lifetime_items", "INTEGER DEFAULT 0");
         ensureColumnExists("spawners", "lifetime_earnings", "REAL DEFAULT 0");
@@ -1915,7 +1916,9 @@ public class DatabaseManager {
                             rs.getDouble("x"), rs.getDouble("y"), rs.getDouble("z"),
                             rs.getFloat("yaw"), rs.getFloat("pitch"));
                     long createdAt = rs.getLong("created_at");
-                    homes.add(new Home(uuid, rs.getString("home_name"), loc, createdAt));
+                    Home home = new Home(uuid, rs.getString("home_name"), loc, createdAt);
+                    home.setIcon(rs.getString("icon"));
+                    homes.add(home);
                 }
             }
         } catch (SQLException e) {
@@ -1926,8 +1929,8 @@ public class DatabaseManager {
 
     public void saveHome(Home home) {
         try (PreparedStatement ps = connection.prepareStatement(
-                "REPLACE INTO homes (player_uuid, home_name, world, x, y, z, yaw, pitch, created_at)" +
-                " VALUES (?,?,?,?,?,?,?,?,?)")) {
+                "REPLACE INTO homes (player_uuid, home_name, world, x, y, z, yaw, pitch, created_at, icon)" +
+                " VALUES (?,?,?,?,?,?,?,?,?,?)")) {
             ps.setString(1, home.getOwnerUuid().toString());
             ps.setString(2, home.getName());
             Location l = home.getLocation();
@@ -1946,6 +1949,7 @@ public class DatabaseManager {
             ps.setFloat(7, l != null ? l.getYaw() : 0.0f);
             ps.setFloat(8, l != null ? l.getPitch() : 0.0f);
             ps.setLong(9, home.getCreatedAt());
+            ps.setString(10, home.getIcon());
             ps.executeUpdate();
         } catch (SQLException e) {
             plugin.getLogger().log(Level.WARNING, "Failed to save home", e);

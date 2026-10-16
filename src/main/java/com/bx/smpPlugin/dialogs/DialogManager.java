@@ -28,6 +28,7 @@ public final class DialogManager implements DialogGateway {
 
     private final SmpPlugin plugin;
     private final DialogConfig config;
+    private final com.bx.smpPlugin.dialogs.screens.HomesDialog homes;
     private final DialogSession.Store sessions = new DialogSession.Store();
 
     private final SettingsDialog settings;
@@ -54,7 +55,8 @@ public final class DialogManager implements DialogGateway {
         this.rtpQueue = new RtpQueueDialog(plugin, config, sessions);
         this.quickBuyItem = new QuickBuyItemDialog(plugin, config, sessions);
         // Ordered so the cheap exact-match screens answer before the prefix-matching ones.
-        this.screens = List.of(settings, rtpQueue, quickBuyItem);
+        this.homes = new com.bx.smpPlugin.dialogs.screens.HomesDialog(plugin, config, sessions);
+        this.screens = List.of(settings, rtpQueue, quickBuyItem, homes);
     }
 
     @SuppressWarnings("unchecked")
@@ -84,6 +86,11 @@ public final class DialogManager implements DialogGateway {
     @Override
     public boolean openRtpQueue(Player player) {
         return config.isScreenEnabled("RTP-QUEUE") && rtpQueue.open(player);
+    }
+
+    @Override
+    public boolean openHomes(Player player) {
+        return config.isScreenEnabled("HOMES") && homes.open(player);
     }
 
     @Override

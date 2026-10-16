@@ -13,7 +13,10 @@ import java.util.logging.Level;
 
 public class UpdateManager {
 
-    private static final String VERSION_URL = "https://raw.githubusercontent.com/BeestoXd/SmpPlugin/main/version.txt";
+    private static final String VERSION_URL = "https://raw.githubusercontent.com/LowBacon/SmpPlugin/main/version.txt";
+
+    /** Where server owners download new versions. */
+    public static final String DOWNLOAD_URL = "https://github.com/LowBacon/SmpPlugin";
 
     private final SmpPlugin plugin;
     private String latestVersion = null;
@@ -47,7 +50,7 @@ public class UpdateManager {
 
                             if (this.updateAvailable) {
                                 Bukkit.getConsoleSender().sendMessage(ColorUtils.colorize("&c[SmpPlugin] A new update is available: " + latestVersion + " (Current version: " + currentVersion + ")"));
-                                Bukkit.getConsoleSender().sendMessage(ColorUtils.colorize("&c[SmpPlugin] Please download the latest version from: https://github.com/BeestoXd/SmpPlugin"));
+                                Bukkit.getConsoleSender().sendMessage(ColorUtils.colorize("&c[SmpPlugin] Please download the latest version from: " + DOWNLOAD_URL));
                             } else {
                                 plugin.getLogger().info("You are running the latest version of SmpPlugin (" + currentVersion + ").");
                             }
@@ -60,55 +63,9 @@ public class UpdateManager {
         });
     }
 
-    private String cleanVersion(String version) {
-        if (version == null) {
-            return "";
-        }
-        version = version.trim();
-        if (version.toLowerCase().startsWith("v")) {
-            version = version.substring(1).trim();
-        }
-        return version;
-    }
-
     private boolean isNewerVersion(String current, String latest) {
-        if (current == null || latest == null) {
-            return false;
-        }
-        String cleanCurrent = cleanVersion(current);
-        String cleanLatest = cleanVersion(latest);
-        if (cleanCurrent.equalsIgnoreCase(cleanLatest)) {
-            return false;
-        }
-
-        // Split by standard delimiters and compare segments numerically
-        String[] currentParts = cleanCurrent.split("[-._]");
-        String[] latestParts = cleanLatest.split("[-._]");
-        int length = Math.max(currentParts.length, latestParts.length);
-
-        for (int i = 0; i < length; i++) {
-            String currentPart = i < currentParts.length ? currentParts[i] : "0";
-            String latestPart = i < latestParts.length ? latestParts[i] : "0";
-
-            try {
-                int currentNum = Integer.parseInt(currentPart);
-                int latestNum = Integer.parseInt(latestPart);
-                if (latestNum > currentNum) {
-                    return true;
-                } else if (currentNum > latestNum) {
-                    return false;
-                }
-            } catch (NumberFormatException e) {
-                // Fallback to lexicographical comparison
-                int comp = latestPart.compareToIgnoreCase(currentPart);
-                if (comp > 0) {
-                    return true;
-                } else if (comp < 0) {
-                    return false;
-                }
-            }
-        }
-        return false;
+        return current != null && latest != null
+                && com.bx.smpPlugin.utils.VersionComparator.isNewer(latest, current);
     }
 
     public boolean isUpdateAvailable() {

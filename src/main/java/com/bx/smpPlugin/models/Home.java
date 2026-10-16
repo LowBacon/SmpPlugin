@@ -10,6 +10,8 @@ public class Home {
     private String name;
     private Location location;
     private long createdAt;
+    /** Material name shown for this home in the menus; blank means the default bed. */
+    private String icon = "";
 
     public Home(UUID ownerUuid, String name, Location location) {
         this(ownerUuid, name, location, System.currentTimeMillis());
@@ -32,4 +34,8 @@ public class Home {
 
     public long getCreatedAt() { return createdAt; }
     public void setCreatedAt(long createdAt) { this.createdAt = createdAt; }
+
+    public String getIcon() { return icon == null ? "" : icon; }
+    public void setIcon(String icon) { this.icon = icon == null ? "" : icon; }
+    public boolean hasIcon() { return icon != null && !icon.isBlank(); }
 }

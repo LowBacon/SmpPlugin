@@ -8,14 +8,14 @@ An all-in-one **Minecraft SMP core plugin**. One jar replaces the usual stack of
 
 | | |
 |---|---|
-| **Plugin version** | `2.0.0-alpha.4` (test build) |
+| **Plugin version** | `2.0.0` (full release); `/smpplugin version` shows the installed build |
 | **Minecraft** | `26.3` on Paper, Purpur, Spigot and CraftBukkit |
 | **Folia** | Not supported in 2.0 (no Folia 26.3 build exists) |
 | **Java** | 25 |
 | **API** | Paper API `26.3.build.157-beta` (Spigot build: Spigot API `26.3-R0.1-SNAPSHOT`), `api-version: 26.3`, `folia-supported: false` |
-| **Build** | `mvn clean package` → `target/SmpPlugin-2.0.0-alpha.4-paper.jar` (Paper/Purpur); `-Pspigot` → `…-spigot.jar` (Spigot/CraftBukkit) |
+| **Build** | `mvn clean package` → `target/SmpPlugin-2.0.0-paper.jar` (Paper/Purpur); `-Pspigot` → `…-spigot.jar` (Spigot/CraftBukkit) |
 | **Size** | ~590 classes, ~152,000 lines of Java, 145 commands, 110+ GUI menus, 36 config files |
-| **Update checker** | Checks GitHub (`BeestoXd/SmpPlugin`) for a newer version on startup |
+| **Update checker** | Checks GitHub (`LowBacon/SmpPlugin`, `version.txt` on `main`) for a newer version on startup |
 
 Older servers refuse the jar (api-version 26.3); for 1.21.10 – 26.2 use version 1.5. Folia makes the plugin
 disable itself. See [COMPATIBILITY.md](COMPATIBILITY.md).
@@ -64,6 +64,10 @@ disable itself. See [COMPATIBILITY.md](COMPATIBILITY.md).
 - `/menu` (`/mainmenu`): one screen with every main feature; set it up in `menus.yml MAIN-MENU`
 
 ### Homes
+- `/homes` on Paper 1.21.6+: a grid of home slots (filled, free, locked by rank) with **Show More**,
+  a manage screen per home (teleport, change icon, rename, delete) and a Team Home button
+- **Home icons**: pick any item for a home from a searchable list
+- The chest menu is used on Spigot, for Bedrock players, or with `dialog.yml SCREENS.HOMES: false`
 - `/home [name]`, `/homes` (GUI), `/sethome [name]`, `/delhome <name>`, `/renamehome <old> <new>`
 - Multiple named homes per player; extra homes by rank with `SETTINGS.HOME-PERMISSIONS`
 - `/seehomes <player>` *(staff)*: view and teleport to someone's homes
@@ -458,7 +462,9 @@ Chat · Ignore · Messaging · Bounty · Cuboids · AFK · Shards · Warps · Te
 - **Sorted by rank** (LuckPerms group weight), AFK players at the bottom with a grey name
 - **Animated title** (`%animated_title%`): a band of light sweeps across the server name
 - **Live footer**: coloured ping and TPS, online count, and rotating tips (`%tip%`)
-- Stat placeholders: `%money%`, `%shards%`, `%kills%`, `%deaths%`, `%playtime%`, `%team%`
+- Stat placeholders: `%money%`, `%shards%`, `%kills%`, `%deaths%`, `%playtime%`, `%team%`, `%rank%`, `%world%`
+- `%animated_line%`: a gradient bar with a moving shine
+- Only changed headers, footers and names are sent, so a big player count costs little
 
 ### Stats
 - `/stats [player]`: stats menu with every stat and the player's leaderboard places

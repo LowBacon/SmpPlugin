@@ -1,5 +1,65 @@
 # Changelog
 
+## 2.0.0 — 16 October 2026
+
+The first full release of SmpPlugin 2.0 (CustomSmp). It contains everything from the alpha builds
+below, plus v2's home screens, a reworked tab list and proper version handling.
+
+### Homes (from UltimateDonutSMP v2)
+- **`/homes` on Paper 1.21.6+ opens v2's home screens** as pop-up dialogs:
+  - **Slot grid:** your homes first, then the free slots you have, then locked slots that say what
+    unlocks them. **Show More** opens more slots (3, 9, 27, then 90 by default).
+  - **Manage screen per home:** Teleport, Change Icon, Rename and Delete (with a confirmation).
+  - **Home icons:** pick any item for a home from a searchable list. The icon also shows in the chest
+    menu and in the staff `/seehomes` view.
+  - **Team Home** button when you are in a team.
+  - Creating and renaming use a text box instead of typing in chat.
+- **Chest menu fallback:** Spigot, servers older than 1.21.6, and Bedrock players (through Geyser)
+  keep the chest menu. So does `dialog.yml SCREENS.HOMES: false`.
+- **Configuration:** `dialog.yml` sections `HOMES_DIALOG`, `CREATE_HOME_DIALOG`,
+  `HOME_MANAGE_DIALOG`, `CHANGE_HOME_ICON_DIALOG`, `RENAME_HOME_DIALOG` and
+  `DELETE_HOME_CONFIRM_DIALOG`.
+  - Locked slots read `LOCKED-TOOLTIP`.
+  - `LOCKED-TOOLTIP-1`, `-2`, ... name the rank that unlocks each tier.
+- **Database:** `homes` gains an `icon` column, added automatically on start.
+
+### Tab list
+- **Lighter on the server:**
+  - A header, footer or name that hasn't changed is no longer re-sent. Before, every player got a
+    new header and footer every 3 ticks while the title animated, and a new name every 2 seconds.
+    Names are still fully resent every 30 seconds, so a missed change can't stick.
+  - The animated title and line are built once per frame for everyone, instead of once per player.
+  - Header and footer text is read from config.yml once per reload, not every frame.
+  - The LuckPerms rank weight used for sorting is cached for 30 seconds, and refreshed at once when
+    a rank changes.
+  - The animation stops when nobody is online.
+- **New placeholders:**
+  - `%animated_line%`: a gradient bar with the same moving shine
+    (`TABLIST.ANIMATION.LINE-CHAR`, `LINE-LENGTH`, `LINE-FROM`, `LINE-TO`)
+  - `%rank%`: the LuckPerms prefix, or "Member"
+  - `%world%`: Overworld, Nether, The End, or the world's name
+- **New default layout:**
+  - Header: animated title, animated line, and "Welcome, rank name".
+  - Footer: money, shards, kills and playtime; then online count, ping, TPS and world; then the
+    animated line and the rotating tip.
+  - Existing servers keep their own header and footer; copy the new lines from the bundled
+    config.yml to use them.
+
+### Version
+- **The version is now `2.0.0`** (it was `2.0.0-alpha.5`). The jars are `SmpPlugin-2.0.0-paper.jar` and
+  `SmpPlugin-2.0.0-spigot.jar`.
+- **`/smpplugin version`** (also `ver`, `about`) shows:
+  - the installed version, and whether it is a release or a test build
+  - which jar it is (paper or spigot) and the server API it was built against
+  - the server and Java version
+  - the latest version on GitHub, and whether an update is available
+- **The update checker looks at this project's GitHub** (`LowBacon/SmpPlugin`, `version.txt` on
+  `main`). Before, it asked the old author's repository and failed on every start. The in-game
+  update notice links there too.
+- **Version comparison follows semantic versioning:** a release is newer than its pre-releases, and
+  `alpha.10` is newer than `alpha.9`. Before, `2.0.0-alpha.5` would have counted as newer than
+  `2.0.0`.
+
 ## 2.0.0-alpha.5 — 15 October 2026
 
 Rebuilds the AFK system from scratch, adds `/offend`, renames the server branding to **CustomSmp**,

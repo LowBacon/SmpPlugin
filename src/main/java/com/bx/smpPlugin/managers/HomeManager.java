@@ -137,7 +137,33 @@ public class HomeManager {
             return;
         }
         Home copy = new Home(home.getOwnerUuid(), home.getName(), home.getLocation().clone(), home.getCreatedAt());
+        copy.setIcon(home.getIcon());
         plugin.getDatabaseManager().executeAsync(() -> plugin.getDatabaseManager().saveHome(copy));
+    }
+
+    /** Sets the item a home is shown with; a blank or unknown material goes back to the bed. */
+    public boolean setIcon(UUID uuid, String homeName, String materialName) {
+        Home home = getHome(uuid, homeName);
+        if (home == null) {
+            return false;
+        }
+        org.bukkit.Material material = materialName == null || materialName.isBlank()
+                ? null
+                : org.bukkit.Material.matchMaterial(materialName.trim().toUpperCase(java.util.Locale.ROOT));
+        home.setIcon(material == null || !material.isItem() ? "" : material.name());
+        saveAsync(home);
+        return true;
+    }
+
+    /** The material a home is drawn with in menus. */
+    public static org.bukkit.Material iconOf(Home home) {
+        if (home != null && home.hasIcon()) {
+            org.bukkit.Material material = org.bukkit.Material.matchMaterial(home.getIcon());
+            if (material != null && material.isItem()) {
+                return material;
+            }
+        }
+        return org.bukkit.Material.WHITE_BED;
     }
 
     private void deleteAsync(UUID uuid, String name) {
@@ -225,6 +251,26 @@ public class HomeManager {
         pendingInputs.remove(player.getUniqueId());
         player.sendMessage(ColorUtils.toComponent(
                 plugin.getConfigManager().getMessage("HOME.RENAME-SUCCESS", "{name}", input)));
+        new HomeMenu(plugin).open(player);
+    }
+
+    /** Duel and FFA arenas are temporary, so homes can't be set in them. */
+    public boolean isInArena(Player player) {
+        return (plugin.getDuelManager() != null && (plugin.getDuelManager().isInDuel(player.getUniqueId())
+                || plugin.getDuelManager().isTransitioning(player.getUniqueId())))
+                || (plugin.getFfaManager() != null && (plugin.getFfaManager().isInSession(player.getUniqueId())
+                || plugin.getFfaManager().isInMatch(player.getUniqueId())));
+    }
+
+    /**
+     * Opens the homes screen: the dialog grid on Paper 1.21.6+, the chest menu everywhere else
+     * (Spigot, older servers, Bedrock players through Geyser, or HOMES off in dialog.yml).
+     */
+    public void openHomes(Player player) {
+        boolean bedrock = com.bx.smpPlugin.utils.BedrockPlayers.isBedrock(player);
+        if (!bedrock && plugin.getDialogManager() != null && plugin.getDialogManager().openHomes(player)) {
+            return;
+        }
         new HomeMenu(plugin).open(player);
     }
 

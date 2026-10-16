@@ -253,7 +253,7 @@ public class PlayerJoinQuitListener implements Listener {
                         player.sendMessage(ColorUtils.colorize("&9&lCustomSmp &7» &c&lA new update is available!", player));
                         player.sendMessage(ColorUtils.colorize("&7Current version: &c" + currentVer + " &8| &7Latest version: &a" + latestVer, player));
                         player.sendMessage(ColorUtils.colorize("&cPlease download the update from the official repository:", player));
-                        player.sendMessage(ColorUtils.colorize("&bhttps://github.com/BeestoXd/SmpPlugin", player));
+                        player.sendMessage(ColorUtils.colorize("&b" + com.bx.smpPlugin.managers.UpdateManager.DOWNLOAD_URL, player));
                         player.sendMessage(ColorUtils.colorize("&8&m--------------------------------------------------", player));
                     }
                 }, 40L);

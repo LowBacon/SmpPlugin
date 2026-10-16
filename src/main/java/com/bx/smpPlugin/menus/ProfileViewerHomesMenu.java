@@ -177,7 +177,9 @@ public class ProfileViewerHomesMenu extends BaseMenu {
         String namePath = valid ? MENU_PATH + ".HOME-BUTTON.DISPLAY-NAME" : MENU_PATH + ".INVALID-HOME-BUTTON.DISPLAY-NAME";
         String lorePath = valid ? MENU_PATH + ".HOME-BUTTON.LORE" : MENU_PATH + ".INVALID-HOME-BUTTON.LORE";
 
-        Material material = ItemUtils.parseMaterial(menus().getString(materialPath, valid ? "LIGHT_BLUE_BED" : "BARRIER"));
+        Material material = valid && home.hasIcon()
+                ? com.bx.smpPlugin.managers.HomeManager.iconOf(home)
+                : ItemUtils.parseMaterial(menus().getString(materialPath, valid ? "LIGHT_BLUE_BED" : "BARRIER"));
         String displayName = menus().getString(namePath, valid ? "&b{name}" : "&c{name}");
         List<String> lore = menus().getStringList(lorePath);
         if (lore.isEmpty()) {

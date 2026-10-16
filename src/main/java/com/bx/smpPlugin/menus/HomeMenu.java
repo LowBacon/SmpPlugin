@@ -183,8 +183,11 @@ public class HomeMenu extends BaseMenu {
     private void setUsedHomeButtons(Player player, Home home, String key, int globalIndex, int teleportSlot, int actionSlot) {
         Map<String, String> placeholders = homePlaceholders(home.getName(), globalIndex, home.getLocation());
 
+        // A home with its own icon (picked in the homes dialog) shows it here too.
         set(teleportSlot, ItemUtils.createItem(
-                material("HOME-MENU.TELEPORT-USED-MATERIAL", Material.LIGHT_BLUE_BED),
+                home.hasIcon()
+                        ? com.bx.smpPlugin.managers.HomeManager.iconOf(home)
+                        : material("HOME-MENU.TELEPORT-USED-MATERIAL", Material.LIGHT_BLUE_BED),
                 text("HOME-MENU.TELEPORT." + key + ".DISPLAY-NAME.USED", "&b{name}", placeholders),
                 lore("HOME-MENU.TELEPORT." + key + ".LORE.USED",
                         List.of("&7ᴡᴏʀʟᴅ: &f{world}", "&aʟᴇꜰᴛ-ᴄʟɪᴄᴋ ᴛᴏ ᴛᴇʟᴇᴘᴏʀᴛ"),

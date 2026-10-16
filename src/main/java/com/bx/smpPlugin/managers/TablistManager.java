@@ -66,7 +66,23 @@ public class TablistManager {
     private final Map<UUID, Long> skinHeadTextureRefreshTimes = new ConcurrentHashMap<>();
     private final Map<UUID, Map<String, PermissionOverride>> luckPermsCommandOverrides = new ConcurrentHashMap<>();
     private final Map<UUID, Integer> listOrders = new ConcurrentHashMap<>();
+    /** What each player was last sent, so an unchanged header, footer or name sends no packet. */
+    private final Map<UUID, String> lastHeaderFooter = new ConcurrentHashMap<>();
+    private final Map<UUID, String> lastNames = new ConcurrentHashMap<>();
+    /** LuckPerms group weight per player and when it was read; rank changes refresh it early. */
+    private final Map<UUID, long[]> rankWeights = new ConcurrentHashMap<>();
+    private static final long RANK_WEIGHT_TTL_MS = 30_000L;
+    /** Every Nth periodic name pass is sent regardless, so a missed change never sticks. */
+    private static final int FORCED_NAME_PASS_EVERY = 15;
+    private int namePassCounter;
     private volatile long animationFrame;
+    /** The animated title and line only change once per frame, so they are built once per frame. */
+    private volatile long renderedFrame = -1L;
+    private volatile String renderedTitle = "";
+    private volatile String renderedLine = "";
+    /** Header and footer text read from config.yml, kept until the config object is reloaded. */
+    private volatile org.bukkit.configuration.file.FileConfiguration textSource;
+    private final Map<String, String> textCache = new ConcurrentHashMap<>();
 
     public TablistManager(SmpPlugin plugin) {
         this.plugin = plugin;
@@ -86,7 +102,14 @@ public class TablistManager {
 
         String headerText = applyInternalPlaceholders(getMultilineText("TABLIST.HEADER"), player);
         String footerText = applyInternalPlaceholders(getMultilineText("TABLIST.FOOTER"), player);
-        player.setPlayerListHeaderFooter(parseTabText(headerText, player), parseTabText(footerText, player));
+        String header = parseTabText(headerText, player);
+        String footer = parseTabText(footerText, player);
+        // The animation redraws every few ticks; most of the time nothing a player sees has moved.
+        String sent = header + '\u0000' + footer;
+        if (sent.equals(lastHeaderFooter.put(player.getUniqueId(), sent))) {
+            return;
+        }
+        player.setPlayerListHeaderFooter(header, footer);
     }
 
     public void updateAll() {
@@ -104,9 +127,38 @@ public class TablistManager {
             return;
         }
 
+        boolean forced = ++namePassCounter % FORCED_NAME_PASS_EVERY == 0;
         for (Player player : Bukkit.getOnlinePlayers()) {
-            updateTablistName(player);
+            if (forced) {
+                updateTablistName(player);
+            } else {
+                updateTablistNameIfChanged(player);
+            }
         }
+    }
+
+    /**
+     * The periodic pass: works out the name as text first and only parses and sends it when it
+     * differs from what the player's entry already shows.
+     */
+    private void updateTablistNameIfChanged(Player player) {
+        updateListOrder(player);
+        String signature = nameSignature(resolveNameFormat(player), player);
+        if (signature.equals(lastNames.get(player.getUniqueId()))) {
+            return;
+        }
+        updateTablistName(player);
+    }
+
+    private String nameSignature(String nameFormat, Player player) {
+        String resolved = nameFormat == null ? "" : nameFormat;
+        if (ColorUtils.hasPAPI()) {
+            try {
+                resolved = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(player, resolved);
+            } catch (Exception ignored) {
+            }
+        }
+        return applyInternalPlaceholders(resolved, player);
     }
 
     public void updateTablistName(Player player) {
@@ -116,6 +168,7 @@ public class TablistManager {
 
         updateListOrder(player);
         String nameFormat = resolveNameFormat(player);
+        lastNames.put(player.getUniqueId(), nameSignature(nameFormat, player));
         refreshSkinHeadTextureIfNeeded(player, nameFormat, false);
         Component adventureComponent = parseTabComponent(nameFormat, player);
         if (adventureComponent != null) {
@@ -150,8 +203,19 @@ public class TablistManager {
         }
     }
 
-    /** The weight of the player's primary LuckPerms group, 0 without LuckPerms. */
+    /** The weight of the player's primary LuckPerms group, 0 without LuckPerms. Cached briefly. */
     private int resolveRankWeight(Player player) {
+        long now = System.currentTimeMillis();
+        long[] cached = rankWeights.get(player.getUniqueId());
+        if (cached != null && now - cached[1] < RANK_WEIGHT_TTL_MS) {
+            return (int) cached[0];
+        }
+        int weight = lookupRankWeight(player);
+        rankWeights.put(player.getUniqueId(), new long[]{weight, now});
+        return weight;
+    }
+
+    private int lookupRankWeight(Player player) {
         try {
             Class<?> providerClass = findOptionalPluginClass("LuckPerms", "net.luckperms.api.LuckPermsProvider");
             Object luckPerms = invokeStaticNoArg(providerClass, "get");
@@ -178,8 +242,12 @@ public class TablistManager {
             return;
         }
         // Only worth redrawing this often when the header or footer actually animates.
-        if (!getMultilineText("TABLIST.HEADER").contains("%animated_title%")
-                && !getMultilineText("TABLIST.FOOTER").contains("%animated_title%")) {
+        String header = getMultilineText("TABLIST.HEADER");
+        String footer = getMultilineText("TABLIST.FOOTER");
+        if (!header.contains("%animated_") && !footer.contains("%animated_")) {
+            return;
+        }
+        if (Bukkit.getOnlinePlayers().isEmpty()) {
             return;
         }
         animationFrame++;
@@ -191,10 +259,32 @@ public class TablistManager {
     }
 
     private String animatedTitle() {
-        String text = config().getString("TABLIST.ANIMATION.TEXT", "CustomSmp");
+        renderFrame();
+        return renderedTitle;
+    }
+
+    /** A bar of LINE-CHAR in a two-colour gradient with its own sweeping shine, for %animated_line%. */
+    private String animatedLine() {
+        renderFrame();
+        return renderedLine;
+    }
+
+    private void renderFrame() {
+        long frame = animationFrame;
+        if (frame == renderedFrame) {
+            return;
+        }
         int base = TablistEffects.parseRgb(config().getString("TABLIST.ANIMATION.COLOR", "#00ADFC"), 0x00ADFC);
         int shine = TablistEffects.parseRgb(config().getString("TABLIST.ANIMATION.SHINE", "#FFFFFF"), 0xFFFFFF);
-        return TablistEffects.shimmer(text, base, shine, animationFrame, config().getBoolean("TABLIST.ANIMATION.BOLD", true));
+        renderedTitle = TablistEffects.shimmer(config().getString("TABLIST.ANIMATION.TEXT", "CustomSmp"),
+                base, shine, frame, config().getBoolean("TABLIST.ANIMATION.BOLD", true));
+        int lineFrom = TablistEffects.parseRgb(config().getString("TABLIST.ANIMATION.LINE-FROM", "#0B3D91"), 0x0B3D91);
+        int lineTo = TablistEffects.parseRgb(config().getString("TABLIST.ANIMATION.LINE-TO", "#00ADFC"), 0x00ADFC);
+        String lineChar = config().getString("TABLIST.ANIMATION.LINE-CHAR", "▬");
+        int lineLength = Math.max(4, Math.min(64, config().getInt("TABLIST.ANIMATION.LINE-LENGTH", 28)));
+        renderedLine = TablistEffects.gradientLine(lineChar == null || lineChar.isEmpty() ? "▬" : lineChar,
+                lineLength, lineFrom, lineTo, shine, frame);
+        renderedFrame = frame;
     }
 
     /** The tip for this moment: they rotate every TABLIST.TIPS-SECONDS. */
@@ -482,7 +572,10 @@ public class TablistManager {
             return;
         }
 
+        // A permission change usually means a rank change: re-read the group weight now.
+        rankWeights.remove(player.getUniqueId());
         String nameFormat = resolveNameFormat(player);
+        lastNames.put(player.getUniqueId(), nameSignature(nameFormat, player));
         refreshSkinHeadTextureIfNeeded(player, nameFormat, false);
         Component adventureComponent = parseTabComponent(nameFormat, player);
         if (adventureComponent != null && componentUpdater.refreshEntry(player, adventureComponent)) {
@@ -573,6 +666,9 @@ public class TablistManager {
         skinHeadTextureRefreshTimes.remove(playerId);
         luckPermsCommandOverrides.remove(playerId);
         listOrders.remove(playerId);
+        lastHeaderFooter.remove(playerId);
+        lastNames.remove(playerId);
+        rankWeights.remove(playerId);
     }
 
     public String createPermissionRefreshSnapshot(Player player) {
@@ -752,12 +848,25 @@ public class TablistManager {
     }
 
     private String getMultilineText(String path) {
-        if (config().isList(path)) {
-            List<String> lines = config().getStringList(path);
-            return String.join("\n", lines);
+        org.bukkit.configuration.file.FileConfiguration config = config();
+        if (config != textSource) {
+            // Reloaded: the config is a new object, so everything read from the old one is stale.
+            textCache.clear();
+            textSource = config;
         }
+        return textCache.computeIfAbsent(path, key -> config.isList(key)
+                ? String.join("\n", config.getStringList(key))
+                : config.getString(key, ""));
+    }
 
-        return config().getString(path, "");
+    /** "Overworld", "Nether", "The End", or the world's own name for anything else. */
+    private static String worldLabel(Player player) {
+        return switch (player.getWorld().getEnvironment()) {
+            case NORMAL -> "Overworld";
+            case NETHER -> "Nether";
+            case THE_END -> "The End";
+            default -> player.getWorld().getName();
+        };
     }
 
     private boolean hasMediaBadgeIncludePermission(Player player) {
@@ -1089,6 +1198,16 @@ public class TablistManager {
         if (text.contains("%animated_title%")) {
             text = text.replace("%animated_title%", animatedTitle());
         }
+        if (text.contains("%animated_line%")) {
+            text = text.replace("%animated_line%", animatedLine());
+        }
+        if (text.contains("%rank%")) {
+            String rank = com.bx.smpPlugin.utils.RolePrefixResolver.resolve(player);
+            text = text.replace("%rank%", rank == null || rank.isBlank() ? "&7Member" : rank.trim());
+        }
+        if (text.contains("%world%")) {
+            text = text.replace("%world%", worldLabel(player));
+        }
         if (text.contains("%tip%")) {
             text = text.replace("%tip%", currentTip());
         }
@@ -1160,6 +1279,7 @@ public class TablistManager {
                     return;
                 }
                 invalidateLuckPermsCachedData(online);
+                rankWeights.remove(playerId);
                 updateTablistName(online);
                 update(online);
             }, delay);

@@ -49,4 +49,14 @@ class TablistEffectsTest {
         assertEquals("&e18.2", TablistEffects.colorTps(18.24D));
         assertEquals("&c12.0", TablistEffects.colorTps(12D));
     }
+
+    @Test
+    void gradientLineHasOneColourPerCharacterAndMoves() {
+        String first = TablistEffects.gradientLine("=", 10, 0x000000, 0x0000FF, 0xFFFFFF, 0);
+        String later = TablistEffects.gradientLine("=", 10, 0x000000, 0x0000FF, 0xFFFFFF, 5);
+        org.junit.jupiter.api.Assertions.assertEquals(10, first.split("&#", -1).length - 1);
+        org.junit.jupiter.api.Assertions.assertEquals(10, first.chars().filter(c -> c == '=').count());
+        org.junit.jupiter.api.Assertions.assertNotEquals(first, later);
+        org.junit.jupiter.api.Assertions.assertEquals("", TablistEffects.gradientLine("", 10, 0, 0, 0, 0));
+    }
 }

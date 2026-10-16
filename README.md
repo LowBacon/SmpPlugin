@@ -2,7 +2,7 @@
 
 A complete, feature-rich **Minecraft SMP core plugin** for **Minecraft 26.3** on **Paper, Purpur, Spigot and CraftBukkit**.
 
-> **2.0.0-alpha.5 is a test build.** It starts on Purpur 26.3 but has not been tested with players yet. See [COMPATIBILITY.md](COMPATIBILITY.md),
+> **2.0.0 is the first full release of the 2.0 line** (CustomSmp). Run `/smpplugin version` to see what is installed. See [COMPATIBILITY.md](COMPATIBILITY.md),
 > [CHANGELOG.md](CHANGELOG.md) and the upgrade status in [docs/UPGRADE-26.3-STATUS.md](docs/UPGRADE-26.3-STATUS.md).
 > Permissions changed; read [docs/permissions-migration-and-luckperms.md](docs/permissions-migration-and-luckperms.md) before upgrading.
 
@@ -322,11 +322,11 @@ mvn clean package
 This builds the jar for **Paper and Purpur**:
 
 ```text
-target/SmpPlugin-2.0.0-alpha.4-paper.jar
+target/SmpPlugin-2.0.0-paper.jar
 ```
 
 For **Spigot and CraftBukkit**, build with `mvn clean package -Pspigot`, which produces
-`target/SmpPlugin-2.0.0-alpha.4-spigot.jar`. The two APIs are not binary compatible; use the matching jar.
+`target/SmpPlugin-2.0.0-spigot.jar`. The two APIs are not binary compatible; use the matching jar.
 
 ## 📦 Installation
 

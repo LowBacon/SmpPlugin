@@ -6,18 +6,18 @@ import java.util.Set;
 /**
  * Decides whether this artifact may run on a given platform and Minecraft version.
  *
- * <p>The artifact is compiled against the Spigot 26.3 API and declares
- * {@code api-version: 26.3}, so older servers refuse to load it before this check runs.
- * The policy still guards against the cases plugin.yml cannot express:</p>
+ * <p>The artifact is compiled against the 1.21.11 API and declares {@code api-version: 1.21}, which
+ * every 1.21.x server would accept, so this check is what keeps it off anything older than 1.21.11.
+ * It also guards against the cases plugin.yml cannot express:</p>
  * <ul>
- *   <li>Folia: no Folia 26.3 build has been tested, so the plugin refuses to run there.</li>
+ *   <li>Folia: no Folia build has been tested, so the plugin refuses to run there.</li>
  *   <li>Versions newer than the tested one: allowed, but reported as untested.</li>
  * </ul>
  */
 public final class CompatibilityPolicy {
 
     /** Minimum Minecraft version this artifact supports. Keep in sync with {@code minecraft.api.version} in pom.xml. */
-    public static final MinecraftVersion MINIMUM = MinecraftVersion.parse("26.3");
+    public static final MinecraftVersion MINIMUM = MinecraftVersion.parse("1.21.11");
 
     /** Newest Minecraft version this artifact was built against. */
     public static final MinecraftVersion LATEST_TESTED = MinecraftVersion.parse("26.3");
@@ -54,8 +54,8 @@ public final class CompatibilityPolicy {
     public static Decision evaluate(ServerPlatform platform, MinecraftVersion version) {
         if (platform == ServerPlatform.FOLIA) {
             return new Decision(Verdict.REFUSED,
-                    "Folia is not supported by this build. No Folia 26.3 server build has been tested;"
-                            + " region-thread safety of SmpPlugin's modules is unverified on Folia 26.3.");
+                    "Folia is not supported by this build. No Folia server build has been tested;"
+                            + " region-thread safety of SmpPlugin's modules is unverified on Folia.");
         }
         if (version.compareTo(MINIMUM) < 0) {
             return new Decision(Verdict.REFUSED,

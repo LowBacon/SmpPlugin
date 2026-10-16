@@ -1,8 +1,8 @@
 # SmpPlugin
 
-A complete, feature-rich **Minecraft SMP core plugin** for **Minecraft 26.3** on **Paper, Purpur, Spigot and CraftBukkit**.
+A complete, feature-rich **Minecraft SMP core plugin** for **Minecraft 1.21.11 – 26.3** on **Paper, Purpur, Spigot and CraftBukkit**.
 
-> **2.0.0 is the first full release of the 2.0 line** (CustomSmp). Run `/smpplugin version` to see what is installed. See [COMPATIBILITY.md](COMPATIBILITY.md),
+> **2.1.0** runs on Minecraft **1.21.11, 26.1, 26.1.1, 26.1.2, 26.2 and 26.3** from one jar per server family. Run `/smpplugin version` to see what is installed. See [COMPATIBILITY.md](COMPATIBILITY.md),
 > [CHANGELOG.md](CHANGELOG.md) and the upgrade status in [docs/UPGRADE-26.3-STATUS.md](docs/UPGRADE-26.3-STATUS.md).
 > Permissions changed; read [docs/permissions-migration-and-luckperms.md](docs/permissions-migration-and-luckperms.md) before upgrading.
 
@@ -213,7 +213,7 @@ This allows SmpPlugin to scale beyond a simple single-server setup and provides 
 
 ## 🌐 Folia
 
-Version 2.0 does **not** support Folia: no Folia 26.3 build exists to test against, so the plugin refuses to
+Version 2.x does **not** support Folia: its modules have not been checked on Folia, so the plugin refuses to
 start there and declares `folia-supported: false`. See [COMPATIBILITY.md](COMPATIBILITY.md).
 
 ## ⚡ Performance
@@ -307,11 +307,12 @@ SmpPlugin is written in **Java** and uses **Maven** as its build system.
 
 ### Requirements
 
-* Java 25
+* JDK 25 to build (the jars it produces are Java 21 bytecode)
 * Maven 3.9 or newer
-* Paper, Purpur, Spigot or CraftBukkit **26.3**
+* To run: Paper, Purpur, Spigot or CraftBukkit **1.21.11 – 26.3** (Java 21 on 1.21.11, Java 25 on 26.x)
 
-Version 2.0 targets **Minecraft 26.3 only** (`api-version: 26.3`). For 1.21.10 – 26.2 use SmpPlugin 1.5.
+Version 2.1 runs on **Minecraft 1.21.11 to 26.3** (`api-version: 1.21`, minimum checked at start-up).
+For 1.21.10 and older use SmpPlugin 1.5. See [COMPATIBILITY.md](COMPATIBILITY.md).
 
 ### Build
 
@@ -322,11 +323,11 @@ mvn clean package
 This builds the jar for **Paper and Purpur**:
 
 ```text
-target/SmpPlugin-2.0.0-paper.jar
+target/SmpPlugin-2.1.0-paper.jar
 ```
 
 For **Spigot and CraftBukkit**, build with `mvn clean package -Pspigot`, which produces
-`target/SmpPlugin-2.0.0-spigot.jar`. The two APIs are not binary compatible; use the matching jar.
+`target/SmpPlugin-2.1.0-spigot.jar`. The two APIs are not binary compatible; use the matching jar.
 
 ## 📦 Installation
 

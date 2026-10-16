@@ -7,7 +7,7 @@
 
     <groupId>com.bx</groupId>
     <artifactId>smpplugin</artifactId>
-    <version>2.0.0</version>
+    <version>2.1.0</version>
     <packaging>jar</packaging>
 
     <name>SmpPlugin</name>
@@ -24,15 +24,26 @@
               mvn clean package             -> SmpPlugin-<version>-paper.jar   (Paper and Purpur)
               mvn clean package -Pspigot    -> SmpPlugin-<version>-spigot.jar  (Spigot and CraftBukkit)
 
-            Paper 26.1+ requires Java 25 (docs.papermc.io/paper/getting-started).
+            One jar per family runs on Minecraft 1.21.11, 26.1, 26.1.1, 26.1.2, 26.2 and 26.3:
+              - it is compiled against the OLDEST supported API (1.21.11) as Java 21 bytecode, because
+                1.21.11 servers run on Java 21 while 26.x servers need Java 25 (which runs Java 21
+                bytecode fine);
+              - plugin.yml declares api-version 1.21, so every one of those servers loads it;
+              - CompatibilityPolicy.MINIMUM refuses anything older than 1.21.11 at start-up.
+            Newer server API is only ever reached through reflection or a runtime check.
+
+            To prove the code still compiles against the newest API, run:
+              mvn clean compile -Ppaper,api-latest        (Paper 26.3, Java 25)
+              mvn clean compile -Pspigot,api-latest       (Spigot 26.3, Java 25)
+
             The plugin's own version (above) is independent of the Minecraft version.
         -->
-        <java.version>25</java.version>
+        <java.version>21</java.version>
 
-        <!-- Minimum Minecraft version this artifact supports; also written to plugin.yml api-version. -->
-        <minecraft.api.version>26.3</minecraft.api.version>
-        <paper-api.version>26.3.build.157-beta</paper-api.version>
-        <spigot-api.version>26.3-R0.1-SNAPSHOT</spigot-api.version>
+        <!-- Lowest Minecraft API this artifact supports; written to plugin.yml api-version. -->
+        <minecraft.api.version>1.21</minecraft.api.version>
+        <paper-api.version>1.21.11-R0.1-SNAPSHOT</paper-api.version>
+        <spigot-api.version>1.21.11-R0.1-SNAPSHOT</spigot-api.version>
 
         <placeholderapi.version>2.12.2</placeholderapi.version>
 
@@ -417,6 +428,19 @@
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+
+        <!--
+          mvn clean compile -Ppaper,api-latest: compile against the newest supported API (26.3, Java 25) to
+          check that nothing the plugin uses was removed. Not for release jars.
+        -->
+        <profile>
+            <id>api-latest</id>
+            <properties>
+                <java.version>25</java.version>
+                <paper-api.version>26.3.build.157-beta</paper-api.version>
+                <spigot-api.version>26.3-R0.1-SNAPSHOT</spigot-api.version>
+            </properties>
         </profile>
 
     </profiles>

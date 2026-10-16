@@ -57,6 +57,10 @@ public class DuelWorldManager {
     private static final String STATIC_WORLDS_PATH = "MAP_SOURCES.STATIC_WORLDS";
     private static final String RANDOM_BIOMES_PATH = "MAP_SOURCES.RANDOM_BIOMES";
     private static final String FLAT_POOL_PATH = RANDOM_BIOMES_PATH + ".FLAT_POOL";
+    /** Minecraft's own default superflat layers, valid on every supported version. */
+    static final String FLAT_PRESET = "{\"layers\":[{\"block\":\"minecraft:bedrock\",\"height\":1},"
+            + "{\"block\":\"minecraft:dirt\",\"height\":2},{\"block\":\"minecraft:grass_block\",\"height\":1}],"
+            + "\"biome\":\"minecraft:plains\"}";
     private static final String VANILLA_POOL_PATH = RANDOM_BIOMES_PATH + ".VANILLA_POOL";
     private static final String WORLDBORDER_PATH = "WORLDBORDER";
 
@@ -398,7 +402,10 @@ public class DuelWorldManager {
                     .environment(World.Environment.NORMAL)
                     .generateStructures(config().getBoolean(RANDOM_BIOMES_PATH + ".GENERATE_STRUCTURES", false))
                     .biomeProvider(new SingleBiomeProvider(biome));
+            // Spelled out because 1.21.11 rejects an empty flat preset ("No key layers"); 26.x accepted it.
+            // The custom generator below draws the terrain either way.
             creator.type(WorldType.FLAT)
+                    .generatorSettings(FLAT_PRESET)
                     .generator(new FlatBiomeChunkGenerator(biome));
             world = createWorldWithoutSpawnMemory(creator);
         } catch (RuntimeException exception) {

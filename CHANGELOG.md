@@ -1,5 +1,37 @@
 # Changelog
 
+## 2.1.0 — 16 October 2026
+
+**Runs on Minecraft 1.21.11, 26.1, 26.1.1, 26.1.2, 26.2 and 26.3.** 2.0.0 ran on 26.3 only.
+
+### Multi-version support
+- **One jar per server family covers every version:**
+  - `SmpPlugin-2.1.0-paper.jar` for Paper and Purpur
+  - `SmpPlugin-2.1.0-spigot.jar` for Spigot and CraftBukkit
+- **Built for the oldest version:** the jars are compiled against the 1.21.11 server API as Java 21
+  bytecode.
+  - 1.21.11 servers run them on Java 21.
+  - 26.x servers run them on the Java 25 they already need.
+- **What the server sees:**
+  - `plugin.yml` now declares `api-version: 1.21`, so all of these servers load the plugin.
+  - The start-up check still refuses anything older than 1.21.11.
+- **Checked against the newest API:**
+  - The code still compiles against the 26.3 API (`mvn clean compile -Ppaper,api-latest` /
+    `-Pspigot,api-latest`).
+  - Every server and Adventure method the plugin calls was confirmed to exist in the Paper and
+    Spigot APIs for 26.1 to 26.3.
+- **Test status:**
+  - **1.21.11** runs on a Purpur 1.21.11 server.
+  - **26.3** is where most of 2.x was run.
+  - **26.1.1, 26.1.2 and 26.2** pass the build checks but have not been run on a live server yet.
+  - **26.1** has no Paper or Purpur server to test on.
+  - See [COMPATIBILITY.md](COMPATIBILITY.md).
+
+### Fixed
+- **Duel arenas on 1.21.11:** creating the generated duel worlds logged `No key layers in
+  MapLike[{}]` there. They now use Minecraft's standard flat layers, which every version accepts.
+- **Folia message:** it no longer names a Minecraft version.
+
 ## 2.0.0 — 16 October 2026
 
 The first full release of SmpPlugin 2.0 (CustomSmp). It contains everything from the alpha builds

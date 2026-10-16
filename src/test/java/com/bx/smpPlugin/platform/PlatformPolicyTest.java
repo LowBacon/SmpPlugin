@@ -56,9 +56,18 @@ class PlatformPolicyTest {
         CompatibilityPolicy.Decision folia = CompatibilityPolicy.evaluate(ServerPlatform.FOLIA, MinecraftVersion.parse("26.3"));
         assertFalse(folia.allowsEnable());
 
-        CompatibilityPolicy.Decision old = CompatibilityPolicy.evaluate(ServerPlatform.PAPER, MinecraftVersion.parse("26.2"));
-        assertFalse(old.allowsEnable());
         assertFalse(CompatibilityPolicy.evaluate(ServerPlatform.PAPER, MinecraftVersion.parse("1.21.10")).allowsEnable());
+        assertFalse(CompatibilityPolicy.evaluate(ServerPlatform.SPIGOT, MinecraftVersion.parse("1.20.6")).allowsEnable());
+    }
+
+    @Test
+    void runsOnEverySupportedVersionFrom1_21_11To26_3() {
+        for (String version : java.util.List.of("1.21.11", "26.1", "26.1.1", "26.1.2", "26.2", "26.3")) {
+            for (ServerPlatform platform : Set.of(ServerPlatform.PAPER, ServerPlatform.PURPUR, ServerPlatform.SPIGOT, ServerPlatform.CRAFTBUKKIT)) {
+                assertTrue(CompatibilityPolicy.evaluate(platform, MinecraftVersion.parse(version)).allowsEnable(),
+                        platform + " " + version);
+            }
+        }
     }
 
     @Test
@@ -77,6 +86,9 @@ class PlatformPolicyTest {
         java.util.regex.Matcher matcher = java.util.regex.Pattern
                 .compile("<minecraft\\.api\\.version>([^<]+)</minecraft\\.api\\.version>").matcher(pom);
         assertTrue(matcher.find(), "pom.xml must define minecraft.api.version");
-        assertEquals(MinecraftVersion.parse(matcher.group(1).trim()), CompatibilityPolicy.MINIMUM);
+        // plugin.yml can only say "1.21"; the policy narrows that to the exact minimum patch.
+        String apiVersion = matcher.group(1).trim();
+        assertTrue(CompatibilityPolicy.MINIMUM.toString().startsWith(apiVersion + "."),
+                "api-version " + apiVersion + " must cover the minimum " + CompatibilityPolicy.MINIMUM);
     }
 }

@@ -8,16 +8,16 @@ An all-in-one **Minecraft SMP core plugin**. One jar replaces the usual stack of
 
 | | |
 |---|---|
-| **Plugin version** | `2.0.0` (full release); `/smpplugin version` shows the installed build |
-| **Minecraft** | `26.3` on Paper, Purpur, Spigot and CraftBukkit |
-| **Folia** | Not supported in 2.0 (no Folia 26.3 build exists) |
-| **Java** | 25 |
-| **API** | Paper API `26.3.build.157-beta` (Spigot build: Spigot API `26.3-R0.1-SNAPSHOT`), `api-version: 26.3`, `folia-supported: false` |
-| **Build** | `mvn clean package` → `target/SmpPlugin-2.0.0-paper.jar` (Paper/Purpur); `-Pspigot` → `…-spigot.jar` (Spigot/CraftBukkit) |
+| **Plugin version** | `2.1.0`; `/smpplugin version` shows the installed build |
+| **Minecraft** | `1.21.11`, `26.1`, `26.1.1`, `26.1.2`, `26.2` and `26.3` on Paper, Purpur, Spigot and CraftBukkit |
+| **Folia** | Not supported |
+| **Java** | 21 on 1.21.11, 25 on 26.x (the jars are Java 21 bytecode) |
+| **API** | Compiled against Paper API `1.21.11` (Spigot build: Spigot API `1.21.11`), checked against 26.3; `api-version: 1.21`, `folia-supported: false` |
+| **Build** | `mvn clean package` → `target/SmpPlugin-2.1.0-paper.jar` (Paper/Purpur); `-Pspigot` → `…-spigot.jar` (Spigot/CraftBukkit) |
 | **Size** | ~590 classes, ~152,000 lines of Java, 145 commands, 110+ GUI menus, 36 config files |
 | **Update checker** | Checks GitHub (`LowBacon/SmpPlugin`, `version.txt` on `main`) for a newer version on startup |
 
-Older servers refuse the jar (api-version 26.3); for 1.21.10 – 26.2 use version 1.5. Folia makes the plugin
+Servers older than 1.21.11 are refused at start-up; for 1.21.10 and older use version 1.5. Folia makes the plugin
 disable itself. See [COMPATIBILITY.md](COMPATIBILITY.md).
 
 ---

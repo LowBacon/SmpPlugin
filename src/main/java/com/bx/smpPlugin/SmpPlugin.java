@@ -199,6 +199,16 @@ public final class SmpPlugin extends JavaPlugin {
 
         databaseManager = new DatabaseManager(this);
         databaseManager.initialize();
+        if (!databaseManager.isReady()) {
+            // Without storage every balance, home, item and stat change would vanish at the next restart, and
+            // Vault would hand other plugins an economy that saves nothing. Refuse to run instead.
+            getLogger().severe("====================================================");
+            getLogger().severe("The database could not be started (see the error above), so SmpPlugin is disabling");
+            getLogger().severe("itself. Nothing was changed. Fix database.yml (or the database server) and restart.");
+            getLogger().severe("====================================================");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
         playerLogsManager = new PlayerLogsManager(this);
         serverWipeManager = new ServerWipeManager(this);
         serverWipeManager.recoverOrRecreatePendingWorlds();

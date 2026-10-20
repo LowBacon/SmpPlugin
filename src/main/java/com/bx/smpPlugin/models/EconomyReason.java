@@ -30,5 +30,15 @@ public enum EconomyReason {
     /** /dice or /roulette winnings. */
     GAMBLE_PAYOUT,
     /** A /dice or /roulette bet given back (tie, cancelled round, recovery after a crash). */
-    GAMBLE_REFUND
+    GAMBLE_REFUND,
+    /** Money a crate gave. */
+    CRATE_REWARD,
+    /** Another plugin paid the player through Vault. */
+    VAULT_DEPOSIT,
+    /** Another plugin charged the player through Vault. */
+    VAULT_WITHDRAW,
+    /** /eco reset: the balance was put back to the starting amount. */
+    ADMIN_RESET,
+    /** A seasonal event (calendar, Trick or Treat, event milestones). */
+    EVENT_REWARD
 }

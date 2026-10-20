@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -307,7 +306,7 @@ public final class CoinFlipService {
                     "balance", StakeMath.format(economy.balanceCents(player)))));
             return;
         }
-        OptionalDouble balance = economy.storedBalance(player);
+        Optional<EconomyGateway.StoredBalance> balance = economy.storedBalance(player);
         long now = clock.getAsLong();
         onMain(repository.transaction(dao -> {
             dao.moveTransaction(stake.id(), CoinFlipTransaction.State.INTENT, CoinFlipTransaction.State.APPLIED, now,
@@ -441,7 +440,7 @@ public final class CoinFlipService {
         String outcomeId = random.newOutcomeId();
         long now = clock.getAsLong();
         UUID winner = outcome == match.creatorSide() ? match.creatorId() : player;
-        OptionalDouble balance = economy.storedBalance(player);
+        Optional<EconomyGateway.StoredBalance> balance = economy.storedBalance(player);
         onMain(repository.transaction(dao -> {
             dao.moveTransaction(stake.id(), CoinFlipTransaction.State.INTENT, CoinFlipTransaction.State.APPLIED, now,
                     "taken from balance");
@@ -561,7 +560,7 @@ public final class CoinFlipService {
             return;
         }
         applyCredit(payout, () -> {
-            OptionalDouble balance = economy.storedBalance(winner);
+            Optional<EconomyGateway.StoredBalance> balance = economy.storedBalance(winner);
             long at = clock.getAsLong();
             return repository.transaction(dao -> {
                 dao.moveTransaction(payout.id(), CoinFlipTransaction.State.INTENT, CoinFlipTransaction.State.APPLIED, at,
@@ -745,7 +744,7 @@ public final class CoinFlipService {
                 return;
             }
             applyCredit(refund, () -> {
-                OptionalDouble balance = economy.storedBalance(creator);
+                Optional<EconomyGateway.StoredBalance> balance = economy.storedBalance(creator);
                 long at = clock.getAsLong();
                 return repository.transaction(dao -> {
                     dao.moveTransaction(refund.id(), CoinFlipTransaction.State.INTENT, CoinFlipTransaction.State.APPLIED, at,
@@ -840,7 +839,7 @@ public final class CoinFlipService {
                 return;
             }
             applyCredit(claim, () -> {
-                OptionalDouble balance = economy.storedBalance(player);
+                Optional<EconomyGateway.StoredBalance> balance = economy.storedBalance(player);
                 long at = clock.getAsLong();
                 return repository.transaction(dao -> {
                     dao.moveTransaction(claim.id(), CoinFlipTransaction.State.INTENT, CoinFlipTransaction.State.APPLIED, at,

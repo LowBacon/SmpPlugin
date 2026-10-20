@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.OptionalDouble;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -57,7 +57,8 @@ final class CoinFlipTestHarness implements AutoCloseable {
         configure.accept(yaml);
         this.config = CoinFlipConfig.from(yaml);
         try (Connection connection = open(); Statement statement = connection.createStatement()) {
-            statement.execute("CREATE TABLE IF NOT EXISTS players (uuid TEXT PRIMARY KEY, username TEXT, money REAL DEFAULT 0)");
+            statement.execute("CREATE TABLE IF NOT EXISTS players (uuid TEXT PRIMARY KEY, username TEXT, money REAL DEFAULT 0,"
+                    + " money_version BIGINT DEFAULT 0)");
         }
         start();
     }
@@ -164,6 +165,8 @@ final class CoinFlipTestHarness implements AutoCloseable {
     /** In-memory balances for online players, like the server economy. */
     static final class FakeEconomy implements EconomyGateway {
         final Map<UUID, Long> balances = new HashMap<>();
+        /** Grows with every change, like PlayerData's balance version. */
+        final Map<UUID, Long> versions = new HashMap<>();
         final Set<UUID> online = new HashSet<>();
         volatile boolean failWithdrawals;
 
@@ -184,6 +187,7 @@ final class CoinFlipTestHarness implements AutoCloseable {
                 return false;
             }
             balances.put(player, balance - cents);
+            versions.merge(player, 1L, Long::sum);
             return true;
         }
 
@@ -193,12 +197,15 @@ final class CoinFlipTestHarness implements AutoCloseable {
                 return false;
             }
             balances.merge(player, cents, Long::sum);
+            versions.merge(player, 1L, Long::sum);
             return true;
         }
 
         @Override
-        public OptionalDouble storedBalance(UUID player) {
-            return balances.containsKey(player) ? OptionalDouble.of(balances.get(player) / 100D) : OptionalDouble.empty();
+        public Optional<StoredBalance> storedBalance(UUID player) {
+            return balances.containsKey(player)
+                    ? Optional.of(new StoredBalance(balances.get(player) / 100D, versions.getOrDefault(player, 0L)))
+                    : Optional.empty();
         }
     }
 

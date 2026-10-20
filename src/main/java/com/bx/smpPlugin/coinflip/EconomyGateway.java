@@ -1,6 +1,6 @@
 package com.bx.smpPlugin.coinflip;
 
-import java.util.OptionalDouble;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -21,6 +21,13 @@ public interface EconomyGateway {
     /** Adds {@code cents} to an online player's balance. Returns false (and changes nothing) if it cannot. */
     boolean deposit(UUID player, long cents);
 
-    /** The balance exactly as the economy will save it, for writing together with the journal row. */
-    OptionalDouble storedBalance(UUID player);
+    /**
+     * The balance exactly as the economy will save it, with its balance version, for writing together with the
+     * journal row. Empty when the player's data is not loaded.
+     */
+    Optional<StoredBalance> storedBalance(UUID player);
+
+    /** A balance and the version it was saved under (see {@code players.money_version}). */
+    record StoredBalance(double money, long version) {
+    }
 }

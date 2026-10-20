@@ -62,6 +62,12 @@ public class PlayerData {
     private long keyAllRemainingSeconds;
     private long keyAllAnchorPlaytimeSeconds;
     private boolean dirty;
+    /** Grows with every balance change; stored as players.money_version so an older balance never overwrites a newer one. */
+    private long moneyVersion;
+
+    /** The money columns read together, so a save never mixes two different changes. */
+    public record MoneyState(double money, double moneySpent, double moneyMade, long version) {
+    }
 
     // New Settings
     private boolean destroyPearlOnDeath;
@@ -163,20 +169,28 @@ public class PlayerData {
         dirty = true;
     }
 
-    public double getMoney() {
+    // Money is read by the database writer while the server thread changes it, so these methods share one lock.
+
+    public synchronized double getMoney() {
         return money;
     }
 
-    public void setMoney(double money) {
+    /** Sets the balance and moves the balance version on. */
+    public synchronized void setMoney(double money) {
         this.money = Math.max(0, money);
+        moneyVersion++;
         dirty = true;
     }
 
-    public void addMoney(double amount) {
+    /**
+     * Adds to the balance outside the economy service. New code should use
+     * {@link com.bx.smpPlugin.managers.EconomyManager#deposit} so the change is logged and saved at once.
+     */
+    public synchronized void addMoney(double amount) {
         setMoney(this.money + amount);
     }
 
-    public boolean removeMoney(double amount) {
+    public synchronized boolean removeMoney(double amount) {
         if (this.money < amount) {
             return false;
         }
@@ -184,8 +198,34 @@ public class PlayerData {
         return true;
     }
 
-    public boolean hasMoney(double amount) {
+    public synchronized boolean hasMoney(double amount) {
         return this.money >= amount;
+    }
+
+    public synchronized long getMoneyVersion() {
+        return moneyVersion;
+    }
+
+    /** Only for loading a stored row. */
+    public synchronized void setMoneyVersion(long moneyVersion) {
+        this.moneyVersion = Math.max(0L, moneyVersion);
+    }
+
+    /** The balance, totals and balance version as one consistent reading. */
+    public synchronized MoneyState moneyState() {
+        return new MoneyState(money, moneySpent, moneyMade, moneyVersion);
+    }
+
+    /**
+     * Moves the balance version past {@code storedVersion} when something else wrote a newer one, so this copy's
+     * next save is not ignored. Returns the state to write.
+     */
+    public synchronized MoneyState ensureMoneyVersionAbove(long storedVersion) {
+        if (moneyVersion <= storedVersion) {
+            moneyVersion = storedVersion + 1L;
+            dirty = true;
+        }
+        return moneyState();
     }
 
     public long getShards() {
@@ -339,29 +379,29 @@ public class PlayerData {
         dirty = true;
     }
 
-    public double getMoneySpent() {
+    public synchronized double getMoneySpent() {
         return moneySpent;
     }
 
-    public void setMoneySpent(double moneySpent) {
+    public synchronized void setMoneySpent(double moneySpent) {
         this.moneySpent = Math.max(0, moneySpent);
         dirty = true;
     }
 
-    public void addMoneySpent(double amount) {
+    public synchronized void addMoneySpent(double amount) {
         setMoneySpent(this.moneySpent + amount);
     }
 
-    public double getMoneyMade() {
+    public synchronized double getMoneyMade() {
         return moneyMade;
     }
 
-    public void setMoneyMade(double moneyMade) {
+    public synchronized void setMoneyMade(double moneyMade) {
         this.moneyMade = Math.max(0, moneyMade);
         dirty = true;
     }
 
-    public void addMoneyMade(double amount) {
+    public synchronized void addMoneyMade(double amount) {
         setMoneyMade(this.moneyMade + amount);
     }
 

@@ -1,6 +1,7 @@
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
+import com.bx.smpPlugin.economy.EconomyStore;
 import com.bx.smpPlugin.utils.ItemSerializationUtils;
 import com.bx.smpPlugin.utils.LazyLocation;
 import com.bx.smpPlugin.models.PlayerWipeArchive;
@@ -119,6 +120,8 @@ public class DatabaseManager {
         return thread;
     });
     private DatabaseType databaseType = DatabaseType.SQLITE;
+    /** True once the schema is in place; false before, after a failed start and after close. */
+    private volatile boolean ready;
     private MongoClient mongoClient;
     private MongoDatabase mongoDatabase;
     private boolean mongoBridgeActive;
@@ -144,15 +147,26 @@ public class DatabaseManager {
             ensureStaffModeColumns();
             ensureHomeColumns();
             ensureSpawnerColumns();
+            EconomyStore.createSchema(connection, this::executeSchema);
 
             if (mongoBridgeActive) {
                 importMongoSnapshotIntoSqlite();
             }
 
+            ready = true;
             plugin.getLogger().info("Database connected successfully using " + databaseType.name() + ".");
         } catch (Exception e) {
+            ready = false;
             plugin.getLogger().log(Level.SEVERE, "Failed to initialize database", e);
         }
+    }
+
+    /**
+     * True when the database started and has not been closed. A cheap flag (no connection call), so the economy can
+     * check it before every change without waiting on the connection lock.
+     */
+    public boolean isReady() {
+        return ready && connection != null;
     }
 
     private void initializeSqliteConnection(File dbFile) throws Exception {
@@ -708,6 +722,7 @@ public class DatabaseManager {
         ensureColumnExists("players", "follow_alerts_enabled", "INTEGER DEFAULT 1");
         ensureColumnExists("players", "explosion_sounds_enabled", "INTEGER DEFAULT 1");
         ensureColumnExists("players", "display_donutplus_enabled", "INTEGER DEFAULT 1");
+        ensureColumnExists("players", "money_version", "BIGINT DEFAULT 0");
     }
 
     private void ensurePortalColumns() throws SQLException {
@@ -1005,8 +1020,21 @@ public class DatabaseManager {
         data.setFollowAlertsEnabled(rs.getInt("follow_alerts_enabled") != 0);
         data.setExplosionSoundsEnabled(rs.getInt("explosion_sounds_enabled") != 0);
         data.setDisplayDonutPlusEnabled(rs.getInt("display_donutplus_enabled") != 0);
+        // After setMoney, which moves the in-memory version on.
+        data.setMoneyVersion(optionalLong(rs, "money_version"));
         data.setDirty(false);
         return data;
+    }
+
+    /** A long column that older tables (or test schemas) may not have yet; 0 when it is missing. */
+    private static long optionalLong(ResultSet rs, String column) throws SQLException {
+        ResultSetMetaData meta = rs.getMetaData();
+        for (int i = 1; i <= meta.getColumnCount(); i++) {
+            if (column.equalsIgnoreCase(meta.getColumnLabel(i))) {
+                return rs.getLong(i);
+            }
+        }
+        return 0L;
     }
 
     public UUID findPlayerUuidByUsername(String username) {
@@ -1414,30 +1442,69 @@ public class DatabaseManager {
         }
     }
 
+    /** Every column {@link #savePlayer} writes, in parameter order. */
+    private static final List<String> PLAYER_SAVE_COLUMNS = List.of(
+            "uuid", "username", "money", "shards", "kills", "deaths", "playtime_seconds", "blocks_placed",
+            "blocks_broken", "mobs_killed", "kill_streak", "highest_kill_streak", "money_spent", "money_made",
+            "tpauto", "phantom_enabled", "payments_enabled", "scoreboard_visible", "pay_alerts_enabled",
+            "hotbar_messages_enabled", "worth_display_enabled", "clear_entities_messages_enabled",
+            "bounty_alerts_enabled", "tpa_confirm_menu_enabled", "chainmail_on_respawn_enabled",
+            "lunar_teammates_enabled", "tpa_requests_enabled", "auto_tpahere_enabled", "tpahere_requests_enabled",
+            "team_invites_enabled", "mob_spawn_enabled", "pay_confirm_menu_enabled", "totem_particles_enabled",
+            "fast_crystals_enabled", "amethyst_break_messages_enabled", "private_messages_enabled",
+            "keyall_notifications_enabled", "duel_requests_enabled", "public_chat_enabled",
+            "server_broadcasts_enabled", "auction_notifications_enabled", "explosion_particles_enabled",
+            "hide_all_players_enabled", "notification_sounds_enabled", "rtp_coordinates_enabled",
+            "order_notifications_enabled", "team_chat_visible", "duel_music_enabled", "quiet_spawn_enabled",
+            "night_vision_enabled", "keyall_remaining_seconds", "shard_booster_expiry", "mob_spawn_disabled_until",
+            "phantom_disabled_until", "destroy_pearl_on_death", "randomized_coords", "death_messages_choice",
+            "advancement_messages_choice", "join_leave_messages_choice", "teleport_alerts_enabled",
+            "follow_alerts_enabled", "explosion_sounds_enabled", "display_donutplus_enabled",
+            "combat_timer_enabled", "sell_shulkers_enabled", "private_transactions_enabled", "money_version");
+    /** Columns a save only overwrites when it carries a balance version at least as new as the stored one. */
+    private static final Set<String> VERSIONED_MONEY_COLUMNS = Set.of("money", "money_spent", "money_made");
+    private static final String SQLITE_PLAYER_UPSERT = playerUpsertSql(false);
+    private static final String MYSQL_PLAYER_UPSERT = playerUpsertSql(true);
+
+    /**
+     * Insert-or-update of a player row. Unlike REPLACE it leaves columns it does not list alone, and it keeps a
+     * stored balance whose version is newer than the one being saved (written meanwhile by the economy).
+     */
+    static String playerUpsertSql(boolean mySql) {
+        StringBuilder sql = new StringBuilder("INSERT INTO players (")
+                .append(String.join(", ", PLAYER_SAVE_COLUMNS))
+                .append(") VALUES (")
+                .append(String.join(",", Collections.nCopies(PLAYER_SAVE_COLUMNS.size(), "?")))
+                .append(mySql ? ") ON DUPLICATE KEY UPDATE " : ") ON CONFLICT(uuid) DO UPDATE SET ");
+        List<String> updates = new ArrayList<>();
+        for (String column : PLAYER_SAVE_COLUMNS) {
+            if (column.equals("uuid") || column.equals("money_version")) {
+                continue;
+            }
+            if (VERSIONED_MONEY_COLUMNS.contains(column)) {
+                updates.add(mySql
+                        ? column + " = IF(VALUES(money_version) >= money_version, VALUES(" + column + "), " + column + ")"
+                        : column + " = CASE WHEN excluded.money_version >= players.money_version THEN excluded."
+                                + column + " ELSE players." + column + " END");
+            } else {
+                updates.add(mySql ? column + " = VALUES(" + column + ")" : column + " = excluded." + column);
+            }
+        }
+        // Last: MySQL applies assignments in order, so the money columns above still compare with the old version.
+        updates.add(mySql
+                ? "money_version = GREATEST(money_version, VALUES(money_version))"
+                : "money_version = MAX(players.money_version, excluded.money_version)");
+        return sql.append(String.join(", ", updates)).toString();
+    }
+
     public void savePlayer(PlayerData data) {
-        try (PreparedStatement ps = connection.prepareStatement("""
-                REPLACE INTO players
-                (uuid, username, money, shards, kills, deaths, playtime_seconds, blocks_placed, blocks_broken, mobs_killed,
-                 kill_streak, highest_kill_streak, money_spent, money_made, tpauto, phantom_enabled, payments_enabled,
-                 scoreboard_visible, pay_alerts_enabled, hotbar_messages_enabled, worth_display_enabled,
-                 clear_entities_messages_enabled, bounty_alerts_enabled, tpa_confirm_menu_enabled,
-                 chainmail_on_respawn_enabled, lunar_teammates_enabled, tpa_requests_enabled, auto_tpahere_enabled,
-                 tpahere_requests_enabled, team_invites_enabled, mob_spawn_enabled, pay_confirm_menu_enabled,
-                 totem_particles_enabled, fast_crystals_enabled, amethyst_break_messages_enabled,
-                 private_messages_enabled, keyall_notifications_enabled, duel_requests_enabled,
-                 public_chat_enabled, server_broadcasts_enabled, auction_notifications_enabled,
-                 explosion_particles_enabled, hide_all_players_enabled, notification_sounds_enabled,
-                 rtp_coordinates_enabled, order_notifications_enabled, team_chat_visible,
-                    duel_music_enabled, quiet_spawn_enabled, night_vision_enabled, keyall_remaining_seconds,
-                    shard_booster_expiry, mob_spawn_disabled_until, phantom_disabled_until, destroy_pearl_on_death, randomized_coords, death_messages_choice,
-                    advancement_messages_choice, join_leave_messages_choice, teleport_alerts_enabled,
-                    follow_alerts_enabled, explosion_sounds_enabled, display_donutplus_enabled,
-                    combat_timer_enabled, sell_shulkers_enabled, private_transactions_enabled)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-                """)) {
+        // Cleared before reading: a change made while this save runs marks the row dirty again for the next save.
+        data.setDirty(false);
+        PlayerData.MoneyState money = data.moneyState();
+        try (PreparedStatement ps = connection.prepareStatement(isMySql() ? MYSQL_PLAYER_UPSERT : SQLITE_PLAYER_UPSERT)) {
             ps.setString(1, data.getUuid().toString());
             ps.setString(2, data.getUsername());
-            ps.setDouble(3, data.getMoney());
+            ps.setDouble(3, money.money());
             ps.setLong(4, data.getShards());
             ps.setInt(5, data.getKills());
             ps.setInt(6, data.getDeaths());
@@ -1447,8 +1514,8 @@ public class DatabaseManager {
             ps.setLong(10, data.getMobsKilled());
             ps.setInt(11, data.getKillStreak());
             ps.setInt(12, data.getHighestKillStreak());
-            ps.setDouble(13, data.getMoneySpent());
-            ps.setDouble(14, data.getMoneyMade());
+            ps.setDouble(13, money.moneySpent());
+            ps.setDouble(14, money.moneyMade());
             ps.setInt(15, data.isTpauto() ? 1 : 0);
             ps.setInt(16, data.isPhantomEnabled() ? 1 : 0);
             ps.setInt(17, data.getPaymentsChoice().ordinal());
@@ -1501,9 +1568,10 @@ public class DatabaseManager {
             ps.setInt(64, data.isCombatTimerEnabled() ? 1 : 0);
             ps.setInt(65, data.isSellShulkersEnabled() ? 1 : 0);
             ps.setInt(66, data.isPrivateTransactionsEnabled() ? 1 : 0);
+            ps.setLong(67, money.version());
             ps.executeUpdate();
-            data.setDirty(false);
         } catch (SQLException e) {
+            data.setDirty(true);
             plugin.getLogger().log(Level.WARNING, "Failed to save player " + data.getUuid(), e);
         }
     }
@@ -5180,6 +5248,7 @@ public class DatabaseManager {
             Thread.currentThread().interrupt();
         }
         flush();
+        ready = false;
         try {
             if (connection != null && !connection.isClosed()) {
                 connection.close();
@@ -5397,6 +5466,9 @@ public class DatabaseManager {
                     }
                 }
 
+                // The thread that switches auto-commit off owns the connection until it switches it back on (or
+                // closes it). commit() and rollback() keep ownership: auto-commit is still off afterwards, so another
+                // thread's statements would otherwise run inside the owner's next transaction.
                 if (methodName.equals("setAutoCommit") && args.length == 1 && args[0] instanceof Boolean) {
                     boolean autoCommit = (Boolean) args[0];
                     if (!autoCommit) {
@@ -5405,7 +5477,7 @@ public class DatabaseManager {
                         transactionOwner = null;
                         lock.notifyAll();
                     }
-                } else if (methodName.equals("commit") || methodName.equals("rollback") || methodName.equals("close")) {
+                } else if (methodName.equals("close")) {
                     transactionOwner = null;
                     lock.notifyAll();
                 }

@@ -3,6 +3,7 @@ package com.bx.smpPlugin.managers;
 import com.bx.smpPlugin.utils.PermissionUtils;
 
 import com.bx.smpPlugin.SmpPlugin;
+import com.bx.smpPlugin.models.EconomyReason;
 import com.bx.smpPlugin.models.PlayerData;
 import com.bx.smpPlugin.utils.ColorUtils;
 import com.bx.smpPlugin.utils.ItemSerializationUtils;
@@ -869,12 +870,10 @@ public class CrateManager {
     }
 
     private boolean grantMoneyReward(Player player, GrantDefinition grant) {
-        PlayerData data = plugin.getPlayerDataManager().get(player);
-        if (data == null) {
-            return false;
+        if (grant.moneyAmount() <= 0D) {
+            return true;
         }
-        data.addMoney(grant.moneyAmount());
-        return true;
+        return plugin.getEconomyManager().deposit(player, grant.moneyAmount(), EconomyReason.CRATE_REWARD).success();
     }
 
     private boolean grantShardReward(Player player, GrantDefinition grant) {

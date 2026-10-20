@@ -93,6 +93,30 @@ SETTINGS:
   DISABLE-MOB-SPAWN-LIMIT-SECONDS: 3600
   # The numerical value for Disable Phantom Spawn Limit Seconds. Set to -1 for no limit. Available options: Any valid integer
   DISABLE-PHANTOM-SPAWN-LIMIT-SECONDS: 3600
+# Configuration section for the economy: balances, /pay, /baltop and the ledger of every balance change.
+ECONOMY:
+  # The highest balance a deposit can reach. A balance already above it is kept but cannot grow.
+  # Available options: Any number up to 35000000000000 (the largest amount the database stores with exact cents)
+  MAX-BALANCE: 10000000000000
+  # Configuration section for /pay.
+  PAY:
+    # The smallest amount one payment can send. Available options: Any number from 0.01
+    MIN-AMOUNT: 0.01
+    # The largest amount one payment can send; 0 means no limit. Available options: Any number from 0
+    MAX-AMOUNT: 0
+    # Percent of each payment that is removed from the economy; the recipient gets the rest. 0 means no tax.
+    # Available options: 0 to 50
+    TAX-PERCENT: 0
+    # Seconds a player waits between two payments; 0 means no wait. Available options: 0 to 3600
+    COOLDOWN-SECONDS: 0
+  # Configuration section for the ledger (/balance history, /eco history, /eco stats).
+  LEDGER:
+    # Days a ledger row is kept; 0 keeps them forever. Available options: Any whole number from 0
+    RETENTION-DAYS: 0
+  # Configuration section for /baltop.
+  BALTOP:
+    # Players shown per page. Available options: 5 to 20
+    PAGE-SIZE: 10
 # Configuration section for Chat.
 CHAT:
   # Determines whether Format Enabled is enabled or disabled. Available options: true, false

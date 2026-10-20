@@ -36,8 +36,17 @@ public class PlayerDataManager {
             JoinPreloadListener preloader = plugin.getJoinPreloadListener();
             if (preloader != null && preloader.hasPreloaded(uuid)) {
                 data = preloader.takePlayerData(uuid);
+                EconomyManager economy = plugin.getEconomyManager();
+                long offlineVersion = economy == null ? 0L : economy.offlineVersion(uuid);
+                if (offlineVersion > 0L && (data == null || data.getMoneyVersion() < offlineVersion)) {
+                    // The balance changed (e.g. an auction sale) after the login read the row; read it again.
+                    data = plugin.getDatabaseManager().loadPlayer(uuid);
+                }
             } else {
                 data = plugin.getDatabaseManager().loadPlayer(uuid);
+            }
+            if (plugin.getEconomyManager() != null) {
+                plugin.getEconomyManager().forgetOfflineVersion(uuid);
             }
         }
         if (data == null) {
@@ -83,6 +92,14 @@ public class PlayerDataManager {
 
     public boolean isSaving(UUID uuid) {
         return uuid != null && savingAfterQuit.containsKey(uuid);
+    }
+
+    /**
+     * The copy of a player who just quit and whose save is still queued, or null. Balance changes go to this copy
+     * so the queued save and a quick rejoin both see them.
+     */
+    public PlayerData getSaving(UUID uuid) {
+        return uuid == null ? null : savingAfterQuit.get(uuid);
     }
 
     public void saveAll() {

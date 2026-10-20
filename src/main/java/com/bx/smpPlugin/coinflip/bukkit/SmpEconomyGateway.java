@@ -9,7 +9,7 @@ import com.bx.smpPlugin.models.PlayerData;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-import java.util.OptionalDouble;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -68,9 +68,13 @@ public final class SmpEconomyGateway implements EconomyGateway {
     }
 
     @Override
-    public OptionalDouble storedBalance(UUID player) {
+    public Optional<StoredBalance> storedBalance(UUID player) {
         PlayerData data = plugin.getPlayerDataManager().get(player);
-        return data == null ? OptionalDouble.empty() : OptionalDouble.of(data.getMoney());
+        if (data == null) {
+            return Optional.empty();
+        }
+        PlayerData.MoneyState state = data.moneyState();
+        return Optional.of(new StoredBalance(state.money(), state.version()));
     }
 
     private void log(Player player, String type, String detail) {

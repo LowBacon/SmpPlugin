@@ -5,6 +5,7 @@ import com.bx.smpPlugin.coinflip.CoinFlipMatch;
 import com.bx.smpPlugin.coinflip.CoinFlipStats;
 import com.bx.smpPlugin.coinflip.CoinFlipTransaction;
 import com.bx.smpPlugin.coinflip.CoinSide;
+import com.bx.smpPlugin.coinflip.EconomyGateway;
 import com.bx.smpPlugin.coinflip.MatchState;
 
 import java.sql.Connection;
@@ -469,11 +470,31 @@ public final class CoinFlipDao {
      * Writes the player's balance as it stands in memory right after a CoinFlip change, in the same database
      * transaction as the journal row, so the change and its record become durable together.
      */
-    public void writeBalance(UUID player, double money) throws SQLException {
-        try (PreparedStatement statement = prepare("UPDATE players SET money = ? WHERE uuid = ?")) {
-            statement.setDouble(1, money);
-            statement.setString(2, player.toString());
-            requireOne(statement.executeUpdate(), "no stored account for " + player);
+    public void writeBalance(UUID player, EconomyGateway.StoredBalance balance) throws SQLException {
+        // Only a newer version is written, so this can never put back an older balance that another writer
+        // (the economy's own database writer, a quit save) has already replaced.
+        try (PreparedStatement statement = prepare(
+                "UPDATE players SET money = ?, money_version = ? WHERE uuid = ? AND money_version < ?")) {
+            statement.setDouble(1, balance.money());
+            statement.setLong(2, balance.version());
+            statement.setString(3, player.toString());
+            statement.setLong(4, balance.version());
+            if (statement.executeUpdate() > 0) {
+                return;
+            }
+        }
+        // Nothing written: the account is missing, or this balance version (or a newer one, which includes this
+        // change) is already stored. Only the first is a failure.
+        try (PreparedStatement statement = prepare("SELECT money_version FROM players WHERE uuid = ?")) {
+            statement.setString(1, player.toString());
+            try (ResultSet result = statement.executeQuery()) {
+                if (!result.next()) {
+                    throw new SQLException("no stored account for " + player);
+                }
+                if (result.getLong(1) < balance.version()) {
+                    throw new SQLException("balance of " + player + " was not written");
+                }
+            }
         }
     }
 

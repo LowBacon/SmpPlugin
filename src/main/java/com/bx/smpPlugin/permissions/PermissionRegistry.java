@@ -437,6 +437,9 @@ public final class PermissionRegistry {
         player("smpplugin.transactions", "See your own balance history with /transactions.", "New in 3.2.");
         admin("smpplugin.admin.economy.history", "See any player's balance history with /eco history.", "New in 3.2.");
         admin("smpplugin.admin.economy.stats", "See the money supply and money flows with /eco stats.", "New in 3.2.");
+        player("smpplugin.events", "See which seasonal events run with /events.", "New in 3.2.");
+        admin("smpplugin.admin.events", "Switch seasonal events on, off or back to their dates with /events.",
+                "New in 3.2.");
 
         // ── Legacy bundles kept so 1.5 grants behave the same ───────────────────────
         node("smpplugin.staff.punishments.create", "Legacy bundle: every punishment-creating action.",

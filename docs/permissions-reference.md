@@ -61,6 +61,7 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.sidebar` | Show or hide your own scoreboard with /sidebar. | everyone | New in 3.1. |
 | `smpplugin.baltop` | See the richest players with /baltop. | everyone | New in 3.2. |
 | `smpplugin.transactions` | See your own balance history with /transactions. | everyone | New in 3.2. |
+| `smpplugin.events` | See which seasonal events run with /events. | everyone | New in 3.2. |
 
 ## Rank perks (default: nobody)
 
@@ -250,6 +251,7 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.admin.border` | Set up the spawn and lobby world borders with /border. | nobody | New in 3.1. |
 | `smpplugin.admin.economy.history` | See any player's balance history with /eco history. | nobody | New in 3.2. |
 | `smpplugin.admin.economy.stats` | See the money supply and money flows with /eco stats. | nobody | New in 3.2. |
+| `smpplugin.admin.events` | Switch seasonal events on, off or back to their dates with /events. | nobody | New in 3.2. |
 
 ## Operational bypasses (default: nobody; ops via smpplugin.admin)
 
@@ -310,7 +312,7 @@ including destructive actions and bypasses. Only use one when you mean that.
 
 | Node | Allows | Default | Notes |
 |---|---|---|---|
-| `smpplugin.admin` | Default-op administrator bundle: staff tools, administration and operational bypasses. Excludes destructive actions and security bypasses. | ops | In 2.0 this no longer includes destructive actions or security bypasses. Contains 140 nodes: every node in the staff, administration and operational-bypass tables. |
+| `smpplugin.admin` | Default-op administrator bundle: staff tools, administration and operational bypasses. Excludes destructive actions and security bypasses. | ops | In 2.0 this no longer includes destructive actions or security bypasses. Contains 141 nodes: every node in the staff, administration and operational-bypass tables. |
 | `smpplugin.role.helper` | Helper role: staff chat, reports, warn, kick, temp-mute, /whois and events. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 14 nodes: every node in the staff, administration and operational-bypass tables. |
 | `smpplugin.role.moderator` | Moderator role: everything a helper has, plus staff mode, vanish, freeze, bans, mutes, invsee and spy. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 31 nodes: every node in the staff, administration and operational-bypass tables. |
 | `smpplugin.role.admin` | Admin role: everything a moderator has plus every tool in smpplugin.admin (no destructive actions). | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 2 nodes: every node in the staff, administration and operational-bypass tables. |

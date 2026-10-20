@@ -21,6 +21,10 @@ import com.bx.smpPlugin.managers.FeatureManager.Feature;
 import com.bx.smpPlugin.moderation.AdminCommands;
 import com.bx.smpPlugin.moderation.PermsCommand;
 import com.bx.smpPlugin.moderation.Spy;
+import com.bx.smpPlugin.seasonal.EventControl;
+import com.bx.smpPlugin.seasonal.EventId;
+import com.bx.smpPlugin.seasonal.EventsCommand;
+import com.bx.smpPlugin.seasonal.SeasonalEvents;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.PluginCommand;
@@ -54,6 +58,7 @@ public final class V3Module implements Listener {
     private final List<BukkitTask> tasks = new ArrayList<>();
     private final List<Runnable> shutdownHooks = new ArrayList<>();
     private PlayerStore store;
+    private SeasonalEvents events;
     private HalloweenManager halloween;
     private DailyRewards daily;
     private Challenges challenges;
@@ -67,7 +72,7 @@ public final class V3Module implements Listener {
             "seen", "coords", "suicide", "ptime", "pweather", "repair", "skull", "lore", "glow", "online", "uptime", "calc",
             "perms", "broadcast", "day", "night", "sun", "rain", "thunder", "smite", "butcher", "spawnmob", "more",
             "countdown", "performance", "speed", "whois", "spook", "socialspy", "commandspy",
-            "guide", "sidebar", "border");
+            "guide", "sidebar", "border", "events");
 
     public V3Module(SmpPlugin plugin) {
         this.plugin = plugin;
@@ -81,12 +86,23 @@ public final class V3Module implements Listener {
         return halloween;
     }
 
+    /** The seasonal events and their /events switches; null only before {@link #enable()}. */
+    public SeasonalEvents events() {
+        return events;
+    }
+
     /**
      * PlaceholderAPI values for the 3.0 features (null when the name is not one of them):
      * daily_streak, daily_ready, halloween_opened, halloween_ready, halloween_countdown,
-     * challenges_done, challenges_total.
+     * challenges_done, challenges_total, and events_&lt;advent|halloween|trickortreat&gt; (active, scheduled,
+     * disabled or completed).
      */
     public String placeholder(org.bukkit.OfflinePlayer offline, String params) {
+        if (params != null && params.startsWith("events_")) {
+            return EventId.parse(params.substring("events_".length()))
+                    .map(id -> events == null ? "disabled" : events.status(id).name().toLowerCase(java.util.Locale.ROOT))
+                    .orElse(null);
+        }
         if (params == null || !(params.startsWith("daily_") || params.startsWith("halloween_") || params.startsWith("challenges_"))) {
             return null;
         }
@@ -124,8 +140,16 @@ public final class V3Module implements Listener {
             store.loadAsync(online.getUniqueId());
         }
 
+        events = new SeasonalEvents(new EventControl(new java.io.File(plugin.getDataFolder(), "data/events.yml"),
+                plugin.getLogger()), plugin.getLogger(), message -> Text.broadcast(Text.prefix() + message));
+        part("Seasonal events", () -> {
+            EventsCommand command = new EventsCommand(plugin, events);
+            register("events", command, command);
+            task(plugin.getSpigotScheduler().runGlobalTimer(events::tick, 1200L, 1200L));
+        });
+
         part("Halloween", () -> {
-            halloween = new HalloweenManager(plugin, store);
+            halloween = new HalloweenManager(plugin, store, events);
             HalloweenCommand command = new HalloweenCommand(plugin, halloween);
             register("halloween", command, command, Feature.HALLOWEEN);
             register("trickortreat", new TrickOrTreatCommand(plugin, halloween, store), null, Feature.HALLOWEEN);

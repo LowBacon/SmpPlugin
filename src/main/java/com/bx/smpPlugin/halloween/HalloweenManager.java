@@ -4,6 +4,9 @@ import com.bx.smpPlugin.SmpPlugin;
 import com.bx.smpPlugin.core.PlayerStore;
 import com.bx.smpPlugin.core.Reward;
 import com.bx.smpPlugin.halloween.CalendarRules.DoorState;
+import com.bx.smpPlugin.seasonal.EventId;
+import com.bx.smpPlugin.seasonal.EventStatus;
+import com.bx.smpPlugin.seasonal.SeasonalEvents;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -41,14 +44,77 @@ public final class HalloweenManager {
 
     private final SmpPlugin plugin;
     private final PlayerStore store;
+    private final SeasonalEvents events;
     private YamlConfiguration overrides = new YamlConfiguration();
     /** Set by /halloween preview; null uses the real date (or PREVIEW-DATE). */
     private volatile LocalDate previewDate;
 
-    public HalloweenManager(SmpPlugin plugin, PlayerStore store) {
+    public HalloweenManager(SmpPlugin plugin, PlayerStore store, SeasonalEvents events) {
         this.plugin = plugin;
         this.store = store;
+        this.events = events;
         loadOverrides();
+        events.register(EventId.HALLOWEEN, new SeasonalEvents.Source() {
+            @Override
+            public boolean configEnabled() {
+                return config().getBoolean("ENABLED", true);
+            }
+
+            @Override
+            public boolean featureEnabled() {
+                return featureOn();
+            }
+
+            @Override
+            public CalendarRules rules() {
+                return HalloweenManager.this.rules();
+            }
+
+            @Override
+            public ZonedDateTime now() {
+                return HalloweenManager.this.now();
+            }
+
+            @Override
+            public String command() {
+                return "halloween";
+            }
+        });
+        events.register(EventId.TRICK_OR_TREAT, new SeasonalEvents.Source() {
+            @Override
+            public boolean configEnabled() {
+                return config().getBoolean("ENABLED", true) && config().getBoolean("TRICK-OR-TREAT.ENABLED", true);
+            }
+
+            @Override
+            public boolean featureEnabled() {
+                return featureOn();
+            }
+
+            @Override
+            public CalendarRules rules() {
+                return trickOrTreatRules();
+            }
+
+            @Override
+            public ZonedDateTime now() {
+                return HalloweenManager.this.now();
+            }
+
+            @Override
+            public String command() {
+                return "trickortreat";
+            }
+        });
+    }
+
+    public SeasonalEvents events() {
+        return events;
+    }
+
+    private boolean featureOn() {
+        return plugin.getFeatureManager() == null
+                || plugin.getFeatureManager().isEnabled(com.bx.smpPlugin.managers.FeatureManager.Feature.HALLOWEEN);
     }
 
     public FileConfiguration config() {
@@ -56,11 +122,12 @@ public final class HalloweenManager {
         return config == null ? new YamlConfiguration() : config;
     }
 
-    /** On in halloween.yml and as a feature (/smpplugin feature HALLOWEEN). */
+    /**
+     * On in halloween.yml, as a feature (/smpplugin feature HALLOWEEN) and not switched off with /events. The
+     * calendar can then be opened; doors still only open on their dates.
+     */
     public boolean isEnabled() {
-        return config().getBoolean("ENABLED", true)
-                && (plugin.getFeatureManager() == null
-                || plugin.getFeatureManager().isEnabled(com.bx.smpPlugin.managers.FeatureManager.Feature.HALLOWEEN));
+        return events.status(EventId.HALLOWEEN) != EventStatus.DISABLED;
     }
 
     public CalendarRules rules() {
@@ -92,8 +159,20 @@ public final class HalloweenManager {
         return rules().seasonYear(today());
     }
 
+    /** Halloween is running: on its dates, or forced on with /events. */
     public boolean inSeason() {
-        return isEnabled() && rules().inSeason(today());
+        return events.isActive(EventId.HALLOWEEN);
+    }
+
+    /**
+     * Trick or Treat's own dates: TRICK-OR-TREAT.FIRST-DAY and LAST-DAY when set, otherwise the calendar's season.
+     */
+    public CalendarRules trickOrTreatRules() {
+        CalendarRules season = rules();
+        FileConfiguration c = config();
+        int first = c.getInt("TRICK-OR-TREAT.FIRST-DAY", season.firstDay());
+        int last = c.getInt("TRICK-OR-TREAT.LAST-DAY", season.lastDay());
+        return new CalendarRules(season.month(), first, last, season.mode(), season.catchUp(), season.graceDays());
     }
 
     public void setPreviewDate(LocalDate date) {

@@ -4,6 +4,8 @@ import com.bx.smpPlugin.SmpPlugin;
 import com.bx.smpPlugin.core.PlayerStore;
 import com.bx.smpPlugin.core.Reward;
 import com.bx.smpPlugin.core.Text;
+import com.bx.smpPlugin.seasonal.EventId;
+import com.bx.smpPlugin.seasonal.EventStatus;
 import com.bx.smpPlugin.utils.PermissionUtils;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -54,12 +56,13 @@ public final class TrickOrTreatCommand implements CommandExecutor {
             Text.send(player, "GENERAL.NO-PERMISSION", "&cYou don't have permission to do that.");
             return true;
         }
-        if (!halloween.config().getBoolean("TRICK-OR-TREAT.ENABLED", true) || !halloween.isEnabled()) {
+        EventStatus status = halloween.events().status(EventId.TRICK_OR_TREAT);
+        if (status == EventStatus.DISABLED) {
             Text.send(player, "TRICK-OR-TREAT.DISABLED", "&7Nobody is answering the door right now.");
             return true;
         }
-        if (!halloween.inSeason()) {
-            long wait = halloween.rules().secondsUntilSeason(halloween.now());
+        if (status != EventStatus.ACTIVE) {
+            long wait = halloween.events().secondsUntilStart(EventId.TRICK_OR_TREAT);
             Text.send(player, "TRICK-OR-TREAT.OUT-OF-SEASON",
                     "&7Trick or Treat opens with the Halloween season{when}.",
                     "{when}", wait > 0 ? " in &f" + Text.duration(wait) + "&7" : "");

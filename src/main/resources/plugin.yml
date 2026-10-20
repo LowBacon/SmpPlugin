@@ -668,6 +668,13 @@ commands:
     permission: smpplugin.halloween.trickortreat
     aliases:
     - tot
+  events:
+    description: See the seasonal events; staff switch them on, off or back to their dates
+    usage: /events [status|<advent|halloween|trickortreat> [on|off|auto]]
+    permission: smpplugin.events
+    aliases:
+    - seasonalevents
+    - smpevents
   daily:
     description: Claim your daily reward and keep your streak
     usage: /daily
@@ -1121,6 +1128,7 @@ permissions:
       smpplugin.bypass.border: true
       smpplugin.admin.economy.history: true
       smpplugin.admin.economy.stats: true
+      smpplugin.admin.events: true
   smpplugin.message:
     description: 'Send private messages with /msg and reply with /reply.'
     default: true
@@ -1892,6 +1900,12 @@ permissions:
     default: false
   smpplugin.admin.economy.stats:
     description: 'See the money supply and money flows with /eco stats.'
+    default: false
+  smpplugin.events:
+    description: 'See which seasonal events run with /events.'
+    default: true
+  smpplugin.admin.events:
+    description: 'Switch seasonal events on, off or back to their dates with /events.'
     default: false
   smpplugin.staff.punishments.create:
     description: 'Legacy bundle: every punishment-creating action.'

@@ -107,12 +107,17 @@ public final class CalendarMenu extends BaseMenu {
             set(EDIT_SLOT, ItemUtils.createItem(Material.WRITABLE_BOOK, "&e&lEdit prizes",
                     List.of("&7Choose what is behind each door.", "", "&e▶ Click to edit")));
         }
-        if (halloween.config().getBoolean("TRICK-OR-TREAT.ENABLED", true)) {
+        if (trickOrTreatShown()) {
             set(TRICK_SLOT, ItemUtils.createItem(Material.CAULDRON, "&5&lTrick or Treat!",
                     List.of("&7Knock on a door and hope for", "&7candy... or a trick.", "",
                             "&e▶ Click or use /trickortreat")));
         }
         set(CLOSE_SLOT, ItemUtils.createItem(Material.BARRIER, "&cClose"));
+    }
+
+    private boolean trickOrTreatShown() {
+        return halloween.events().status(com.bx.smpPlugin.seasonal.EventId.TRICK_OR_TREAT)
+                != com.bx.smpPlugin.seasonal.EventStatus.DISABLED;
     }
 
     private List<Integer> frameSlots(Player player) {
@@ -222,7 +227,7 @@ public final class CalendarMenu extends BaseMenu {
             player.closeInventory();
             return;
         }
-        if (slot == TRICK_SLOT && halloween.config().getBoolean("TRICK-OR-TREAT.ENABLED", true)) {
+        if (slot == TRICK_SLOT && trickOrTreatShown()) {
             player.closeInventory();
             plugin.getSpigotScheduler().dispatchPlayerCommand(player, "trickortreat");
             return;

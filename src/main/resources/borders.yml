@@ -1,0 +1,59 @@
+# ==============================================================================
+# CustomSmp - spawn and lobby borders (new in 3.1)
+# ==============================================================================
+#
+# Real Minecraft world borders (the blue wall) around the spawn and the lobby.
+# Easiest is to set them up in game, standing at the spawn or in the lobby:
+#
+#   /border spawn set 200          a 200 x 200 square around the /setspawn point
+#   /border spawn set 150 here     a 150 x 150 square around where you stand
+#   /border lobby set 100          the lobby (also becomes the protected lobby area)
+#   /border spawn warning 5 15     red screen 5 blocks from the edge
+#   /border spawn mode world       see MODE below
+#   /border spawn off              take it down again
+#
+# MODE
+#   PLAYER (default) Only players standing inside the square get the border. Their
+#                    client shows the real wall and stops them at it, and the server
+#                    also stops walking, flying, riding, ender pearls and chorus fruit
+#                    from taking them out (so a hacked client cannot ignore it).
+#                    Teleport commands (/rtp, /home, /warp, /lobby...) still work,
+#                    and the border disappears once they are out. Players elsewhere
+#                    in the same world are not affected, so this is the safe choice
+#                    when the spawn is inside the survival world.
+#   WORLD            The world's own border is changed, so the whole world ends at
+#                    the edge for everyone. Use it for a world that only holds the
+#                    lobby or the spawn. The world's previous border is saved under
+#                    PREVIOUS-WORLD-BORDER and put back when you turn the zone off or
+#                    switch to PLAYER. On your main world this needs "confirm".
+#
+# Minecraft's border is always a square: SIZE is the length of one side.
+# Damage only happens to players outside a border, which in PLAYER mode never
+# happens, so DAMAGE-* only matters in WORLD mode.
+# Staff with smpplugin.bypass.border and players in spectator mode are never held.
+# ==============================================================================
+
+SPAWN:
+  ENABLED: false
+  # Set by /border; leave empty until then.
+  WORLD: ''
+  CENTER-X: 0.0
+  CENTER-Z: 0.0
+  SIZE: 200.0
+  MODE: PLAYER
+  WARNING-DISTANCE: 5
+  WARNING-TIME: 15
+  DAMAGE-AMOUNT: 0.2
+  DAMAGE-BUFFER: 5.0
+
+LOBBY:
+  ENABLED: false
+  WORLD: ''
+  CENTER-X: 0.0
+  CENTER-Z: 0.0
+  SIZE: 200.0
+  MODE: PLAYER
+  WARNING-DISTANCE: 5
+  WARNING-TIME: 15
+  DAMAGE-AMOUNT: 0.2
+  DAMAGE-BUFFER: 5.0

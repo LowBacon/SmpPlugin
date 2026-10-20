@@ -26,6 +26,7 @@ public final class PermissionRenderer {
         titles.put(PermissionCategory.OPERATIONAL_BYPASS, "Operational bypasses (default: nobody; ops via smpplugin.admin)");
         titles.put(PermissionCategory.SECURITY_BYPASS, "Security and privacy bypasses (default: nobody; never bundled)");
         titles.put(PermissionCategory.DESTRUCTIVE, "Destructive actions (default: nobody; never bundled)");
+        titles.put(PermissionCategory.SENIOR_STAFF, "Senior staff (default: nobody, but always allowed for ops; only the manager, developer, co-owner and owner roles)");
         titles.put(PermissionCategory.BUNDLE, "Bundles");
         titles.put(PermissionCategory.LEGACY, "Legacy names and bundles");
         return titles;

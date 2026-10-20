@@ -526,14 +526,14 @@ public class SmpPluginCommand implements CommandExecutor, TabCompleter {
                     "ah", "orders", "billford", "bounty", "crate", "crates", "keys", "spawner"
             );
             case "community" -> List.of(
-                    "halloween", "trickortreat", "daily", "challenges", "poll", "giveaway", "chatgame", "mail"
+                    "halloween", "trickortreat", "daily", "challenges", "poll", "giveaway", "chatgame", "mail", "guide"
             );
             case "fun" -> List.of(
-                    "hug", "slap", "highfive", "poke", "wave", "cheer", "dice", "8ball", "rps", "rate", "firework",
-                    "sit", "hat"
+                    "slap", "highfive", "poke", "wave", "cheer", "dice", "roulette", "coinflip", "rps", "rate",
+                    "firework", "sit"
             );
             case "utility" -> List.of(
-                    "craft", "anvil", "grindstone", "stonecutter", "loom", "smithing", "cartography", "trash", "back",
+                    "craft", "anvil", "grindstone", "stonecutter", "loom", "smithing", "cartography", "back",
                     "near", "seen", "coords", "suicide", "ptime", "pweather", "repair", "skull", "lore", "glow",
                     "online", "uptime", "calc"
             );
@@ -545,14 +545,14 @@ public class SmpPluginCommand implements CommandExecutor, TabCompleter {
                     "heal", "feed", "gamemode", "randomteleport", "teleport", "alts", "vanish",
                     "invsee", "profileviewer", "punishments", "ban", "tempban", "mute", "tempmute",
                     "warn", "kick", "blacklist", "unban", "unmute", "unblacklist", "findplayer", "rename",
-                    "notes", "whois", "socialspy", "commandspy", "speed", "countdown"
+                    "whois", "socialspy", "commandspy", "speed", "countdown"
             );
             case "admin" -> List.of(
                     "customsmp", "clearlag", "cuboid", "setwarp", "delwarp", "warpmanager",
                     "portalmanager", "amethysttool", "arena", "ffaarena", "crate", "spawner",
                     "shop", "orders", "ah", "enderchest", "freeze", "staffmode", "invsee", "worth",
                     "perms", "broadcast", "announcer", "day", "night", "sun", "rain", "thunder", "smite", "butcher",
-                    "spawnmob", "more", "performance", "spook"
+                    "spawnmob", "more", "performance", "spook", "border", "sidebar", "setspawn", "setlobby"
             );
             default -> List.of();
         };

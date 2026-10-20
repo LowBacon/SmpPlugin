@@ -1,0 +1,152 @@
+# ==============================================================================
+# CustomSmp - /guide (new in 3.1)
+# ==============================================================================
+#
+# The getting-started guide players open with /guide. Each page has a TITLE and LINES.
+# A line is either plain text, or a command with a short explanation:
+#
+#   - "&7Plain text. Colours, hex (&#00A4FC) and PlaceholderAPI placeholders work."
+#   - COMMAND: "/spawn"          # what the player clicks
+#     TEXT: "Go back to spawn"   # the explanation next to it
+#     SUGGEST: true              # optional: put it in the chat box instead of running it
+#
+# A command line only shows when that command exists on this server, its CustomSmp
+# feature is turned on, and the player is allowed to use it. So the guide never shows a
+# command a player cannot use. A page with nothing left to show is skipped.
+# Commands from other plugins work too (for example /discord or /vote), as long as the
+# plugin is installed.
+#
+# /guide <number> opens a page, /guide <page name> opens it by its key (/guide money),
+# and /guide topics lists them all. Change this file and run /smpplugin reload.
+# ==============================================================================
+
+TITLE: "&6&lServer Guide"
+
+PAGES:
+  start:
+    TITLE: "Welcome!"
+    LINES:
+      - "&7Welcome to the server, &f%player%&7! This guide covers"
+      - "&7the basics in a few short pages. Click a command to use it."
+      - COMMAND: "/rules"
+        TEXT: "Read the rules first"
+      - COMMAND: "/menu"
+        TEXT: "The main menu with almost everything in one place"
+      - COMMAND: "/settings"
+        TEXT: "Turn chat, sounds, the sidebar and more on or off"
+      - COMMAND: "/sidebar"
+        TEXT: "Show or hide the sidebar"
+      - COMMAND: "/guide topics"
+        TEXT: "Every page of this guide"
+
+  travel:
+    TITLE: "Getting around"
+    LINES:
+      - COMMAND: "/spawn"
+        TEXT: "Go back to spawn"
+      - COMMAND: "/lobby"
+        TEXT: "Go to the lobby; /lobby survival takes you back"
+      - COMMAND: "/rtp"
+        TEXT: "Teleport to a random spot in the wild"
+      - COMMAND: "/sethome"
+        TEXT: "Save your current spot as a home"
+        SUGGEST: true
+      - COMMAND: "/homes"
+        TEXT: "Your homes; click one to go there"
+      - COMMAND: "/warp"
+        TEXT: "Public warps the staff have set up"
+      - COMMAND: "/tpa"
+        TEXT: "Ask to teleport to a friend"
+        SUGGEST: true
+      - COMMAND: "/back"
+        TEXT: "Return to where you were before teleporting"
+
+  money:
+    TITLE: "Money"
+    LINES:
+      - "&7You start with some money and earn more by playing."
+      - COMMAND: "/balance"
+        TEXT: "See how much money you have"
+      - COMMAND: "/sell"
+        TEXT: "Sell items from your inventory"
+      - COMMAND: "/worth"
+        TEXT: "What the item in your hand sells for"
+      - COMMAND: "/shop"
+        TEXT: "Buy blocks, food, tools and more"
+      - COMMAND: "/pay"
+        TEXT: "Send money to another player"
+        SUGGEST: true
+      - COMMAND: "/afk"
+        TEXT: "Stand in an AFK zone to earn shards while away"
+      - COMMAND: "/shards"
+        TEXT: "Your shards, the second currency"
+
+  trading:
+    TITLE: "Trading"
+    LINES:
+      - COMMAND: "/ah"
+        TEXT: "The auction house: buy and sell with other players"
+      - COMMAND: "/orders"
+        TEXT: "Ask for items and let others deliver them"
+      - COMMAND: "/bounty"
+        TEXT: "Put a price on a player's head"
+
+  rewards:
+    TITLE: "Rewards"
+    LINES:
+      - COMMAND: "/daily"
+        TEXT: "A free reward every day; keep your streak going"
+      - COMMAND: "/challenges"
+        TEXT: "Three daily goals with prizes"
+      - COMMAND: "/crates"
+        TEXT: "Open crates with the keys you earn"
+      - COMMAND: "/halloween"
+        TEXT: "The Spooky Calendar: a prize for every day of October"
+      - COMMAND: "/leaderboard"
+        TEXT: "The top players"
+
+  friends:
+    TITLE: "Teams and friends"
+    LINES:
+      - COMMAND: "/team"
+        TEXT: "Make a team, invite friends and share a team home"
+      - COMMAND: "/friends"
+        TEXT: "Your friends list"
+      - COMMAND: "/msg"
+        TEXT: "Send a private message"
+        SUGGEST: true
+      - COMMAND: "/mail"
+        TEXT: "Leave a message for someone who is offline"
+      - COMMAND: "/duel"
+        TEXT: "Challenge a player to a fair fight"
+        SUGGEST: true
+
+  games:
+    TITLE: "Games and gambling"
+    LINES:
+      - "&7Gambling uses in-game money only. Only bet what you can lose!"
+      - COMMAND: "/coinflip"
+        TEXT: "Flip a coin against another player, 50/50"
+      - COMMAND: "/dice"
+        TEXT: "Bet on a dice roll against the house; shows the odds first"
+      - COMMAND: "/roulette"
+        TEXT: "Put money in the head roulette; the middle head wins the pot"
+      - COMMAND: "/rps"
+        TEXT: "Rock, paper, scissors against the server"
+        SUGGEST: true
+
+  help:
+    TITLE: "Rules and help"
+    LINES:
+      - COMMAND: "/rules"
+        TEXT: "The server rules"
+      - COMMAND: "/helpop"
+        TEXT: "Ask the staff for help"
+        SUGGEST: true
+      - COMMAND: "/report"
+        TEXT: "Report a player who breaks the rules"
+        SUGGEST: true
+      - COMMAND: "/discord"
+        TEXT: "Join our Discord"
+      - COMMAND: "/help"
+        TEXT: "Every command you can use"

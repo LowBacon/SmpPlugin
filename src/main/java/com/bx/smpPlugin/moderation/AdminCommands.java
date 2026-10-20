@@ -501,11 +501,6 @@ public final class AdminCommands implements CommandExecutor, TabCompleter {
             boolean muted = plugin.getPunishmentManager().getActiveRecord(account.uuid(), PunishmentType.MUTE).isPresent();
             Text.raw(sender, "&7Banned: " + (banned ? "&cyes" : "&ano") + " &8| &7Muted: " + (muted ? "&cyes" : "&ano"));
         }
-        StaffNotes notes = plugin.getV3Module() == null ? null : plugin.getV3Module().staffNotes();
-        if (notes != null) {
-            notes.count(account.uuid(), count -> Text.line(sender, "&7Staff notes: &f" + count + " ",
-                    Text.button("&e[View]", "notes " + account.displayName(), "&7Show the notes")));
-        }
     }
 
     private void spook(CommandSender sender, String[] args) {

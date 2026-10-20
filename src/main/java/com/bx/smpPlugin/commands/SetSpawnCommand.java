@@ -42,6 +42,9 @@ public class SetSpawnCommand implements CommandExecutor {
                 + location.getWorld().getName() + " &7(" + location.getBlockX() + ", "
                 + location.getBlockY() + ", " + location.getBlockZ() + ")."));
         sender.sendMessage(ColorUtils.toComponent("&7Players can now use &f/spawn&7 to teleport here."));
+        com.bx.smpPlugin.core.Text.line(sender, "&7Want a real world border around it? ",
+                com.bx.smpPlugin.core.Text.suggest("&e[/border spawn set 200]", "/border spawn set 200",
+                        "&7A 200 x 200 Minecraft border around the spawn"));
         return true;
     }
 }

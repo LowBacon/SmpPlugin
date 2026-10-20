@@ -1,5 +1,58 @@
 # Changelog
 
+## 3.1.0 — 20 October 2026
+
+**CustomSmp 3.1: dice and a head roulette, a one-screen CoinFlip, a getting-started guide, an
+in-game scoreboard editor, a cleaner tab list and real borders for the spawn and the lobby.** Runs
+on the same versions as 3.0 (Minecraft 1.21.11 to 26.3).
+
+### Added
+- **`/dice <bet> [high|low|1-6]`:** bet against the house. The chance, payout and average return
+  are shown with a [ROLL] button before any money moves. Odds and payouts are documented in
+  `extras.yml`; a payout can never be set above the fair odds.
+- **`/roulette`** (`/jackpot`): a shared pot; the players' heads spin and the head that stops in
+  the middle wins. Chance = bet ÷ pot. Countdown, bet lock, quick bets, optional fee.
+- **Escrow for bets:** a bet is written to `data/gambling-escrow.yml` until it is paid, and given
+  back at the next start if the server crashed in between.
+- **`/guide`:** a paged getting-started guide from the new `guide.yml`, with clickable commands.
+- **`/sidebar`:** hide or show your scoreboard; staff edit its title and lines in game.
+- **`/border`:** real Minecraft borders for the spawn and the lobby, saved in the new `borders.yml`.
+- **`/spawn <player>`** for staff.
+- **Roles** `smpplugin.role.manager`, `developer` and `coowner`.
+- New permissions: `smpplugin.dice`, `smpplugin.roulette`, `smpplugin.guide`, `smpplugin.sidebar`,
+  `smpplugin.giveaway.manage`, `smpplugin.admin.roulette`, `smpplugin.admin.sidebar`,
+  `smpplugin.admin.border`, `smpplugin.bypass.border`, `smpplugin.staff.spawn.others`,
+  `smpplugin.gambling.bypasscooldown`.
+
+### Changed
+- **CoinFlip:** `/cf` opens one screen with the open flips, quick stakes and a side picker; two
+  clicks replace the review and confirm screens. `/cf <amount> [side]` creates a flip from chat.
+  New toss animation. History, statistics and settings are under "More".
+- **Giveaways** can only be started or cancelled by ops, `smpplugin.giveaway.manage` (manager,
+  developer, co-owner and owner roles) and the groups in `GIVEAWAYS.MANAGER-GROUPS`.
+  `smpplugin.staff.giveaway` and `smpplugin.admin.giveaway.money` were replaced; the moderator
+  role no longer hosts giveaways.
+- **Tab list:** the default footer shows the online count, the animated line and tips; no money,
+  statistics, ping or TPS. A config.yml with the exact 3.0 footer is updated after a backup.
+- **`/dice`** with an amount now bets; `/dice roll [sides]` (and `/roll`) is the free roll.
+- **`/setspawn` and `/setlobby`** suggest a border; `/spawn` explains a missing spawn or an
+  unloaded spawn world.
+
+### Removed
+- `/hug`, `/8ball`, `/hat`, `/trash` and `/notes` (and their aliases, permissions and settings).
+  Existing staff notes stay in the `v3_staff_notes` table.
+
+### Fixed
+- `TITLE-UPDATE-TICKS` in `scoreboard.yml` was ignored; the title advanced every 2 ticks.
+
+### Performance
+- The sidebar sent every line to every player ten times a second. It now sends only lines whose
+  text changed, refreshes lines every `LINE-UPDATE-TICKS` (default 10) and updates the title on
+  its own interval.
+- The roulette screen is one shared inventory, so a spin step is drawn once for all viewers; its
+  clock runs only while a round is open.
+- Border checks run only when a player moves to another block and a border is on.
+
 ## 3.0.0 — 20 October 2026
 
 **CustomSmp 3.0: a Halloween calendar, daily rewards and challenges, live events, 63 new commands,

@@ -20,7 +20,6 @@ import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.util.Vector;
 
@@ -33,19 +32,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Social and silly commands: emotes (/hug /slap /highfive /poke /wave /cheer), /dice, /8ball,
- * /rps, /rate, /firework, /sit and /hat. All of them are cosmetic: none can hurt a player, move
- * their items to someone else or be used to farm money.
+ * Social and silly commands: emotes (/slap /highfive /poke /wave /cheer), /rps, /rate, /firework
+ * and /sit. All of them are cosmetic: none can hurt a player, move their items to someone else or
+ * be used to farm money. /dice lives in {@link com.bx.smpPlugin.gambling.DiceGame}.
  */
 public final class FunCommands implements CommandExecutor, TabCompleter {
 
-    public static final List<String> EMOTES = List.of("hug", "slap", "highfive", "poke", "wave", "cheer");
-    private static final String[] EIGHT_BALL = {
-            "It is certain.", "Without a doubt.", "You may rely on it.", "Yes, definitely.", "Most likely.",
-            "Outlook good.", "Signs point to yes.", "Reply hazy, try again.", "Ask again later.",
-            "Better not tell you now.", "Don't count on it.", "My reply is no.", "Very doubtful.",
-            "The creepers say no.", "The villagers whisper yes."
-    };
+    public static final List<String> EMOTES = List.of("slap", "highfive", "poke", "wave", "cheer");
 
     private final SmpPlugin plugin;
     private final Map<String, Map<UUID, Long>> cooldowns = new ConcurrentHashMap<>();
@@ -65,7 +58,6 @@ public final class FunCommands implements CommandExecutor, TabCompleter {
         return switch (command) {
             case "firework" -> "smpplugin.fun.firework";
             case "sit" -> "smpplugin.fun.sit";
-            case "hat" -> "smpplugin.fun.hat";
             default -> "smpplugin.fun." + (EMOTES.contains(command) ? "emotes" : "games");
         };
     }
@@ -82,13 +74,10 @@ public final class FunCommands implements CommandExecutor, TabCompleter {
             return true;
         }
         switch (name) {
-            case "dice" -> dice(player, args);
-            case "8ball" -> eightBall(player, args);
             case "rps" -> rps(player, args);
             case "rate" -> rate(player, args);
             case "firework" -> firework(player);
             case "sit" -> sit(player);
-            case "hat" -> hat(player);
             default -> emote(player, name, args);
         }
         return true;
@@ -202,60 +191,6 @@ public final class FunCommands implements CommandExecutor, TabCompleter {
 
     // ------------------------------------------------------------------ games
 
-    private void dice(Player player, String[] args) {
-        int sides = 6;
-        if (args.length > 0) {
-            try {
-                sides = Math.max(2, Math.min(1000, Integer.parseInt(args[0].replace("d", ""))));
-            } catch (NumberFormatException ignored) {
-                sides = 6;
-            }
-        }
-        if (onCooldown(player, "dice", 3L)) {
-            return;
-        }
-        int result = ThreadLocalRandom.current().nextInt(1, sides + 1);
-        int finalSides = sides;
-        for (int frame = 0; frame < 8; frame++) {
-            int shown = ThreadLocalRandom.current().nextInt(1, sides + 1);
-            boolean last = frame == 7;
-            plugin.getSpigotScheduler().runEntityLater(player, () -> {
-                if (!player.isOnline()) {
-                    return;
-                }
-                if (last) {
-                    Text.title(player, "&f&l🎲 " + result, "&7d" + finalSides, 0, 30, 10);
-                    player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.5F, 1.6F);
-                    tell(player, Text.get("FUN.DICE", "&7🎲 &f{player} &7rolled a &e&l{result} &8(d{sides})",
-                            "{player}", player.getName(), "{result}", Integer.toString(result), "{sides}", Integer.toString(finalSides)));
-                } else {
-                    Text.title(player, "&7🎲 " + shown, "&8rolling...", 0, 5, 0);
-                    player.playSound(player.getLocation(), Sound.BLOCK_STONE_HIT, 0.6F, 1.0F + 0.1F * (shown % 5));
-                }
-            }, 1L + frame * 3L);
-        }
-    }
-
-    private void eightBall(Player player, String[] args) {
-        if (args.length == 0) {
-            Text.send(player, "FUN.8BALL-USAGE", "&7/8ball <question>");
-            return;
-        }
-        if (onCooldown(player, "8ball", 5L)) {
-            return;
-        }
-        String question = String.join(" ", args);
-        String answer = EIGHT_BALL[ThreadLocalRandom.current().nextInt(EIGHT_BALL.length)];
-        Text.actionBar(player, Text.get("FUN.8BALL-SHAKE", "&8🎱 &7shaking..."));
-        player.playSound(player.getLocation(), Sound.BLOCK_BREWING_STAND_BREW, 0.6F, 1.4F);
-        plugin.getSpigotScheduler().runEntityLater(player, () -> {
-            if (player.isOnline()) {
-                tell(player, Text.get("FUN.8BALL", "&8🎱 &f{player} &7asked: &f{question}\n&8🎱 &d{answer}",
-                        "{player}", player.getName(), "{question}", question.replace('&', '＆'), "{answer}", answer));
-            }
-        }, 30L);
-    }
-
     private void rps(Player player, String[] args) {
         List<String> moves = List.of("rock", "paper", "scissors");
         String move = args.length > 0 ? args[0].toLowerCase(Locale.ROOT) : "";
@@ -338,7 +273,7 @@ public final class FunCommands implements CommandExecutor, TabCompleter {
         firework.addScoreboardTag(ExtrasListener.HARMLESS_FIREWORK_TAG);
     }
 
-    // ------------------------------------------------------------------ sit and hat
+    // ------------------------------------------------------------------ sit
 
     private void sit(Player player) {
         ArmorStand existing = seats.remove(player.getUniqueId());
@@ -394,28 +329,6 @@ public final class FunCommands implements CommandExecutor, TabCompleter {
         seats.clear();
     }
 
-    private void hat(Player player) {
-        ItemStack hand = player.getInventory().getItemInMainHand();
-        if (hand.getType().isAir()) {
-            Text.send(player, "FUN.HAT-EMPTY", "&7Hold the item you want to wear.");
-            return;
-        }
-        ItemStack helmet = player.getInventory().getHelmet();
-        ItemStack wear = hand.clone();
-        wear.setAmount(1);
-        hand.setAmount(hand.getAmount() - 1);
-        player.getInventory().setItemInMainHand(hand.getAmount() <= 0 ? null : hand);
-        player.getInventory().setHelmet(wear);
-        if (helmet != null && !helmet.getType().isAir()) {
-            for (ItemStack rest : player.getInventory().addItem(helmet).values()) {
-                player.getWorld().dropItemNaturally(player.getLocation(), rest);
-            }
-        }
-        player.playSound(player.getLocation(), Sound.ITEM_ARMOR_EQUIP_LEATHER, 0.8F, 1.2F);
-        Text.send(player, "FUN.HAT", "&7Looking sharp! You are now wearing &f{item}&7.",
-                "{item}", com.bx.smpPlugin.core.Reward.itemName(wear));
-    }
-
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         String name = command.getName().toLowerCase(Locale.ROOT);
@@ -425,9 +338,6 @@ public final class FunCommands implements CommandExecutor, TabCompleter {
         String typed = args[0].toLowerCase(Locale.ROOT);
         if (name.equals("rps")) {
             return List.of("rock", "paper", "scissors").stream().filter(o -> o.startsWith(typed)).toList();
-        }
-        if (name.equals("dice")) {
-            return List.of("6", "12", "20", "100").stream().filter(o -> o.startsWith(typed)).toList();
         }
         if (EMOTES.contains(name) && sender instanceof Player player) {
             List<String> names = new ArrayList<>();

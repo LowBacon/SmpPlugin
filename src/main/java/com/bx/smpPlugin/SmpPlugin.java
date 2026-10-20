@@ -1251,6 +1251,12 @@ public final class SmpPlugin extends JavaPlugin {
             coinFlipModule.reload().ifPresent(problem ->
                     getLogger().warning("CoinFlip configuration was not reloaded: " + problem));
         }
+        if (v3Module != null) {
+            v3Module.reload();
+        }
+        if (scoreboardManager != null) {
+            scoreboardManager.markDirty();
+        }
         if (playerDataManager != null) {
             playerDataManager.refreshRemovedSettingOptions();
         }

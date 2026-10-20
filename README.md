@@ -2,8 +2,8 @@
 
 A complete, feature-rich **Minecraft SMP core plugin** for **Minecraft 1.21.11 – 26.3** on **Paper, Purpur, Spigot and CraftBukkit**.
 
-> **3.0.0** adds the Spooky Calendar (`/halloween`), daily rewards, daily challenges, polls, giveaways, chat games,
-> 63 new commands and ready-made staff roles. It runs on Minecraft **1.21.11, 26.1, 26.1.1, 26.1.2, 26.2 and 26.3**
+> **3.1.0** adds `/dice` and the `/roulette` head jackpot, a one-screen CoinFlip, `/guide`, an in-game scoreboard
+> editor, a cleaner tab list and real Minecraft borders for the spawn and the lobby. It runs on Minecraft **1.21.11, 26.1, 26.1.1, 26.1.2, 26.2 and 26.3**
 > from one jar per server family. Run `/smpplugin version` to see what is installed. See [COMPATIBILITY.md](COMPATIBILITY.md),
 > [CHANGELOG.md](CHANGELOG.md) and the upgrade status in [docs/UPGRADE-26.3-STATUS.md](docs/UPGRADE-26.3-STATUS.md).
 > Permissions changed; read [docs/permissions-migration-and-luckperms.md](docs/permissions-migration-and-luckperms.md) before upgrading.
@@ -11,6 +11,20 @@ A complete, feature-rich **Minecraft SMP core plugin** for **Minecraft 1.21.11 �
 SmpPlugin is designed to provide an entire SMP server experience from a single, highly configurable plugin. It combines gameplay, economy, social features, moderation, player utilities, competitive systems, GUI menus, statistics, server management, and extensive integrations into one unified system.
 
 Instead of running a small army of plugins just to make an SMP function, SmpPlugin brings the majority of the core systems together in one optimized and configurable package.
+
+## 🆕 New in 3.1
+
+| | |
+|---|---|
+| 🎲 **Dice** | `/dice <bet> [high\|low\|1-6]` against the house. Shows the chance, payout and average return with a **[ROLL]** button before any money moves. Fair dice rolled by the server; payouts in `extras.yml` can never be set above the fair odds. `/dice roll` is still a free roll. |
+| 🎰 **Head roulette** | `/roulette`: everyone's bet goes in one pot, the players' heads spin and the one that stops in the middle wins. Chance = your bet ÷ the pot, shown for everyone. |
+| 🪙 **Simpler CoinFlip** | `/cf` is one screen: open flips as heads (click twice to join), quick stake buttons and a side picker. `/cf <amount> [heads\|tails]` creates a flip straight from chat. A new toss animation. |
+| 📖 **`/guide`** | A getting-started guide from `guide.yml`, page by page, with clickable commands. It only shows commands that exist, are turned on and the reader may use. |
+| 📋 **Scoreboard text** | Edit the sidebar in game with `/sidebar lines\|add\|set\|insert\|remove\|title`. Only changed lines are sent, at a configurable `LINE-UPDATE-TICKS`. |
+| 🧾 **Cleaner tab list** | The default footer no longer shows money, stats, ping or TPS; servers still on the old default footer are updated (with a backup). |
+| 🧱 **Spawn and lobby borders** | `/border spawn set 200`: a real Minecraft border. In PLAYER mode only players inside are held, so it is safe in a survival world; WORLD mode uses the world's own border. |
+| 🎁 **Giveaways for senior staff** | Only ops and the Manager, Developer, Co-Owner and Owner ranks (or `smpplugin.giveaway.manage`) can start or cancel giveaways. |
+| 🧹 **Removed** | `/hug`, `/8ball`, `/hat`, `/trash` and `/notes`. |
 
 ## 🆕 New in 3.0
 
@@ -20,9 +34,9 @@ Instead of running a small army of plugins just to make an SMP function, SmpPlug
 | 🎁 **Daily rewards** | `/daily`: a 7-day streak with a big day-7 reward and weekly bonuses. |
 | 🎯 **Daily challenges** | `/challenges`: three goals a day for everyone, paid out automatically. |
 | 🎉 **Live events** | `/poll`, `/giveaway`, automatic chat games, `/countdown`, a rotating announcer and `/mail`. |
-| 😄 **Fun** | `/hug` `/slap` `/highfive` `/poke` `/wave` `/cheer` `/dice` `/8ball` `/rps` `/rate` `/firework` `/sit` `/hat` |
-| 🧰 **Utilities** | `/craft` `/anvil` `/grindstone` `/stonecutter` `/loom` `/smithing` `/cartography` `/trash` `/back` `/near` `/seen` `/coords` `/ptime` `/pweather` `/repair` `/skull` `/lore` `/glow` `/online` `/uptime` `/calc` `/suicide` |
-| 🛡️ **Staff** | Roles `smpplugin.role.helper` / `moderator` / `admin` / `owner`, `/perms`, `/notes`, `/whois`, `/socialspy`, `/commandspy`, `/broadcast`, `/day` `/night` `/sun` `/rain` `/thunder`, `/smite`, `/butcher`, `/spawnmob`, `/more`, `/speed`, `/performance`, `/spook` |
+| 😄 **Fun** | `/slap` `/highfive` `/poke` `/wave` `/cheer` `/dice` `/rps` `/rate` `/firework` `/sit` |
+| 🧰 **Utilities** | `/craft` `/anvil` `/grindstone` `/stonecutter` `/loom` `/smithing` `/cartography` `/back` `/near` `/seen` `/coords` `/ptime` `/pweather` `/repair` `/skull` `/lore` `/glow` `/online` `/uptime` `/calc` `/suicide` |
+| 🛡️ **Staff** | Roles `smpplugin.role.helper` / `moderator` / `admin` / `manager` / `developer` / `coowner` / `owner`, `/perms`, `/whois`, `/socialspy`, `/commandspy`, `/broadcast`, `/day` `/night` `/sun` `/rain` `/thunder`, `/smite`, `/butcher`, `/spawnmob`, `/more`, `/speed`, `/performance`, `/spook` |
 | 📊 **Simpler /stats** | Your own stats in three lines, with Search Player and Leaderboards buttons. |
 
 The Auction House is now only `/ah` (`/auctionhouse` was removed). Everything new is configured in
@@ -274,6 +288,10 @@ Examples include:
 /stats
 /daily
 /challenges
+/guide
+/dice
+/roulette
+/coinflip
 /halloween
 /mail
 /playtime
@@ -294,6 +312,8 @@ Examples include:
 /staffmode
 /punishments
 /maintenance
+/border
+/sidebar
 ```
 
 Administrative commands are protected using dedicated permission nodes, making the plugin suitable for both normal players and staff teams.
@@ -345,20 +365,33 @@ mvn clean package
 This builds the jar for **Paper and Purpur**:
 
 ```text
-target/SmpPlugin-3.0.0-paper.jar
+target/SmpPlugin-3.1.0-paper.jar
 ```
 
 For **Spigot and CraftBukkit**, build with `mvn clean package -Pspigot`, which produces
-`target/SmpPlugin-3.0.0-spigot.jar`. The two APIs are not binary compatible; use the matching jar.
+`target/SmpPlugin-3.1.0-spigot.jar`. The two APIs are not binary compatible; use the matching jar.
 
 ## 📦 Installation
 
-1. Download the latest SmpPlugin release.
-2. Place `SmpPlugin.jar` into your server's `plugins` folder.
+1. Download the jar for your server from the latest release: `SmpPlugin-<version>-paper.jar` for Paper and
+   Purpur, `SmpPlugin-<version>-spigot.jar` for Spigot and CraftBukkit.
+2. Place it in your server's `plugins` folder (remove the old SmpPlugin jar when upgrading).
 3. Start or restart your server.
 4. Configure the generated configuration files.
 5. Install optional dependencies for the integrations you want to use.
-6. Restart the server after configuration changes.
+6. Restart the server, or run `/smpplugin reload`, after configuration changes.
+
+### Upgrading to 3.1
+
+- Your configuration is kept. New settings are added to your files on start-up (the old files are copied to
+  `config-backups/` first), and the new files `guide.yml` and `borders.yml` are created.
+- The tab list footer is only changed if it is still exactly the 3.0 default.
+- `/hug`, `/8ball`, `/hat`, `/trash` and `/notes` are gone. Existing staff notes stay in the database table
+  `v3_staff_notes`; nothing is deleted.
+- Giveaways now need `smpplugin.giveaway.manage`, a Manager / Developer / Co-Owner / Owner group (see
+  `GIVEAWAYS.MANAGER-GROUPS` in `extras.yml`), or op. `smpplugin.staff.giveaway` and
+  `smpplugin.admin.giveaway.money` no longer exist.
+- Bets that a crash left unfinished are given back on the next start (`data/gambling-escrow.yml`).
 
 ## 🎯 Designed For
 

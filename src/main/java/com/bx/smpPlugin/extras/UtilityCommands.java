@@ -38,7 +38,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Everyday helpers: portable workstations, /trash, /back, /near, /seen, /coords, /suicide,
+ * Everyday helpers: portable workstations, /back, /near, /seen, /coords, /suicide,
  * /ptime, /pweather, /repair, /skull, /lore, /glow, /online, /uptime and /calc.
  */
 public final class UtilityCommands implements CommandExecutor, TabCompleter {
@@ -93,7 +93,6 @@ public final class UtilityCommands implements CommandExecutor, TabCompleter {
 
     private void playerCommand(Player player, String name, String[] args) {
         switch (name) {
-            case "trash" -> player.openInventory(new TrashMenu(plugin).getInventory());
             case "back" -> back(player);
             case "near" -> near(player);
             case "coords" -> coords(player, args);

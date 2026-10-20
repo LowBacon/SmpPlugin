@@ -4,8 +4,9 @@
 challenges, a Halloween calendar, events, spawners, crates, duels, staff tools and more. Everything
 is set up from config files and built to stay light on the server.
 
-> **3.0** adds the 🎃 Spooky Calendar, daily rewards and challenges, polls, giveaways, chat games,
-> **63 new commands** and ready-made staff roles.
+> **3.1** adds 🎲 `/dice` and the 🎰 `/roulette` head jackpot, a one-screen CoinFlip, `/guide`, an in-game
+> scoreboard editor, a cleaner tab list and real Minecraft borders for the spawn and the lobby.
+> **3.0** added the 🎃 Spooky Calendar, daily rewards and challenges, polls, giveaways, chat games and staff roles.
 >
 > Runs on **Minecraft 1.21.11, 26.1, 26.1.1, 26.1.2, 26.2 and 26.3**
 > on **Paper, Purpur, Spigot and CraftBukkit**, from one jar per server type.
@@ -58,11 +59,12 @@ is set up from config files and built to stay light on the server.
 ## 🎉 Events & Fun (new in 3.0)
 
 - **`/poll`:** clickable votes with a boss-bar timer and a bar-chart result.
-- **`/giveaway`:** give away the item in your hand; players join with one click.
+- **`/giveaway`:** senior staff give away an item or money; players join with one click.
 - **Chat games:** unscramble, quick maths, fast typer and trivia. The first right answer wins.
 - **`/countdown`, a rotating announcer, and `/mail`** for offline players.
-- **Emotes:** `/hug` `/slap` `/highfive` `/poke` `/wave` `/cheer`.
-- **Games and toys:** `/dice` `/8ball` `/rps` `/rate` `/firework` `/sit` `/hat`.
+- **Emotes:** `/slap` `/highfive` `/poke` `/wave` `/cheer`.
+- **Games and toys:** `/dice` (bet against the house, odds shown first), `/roulette` (a head jackpot),
+  `/coinflip`, `/rps` `/rate` `/firework` `/sit`.
 
 ## 🏠 Homes & Teleporting
 
@@ -78,7 +80,7 @@ is set up from config files and built to stay light on the server.
 
 - **Portable workstations:** `/craft` `/anvil` `/grindstone` `/stonecutter` `/loom` `/smithing` `/cartography`
 - **Information:** `/near` `/seen` `/coords` `/online` `/uptime` `/calc`
-- **Items and personal:** `/trash` `/repair` `/skull` `/lore` `/glow` `/ptime` `/pweather` `/suicide`
+- **Items and personal:** `/repair` `/skull` `/lore` `/glow` `/ptime` `/pweather` `/suicide`
 
 ## 💰 Economy
 
@@ -118,7 +120,6 @@ is set up from config files and built to stay light on the server.
 - **Staff mode:** vanish, freeze, inspect, spectator and more
 - **Punishments:** ban, mute, warn, kick, blacklist, voice-chat mute, preset offenses and full history
 - **New in 3.0:**
-  - `/notes` (private staff notes)
   - `/whois`, `/socialspy`, `/commandspy`, `/broadcast`
   - `/day`, `/night`, `/sun`, `/rain`, `/thunder`
   - `/butcher`, `/spawnmob`, `/speed`, `/performance`
@@ -148,8 +149,8 @@ Everything below is optional. If one is missing, only the features that need it 
 ## 📥 Installation
 
 1. Download the jar that matches your server:
-   - **Paper / Purpur:** `SmpPlugin-3.0.0-paper.jar`
-   - **Spigot / CraftBukkit:** `SmpPlugin-3.0.0-spigot.jar`
+   - **Paper / Purpur:** `SmpPlugin-3.1.0-paper.jar`
+   - **Spigot / CraftBukkit:** `SmpPlugin-3.1.0-spigot.jar`
 2. Drop it in `plugins/` and start the server once.
 3. Run `/smpplugin setup` to see what still needs setting.
 4. Give your staff ranks a role, for example `smpplugin.role.moderator`.

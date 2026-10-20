@@ -8,12 +8,12 @@ An all-in-one **Minecraft SMP core plugin**. One jar replaces the usual stack of
 
 | | |
 |---|---|
-| **Plugin version** | `3.0.0`; `/smpplugin version` shows the installed build |
+| **Plugin version** | `3.1.0`; `/smpplugin version` shows the installed build |
 | **Minecraft** | `1.21.11`, `26.1`, `26.1.1`, `26.1.2`, `26.2` and `26.3` on Paper, Purpur, Spigot and CraftBukkit |
 | **Folia** | Not supported |
 | **Java** | 21 on 1.21.11, 25 on 26.x (the jars are Java 21 bytecode) |
 | **API** | Compiled against Paper API `1.21.11` (Spigot build: Spigot API `1.21.11`), checked against 26.3; `api-version: 1.21`, `folia-supported: false` |
-| **Build** | `mvn clean package` → `target/SmpPlugin-3.0.0-paper.jar` (Paper/Purpur); `-Pspigot` → `…-spigot.jar` (Spigot/CraftBukkit) |
+| **Build** | `mvn clean package` → `target/SmpPlugin-3.1.0-paper.jar` (Paper/Purpur); `-Pspigot` → `…-spigot.jar` (Spigot/CraftBukkit) |
 | **Size** | ~590 classes, ~152,000 lines of Java, 145 commands, 110+ GUI menus, 36 config files |
 | **Update checker** | Checks GitHub (`LowBacon/SmpPlugin`, `version.txt` on `main`) for a newer version on startup |
 
@@ -46,6 +46,7 @@ disable itself. See [COMPATIBILITY.md](COMPATIBILITY.md).
 20. [Configuration Files](#%EF%B8%8F-configuration-files)
 21. [How It Works](#-how-it-works)
 22. [New in 3.0](#-new-in-30)
+23. [New in 3.1](#-new-in-31)
 
 ---
 
@@ -91,7 +92,9 @@ disable itself. See [COMPATIBILITY.md](COMPATIBILITY.md).
 ### 🎉 Events
 - **`/poll start <seconds> <question> | <a> | <b>`:** clickable votes, a boss bar and a bar-chart result.
 - **`/giveaway start [seconds]`:** gives away the held item.
-- **`/giveaway money <amount> [seconds] [winners]`:** gives away money that is created for it (admins only).
+- **`/giveaway money <amount> [seconds] [winners]`:** gives away money that is created for it.
+- Since 3.1 only senior staff can start or cancel giveaways: ops, `smpplugin.giveaway.manage` (the manager,
+  developer, co-owner and owner roles) and members of the `GIVEAWAYS.MANAGER-GROUPS` groups. Anyone can join.
 - **Chat games:** UNSCRAMBLE, MATH, TYPE and TRIVIA. They start every `INTERVAL-MINUTES` when
   `MIN-PLAYERS` are online, or with `/chatgame start [type]`.
 - **Announcer:** `ANNOUNCER.MESSAGES` rotate every `INTERVAL-SECONDS`. `/announcer list|send|toggle`.
@@ -102,29 +105,28 @@ disable itself. See [COMPATIBILITY.md](COMPATIBILITY.md).
   - muted players cannot send mail
 
 ### 😄 Fun and 🧰 utilities
-- **Emotes** (`EMOTES.LIST`): hug, slap, highfive, poke, wave and cheer, each with a message,
+- **Emotes** (`EMOTES.LIST`): slap, highfive, poke, wave and cheer, each with a message,
   particle, sound and optional push. They are seen by `NEARBY` players or the whole `SERVER`.
 - **Games and extras:**
-  - `/dice [sides]`, `/8ball`, `/rps`, `/rate`
+  - `/dice roll [sides]`, `/rps`, `/rate` (betting with `/dice` is in 3.1 below)
   - `/firework` never damages anyone
-  - `/sit` (sneak to stand), `/hat`
+  - `/sit` (sneak to stand)
 - **Workstations:** `/craft`, `/anvil`, `/grindstone`, `/stonecutter`, `/loom`, `/smithing` and
   `/cartography`, each with its own perk node.
 - **Teleport and location:**
   - `/back` covers teleports, and deaths with `smpplugin.back.death`. It never goes into arenas or
     the lobby and is blocked in combat.
   - `/near`, `/seen`, `/coords [share]`
-- **Items and personal:** `/trash`, `/repair [all]`, `/skull`, `/lore`, `/glow`, `/ptime`, `/pweather`.
+- **Items and personal:** `/repair [all]`, `/skull`, `/lore`, `/glow`, `/ptime`, `/pweather`.
 - **Information:** `/online`, `/uptime`, `/calc`, and `/suicide` (asks to confirm).
 
 ### 🛡️ Staff roles and tools
 - **Roles:** `smpplugin.role.helper` → `moderator` → `admin` → `owner`. Each contains the one
-  before it.
+  before it. 3.1 adds `manager` and `developer` (admin plus giveaways) and `coowner` (same as owner).
   - Owner adds destructive actions and rank perks.
   - No role grants security bypasses.
 - **`/perms`:** `roles`, `role <name>`, `explain <node>`, `check <player> <node>`, `player <player>`.
 - **Player tools:**
-  - `/notes <player> [add|remove]`
   - `/whois <player>`
   - `/socialspy`, `/commandspy` (logins and passwords are never shown)
 - **World tools:** `/broadcast [-title]`, `/day`, `/night`, `/sun`, `/rain`, `/thunder`, `/smite
@@ -755,3 +757,60 @@ until a Folia 26.3 build exists and the modules are verified there.
 - Player features default to everyone (messaging, ignore, helpop, report, Ender Chest, lobby, friends,
   findplayer, Auction House actions, safety book).
 - Upgrading from 1.5: [docs/permissions-migration-and-luckperms.md](docs/permissions-migration-and-luckperms.md).
+
+---
+
+## 🆕 New in 3.1
+
+### 🎲 /dice
+- **`/dice <bet> [high|low|1-6]`** against the house. Leave the bet type out to roll against the
+  house's die (a tie gives the bet back, `TIE-REFUNDS`).
+- **Odds:** beat the house 41.7%, high or low 50%, one number 16.7%. The payout is the total a win
+  pays back; defaults 1.9x, 1.9x and 5.7x (about 95% back on average). A payout above the fair one
+  is lowered to it, so the house never loses on average.
+- **Before any money moves** the bet, chance, payout and average return are shown with
+  **[ROLL]** and **[Cancel]** (`CONFIRM`). **[Again]** repeats a bet in one click.
+- The dice are rolled by the server (SecureRandom) before the animation; the stake is held in
+  escrow until the roll is paid once, and given back after a crash.
+- Limits, cooldown and the big-win broadcast are in `extras.yml` `DICE`. `/dice roll [sides]` is a
+  free roll.
+
+### 🎰 /roulette (head jackpot)
+- Everyone's bet goes into one pot. When `MIN-PLAYERS` are in, a `COUNTDOWN-SECONDS` countdown
+  starts; bets lock `LOCK-SECONDS` before the end.
+- The server draws the winner (chance = bet ÷ pot), then a reel of the players' heads spins,
+  slows down and stops on that head in the middle. Everyone watching shares one screen.
+- The winner gets the pot minus `FEE-PERCENT`. A round nobody else joins is refunded after
+  `WAIT-TIMEOUT-SECONDS`; a server stop before the draw refunds everyone, during the spin pays
+  the winner. Staff can cancel a waiting round with `/roulette cancel`.
+
+### 🪙 CoinFlip
+- `/cf` is one screen: open flips as heads (click to arm, click again to join or to cancel your
+  own), five quick stakes, a heads / tails / random picker and "another amount".
+- `/cf <amount> [heads|tails|random]` creates a flip from chat. Large stakes still get the review screen.
+- The flip animation tosses the coin into the air, flashes the colour of the face showing and
+  lands on the stored result; the winner's head lights up and the loser's becomes a skull.
+
+### 📖 /guide
+- Pages from `guide.yml`, with clickable commands, Previous / Next and `/guide topics`.
+- A command line only shows when the command exists (from any plugin), its feature is on and the
+  reader may use it.
+
+### 📋 Scoreboard and tab list
+- `/sidebar` hides or shows your own sidebar. Staff edit the text in game:
+  `/sidebar lines|add|set|insert|remove|title|reload`.
+- Only changed lines are sent; lines refresh every `LINE-UPDATE-TICKS`.
+- `%player_name%`, `%server_online%` and `%server_max_players%` work without PlaceholderAPI.
+- The default tab list footer no longer shows money, statistics, ping or TPS.
+
+### 🧱 Spawn, lobby and borders
+- `/border spawn|lobby set <size> [here]`, `center`, `warning`, `damage`, `mode player|world`, `on|off`.
+- PLAYER mode sends the border to players inside the square and stops walking, riding, flying, ender
+  pearls and chorus fruit from leaving; teleport commands still work. WORLD mode sets the world's own
+  border and puts the old one back when it is turned off.
+- `/border lobby` also makes the lobby area the same square.
+- `/spawn <player>` for staff (`smpplugin.staff.spawn.others`), and clearer messages when the spawn is
+  not set or its world is not loaded.
+
+### 🧹 Removed
+- `/hug`, `/8ball`, `/hat`, `/trash` and `/notes`.

@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/** The CoinFlip hub. Reads only in-memory state, so opening it never touches storage. */
+/** "More" from the CoinFlip screen: challenges, history, statistics and settings. Reads only in-memory state. */
 public final class MainMenu extends CoinFlipMenu {
 
     public MainMenu(CoinFlipModule module, UUID viewer) {
@@ -93,7 +93,8 @@ public final class MainMenu extends CoinFlipMenu {
         button(config.mainSlot("HELP"), Gui.item(Material.KNOWLEDGE_BOOK, Gui.INFO + "Help and rules",
                         Gui.MUTED + "How matches, odds and fees work."),
                 () -> openMenu(new HelpMenu(module, viewer)));
-        button(config.mainSlot("CLOSE"), Gui.item(Material.BARRIER, Gui.BAD + "Close"), () -> close());
+        button(config.mainSlot("CLOSE"), Gui.item(Material.ARROW, Gui.INFO + "Back", Gui.MUTED + "Return to the open flips."),
+                () -> openMenu(new QuickMenu(module, viewer)));
     }
 
 }

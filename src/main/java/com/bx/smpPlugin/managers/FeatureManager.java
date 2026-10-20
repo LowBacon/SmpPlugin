@@ -84,9 +84,12 @@ public class FeatureManager {
         EVENTS("EVENTS", "events", "polls, giveaways, chat games and countdowns.", "FIREWORK_ROCKET", null),
         ANNOUNCER("ANNOUNCER", "announcer", "rotating automatic announcements.", "BELL", null),
         MAIL("MAIL", "mail", "/mail for players who are offline.", "PAPER", null),
-        FUN("FUN", "fun commands", "emotes, dice, 8ball, rock paper scissors, sit, hat and fireworks.", "CAKE", null),
-        UTILITIES("UTILITIES", "utility commands", "portable workbenches, trash, back, near, seen and other helpers.", "CRAFTING_TABLE", null),
-        STAFF_EXTRAS("STAFF_EXTRAS", "staff extras", "staff notes, social and command spy, whois, permission tools and world commands.", "SPYGLASS", null);
+        FUN("FUN", "fun commands", "emotes, rock paper scissors, rate, sit and fireworks.", "CAKE", null),
+        UTILITIES("UTILITIES", "utility commands", "portable workbenches, back, near, seen and other helpers.", "CRAFTING_TABLE", null),
+        STAFF_EXTRAS("STAFF_EXTRAS", "staff extras", "social and command spy, whois, permission tools and world commands.", "SPYGLASS", null),
+        GAMBLING("GAMBLING", "gambling", "/dice bets against the house and the /roulette head jackpot.", "EMERALD", null),
+        GUIDE("GUIDE", "guide", "/guide: a getting-started guide that only lists features that are turned on.", "WRITTEN_BOOK", null),
+        BORDERS("BORDERS", "spawn and lobby borders", "real Minecraft world borders around the spawn and the lobby.", "IRON_BARS", null);
 
         private final String configKey;
         private final String displayName;
@@ -241,13 +244,16 @@ public class FeatureManager {
             case "poll", "giveaway", "chatgame", "countdown" -> new Feature[]{Feature.EVENTS};
             case "announcer" -> new Feature[]{Feature.ANNOUNCER};
             case "mail" -> new Feature[]{Feature.MAIL};
-            case "hug", "slap", "highfive", "wave", "poke", "cheer", "dice", "8ball", "rps", "firework", "rate",
-                    "sit", "hat" -> new Feature[]{Feature.FUN};
-            case "craft", "anvil", "grindstone", "stonecutter", "loom", "smithing", "cartography", "trash",
+            case "slap", "highfive", "wave", "poke", "cheer", "rps", "firework", "rate", "sit" -> new Feature[]{Feature.FUN};
+            case "dice", "roulette" -> new Feature[]{Feature.GAMBLING};
+            case "guide" -> new Feature[]{Feature.GUIDE};
+            case "border" -> new Feature[]{Feature.BORDERS};
+            case "sidebar" -> new Feature[]{Feature.SCOREBOARD};
+            case "craft", "anvil", "grindstone", "stonecutter", "loom", "smithing", "cartography",
                     "near", "seen", "coords", "back", "suicide", "ptime", "pweather", "repair", "skull", "lore",
                     "glow", "online", "uptime", "calc" -> new Feature[]{Feature.UTILITIES};
             case "perms", "broadcast", "day", "night", "sun", "rain", "thunder", "smite", "butcher", "spawnmob",
-                    "more", "performance", "speed", "socialspy", "commandspy", "notes", "whois", "spook"
+                    "more", "performance", "speed", "socialspy", "commandspy", "whois", "spook"
                     -> new Feature[]{Feature.STAFF_EXTRAS};
             default -> new Feature[0];
         };

@@ -41,9 +41,8 @@ public final class LobbyManager {
 
     private volatile Location lobbyLocation;
 
-    // Border (see class Javadoc for why this is a movement clamp, not a vanilla WorldBorder:
-    // this project deliberately compiles against spigot-api, not paper-api, to avoid linking to
-    // server-specific additions, and Player#setWorldBorder is a Paper-only API).
+    // The lobby area. It is kept with a movement clamp; /border lobby can also show it as a real
+    // Minecraft border (world.BorderManager), which sets this area to the same square.
     //
     // Internally always a rectangle (minX/maxX/minZ/maxZ), settable two ways:
     //  - /lobby border <radius>: a square centered on the lobby location
@@ -314,7 +313,7 @@ public final class LobbyManager {
     }
 
     // ------------------------------------------------------------------
-    // Border - see class Javadoc for why this is a movement clamp, not a vanilla WorldBorder.
+    // Border: the lobby area (a movement clamp; /border lobby adds the visible Minecraft border).
     // ------------------------------------------------------------------
 
     public boolean isBorderEnabled() {
@@ -335,6 +334,24 @@ public final class LobbyManager {
     public void setBorderRadius(double radius) {
         applyRadius(Math.max(1.0, radius));
         persistBorder();
+    }
+
+    /**
+     * Sets the lobby area to a square of the given half-width around a point. Used by /border lobby,
+     * so the lobby area and the visible Minecraft border are the same square.
+     */
+    public void setBorderSquare(double centerX, double centerZ, double halfWidth) {
+        double radius = Math.max(1.0, halfWidth);
+        borderMinX = centerX - radius;
+        borderMaxX = centerX + radius;
+        borderMinZ = centerZ - radius;
+        borderMaxZ = centerZ + radius;
+        persistBorder();
+    }
+
+    /** The lobby area as {minX, maxX, minZ, maxZ}, or null before the lobby is set up. */
+    public double[] getBorderBounds() {
+        return lobbyLocation == null ? null : new double[]{borderMinX, borderMaxX, borderMinZ, borderMaxZ};
     }
 
     private void applyRadius(double radius) {

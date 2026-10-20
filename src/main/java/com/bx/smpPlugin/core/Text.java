@@ -181,6 +181,20 @@ public final class Text {
         return new BaseComponent[]{component};
     }
 
+    /** Like {@link #button}, but clicking puts the command in the chat box for the player to finish. */
+    public static BaseComponent[] suggest(String label, String command, String hover) {
+        TextComponent component = new TextComponent(components(color(label)));
+        if (command != null && !command.isBlank()) {
+            component.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND,
+                    command.startsWith("/") ? command : "/" + command));
+        }
+        if (hover != null && !hover.isBlank()) {
+            component.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                    new net.md_5.bungee.api.chat.hover.content.Text(color(hover))));
+        }
+        return new BaseComponent[]{component};
+    }
+
     /** Sends a line made of plain text and buttons, e.g. {@code line(p, "Ready! ", button(...))}. */
     public static void line(CommandSender to, Object... parts) {
         ComponentBuilder builder = new ComponentBuilder();

@@ -21,7 +21,6 @@ import com.bx.smpPlugin.managers.FeatureManager.Feature;
 import com.bx.smpPlugin.moderation.AdminCommands;
 import com.bx.smpPlugin.moderation.PermsCommand;
 import com.bx.smpPlugin.moderation.Spy;
-import com.bx.smpPlugin.moderation.StaffNotes;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.PluginCommand;
@@ -56,18 +55,19 @@ public final class V3Module implements Listener {
     private final List<Runnable> shutdownHooks = new ArrayList<>();
     private PlayerStore store;
     private HalloweenManager halloween;
-    private StaffNotes staffNotes;
     private DailyRewards daily;
     private Challenges challenges;
+    private com.bx.smpPlugin.world.BorderManager borders;
 
     /** Commands added in 3.0, for the help menu and the docs. */
     public static final List<String> COMMANDS = List.of(
             "halloween", "trickortreat", "daily", "challenges", "poll", "giveaway", "chatgame", "announcer", "mail",
-            "hug", "slap", "highfive", "poke", "wave", "cheer", "dice", "8ball", "rps", "rate", "firework", "sit", "hat",
-            "craft", "anvil", "grindstone", "stonecutter", "loom", "smithing", "cartography", "trash", "back", "near",
+            "slap", "highfive", "poke", "wave", "cheer", "dice", "roulette", "rps", "rate", "firework", "sit",
+            "craft", "anvil", "grindstone", "stonecutter", "loom", "smithing", "cartography", "back", "near",
             "seen", "coords", "suicide", "ptime", "pweather", "repair", "skull", "lore", "glow", "online", "uptime", "calc",
             "perms", "broadcast", "day", "night", "sun", "rain", "thunder", "smite", "butcher", "spawnmob", "more",
-            "countdown", "performance", "speed", "whois", "spook", "notes", "socialspy", "commandspy");
+            "countdown", "performance", "speed", "whois", "spook", "socialspy", "commandspy",
+            "guide", "sidebar", "border");
 
     public V3Module(SmpPlugin plugin) {
         this.plugin = plugin;
@@ -79,10 +79,6 @@ public final class V3Module implements Listener {
 
     public HalloweenManager halloween() {
         return halloween;
-    }
-
-    public StaffNotes staffNotes() {
-        return staffNotes;
     }
 
     /**
@@ -176,12 +172,35 @@ public final class V3Module implements Listener {
 
         part("Fun commands", () -> {
             FunCommands fun = new FunCommands(plugin);
-            for (String name : List.of("hug", "slap", "highfive", "poke", "wave", "cheer", "dice", "8ball", "rps",
-                    "rate", "firework", "sit", "hat")) {
+            for (String name : List.of("slap", "highfive", "poke", "wave", "cheer", "rps", "rate", "firework", "sit")) {
                 register(name, fun, fun, Feature.FUN);
             }
             task(plugin.getSpigotScheduler().runGlobalTimer(fun::cleanSeats, 20L, 20L));
             onShutdown(fun::removeSeats);
+        });
+
+        part("Gambling", () -> {
+            com.bx.smpPlugin.gambling.Gambling gambling = new com.bx.smpPlugin.gambling.Gambling(plugin);
+            register("dice", gambling.dice(), gambling.dice(), Feature.GAMBLING);
+            listen(gambling.dice());
+            register("roulette", gambling.roulette(), gambling.roulette(), Feature.GAMBLING);
+            onShutdown(gambling::shutdown);
+        });
+
+        part("Guide and sidebar", () -> {
+            com.bx.smpPlugin.display.GuideCommand guide = new com.bx.smpPlugin.display.GuideCommand(plugin);
+            register("guide", guide, guide, Feature.GUIDE);
+            com.bx.smpPlugin.display.SidebarCommand sidebar = new com.bx.smpPlugin.display.SidebarCommand(plugin);
+            register("sidebar", sidebar, sidebar, Feature.SCOREBOARD);
+        });
+
+        part("Spawn and lobby borders", () -> {
+            borders = new com.bx.smpPlugin.world.BorderManager(plugin);
+            borders.load();
+            listen(borders);
+            com.bx.smpPlugin.world.BorderCommand command = new com.bx.smpPlugin.world.BorderCommand(plugin, borders);
+            register("border", command, command, Feature.BORDERS);
+            onShutdown(borders::shutdown);
         });
 
         part("Utility commands", () -> {
@@ -189,7 +208,7 @@ public final class V3Module implements Listener {
             listen(tracker);
             UtilityCommands utilities = new UtilityCommands(plugin, tracker);
             for (String name : List.of("craft", "anvil", "grindstone", "stonecutter", "loom", "smithing", "cartography",
-                    "trash", "back", "near", "seen", "coords", "suicide", "ptime", "pweather", "repair", "skull", "lore",
+                    "back", "near", "seen", "coords", "suicide", "ptime", "pweather", "repair", "skull", "lore",
                     "glow", "online", "uptime", "calc")) {
                 register(name, utilities, utilities, Feature.UTILITIES);
             }
@@ -203,8 +222,6 @@ public final class V3Module implements Listener {
             }
             register("countdown", admin, admin, Feature.EVENTS);
             onShutdown(admin::shutdown);
-            staffNotes = new StaffNotes(plugin, store);
-            register("notes", staffNotes, staffNotes, Feature.STAFF_EXTRAS);
             Spy spy = new Spy(plugin, store);
             register("socialspy", spy, null, Feature.STAFF_EXTRAS);
             register("commandspy", spy, null, Feature.STAFF_EXTRAS);
@@ -222,6 +239,13 @@ public final class V3Module implements Listener {
                 PendingItems.deliver(plugin, store, player);
             }
         }, 40L);
+    }
+
+    /** Called by /smpplugin reload after the config files were read again. */
+    public void reload() {
+        if (borders != null) {
+            borders.load();
+        }
     }
 
     public void disable() {

@@ -63,7 +63,8 @@ public final class CoinFlipCommand implements CommandExecutor, TabCompleter {
         String sub = args.length == 0 ? "" : args[0].toLowerCase(Locale.ROOT);
         UUID id = player.getUniqueId();
         switch (sub) {
-            case "" -> new MainMenu(module, id).open(player);
+            case "" -> new QuickMenu(module, id).open(player);
+            case "menu", "more", "home" -> new MainMenu(module, id).open(player);
             case "create" -> create(player, args);
             case "browse", "list" -> new BrowserMenu(module, id).open(player);
             case "join" -> join(player, args);
@@ -101,7 +102,14 @@ public final class CoinFlipCommand implements CommandExecutor, TabCompleter {
             }
             case "settings" -> new SettingsMenu(module, id).open(player);
             case "help", "rules" -> new HelpMenu(module, id).open(player);
-            default -> usage(player, "/" + label + " [" + String.join("|", SUBCOMMANDS) + "]");
+            default -> {
+                // "/cf 1000 [heads|tails]": create straight away, no screens.
+                if (StakeMath.parse(args[0]).ok()) {
+                    quickCreate(player, args);
+                } else {
+                    usage(player, "/" + label + " <amount> [heads|tails] | /" + label + " [" + String.join("|", SUBCOMMANDS) + "]");
+                }
+            }
         }
         return true;
     }
@@ -133,6 +141,39 @@ public final class CoinFlipCommand implements CommandExecutor, TabCompleter {
         }
         // Always show the review screen: terms are confirmed before anything is reserved.
         new ReviewMenu(module, player.getUniqueId(), draft).open(player);
+    }
+
+    /**
+     * {@code /cf <amount> [heads|tails|random]}: creates a public flip at once. The terms are shown in chat
+     * with a cancel button; stakes at or above the high-stake limit still go through the review screen.
+     */
+    private void quickCreate(Player player, String[] args) {
+        if (!require(player, CoinFlipModule.PERM_CREATE)) {
+            return;
+        }
+        StakeMath.ParseResult parsed = StakeMath.parse(args[0]);
+        CoinSide side;
+        if (args.length < 2 || args[1].equalsIgnoreCase("random")) {
+            CoinSide saved = args.length < 2 ? module.service().preferences(player.getUniqueId()).savedSide() : null;
+            side = saved != null ? saved : java.util.concurrent.ThreadLocalRandom.current().nextBoolean() ? CoinSide.HEADS : CoinSide.TAILS;
+        } else {
+            side = CoinSide.parse(args[1]).orElse(null);
+            if (side == null) {
+                usage(player, "/coinflip <amount> [heads|tails|random]");
+                return;
+            }
+        }
+        long high = module.config().highStakeConfirmCents();
+        if (high > 0 && parsed.cents() >= high) {
+            CreateMenu.Draft draft = CreateMenu.Draft.initial(module.service().preferences(player.getUniqueId()), module.config())
+                    .withStake(parsed.cents());
+            draft.side = side;
+            new ReviewMenu(module, player.getUniqueId(), draft).open(player);
+            return;
+        }
+        UUID id = player.getUniqueId();
+        module.service().create(new CoinFlipService.CreateRequest(id, player.getName(), parsed.cents(), side, null, null))
+                .thenAccept(outcome -> module.presenter().sendOutcome(id, outcome));
     }
 
     private void join(Player player, String[] args) {
@@ -267,6 +308,9 @@ public final class CoinFlipCommand implements CommandExecutor, TabCompleter {
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (!(sender instanceof Player player) || !PermissionUtils.has(player, CoinFlipModule.PERM_USE)) {
             return List.of();
+        }
+        if (args.length == 2 && StakeMath.parse(args[0]).ok()) {
+            return filter(List.of("heads", "tails", "random"), args[1]);
         }
         if (args.length == 1) {
             List<String> allowed = new ArrayList<>();

@@ -24,5 +24,11 @@ public enum EconomyReason {
     COINFLIP_PAYOUT,
     COINFLIP_REFUND,
     /** Daily rewards, the Halloween calendar, challenges, chat games and other 3.0 prizes. */
-    REWARD
+    REWARD,
+    /** A /dice or /roulette bet taken from the player. */
+    GAMBLE_STAKE,
+    /** /dice or /roulette winnings. */
+    GAMBLE_PAYOUT,
+    /** A /dice or /roulette bet given back (tie, cancelled round, recovery after a crash). */
+    GAMBLE_REFUND
 }

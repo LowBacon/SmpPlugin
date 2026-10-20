@@ -1,12 +1,12 @@
 # Compatibility
 
-SmpPlugin **3.0.0** is one jar per server family that runs on every Minecraft version from
+SmpPlugin **3.1.0** is one jar per server family that runs on every Minecraft version from
 **1.21.11** to **26.3**.
 
 | Jar | Servers |
 |---|---|
-| `SmpPlugin-3.0.0-paper.jar` | Paper, Purpur (and other Paper forks) |
-| `SmpPlugin-3.0.0-spigot.jar` | Spigot, CraftBukkit |
+| `SmpPlugin-3.1.0-paper.jar` | Paper, Purpur (and other Paper forks) |
+| `SmpPlugin-3.1.0-spigot.jar` | Spigot, CraftBukkit |
 
 Use the jar that matches your server. Paper and Spigot are not binary compatible, so the wrong jar
 can fail at runtime.

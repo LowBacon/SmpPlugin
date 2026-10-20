@@ -81,8 +81,8 @@ commands:
     description: Rename a home
     usage: /renamehome <old> <new>
   spawn:
-    description: Teleport to spawn
-    usage: /spawn
+    description: Teleport to spawn (staff can send another player)
+    usage: /spawn [player]
   setspawn:
     description: Set the primary server spawn at your current location
     usage: /setspawn
@@ -689,10 +689,34 @@ commands:
     permission: smpplugin.mail
     aliases:
     - inbox
-  hug:
-    description: Give a player a hug
-    usage: /hug <player>
-    permission: smpplugin.fun.emotes
+  dice:
+    description: Bet money on a dice roll, or roll one just for fun
+    usage: /dice <bet> [high|low|1-6] | /dice roll [sides] | /dice odds
+    aliases:
+    - roll
+  roulette:
+    description: Put money in the head roulette; the head that stops in the middle wins the pot
+    usage: /roulette [join <amount>|leave|info]
+    aliases:
+    - jackpot
+    - headroulette
+  guide:
+    description: A short guide to getting started on the server
+    usage: /guide [page|topic]
+    aliases:
+    - tutorial
+    - starterguide
+  sidebar:
+    description: Show or hide your scoreboard, or (staff) edit its text
+    usage: /sidebar [toggle] | /sidebar lines|add|set|insert|remove|title|reload
+    aliases:
+    - sb
+  border:
+    description: Put a real Minecraft world border around the spawn or the lobby
+    usage: /border [spawn|lobby] [info|set <size>|center|warning <blocks> [seconds]|damage <amount> [buffer]|mode <player|world>|on|off]
+    permission: smpplugin.admin.border
+    aliases:
+    - spawnborder
   slap:
     description: Slap a player
     usage: /slap <player>
@@ -713,18 +737,6 @@ commands:
     description: Cheer!
     usage: /cheer
     permission: smpplugin.fun.emotes
-  dice:
-    description: Roll a dice
-    usage: /dice [sides]
-    permission: smpplugin.fun.games
-    aliases:
-    - roll
-  8ball:
-    description: Ask the magic 8-ball
-    usage: /8ball <question>
-    permission: smpplugin.fun.games
-    aliases:
-    - eightball
   rps:
     description: Rock, paper, scissors against the server
     usage: /rps <rock|paper|scissors>
@@ -745,10 +757,6 @@ commands:
     description: Sit down where you stand
     usage: /sit
     permission: smpplugin.fun.sit
-  hat:
-    description: Wear the item in your hand
-    usage: /hat
-    permission: smpplugin.fun.hat
   craft:
     description: Open a crafting table
     usage: /craft
@@ -784,13 +792,6 @@ commands:
     permission: smpplugin.workbench.cartography
     aliases:
     - cartographytable
-  trash:
-    description: Open a bin that deletes items
-    usage: /trash
-    permission: smpplugin.trash
-    aliases:
-    - disposal
-    - bin
   back:
     description: Go back to where you were before your last teleport
     usage: /back
@@ -946,12 +947,6 @@ commands:
     permission: smpplugin.admin.spook
     aliases:
     - boo
-  notes:
-    description: Private staff notes about a player
-    usage: /notes <player> [add <text>|remove <id>]
-    permission: smpplugin.staff.notes
-    aliases:
-    - staffnotes
   socialspy:
     description: See private messages between players
     usage: /socialspy
@@ -1085,16 +1080,13 @@ permissions:
       smpplugin.admin.playerwipe: true
       smpplugin.admin.playerunwipe: true
       smpplugin.staff.poll: true
-      smpplugin.staff.giveaway: true
       smpplugin.staff.chatgame: true
       smpplugin.staff.countdown: true
       smpplugin.staff.speed: true
       smpplugin.staff.whois: true
-      smpplugin.staff.notes: true
       smpplugin.staff.socialspy: true
       smpplugin.staff.commandspy: true
       smpplugin.admin.halloween: true
-      smpplugin.admin.giveaway.money: true
       smpplugin.admin.announcer: true
       smpplugin.admin.broadcast: true
       smpplugin.admin.time: true
@@ -1106,6 +1098,11 @@ permissions:
       smpplugin.admin.performance: true
       smpplugin.admin.spook: true
       smpplugin.admin.perms: true
+      smpplugin.staff.spawn.others: true
+      smpplugin.admin.roulette: true
+      smpplugin.admin.sidebar: true
+      smpplugin.admin.border: true
+      smpplugin.bypass.border: true
   smpplugin.message:
     description: 'Send private messages with /msg and reply with /reply.'
     default: true
@@ -1690,19 +1687,13 @@ permissions:
     description: 'Send and read /mail, including to offline players.'
     default: true
   smpplugin.fun.emotes:
-    description: 'Use /hug, /slap, /highfive, /poke, /wave and /cheer.'
+    description: 'Use /slap, /highfive, /poke, /wave and /cheer.'
     default: true
   smpplugin.fun.games:
-    description: 'Use /dice, /8ball, /rps and /rate.'
+    description: 'Use /rps, /rate and /dice roll.'
     default: true
   smpplugin.fun.sit:
     description: 'Sit down where you stand with /sit.'
-    default: true
-  smpplugin.fun.hat:
-    description: 'Wear the item in your hand with /hat.'
-    default: true
-  smpplugin.trash:
-    description: 'Open a bin that deletes items with /trash.'
     default: true
   smpplugin.back:
     description: 'Return to where you were before your last teleport with /back.'
@@ -1785,9 +1776,6 @@ permissions:
   smpplugin.staff.poll:
     description: 'Start and end polls with /poll.'
     default: false
-  smpplugin.staff.giveaway:
-    description: 'Give away the item in your hand with /giveaway.'
-    default: false
   smpplugin.staff.chatgame:
     description: 'Start and stop chat games with /chatgame.'
     default: false
@@ -1800,9 +1788,6 @@ permissions:
   smpplugin.staff.whois:
     description: 'Look up a player''s details with /whois (the IP also needs smpplugin.staff.alts).'
     default: false
-  smpplugin.staff.notes:
-    description: 'Read and write private staff notes about players with /notes.'
-    default: false
   smpplugin.staff.socialspy:
     description: 'See private messages between players with /socialspy.'
     default: false
@@ -1811,9 +1796,6 @@ permissions:
     default: false
   smpplugin.admin.halloween:
     description: 'Edit Spooky Calendar prizes and use /halloween give, reset, preview and stats.'
-    default: false
-  smpplugin.admin.giveaway.money:
-    description: 'Give away money that is created for the giveaway (/giveaway money).'
     default: false
   smpplugin.admin.announcer:
     description: 'List, send and pause the automatic announcements with /announcer.'
@@ -1847,6 +1829,39 @@ permissions:
     default: false
   smpplugin.admin.perms:
     description: 'Inspect roles and permissions with /perms.'
+    default: false
+  smpplugin.dice:
+    description: 'Bet money on a dice roll against the house with /dice.'
+    default: true
+  smpplugin.roulette:
+    description: 'Put money into the head roulette with /roulette.'
+    default: true
+  smpplugin.guide:
+    description: 'Read the getting-started guide with /guide.'
+    default: true
+  smpplugin.sidebar:
+    description: 'Show or hide your own scoreboard with /sidebar.'
+    default: true
+  smpplugin.gambling.bypasscooldown:
+    description: 'No cooldown between /dice rolls.'
+    default: false
+  smpplugin.staff.spawn.others:
+    description: 'Send another player to spawn with /spawn <player>.'
+    default: false
+  smpplugin.admin.roulette:
+    description: 'Cancel a head-roulette round and refund everyone with /roulette cancel.'
+    default: false
+  smpplugin.admin.sidebar:
+    description: 'Edit the scoreboard title and lines in game with /sidebar.'
+    default: false
+  smpplugin.admin.border:
+    description: 'Set up the spawn and lobby world borders with /border.'
+    default: false
+  smpplugin.bypass.border:
+    description: 'Walk through the spawn and lobby borders (staff building or moderating).'
+    default: false
+  smpplugin.giveaway.manage:
+    description: 'Start, cancel and give away money with /giveaway. Ops are always allowed.'
     default: false
   smpplugin.staff.punishments.create:
     description: 'Legacy bundle: every punishment-creating action.'
@@ -1971,7 +1986,7 @@ permissions:
     children:
       smpplugin.auctionhouse.fastsell: true
   smpplugin.role.helper:
-    description: 'Helper role: staff chat, reports, warn, kick, temp-mute, staff notes, /whois and events.'
+    description: 'Helper role: staff chat, reports, warn, kick, temp-mute, /whois and events.'
     default: false
     children:
       smpplugin.staff.chat.use: true
@@ -1984,7 +1999,6 @@ permissions:
       smpplugin.staff.punishments.kick: true
       smpplugin.staff.punishments.tempmute: true
       smpplugin.staff.chat.clear: true
-      smpplugin.staff.notes: true
       smpplugin.staff.whois: true
       smpplugin.staff.poll: true
       smpplugin.staff.chatgame: true
@@ -2020,7 +2034,7 @@ permissions:
       smpplugin.staff.chat.delay: true
       smpplugin.staff.socialspy: true
       smpplugin.staff.commandspy: true
-      smpplugin.staff.giveaway: true
+      smpplugin.staff.spawn.others: true
       smpplugin.staff.speed: true
       smpplugin.admin.chatlog: true
       smpplugin.security.alerts: true
@@ -2030,11 +2044,24 @@ permissions:
     children:
       smpplugin.role.moderator: true
       smpplugin.admin: true
+  smpplugin.role.manager:
+    description: 'Manager role: the admin role plus managing giveaways.'
+    default: false
+    children:
+      smpplugin.role.admin: true
+      smpplugin.giveaway.manage: true
+  smpplugin.role.developer:
+    description: 'Developer role: the admin role plus managing giveaways.'
+    default: false
+    children:
+      smpplugin.role.admin: true
+      smpplugin.giveaway.manage: true
   smpplugin.role.owner:
     description: 'Owner role: the admin role plus every destructive action (wipes, set-money) and every rank perk. Security bypasses (anti-cheat, hidden names) are still granted one by one.'
     default: false
     children:
       smpplugin.role.admin: true
+      smpplugin.giveaway.manage: true
       smpplugin.chat.color: true
       smpplugin.auctionhouse.fastbuy: true
       smpplugin.auctionhouse.fastsell: true
@@ -2084,4 +2111,10 @@ permissions:
       smpplugin.skull: true
       smpplugin.lore: true
       smpplugin.glow: true
+      smpplugin.gambling.bypasscooldown: true
+  smpplugin.role.coowner:
+    description: 'Co-owner role: everything the owner role has.'
+    default: false
+    children:
+      smpplugin.role.owner: true
 # END GENERATED PERMISSIONS

@@ -22,6 +22,12 @@ public enum PermissionCategory {
     SECURITY_BYPASS(false, false),
     /** Irreversible or data-overwriting action. Never in a bundle; grant explicitly. */
     DESTRUCTIVE(false, false),
+    /**
+     * Senior-staff action (managing giveaways). Default {@code false} and not in {@code smpplugin.admin} or the
+     * helper, moderator or admin roles: only the manager, developer, co-owner and owner roles include it. Server
+     * operators are always allowed by the command itself.
+     */
+    SENIOR_STAFF(false, false),
     /** Groups other nodes. */
     BUNDLE(false, false),
     /** Old node name kept so existing grants keep working; grants its replacement as a child. */

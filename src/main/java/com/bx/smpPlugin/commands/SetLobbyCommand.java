@@ -42,6 +42,9 @@ public class SetLobbyCommand implements CommandExecutor {
                 + location.getWorld().getName() + " &7(" + location.getBlockX() + ", "
                 + location.getBlockY() + ", " + location.getBlockZ() + ")."));
         sender.sendMessage(ColorUtils.toComponent("&7Players will now be teleported here on join, and via &f/lobby&7."));
+        com.bx.smpPlugin.core.Text.line(sender, "&7Want a real world border around it? ",
+                com.bx.smpPlugin.core.Text.suggest("&e[/border lobby set 100]", "/border lobby set 100",
+                        "&7A 100 x 100 Minecraft border that is also the protected lobby area"));
         return true;
     }
 }

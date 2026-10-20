@@ -63,7 +63,9 @@ public class ConfigManager {
             "discord.yml",
             "anvil-moderation.yml",
             "halloween.yml",
-            "extras.yml"
+            "extras.yml",
+            "guide.yml",
+            "borders.yml"
     );
 
     private static final DateTimeFormatter BACKUP_TIMESTAMP_FORMAT =
@@ -108,6 +110,8 @@ public class ConfigManager {
     private FileConfiguration filter;
     private FileConfiguration halloween;
     private FileConfiguration extras;
+    private FileConfiguration guide;
+    private FileConfiguration borders;
 
     public ConfigManager(SmpPlugin plugin) {
         this.plugin = plugin;
@@ -136,6 +140,8 @@ public class ConfigManager {
         dialog       = withBundledDefaults("dialog.yml", load("dialog.yml", dialog));
         halloween    = load("halloween.yml", halloween);
         extras       = load("extras.yml", extras);
+        guide        = load("guide.yml", guide);
+        borders      = load("borders.yml", borders);
         lobby        = load("lobby.yml", lobby);
         worth        = load("worth.yml", worth);
         amethystTools = load("amethyst-tools.yml", amethystTools);
@@ -189,6 +195,55 @@ public class ConfigManager {
                 + updated + " updated, "
                 + (skipped > 0 ? ", " + skipped + " skipped" : "")
                 + ".");
+        migrateTablistFooter(backupDirectory);
+    }
+
+    /** The two footer lines 3.0 shipped with: personal stats, then online count, ping, TPS and world. */
+    static final String OLD_FOOTER_STATS_LINE =
+            "  - '&a$ &f%money%  &8•  &d✦ &f%shards%  &8•  &c⚔ &f%kills%  &8•  &e⌚ &f%playtime%'";
+    static final String OLD_FOOTER_SERVER_LINE =
+            "  - '&7Online &f%online%&8/&7%max_players%  &8•  &7Ping %ping_colored%  &8•  &7TPS %tps_colored%  &8•  &7%world%'";
+    static final String NEW_FOOTER_SERVER_LINE = "  - '&7Online &f%online%&8/&7%max_players%'";
+
+    /**
+     * 3.1 keeps the tab list clean: no money, statistics, ping or TPS. A config.yml whose footer still
+     * has the exact lines 3.0 shipped with gets the new lines (after a backup); a footer anyone has
+     * changed is left exactly as it is.
+     */
+    private void migrateTablistFooter(File backupDirectory) {
+        File file = new File(plugin.getDataFolder(), "config.yml");
+        if (!file.isFile() || invalidConfigurations.contains("config.yml")) {
+            return;
+        }
+        try {
+            List<String> lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+            List<String> updated = migrateFooterLines(lines);
+            if (updated.equals(lines)) {
+                return;
+            }
+            if (!backupExistingFile(file, backupDirectory)) {
+                plugin.getLogger().warning("Kept the old tab list footer because config.yml could not be backed up first.");
+                return;
+            }
+            Files.write(file.toPath(), updated, StandardCharsets.UTF_8);
+            plugin.getLogger().info("Simplified the default tab list footer in config.yml (no money, stats, ping or TPS)."
+                    + " The old file is in config-backups.");
+        } catch (IOException exception) {
+            plugin.getLogger().log(Level.WARNING, "Could not update the tab list footer in config.yml", exception);
+        }
+    }
+
+    /** Pure part of {@link #migrateTablistFooter}: only the exact old default lines are touched. */
+    static List<String> migrateFooterLines(List<String> lines) {
+        int stats = lines.indexOf(OLD_FOOTER_STATS_LINE);
+        int server = lines.indexOf(OLD_FOOTER_SERVER_LINE);
+        if (stats < 0 || server != stats + 1) {
+            return lines;
+        }
+        List<String> updated = new ArrayList<>(lines);
+        updated.set(server, NEW_FOOTER_SERVER_LINE);
+        updated.remove(stats);
+        return updated;
     }
 
     private SyncResult syncBundledConfiguration(String name, File backupDirectory) {
@@ -2053,6 +2108,8 @@ public class ConfigManager {
     public FileConfiguration getHalloween()     { return halloween; }
     /** Daily rewards, challenges, events, emotes and the other 3.0 extras. */
     public FileConfiguration getExtras()        { return extras; }
+    public FileConfiguration getGuide()         { return guide; }
+    public FileConfiguration getBorders()       { return borders; }
 
     public FileConfiguration getLegacyMessages() { return messages; }
     public FileConfiguration getLegacyDeathMessages() { return deathMessages; }
@@ -2061,6 +2118,8 @@ public class ConfigManager {
     public FileConfiguration getLegacyAuctionHouse() { return auctionHouse; }
 
     public void reloadShop() { shop = load("shop.yml", shop); }
+    public void reloadScoreboard() { scoreboard = load("scoreboard.yml", scoreboard); }
+    public void reloadGuide() { guide = load("guide.yml", guide); }
     public void reloadMenus() { menus = load("menus.yml", menus); }
     public void reloadSounds() { sounds = load("sounds.yml", sounds); }
     public void reloadWorth() { worth = load("worth.yml", worth); }
@@ -2087,6 +2146,8 @@ public class ConfigManager {
     public boolean saveConfig() { return save("config.yml", config); }
     public boolean saveAfk() { return save("afk.yml", afk); }
     public boolean saveLobby() { return save("lobby.yml", lobby); }
+    public boolean saveScoreboard() { return save("scoreboard.yml", scoreboard); }
+    public boolean saveBorders() { return save("borders.yml", borders); }
     public boolean saveDuels() { return save("duels.yml", duels); }
     public boolean saveFfa() { return save("ffa.yml", ffa); }
     public boolean saveCrates() { return save("crates.yml", crates); }

@@ -10,7 +10,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
@@ -85,21 +84,4 @@ public final class ExtrasListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onTrashClose(InventoryCloseEvent event) {
-        if (!(event.getInventory().getHolder() instanceof TrashMenu) || !(event.getPlayer() instanceof Player player)) {
-            return;
-        }
-        int destroyed = 0;
-        for (ItemStack item : event.getInventory().getContents()) {
-            if (item != null && !item.getType().isAir()) {
-                destroyed += item.getAmount();
-            }
-        }
-        event.getInventory().clear();
-        if (destroyed > 0) {
-            com.bx.smpPlugin.core.Text.send(player, "UTIL.TRASHED", "&7Deleted &f{count} &7item(s).",
-                    "{count}", Integer.toString(destroyed));
-        }
-    }
 }

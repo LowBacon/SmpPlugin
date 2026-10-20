@@ -33,8 +33,14 @@ public final class PermissionRegistry {
     public static final String ROLE_MODERATOR = "smpplugin.role.moderator";
     public static final String ROLE_ADMIN = "smpplugin.role.admin";
     public static final String ROLE_OWNER = "smpplugin.role.owner";
+    public static final String ROLE_MANAGER = "smpplugin.role.manager";
+    public static final String ROLE_DEVELOPER = "smpplugin.role.developer";
+    public static final String ROLE_COOWNER = "smpplugin.role.coowner";
+    /** Start, end and give away money with /giveaway. Only senior ranks and ops. */
+    public static final String GIVEAWAY_MANAGE = "smpplugin.giveaway.manage";
     /** The ready-made staff roles, lowest first. */
-    public static final List<String> ROLES = List.of(ROLE_HELPER, ROLE_MODERATOR, ROLE_ADMIN, ROLE_OWNER);
+    public static final List<String> ROLES = List.of(ROLE_HELPER, ROLE_MODERATOR, ROLE_ADMIN, ROLE_MANAGER,
+            ROLE_DEVELOPER, ROLE_COOWNER, ROLE_OWNER);
 
     /**
      * Numbered permissions resolved at runtime, e.g. {@code smpplugin.homes.10}.
@@ -361,11 +367,9 @@ public final class PermissionRegistry {
         player("smpplugin.poll.vote", "Vote in polls started by staff.", "New in 3.0.");
         player("smpplugin.giveaway.join", "Join giveaways started by staff.", "New in 3.0.");
         player("smpplugin.mail", "Send and read /mail, including to offline players.", "New in 3.0.");
-        player("smpplugin.fun.emotes", "Use /hug, /slap, /highfive, /poke, /wave and /cheer.", "New in 3.0.");
-        player("smpplugin.fun.games", "Use /dice, /8ball, /rps and /rate.", "New in 3.0.");
+        player("smpplugin.fun.emotes", "Use /slap, /highfive, /poke, /wave and /cheer.", "New in 3.0; /hug removed in 3.1.");
+        player("smpplugin.fun.games", "Use /rps, /rate and /dice roll.", "New in 3.0; /8ball removed in 3.1.");
         player("smpplugin.fun.sit", "Sit down where you stand with /sit.", "New in 3.0.");
-        player("smpplugin.fun.hat", "Wear the item in your hand with /hat.", "New in 3.0.");
-        player("smpplugin.trash", "Open a bin that deletes items with /trash.", "New in 3.0.");
         player("smpplugin.back", "Return to where you were before your last teleport with /back.", "New in 3.0.");
         player("smpplugin.seen", "See when a player was last online with /seen.", "New in 3.0.");
         player("smpplugin.coords", "Show your coordinates and share them with your team with /coords.", "New in 3.0.");
@@ -393,16 +397,13 @@ public final class PermissionRegistry {
         perk("smpplugin.lore", "Edit the lore of the item in your hand with /lore.", "New in 3.0.");
         perk("smpplugin.glow", "Toggle a glowing outline with /glow.", "New in 3.0.");
         staff("smpplugin.staff.poll", "Start and end polls with /poll.", "New in 3.0.");
-        staff("smpplugin.staff.giveaway", "Give away the item in your hand with /giveaway.", "New in 3.0.");
         staff("smpplugin.staff.chatgame", "Start and stop chat games with /chatgame.", "New in 3.0.");
         staff("smpplugin.staff.countdown", "Show a server-wide countdown with /countdown.", "New in 3.0.");
         staff("smpplugin.staff.speed", "Change walk and fly speed with /speed.", "New in 3.0.");
         staff("smpplugin.staff.whois", "Look up a player's details with /whois (the IP also needs smpplugin.staff.alts).", "New in 3.0.");
-        staff("smpplugin.staff.notes", "Read and write private staff notes about players with /notes.", "New in 3.0.");
         staff("smpplugin.staff.socialspy", "See private messages between players with /socialspy.", "New in 3.0.");
         staff("smpplugin.staff.commandspy", "See the commands players run with /commandspy.", "New in 3.0.");
         admin("smpplugin.admin.halloween", "Edit Spooky Calendar prizes and use /halloween give, reset, preview and stats.", "New in 3.0.");
-        admin("smpplugin.admin.giveaway.money", "Give away money that is created for the giveaway (/giveaway money).", "New in 3.0.");
         admin("smpplugin.admin.announcer", "List, send and pause the automatic announcements with /announcer.", "New in 3.0.");
         admin("smpplugin.admin.broadcast", "Send a server-wide announcement with /broadcast.", "New in 3.0.");
         admin("smpplugin.admin.time", "Set the time with /day and /night.", "New in 3.0.");
@@ -414,6 +415,22 @@ public final class PermissionRegistry {
         admin("smpplugin.admin.performance", "See TPS, memory, chunks and entities with /performance.", "New in 3.0.");
         admin("smpplugin.admin.spook", "Jump-scare a player (or everyone) with /spook.", "New in 3.0.");
         admin("smpplugin.admin.perms", "Inspect roles and permissions with /perms.", "New in 3.0.");
+
+        // ── 3.1: gambling, the guide, the sidebar editor and world borders ───────────
+        player("smpplugin.dice", "Bet money on a dice roll against the house with /dice.", "New in 3.1.");
+        player("smpplugin.roulette", "Put money into the head roulette with /roulette.", "New in 3.1.");
+        player("smpplugin.guide", "Read the getting-started guide with /guide.", "New in 3.1.");
+        player("smpplugin.sidebar", "Show or hide your own scoreboard with /sidebar.", "New in 3.1.");
+        perk("smpplugin.gambling.bypasscooldown", "No cooldown between /dice rolls.", "New in 3.1.");
+        staff("smpplugin.staff.spawn.others", "Send another player to spawn with /spawn <player>.", "New in 3.1.");
+        admin("smpplugin.admin.roulette", "Cancel a head-roulette round and refund everyone with /roulette cancel.", "New in 3.1.");
+        admin("smpplugin.admin.sidebar", "Edit the scoreboard title and lines in game with /sidebar.", "New in 3.1.");
+        admin("smpplugin.admin.border", "Set up the spawn and lobby world borders with /border.", "New in 3.1.");
+        operationalBypass("smpplugin.bypass.border", "Walk through the spawn and lobby borders (staff building or moderating).", "New in 3.1.");
+        node(GIVEAWAY_MANAGE, "Start, cancel and give away money with /giveaway. Ops are always allowed.",
+                PermissionCategory.SENIOR_STAFF, List.of(),
+                "New in 3.1. Replaces smpplugin.staff.giveaway and smpplugin.admin.giveaway.money. Only the manager,"
+                        + " developer, co-owner and owner roles include it.");
 
         // ── Legacy bundles kept so 1.5 grants behave the same ───────────────────────
         node("smpplugin.staff.punishments.create", "Legacy bundle: every punishment-creating action.",
@@ -459,9 +476,9 @@ public final class PermissionRegistry {
                 "smpplugin.staff.chat.use", "smpplugin.staff.helpop.receive", "smpplugin.staff.report.receive",
                 "smpplugin.staff.alerts.receive", "smpplugin.staff.mode.stafflist", "smpplugin.staff.punishments.view",
                 "smpplugin.staff.punishments.warn", "smpplugin.staff.punishments.kick", "smpplugin.staff.punishments.tempmute",
-                "smpplugin.staff.chat.clear", "smpplugin.staff.notes", "smpplugin.staff.whois",
+                "smpplugin.staff.chat.clear", "smpplugin.staff.whois",
                 "smpplugin.staff.poll", "smpplugin.staff.chatgame", "smpplugin.staff.countdown");
-        role(ROLE_HELPER, "Helper role: staff chat, reports, warn, kick, temp-mute, staff notes, /whois and events.", helper);
+        role(ROLE_HELPER, "Helper role: staff chat, reports, warn, kick, temp-mute, /whois and events.", helper);
         List<String> moderator = new ArrayList<>(List.of(ROLE_HELPER,
                 "smpplugin.staff.mode", "smpplugin.staff.mode.vanish", "smpplugin.staff.mode.seevanished",
                 "smpplugin.staff.mode.betterview", "smpplugin.staff.mode.randomtp", "smpplugin.staff.mode.spectator",
@@ -471,12 +488,14 @@ public final class PermissionRegistry {
                 "smpplugin.staff.punishments.unmute", "smpplugin.staff.punishments.unban", "smpplugin.staff.punishments.offend",
                 "smpplugin.staff.punishments.vcmute", "smpplugin.staff.punishments.vcunmute",
                 "smpplugin.staff.chat.mute", "smpplugin.staff.chat.unmute", "smpplugin.staff.chat.delay",
-                "smpplugin.staff.socialspy", "smpplugin.staff.commandspy", "smpplugin.staff.giveaway",
+                "smpplugin.staff.socialspy", "smpplugin.staff.commandspy", "smpplugin.staff.spawn.others",
                 "smpplugin.staff.speed", "smpplugin.admin.chatlog", "smpplugin.security.alerts"));
         role(ROLE_MODERATOR, "Moderator role: everything a helper has, plus staff mode, vanish, freeze, bans, mutes, invsee and spy.", moderator);
         role(ROLE_ADMIN, "Admin role: everything a moderator has plus every tool in smpplugin.admin (no destructive actions).",
                 List.of(ROLE_MODERATOR, ADMIN_BUNDLE));
-        List<String> owner = new ArrayList<>(List.of(ROLE_ADMIN));
+        role(ROLE_MANAGER, "Manager role: the admin role plus managing giveaways.", List.of(ROLE_ADMIN, GIVEAWAY_MANAGE));
+        role(ROLE_DEVELOPER, "Developer role: the admin role plus managing giveaways.", List.of(ROLE_ADMIN, GIVEAWAY_MANAGE));
+        List<String> owner = new ArrayList<>(List.of(ROLE_ADMIN, GIVEAWAY_MANAGE));
         for (PermissionNode permission : List.copyOf(NODES.values())) {
             if (permission.category() == PermissionCategory.DESTRUCTIVE || permission.category() == PermissionCategory.PERK) {
                 owner.add(permission.node());
@@ -484,6 +503,7 @@ public final class PermissionRegistry {
         }
         role(ROLE_OWNER, "Owner role: the admin role plus every destructive action (wipes, set-money) and every rank perk."
                 + " Security bypasses (anti-cheat, hidden names) are still granted one by one.", owner);
+        role(ROLE_COOWNER, "Co-owner role: everything the owner role has.", List.of(ROLE_OWNER));
 
         // ── The default-op admin bundle ─────────────────────────────────────────────
         List<String> adminChildren = new ArrayList<>();

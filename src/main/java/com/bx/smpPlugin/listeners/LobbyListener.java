@@ -111,9 +111,8 @@ public final class LobbyListener implements Listener {
     }
 
     // ------------------------------------------------------------------
-    // Border enforcement - see LobbyManager's Javadoc for why this is a movement clamp rather
-    // than a vanilla WorldBorder (Player#setWorldBorder is Paper-only; this project compiles
-    // against spigot-api).
+    // Border enforcement: the lobby area is kept with a movement clamp. The visible Minecraft
+    // border on top of it is optional and set up with /border lobby (see world.BorderManager).
     // ------------------------------------------------------------------
 
     @EventHandler(ignoreCancelled = true)
@@ -352,8 +351,8 @@ public final class LobbyListener implements Listener {
 
     @EventHandler
     public void onChangeWorld(PlayerChangedWorldEvent event) {
-        // No per-player visual border object to sync in this project (see LobbyManager's
-        // Javadoc) - nothing to do here beyond what the move/teleport handlers already cover.
+        // The visible border (/border lobby) is synced by world.BorderManager; nothing to do here
+        // beyond what the move/teleport handlers already cover.
     }
 
 

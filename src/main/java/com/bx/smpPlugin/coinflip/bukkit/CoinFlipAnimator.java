@@ -154,7 +154,7 @@ public final class CoinFlipAnimator {
                 continue;
             }
             reveal.wait = reveal.delays.get(reveal.frame);
-            reveal.menu.frame(reveal.reducedMotion);
+            reveal.menu.frame(reveal.reducedMotion, reveal.frame, reveal.delays.size());
             playTick(reveal);
         }
     }

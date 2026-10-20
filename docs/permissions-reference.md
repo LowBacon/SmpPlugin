@@ -45,11 +45,9 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.poll.vote` | Vote in polls started by staff. | everyone | New in 3.0. |
 | `smpplugin.giveaway.join` | Join giveaways started by staff. | everyone | New in 3.0. |
 | `smpplugin.mail` | Send and read /mail, including to offline players. | everyone | New in 3.0. |
-| `smpplugin.fun.emotes` | Use /hug, /slap, /highfive, /poke, /wave and /cheer. | everyone | New in 3.0. |
-| `smpplugin.fun.games` | Use /dice, /8ball, /rps and /rate. | everyone | New in 3.0. |
+| `smpplugin.fun.emotes` | Use /slap, /highfive, /poke, /wave and /cheer. | everyone | New in 3.0; /hug removed in 3.1. |
+| `smpplugin.fun.games` | Use /rps, /rate and /dice roll. | everyone | New in 3.0; /8ball removed in 3.1. |
 | `smpplugin.fun.sit` | Sit down where you stand with /sit. | everyone | New in 3.0. |
-| `smpplugin.fun.hat` | Wear the item in your hand with /hat. | everyone | New in 3.0. |
-| `smpplugin.trash` | Open a bin that deletes items with /trash. | everyone | New in 3.0. |
 | `smpplugin.back` | Return to where you were before your last teleport with /back. | everyone | New in 3.0. |
 | `smpplugin.seen` | See when a player was last online with /seen. | everyone | New in 3.0. |
 | `smpplugin.coords` | Show your coordinates and share them with your team with /coords. | everyone | New in 3.0. |
@@ -57,6 +55,10 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.online` | List the players online with /online. | everyone | New in 3.0. |
 | `smpplugin.uptime` | See how long the server has been up, and its TPS, with /uptime. | everyone | New in 3.0. |
 | `smpplugin.calc` | Do sums with /calc. | everyone | New in 3.0. |
+| `smpplugin.dice` | Bet money on a dice roll against the house with /dice. | everyone | New in 3.1. |
+| `smpplugin.roulette` | Put money into the head roulette with /roulette. | everyone | New in 3.1. |
+| `smpplugin.guide` | Read the getting-started guide with /guide. | everyone | New in 3.1. |
+| `smpplugin.sidebar` | Show or hide your own scoreboard with /sidebar. | everyone | New in 3.1. |
 
 ## Rank perks (default: nobody)
 
@@ -100,6 +102,7 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.skull` | Get a player's head with /skull. | nobody | New in 3.0. |
 | `smpplugin.lore` | Edit the lore of the item in your hand with /lore. | nobody | New in 3.0. |
 | `smpplugin.glow` | Toggle a glowing outline with /glow. | nobody | New in 3.0. |
+| `smpplugin.gambling.bypasscooldown` | No cooldown between /dice rolls. | nobody | New in 3.1. |
 
 ## Staff tools (default: nobody; ops via smpplugin.admin)
 
@@ -158,14 +161,13 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.coinflip.alerts` | Receive CoinFlip storage and settlement alerts. | nobody | New in 2.0. |
 | `smpplugin.coinflip.inspect` | /coinflipadmin status, inspect, audit, reconcile report, debug and any player's statistics. | nobody | New in 2.0. |
 | `smpplugin.staff.poll` | Start and end polls with /poll. | nobody | New in 3.0. |
-| `smpplugin.staff.giveaway` | Give away the item in your hand with /giveaway. | nobody | New in 3.0. |
 | `smpplugin.staff.chatgame` | Start and stop chat games with /chatgame. | nobody | New in 3.0. |
 | `smpplugin.staff.countdown` | Show a server-wide countdown with /countdown. | nobody | New in 3.0. |
 | `smpplugin.staff.speed` | Change walk and fly speed with /speed. | nobody | New in 3.0. |
 | `smpplugin.staff.whois` | Look up a player's details with /whois (the IP also needs smpplugin.staff.alts). | nobody | New in 3.0. |
-| `smpplugin.staff.notes` | Read and write private staff notes about players with /notes. | nobody | New in 3.0. |
 | `smpplugin.staff.socialspy` | See private messages between players with /socialspy. | nobody | New in 3.0. |
 | `smpplugin.staff.commandspy` | See the commands players run with /commandspy. | nobody | New in 3.0. |
+| `smpplugin.staff.spawn.others` | Send another player to spawn with /spawn <player>. | nobody | New in 3.1. |
 
 ## Administration (default: nobody; ops via smpplugin.admin)
 
@@ -230,7 +232,6 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.admin.playerwipe` | Wipe one player's stats, homes, items and progress with /playerwipe (backed up first). | nobody | New in 2.0.0-alpha.5. |
 | `smpplugin.admin.playerunwipe` | Restore a wiped player from their backup with /playerunwipe. | nobody | New in 2.0.0-alpha.5. |
 | `smpplugin.admin.halloween` | Edit Spooky Calendar prizes and use /halloween give, reset, preview and stats. | nobody | New in 3.0. |
-| `smpplugin.admin.giveaway.money` | Give away money that is created for the giveaway (/giveaway money). | nobody | New in 3.0. |
 | `smpplugin.admin.announcer` | List, send and pause the automatic announcements with /announcer. | nobody | New in 3.0. |
 | `smpplugin.admin.broadcast` | Send a server-wide announcement with /broadcast. | nobody | New in 3.0. |
 | `smpplugin.admin.time` | Set the time with /day and /night. | nobody | New in 3.0. |
@@ -242,6 +243,9 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.admin.performance` | See TPS, memory, chunks and entities with /performance. | nobody | New in 3.0. |
 | `smpplugin.admin.spook` | Jump-scare a player (or everyone) with /spook. | nobody | New in 3.0. |
 | `smpplugin.admin.perms` | Inspect roles and permissions with /perms. | nobody | New in 3.0. |
+| `smpplugin.admin.roulette` | Cancel a head-roulette round and refund everyone with /roulette cancel. | nobody | New in 3.1. |
+| `smpplugin.admin.sidebar` | Edit the scoreboard title and lines in game with /sidebar. | nobody | New in 3.1. |
+| `smpplugin.admin.border` | Set up the spawn and lobby world borders with /border. | nobody | New in 3.1. |
 
 ## Operational bypasses (default: nobody; ops via smpplugin.admin)
 
@@ -251,6 +255,7 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.bypass.lobby.border` | Ignore only the lobby border. | nobody |  |
 | `smpplugin.afk.kickbypass` | Never get kicked for being AFK (afk.yml IDLE-ACTIONS.KICK-SECONDS). | nobody | New in 2.0.0-alpha.5. |
 | `smpplugin.admin.maintenance.bypass` | Join and stay on the server during maintenance. | nobody | Declared in 2.0; previously undeclared. |
+| `smpplugin.bypass.border` | Walk through the spawn and lobby borders (staff building or moderating). | nobody | New in 3.1. |
 
 ## Security and privacy bypasses (default: nobody; never bundled)
 
@@ -291,15 +296,24 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.staff.invsee.modify` | Edit another player's inventory through invsee. | nobody | Not part of smpplugin.admin. Upgrade spec name: smpplugin.staff.invsee.modify. |
 | `smpplugin.admin.ecsee.edit` | Edit another player's Ender Chest through /ecsee. | nobody | Declared in 2.0 with default false; previously undeclared (op-only). Upgrade spec name: smpplugin.staff.ecsee.modify. |
 
+## Senior staff (default: nobody, but always allowed for ops; only the manager, developer, co-owner and owner roles)
+
+| Node | Allows | Default | Notes |
+|---|---|---|---|
+| `smpplugin.giveaway.manage` | Start, cancel and give away money with /giveaway. Ops are always allowed. | nobody | New in 3.1. Replaces smpplugin.staff.giveaway and smpplugin.admin.giveaway.money. Only the manager, developer, co-owner and owner roles include it. |
+
 ## Bundles
 
 | Node | Allows | Default | Notes |
 |---|---|---|---|
-| `smpplugin.admin` | Default-op administrator bundle: staff tools, administration and operational bypasses. Excludes destructive actions and security bypasses. | ops | In 2.0 this no longer includes destructive actions or security bypasses. Contains 136 nodes: every node in the staff, administration and operational-bypass tables. |
-| `smpplugin.role.helper` | Helper role: staff chat, reports, warn, kick, temp-mute, staff notes, /whois and events. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 15 nodes: every node in the staff, administration and operational-bypass tables. |
+| `smpplugin.admin` | Default-op administrator bundle: staff tools, administration and operational bypasses. Excludes destructive actions and security bypasses. | ops | In 2.0 this no longer includes destructive actions or security bypasses. Contains 138 nodes: every node in the staff, administration and operational-bypass tables. |
+| `smpplugin.role.helper` | Helper role: staff chat, reports, warn, kick, temp-mute, /whois and events. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 14 nodes: every node in the staff, administration and operational-bypass tables. |
 | `smpplugin.role.moderator` | Moderator role: everything a helper has, plus staff mode, vanish, freeze, bans, mutes, invsee and spy. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 31 nodes: every node in the staff, administration and operational-bypass tables. |
 | `smpplugin.role.admin` | Admin role: everything a moderator has plus every tool in smpplugin.admin (no destructive actions). | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 2 nodes: every node in the staff, administration and operational-bypass tables. |
-| `smpplugin.role.owner` | Owner role: the admin role plus every destructive action (wipes, set-money) and every rank perk. Security bypasses (anti-cheat, hidden names) are still granted one by one. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 50 nodes: every node in the staff, administration and operational-bypass tables. |
+| `smpplugin.role.manager` | Manager role: the admin role plus managing giveaways. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 2 nodes: every node in the staff, administration and operational-bypass tables. |
+| `smpplugin.role.developer` | Developer role: the admin role plus managing giveaways. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 2 nodes: every node in the staff, administration and operational-bypass tables. |
+| `smpplugin.role.owner` | Owner role: the admin role plus every destructive action (wipes, set-money) and every rank perk. Security bypasses (anti-cheat, hidden names) are still granted one by one. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 52 nodes: every node in the staff, administration and operational-bypass tables. |
+| `smpplugin.role.coowner` | Co-owner role: everything the owner role has. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 1 nodes: every node in the staff, administration and operational-bypass tables. |
 
 ## Legacy names and bundles
 

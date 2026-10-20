@@ -481,11 +481,12 @@ TABLIST:
   NAME-FORMAT: <media_badge>%prefix%&f<nick>%team_suffix%
   # Header and footer lines. Besides PlaceholderAPI placeholders these work:
   #   %animated_title% (the shining title below), %animated_line% (the moving gradient bar below)
-  #   %player%, %rank% (LuckPerms prefix), %world%, %team%
-  #   %money%, %shards%, %kills%, %deaths%, %playtime%
-  #   %online%, %max_players%, %afk_count%, %ping% / %ping_colored%, %tps% / %tps_colored%
+  #   %player%, %rank% (LuckPerms prefix), %world%, %team%, %online%, %max_players%, %afk_count%
   #   %tip% (the rotating TIPS below)
-  # Only what changed is sent to players, so lines that rarely change cost almost nothing.
+  # Personal numbers can be added back if you want them:
+  #   %money%, %shards%, %kills%, %deaths%, %playtime%, %ping% / %ping_colored%, %tps% / %tps_colored%
+  # Since 3.1 the default list is kept clean: names and ranks, no money, ping, TPS or stats.
+  # Only what changed is sent to players, and a value that no line uses is never worked out.
   HEADER:
   - ''
   - '%animated_title%'
@@ -494,8 +495,7 @@ TABLIST:
   - ''
   FOOTER:
   - ''
-  - '&a$ &f%money%  &8•  &d✦ &f%shards%  &8•  &c⚔ &f%kills%  &8•  &e⌚ &f%playtime%'
-  - '&7Online &f%online%&8/&7%max_players%  &8•  &7Ping %ping_colored%  &8•  &7TPS %tps_colored%  &8•  &7%world%'
+  - '&7Online &f%online%&8/&7%max_players%'
   - '%animated_line%'
   - '%tip%'
   - ''

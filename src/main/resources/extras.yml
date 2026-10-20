@@ -3,7 +3,7 @@
 # ==============================================================================
 #
 # Daily rewards, daily challenges, polls, giveaways, chat games, the announcer,
-# mail, emotes and the utility commands. Each part can be switched off as a
+# mail, emotes, the utility commands, /dice and /roulette. Each part can be switched off as a
 # feature (/smpplugin feature) and every message can be changed in messages.yml
 # under V3.
 #
@@ -181,6 +181,15 @@ POLLS:
 GIVEAWAYS:
   DEFAULT-SECONDS: 60
   MAX-WINNERS: 10
+  # Who may start and cancel giveaways (joining is open to everyone). Server operators and anyone
+  # with smpplugin.giveaway.manage always can. Members of these permission groups can too: with
+  # LuckPerms every member of a group has the permission group.<name>. Use [] to rely on the
+  # permission alone.
+  MANAGER-GROUPS:
+    - manager
+    - developer
+    - coowner
+    - owner
 
 # ------------------------------------------------------------------------------
 # /mail - leave a message for a player who is offline
@@ -191,7 +200,7 @@ MAIL:
   SEND-COOLDOWN-SECONDS: 15
 
 # ------------------------------------------------------------------------------
-# Emotes - /hug /slap /highfive /wave /poke /cheer
+# Emotes - /slap /highfive /wave /poke /cheer
 # ------------------------------------------------------------------------------
 EMOTES:
   COOLDOWN-SECONDS: 10
@@ -199,11 +208,6 @@ EMOTES:
   AUDIENCE: NEARBY
   RADIUS: 48
   LIST:
-    hug:
-      TARGET: true
-      MESSAGE: "&d{player} &7hugs &d{target} &c❤"
-      PARTICLE: HEART
-      SOUND: ENTITY_CAT_PURR
     slap:
       TARGET: true
       MESSAGE: "&c{player} &7slaps &c{target}&7! &8*smack*"
@@ -243,3 +247,57 @@ UTILITIES:
   NEAR-RADIUS: 200
   # /firework: seconds between uses.
   FIREWORK-COOLDOWN-SECONDS: 30
+
+# ------------------------------------------------------------------------------
+# /dice - bet money on a dice roll against the house (new in 3.1)
+# ------------------------------------------------------------------------------
+# A payout is the total a win pays back, the bet included: 1.9 on a $100 bet pays $190.
+# The server never pays more than the fair amount, so a value above the fair one is
+# lowered to it.
+#   Bet                     Wins when                     Chance   Fair payout
+#   /dice 100               your die beats the house's    41.7%    2.0 (a tie gives the bet back)
+#   /dice 100 high | low    4-6 | 1-3                     50%      2.0
+#   /dice 100 5             exactly that number           16.7%    6.0
+# With the defaults below every bet returns about 95% on average.
+DICE:
+  MIN-BET: 10
+  MAX-BET: 1000000
+  PAYOUTS:
+    DUEL: 1.9
+    HIGH-LOW: 1.9
+    NUMBER: 5.7
+  # Against the house, does a tie give the bet back? (false = a tie loses)
+  TIE-REFUNDS: true
+  # Show the bet, chance and payout with a [ROLL] button before any money is taken.
+  CONFIRM: true
+  CONFIRM-SECONDS: 30
+  COOLDOWN-SECONDS: 3
+  # Tell the whole server about wins with at least this much profit.
+  BROADCAST-WIN-OVER: 50000
+
+# ------------------------------------------------------------------------------
+# /roulette - the head roulette (new in 3.1)
+# ------------------------------------------------------------------------------
+# Everyone's bet goes in one pot. The players' heads spin and the head that stops in
+# the middle wins the pot. Each player's chance is their bet divided by the pot. The
+# server draws the winner before the spin; the animation only shows it.
+ROULETTE:
+  MIN-BET: 100
+  MAX-BET: 10000000
+  # Taken from the pot before it is paid out (0 = no fee).
+  FEE-PERCENT: 0
+  MIN-PLAYERS: 2
+  MAX-PLAYERS: 20
+  # The countdown starts when MIN-PLAYERS are in. Bets lock LOCK-SECONDS before the spin.
+  COUNTDOWN-SECONDS: 30
+  LOCK-SECONDS: 3
+  # A round nobody else joins is cancelled (and the bet given back) after this long.
+  WAIT-TIMEOUT-SECONDS: 300
+  # The four quick-bet buttons in /roulette.
+  QUICK-BETS:
+    - 1000
+    - 10000
+    - 100000
+    - 1000000
+  # Tell everyone when a player joins a round.
+  ANNOUNCE-JOINS: true

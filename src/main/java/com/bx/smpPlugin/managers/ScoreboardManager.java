@@ -51,6 +51,20 @@ public class ScoreboardManager {
     private final Map<UUID, Scoreboard> playerBoards;
 
     private int titleIndex = 0;
+    /** Ticks counted by {@link #updateAll()}, which runs every 2 ticks. */
+    private long ticks;
+
+    /**
+     * What each player's sidebar shows right now, so an update only sends the lines that changed.
+     * Without this every line was re-sent to every player ten times a second.
+     */
+    private final Map<UUID, BoardCache> boardCache = new HashMap<>();
+
+    private static final class BoardCache {
+        String title;
+        int count = -1;
+        final String[] lines = new String[MAX_LINES];
+    }
 
     public ScoreboardManager(SmpPlugin plugin) {
         this.plugin = plugin;
@@ -136,8 +150,17 @@ public class ScoreboardManager {
             return;
         }
 
-        List<String> titles = plugin.getConfigManager().getScoreboard().getStringList("SCOREBOARD.TITLE");
-        if (!titles.isEmpty()) {
+        FileConfiguration config = plugin.getConfigManager().getScoreboard();
+        ticks += 2;
+        int titleTicks = Math.max(2, config.getInt("SCOREBOARD.TITLE-UPDATE-TICKS", 2));
+        int lineTicks = Math.max(2, config.getInt("SCOREBOARD.LINE-UPDATE-TICKS", 10));
+        boolean titleDue = ticks % titleTicks < 2;
+        boolean linesDue = ticks % lineTicks < 2;
+        if (!titleDue && !linesDue) {
+            return;
+        }
+        List<String> titles = config.getStringList("SCOREBOARD.TITLE");
+        if (titleDue && !titles.isEmpty()) {
             titleIndex = (titleIndex + 1) % titles.size();
         }
 
@@ -145,7 +168,7 @@ public class ScoreboardManager {
             plugin.getSpigotScheduler().forEachOnlinePlayer(this::updateFolia);
         } else {
             for (Player player : Bukkit.getOnlinePlayers()) {
-                updateSpigot(player);
+                updateSpigot(player, linesDue);
             }
         }
     }
@@ -161,12 +184,21 @@ public class ScoreboardManager {
     public void invalidateAll() {
         if (!folia) {
             playerBoards.clear();
+            boardCache.clear();
         }
     }
 
     public void invalidatePlayer(Player player) {
         if (!folia) {
             playerBoards.remove(player.getUniqueId());
+            boardCache.remove(player.getUniqueId());
+        }
+    }
+
+    /** Forces every line to be re-sent on the next update, e.g. after /sidebar changed the text. */
+    public void markDirty() {
+        if (!folia) {
+            boardCache.clear();
         }
     }
 
@@ -251,15 +283,21 @@ public class ScoreboardManager {
         obj.setDisplaySlot(DisplaySlot.SIDEBAR);
 
         playerBoards.put(player.getUniqueId(), board);
+        boardCache.remove(player.getUniqueId());
         player.setScoreboard(board);
-        updateTextSpigot(player, board, obj);
+        updateTextSpigot(player, board, obj, true);
     }
 
     private void removePlayerSpigot(UUID uuid) {
         playerBoards.remove(uuid);
+        boardCache.remove(uuid);
     }
 
     private void updateSpigot(Player player) {
+        updateSpigot(player, true);
+    }
+
+    private void updateSpigot(Player player, boolean linesDue) {
         if (!isEnabled()) {
             releaseOwnedBoardSpigot(player);
             return;
@@ -277,31 +315,56 @@ public class ScoreboardManager {
 
         Objective obj = board.getObjective("sidebar");
         if (obj == null) return;
-        updateTextSpigot(player, board, obj);
+        updateTextSpigot(player, board, obj, linesDue);
     }
 
-    private void updateTextSpigot(Player player, Scoreboard board, Objective obj) {
-        obj.setDisplayName(getTitle(player));
+    private void updateTextSpigot(Player player, Scoreboard board, Objective obj, boolean linesDue) {
+        BoardCache cache = boardCache.computeIfAbsent(player.getUniqueId(), ignored -> new BoardCache());
+        String title = getTitle(player);
+        boolean titleChanged = !title.equals(cache.title);
+        if (titleChanged) {
+            obj.setDisplayName(title);
+            cache.title = title;
+        }
+        if (!linesDue && cache.count >= 0) {
+            if (titleChanged) {
+                numberHider.hide(player, obj);
+            }
+            return;
+        }
 
         List<String> lines = getLines(player);
         int count = Math.min(lines.size(), MAX_LINES);
-        syncLineSlotsSpigot(board, obj, count);
+        boolean layoutChanged = count != cache.count;
+        if (layoutChanged) {
+            syncLineSlotsSpigot(board, obj, count);
+            cache.count = count;
+        }
 
         for (int i = 0; i < count; i++) {
-            Team team = board.getTeam("sb_" + i);
-            if (team == null) continue;
             String text = ColorUtils.colorize(lines.get(i), player);
             text = ColorUtils.toTitleCaseSmart(text);
             text = alignSidebarIconColumn(text);
+            if (text.equals(cache.lines[i])) {
+                continue;
+            }
+            Team team = board.getTeam("sb_" + i);
+            if (team == null) continue;
             applyLineSpigot(team, text);
+            cache.lines[i] = text;
         }
 
         for (int i = count; i < MAX_LINES; i++) {
-            Team team = board.getTeam("sb_" + i);
-            if (team != null) applyLineSpigot(team, "");
+            if (cache.lines[i] == null || !cache.lines[i].isEmpty()) {
+                Team team = board.getTeam("sb_" + i);
+                if (team != null) applyLineSpigot(team, "");
+                cache.lines[i] = "";
+            }
         }
 
-        numberHider.hide(player, obj);
+        if (layoutChanged || titleChanged) {
+            numberHider.hide(player, obj);
+        }
     }
 
     private void syncLineSlotsSpigot(Scoreboard board, Objective obj, int count) {
@@ -344,9 +407,11 @@ public class ScoreboardManager {
             releaseOwnedBoardSpigot(player);
         }
         playerBoards.clear();
+        boardCache.clear();
     }
 
     private void releaseOwnedBoardSpigot(Player player) {
+        boardCache.remove(player.getUniqueId());
         Scoreboard board = playerBoards.remove(player.getUniqueId());
         if (board == null || Bukkit.getScoreboardManager() == null) {
             return;
@@ -443,6 +508,9 @@ public class ScoreboardManager {
                 .replace("%economy_shards_amount_short%", shardsShort)
                 .replace("%economy_shards%", shardsShort)
                 .replace("{player}", player.getName())
+                .replace("%player_name%", player.getName())
+                .replace("%server_online%", String.valueOf(Bukkit.getOnlinePlayers().size()))
+                .replace("%server_max_players%", String.valueOf(Bukkit.getMaxPlayers()))
                 .replace("{shards}", String.valueOf(shards))
                 .replace("{money}", moneyShort)
                 .replace("{kills}", String.valueOf(kills))

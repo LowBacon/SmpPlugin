@@ -37,13 +37,19 @@ import java.util.UUID;
  * </pre>
  * An item prize is the real item, taken from the host's hand and given back if the giveaway is
  * cancelled or nobody joins (kept for them until they next join if they are offline by then).
+ *
+ * <p>Only senior staff may start or cancel one: server operators, the console, anyone with
+ * {@code smpplugin.giveaway.manage} (the manager, developer, co-owner and owner roles), and members
+ * of the permission groups listed under {@code GIVEAWAYS.MANAGER-GROUPS} in extras.yml. A group is
+ * checked through the {@code group.<name>} permission that LuckPerms gives every member. Every
+ * action checks this itself, so no alias, menu or tab completion can get around it.
  */
 public final class Giveaways implements CommandExecutor, TabCompleter {
 
     public static final String JOIN_PERMISSION = "smpplugin.giveaway.join";
-    public static final String HOST_PERMISSION = "smpplugin.staff.giveaway";
-    /** Money giveaways create the money, so they are an admin tool. */
-    public static final String MONEY_PERMISSION = "smpplugin.admin.giveaway.money";
+    public static final String MANAGE_PERMISSION = com.bx.smpPlugin.permissions.PermissionRegistry.GIVEAWAY_MANAGE;
+    /** Ranks that may manage giveaways when extras.yml does not list any. */
+    public static final List<String> DEFAULT_MANAGER_GROUPS = List.of("manager", "developer", "coowner", "owner");
 
     private final SmpPlugin plugin;
     private Giveaway active;
@@ -93,9 +99,45 @@ public final class Giveaways implements CommandExecutor, TabCompleter {
                 : plugin.getConfigManager().getExtras().getLong("GIVEAWAYS.DEFAULT-SECONDS", 60L);
     }
 
+    /** Whether this sender may start or cancel giveaways (see the class comment). */
+    public boolean canManage(CommandSender sender) {
+        if (sender == null) {
+            return false;
+        }
+        if (!(sender instanceof Player) || sender.isOp() || PermissionUtils.has(sender, MANAGE_PERMISSION)) {
+            return true;
+        }
+        for (String group : managerGroups()) {
+            if (sender.hasPermission("group." + group)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private List<String> managerGroups() {
+        org.bukkit.configuration.file.FileConfiguration extras = plugin.getConfigManager().getExtras();
+        List<String> configured = extras == null || !extras.isList("GIVEAWAYS.MANAGER-GROUPS")
+                ? DEFAULT_MANAGER_GROUPS : extras.getStringList("GIVEAWAYS.MANAGER-GROUPS");
+        List<String> groups = new ArrayList<>();
+        for (String group : configured) {
+            if (group != null && group.matches("[A-Za-z0-9_.-]{1,36}")) {
+                groups.add(group.toLowerCase(Locale.ROOT));
+            }
+        }
+        return groups;
+    }
+
+    private boolean denyUnlessManager(CommandSender sender) {
+        if (canManage(sender)) {
+            return false;
+        }
+        Text.send(sender, "GIVEAWAY.STAFF-ONLY", "&cOnly senior staff (Manager, Developer, Co-Owner, Owner) can run giveaways.");
+        return true;
+    }
+
     private boolean canHost(CommandSender sender) {
-        if (!PermissionUtils.has(sender, HOST_PERMISSION)) {
-            Text.send(sender, "GENERAL.NO-PERMISSION", "&cYou don't have permission to do that.");
+        if (denyUnlessManager(sender)) {
             return false;
         }
         if (active != null) {
@@ -125,10 +167,6 @@ public final class Giveaways implements CommandExecutor, TabCompleter {
     }
 
     private void startMoney(CommandSender sender, String[] args) {
-        if (!PermissionUtils.has(sender, MONEY_PERMISSION)) {
-            Text.send(sender, "GENERAL.NO-PERMISSION", "&cYou don't have permission to do that.");
-            return;
-        }
         if (!canHost(sender)) {
             return;
         }
@@ -138,7 +176,7 @@ public final class Giveaways implements CommandExecutor, TabCompleter {
         } catch (NumberFormatException ignored) {
             amount = -1D;
         }
-        if (amount <= 0D) {
+        if (!Double.isFinite(amount) || amount <= 0D || amount > 1_000_000_000_000D) {
             Text.send(sender, "GIVEAWAY.USAGE", "&7/giveaway start [seconds] &8(held item) &7or /giveaway money <amount> [seconds] [winners]");
             return;
         }
@@ -272,8 +310,7 @@ public final class Giveaways implements CommandExecutor, TabCompleter {
     }
 
     private void cancel(CommandSender sender) {
-        if (!PermissionUtils.has(sender, HOST_PERMISSION)) {
-            Text.send(sender, "GENERAL.NO-PERMISSION", "&cYou don't have permission to do that.");
+        if (denyUnlessManager(sender)) {
             return;
         }
         Giveaway giveaway = active;
@@ -332,7 +369,7 @@ public final class Giveaways implements CommandExecutor, TabCompleter {
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
             List<String> options = new ArrayList<>(List.of("join"));
-            if (PermissionUtils.has(sender, HOST_PERMISSION)) {
+            if (canManage(sender)) {
                 options.addAll(List.of("start", "money", "cancel"));
             }
             return options.stream().filter(o -> o.startsWith(args[0].toLowerCase(Locale.ROOT))).toList();

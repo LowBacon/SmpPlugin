@@ -52,13 +52,8 @@ public final class PlayerStore {
                             + " data_value TEXT,"
                             + " updated_at INTEGER DEFAULT 0,"
                             + " PRIMARY KEY (player_uuid, section))");
-            database.executeSchema(statement,
-                    "CREATE TABLE IF NOT EXISTS v3_staff_notes ("
-                            + " note_id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                            + " player_uuid TEXT,"
-                            + " author_name TEXT,"
-                            + " note_text TEXT,"
-                            + " created_at INTEGER DEFAULT 0)");
+            // 3.0 also made v3_staff_notes for /notes. /notes was removed in 3.1; an existing table
+            // is left untouched so no one's data disappears.
             database.executeSchema(statement,
                     "CREATE TABLE IF NOT EXISTS v3_mail ("
                             + " mail_id INTEGER PRIMARY KEY AUTOINCREMENT,"

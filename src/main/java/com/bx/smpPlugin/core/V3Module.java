@@ -158,6 +158,7 @@ public final class V3Module implements Listener {
     public void enable() {
         store = new PlayerStore(plugin);
         store.initialize();
+        task(plugin.getSpigotScheduler().runGlobalTimer(() -> store.flushDeferred(null), 600L, 600L));
         listen(this);
         for (Player online : Bukkit.getOnlinePlayers()) {
             store.loadAsync(online.getUniqueId());
@@ -193,10 +194,18 @@ public final class V3Module implements Listener {
 
         part("Halloween", () -> {
             halloween = new HalloweenManager(plugin, store, events);
-            com.bx.smpPlugin.seasonal.CalendarCommand command = new com.bx.smpPlugin.seasonal.CalendarCommand(plugin, halloween);
+            com.bx.smpPlugin.halloween.HalloweenHub hub = new com.bx.smpPlugin.halloween.HalloweenHub(plugin, halloween, store);
+            TrickOrTreatCommand trickOrTreat = new TrickOrTreatCommand(plugin, halloween, hub, store);
+            com.bx.smpPlugin.halloween.HalloweenMenus menus = new com.bx.smpPlugin.halloween.HalloweenMenus(plugin, hub, trickOrTreat);
+            halloween.attach(hub, menus);
+            com.bx.smpPlugin.halloween.HalloweenCommand command =
+                    new com.bx.smpPlugin.halloween.HalloweenCommand(plugin, halloween, hub, menus);
             register("halloween", command, command, Feature.HALLOWEEN);
-            register("trickortreat", new TrickOrTreatCommand(plugin, halloween, store), null, Feature.HALLOWEEN);
-            listen(new HalloweenListener(plugin, halloween, store));
+            register("trickortreat", trickOrTreat, trickOrTreat, Feature.HALLOWEEN);
+            listen(new HalloweenListener(plugin, halloween, hub, store));
+            if (Bukkit.getPluginManager().getPlugin("FancyNpcs") != null) {
+                listen(new com.bx.smpPlugin.halloween.TrickOrTreatNpcListener(trickOrTreat));
+            }
         });
 
         part("Advent Calendar", () -> {
@@ -330,6 +339,9 @@ public final class V3Module implements Listener {
     }
 
     public void disable() {
+        if (store != null) {
+            store.flushDeferred(null);
+        }
         for (Runnable hook : shutdownHooks) {
             try {
                 hook.run();

@@ -364,7 +364,7 @@ public final class CalendarMenu extends BaseMenu {
         body.add(" ");
         body.addAll(lines.isEmpty() ? List.of("&7A surprise!") : lines);
         frames.add(new NoticeSpec(title + " &aopened!", icon, body, List.of(
-                new NoticeSpec.Button(theme.accent() + "Back to calendar", calendar.command()),
+                new NoticeSpec.Button(theme.accent() + "Back to calendar", calendar.calendarCommand()),
                 new NoticeSpec.Button("&7Close", null))));
         return frames;
     }

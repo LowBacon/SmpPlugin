@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -124,6 +125,7 @@ public final class PlayerStore {
     }
 
     public void unload(UUID uuid) {
+        flushDeferred(uuid);
         cache.remove(uuid);
     }
 
@@ -177,10 +179,68 @@ public final class PlayerStore {
         }
     }
 
+    /** Values changed with {@link #setDeferred} and not written yet, by player and section. */
+    private final Map<UUID, Map<String, String>> deferred = new ConcurrentHashMap<>();
+    private static final String DELETED = "\u0000deleted";
+
+    /**
+     * Stores a value in memory now and in the database with the next {@link #flushDeferred()} (every 30 seconds,
+     * when the player leaves, and at shutdown). For values that change very often and may lose a few seconds in a
+     * crash, such as quest progress; never for anything that pays out.
+     */
+    public void setDeferred(UUID uuid, String section, String value) {
+        if (uuid == null || section == null) {
+            return;
+        }
+        Map<String, String> values = cache.get(uuid);
+        if (values != null) {
+            if (value == null) {
+                values.remove(section);
+            } else {
+                values.put(section, value);
+            }
+        }
+        String stored = value == null ? DELETED : value;
+        // compute() is atomic against the remove() in flushPlayer, so a value can never land in a map that was
+        // already taken for writing.
+        deferred.compute(uuid, (ignored, waiting) -> {
+            Map<String, String> map = waiting == null ? new ConcurrentHashMap<>() : waiting;
+            map.put(section, stored);
+            return map;
+        });
+    }
+
+    /** Writes every deferred value (of one player, or of everyone when {@code uuid} is null). */
+    public void flushDeferred(UUID uuid) {
+        if (uuid != null) {
+            flushPlayer(uuid);
+            return;
+        }
+        for (UUID player : List.copyOf(deferred.keySet())) {
+            flushPlayer(player);
+        }
+    }
+
+    private void flushPlayer(UUID uuid) {
+        Map<String, String> pending = deferred.remove(uuid);
+        if (pending == null || pending.isEmpty() || !ready) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        Map<String, String> copy = new HashMap<>(pending);
+        plugin.getDatabaseManager().executeAsync(() -> copy.forEach((section, value) ->
+                writeBlocking(uuid, section, DELETED.equals(value) ? null : value, now)));
+    }
+
     /** Stores a value (null deletes it) in memory now and in the database in the background. */
     public void set(UUID uuid, String section, String value) {
         if (uuid == null || section == null) {
             return;
+        }
+        Map<String, String> waiting = deferred.get(uuid);
+        if (waiting != null) {
+            // This write is newer than a deferred one for the same section; the deferred one must not follow it.
+            waiting.remove(section);
         }
         Map<String, String> values = cache.get(uuid);
         if (values != null) {

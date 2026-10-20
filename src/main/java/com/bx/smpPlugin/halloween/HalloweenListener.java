@@ -15,6 +15,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
@@ -30,9 +31,10 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Halloween ambience while the season runs: a greeting and door reminder on join, candy dropped
- * by monsters (eat it for a short boost), and zombies and skeletons in pumpkin masks. Each check
- * starts with a cheap season test, so outside October these handlers return at once.
+ * Halloween while the season runs: a greeting and door reminder on join, candy dropped by monsters (eat it for a
+ * short boost), candy for the shop from monster kills, quest progress, and zombies and skeletons in pumpkin masks.
+ * Each handler starts with a season test that is worked out at most once a second, so outside October they return
+ * at once.
  */
 public final class HalloweenListener implements Listener {
 
@@ -44,12 +46,14 @@ public final class HalloweenListener implements Listener {
 
     private final SmpPlugin plugin;
     private final HalloweenManager halloween;
+    private final HalloweenHub hub;
     private final PlayerStore store;
     private final NamespacedKey candyKey;
 
-    public HalloweenListener(SmpPlugin plugin, HalloweenManager halloween, PlayerStore store) {
+    public HalloweenListener(SmpPlugin plugin, HalloweenManager halloween, HalloweenHub hub, PlayerStore store) {
         this.plugin = plugin;
         this.halloween = halloween;
+        this.hub = hub;
         this.store = store;
         this.candyKey = new NamespacedKey(plugin, "halloween_candy");
     }
@@ -89,13 +93,33 @@ public final class HalloweenListener implements Listener {
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onMonsterDeath(EntityDeathEvent event) {
         LivingEntity entity = event.getEntity();
-        if (!(entity instanceof Monster) || entity.getKiller() == null || !halloween.inSeason()
-                || !halloween.config().getBoolean("AMBIENCE.CANDY-DROPS.ENABLED", true)) {
+        Player killer = entity.getKiller();
+        if (killer == null || !hub.running()) {
+            return;
+        }
+        hub.track(killer, QuestType.KILL_MOB, entity.getType().name(), 1);
+        if (!(entity instanceof Monster)) {
+            return;
+        }
+        hub.track(killer, QuestType.KILL_MONSTERS, null, 1);
+        double candyChance = halloween.config().getDouble("CANDY.MONSTER-KILL-CHANCE-PERCENT", 15D);
+        if (ThreadLocalRandom.current().nextDouble(100D) < candyChance) {
+            hub.earn(killer, Math.max(0L, halloween.config().getLong("CANDY.MONSTER-KILL-AMOUNT", 1L)), true,
+                    Text.get("HALLOWEEN.KILL-REASON", "monster"));
+        }
+        if (!halloween.config().getBoolean("AMBIENCE.CANDY-DROPS.ENABLED", true)) {
             return;
         }
         double chance = halloween.config().getDouble("AMBIENCE.CANDY-DROPS.CHANCE-PERCENT", 8D);
         if (ThreadLocalRandom.current().nextDouble(100D) < chance) {
             event.getDrops().add(candy());
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onBreak(BlockBreakEvent event) {
+        if (hub.running()) {
+            hub.track(event.getPlayer(), QuestType.BREAK_BLOCK, event.getBlock().getType().name(), 1);
         }
     }
 
@@ -107,6 +131,7 @@ public final class HalloweenListener implements Listener {
             return;
         }
         Player player = event.getPlayer();
+        hub.track(player, QuestType.EAT_CANDY, null, 1);
         PotionEffectType type = CANDY_EFFECTS.get(ThreadLocalRandom.current().nextInt(CANDY_EFFECTS.size()));
         player.addPotionEffect(new PotionEffect(type, 20 * 20, 0, false, true, true));
         player.getWorld().spawnParticle(Particle.WITCH, player.getLocation().add(0, 1.2, 0), 15, 0.3, 0.4, 0.3, 0.02);
@@ -124,7 +149,7 @@ public final class HalloweenListener implements Listener {
                 && type != EntityType.STRAY && type != EntityType.ZOMBIE_VILLAGER) {
             return;
         }
-        if (!halloween.inSeason() || !halloween.config().getBoolean("AMBIENCE.PUMPKIN-HEADS.ENABLED", true)) {
+        if (!hub.running() || !halloween.config().getBoolean("AMBIENCE.PUMPKIN-HEADS.ENABLED", true)) {
             return;
         }
         double chance = halloween.config().getDouble("AMBIENCE.PUMPKIN-HEADS.CHANCE-PERCENT", 25D);

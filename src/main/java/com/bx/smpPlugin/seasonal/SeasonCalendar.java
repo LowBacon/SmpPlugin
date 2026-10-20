@@ -402,6 +402,7 @@ public class SeasonCalendar {
                 plugin.getLogger().info("[" + id.displayName() + "] " + player.getName() + " opened door " + door + " ("
                         + year + "): " + String.join(", ", stripped(granted.lines(plugin))));
             }
+            onDoorOpened(player, granted);
         }
         return Optional.of(granted);
     }
@@ -500,6 +501,15 @@ public class SeasonCalendar {
     /** Extra buttons for the calendar's bottom row (slots 45, 50, 51 and 52). */
     public Map<Integer, MenuButton> extraButtons(Player viewer) {
         return Map.of();
+    }
+
+    /** The command that opens the calendar itself (not a hub around it). */
+    public String calendarCommand() {
+        return command();
+    }
+
+    /** Called after a real (not test) door was opened and paid, on the player's thread. */
+    protected void onDoorOpened(Player player, Granted granted) {
     }
 
     /** Opens what the player command opens. The calendar itself by default. */

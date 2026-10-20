@@ -35,6 +35,24 @@ public final class MenuFx {
                 && player.getOpenInventory().getTopInventory().getHolder() == holder;
     }
 
+    /**
+     * Plays a sound by its Bukkit name. For services that also run without a server (in tests the sound registry
+     * does not exist); unknown names are skipped.
+     */
+    public static void sound(Player player, String name, float volume, float pitch) {
+        if (player == null) {
+            return;
+        }
+        try {
+            Sound sound = Text.sound(name);
+            if (sound != null) {
+                player.playSound(player.getLocation(), sound, volume, pitch);
+            }
+        } catch (LinkageError noRegistry) {
+            // No server, no sounds.
+        }
+    }
+
     public static void sound(Player player, Sound sound, float volume, float pitch) {
         if (player != null && sound != null) {
             player.playSound(player.getLocation(), sound, volume, pitch);

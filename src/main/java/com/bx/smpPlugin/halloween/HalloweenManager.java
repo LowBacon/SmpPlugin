@@ -27,6 +27,9 @@ public final class HalloweenManager extends SeasonCalendar {
     public static final String USE_PERMISSION = "smpplugin.halloween";
     public static final String ADMIN_PERMISSION = "smpplugin.admin.halloween";
     private static final int TRICK_SLOT = 51;
+    private static final int HUB_SLOT = 45;
+    private volatile HalloweenHub hub;
+    private volatile HalloweenMenus menus;
 
     public HalloweenManager(SmpPlugin plugin, PlayerStore store, SeasonalEvents events) {
         super(plugin, store, events, EventId.HALLOWEEN, "halloween.yml", () -> plugin.getConfigManager().getHalloween(),
@@ -60,6 +63,35 @@ public final class HalloweenManager extends SeasonCalendar {
         });
     }
 
+    /** Connects the hub once it exists (it needs this calendar first). */
+    public void attach(HalloweenHub hub, HalloweenMenus menus) {
+        this.hub = hub;
+        this.menus = menus;
+    }
+
+    @Override
+    public String calendarCommand() {
+        return "halloween calendar";
+    }
+
+    @Override
+    public void open(Player player) {
+        HalloweenMenus current = menus;
+        if (current == null) {
+            super.open(player);
+        } else {
+            current.openHub(player);
+        }
+    }
+
+    @Override
+    protected void onDoorOpened(Player player, Granted granted) {
+        HalloweenHub current = hub;
+        if (current != null) {
+            current.track(player, QuestType.OPEN_DOORS, null, 1);
+        }
+    }
+
     /** Trick or Treat's dates: TRICK-OR-TREAT.FIRST-DAY and LAST-DAY when set, otherwise the calendar's season. */
     public CalendarRules trickOrTreatRules() {
         CalendarRules season = rules();
@@ -76,6 +108,10 @@ public final class HalloweenManager extends SeasonCalendar {
     @Override
     public Map<Integer, MenuButton> extraButtons(Player viewer) {
         Map<Integer, MenuButton> buttons = new HashMap<>();
+        if (menus != null) {
+            buttons.put(HUB_SLOT, new MenuButton(ItemUtils.createItem(Material.ARROW, "&6&lHalloween hub",
+                    List.of("&7Quests, the candy shop and more.", "", "&e▶ Click to go back")), player -> menus.openHub(player)));
+        }
         if (trickOrTreatShown()) {
             buttons.put(TRICK_SLOT, new MenuButton(ItemUtils.createItem(Material.CAULDRON, "&5&lTrick or Treat!",
                     List.of("&7Knock on a door and hope for", "&7candy... or a trick.", "",

@@ -19,6 +19,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalLong;
@@ -58,10 +59,16 @@ public class EconomyManager {
         }
     }
 
-    /** One page of a player's ledger, newest first. */
-    public record HistoryPage(UUID player, int page, int pageSize, int total, List<LedgerEntry> entries) {
+    /** One page of a player's ledger, newest first, with the names of the other players in it. */
+    public record HistoryPage(UUID player, int page, int pageSize, int total, List<LedgerEntry> entries,
+                              Map<UUID, String> names) {
         public int pages() {
             return Math.max(1, (total + pageSize - 1) / pageSize);
+        }
+
+        public String nameOf(UUID uuid) {
+            String name = uuid == null ? null : names.get(uuid);
+            return name == null ? (uuid == null ? "?" : uuid.toString().substring(0, 8)) : name;
         }
     }
 
@@ -504,7 +511,7 @@ public class EconomyManager {
         int size = Math.max(1, Math.min(45, pageSize));
         int safePage = Math.max(1, page);
         if (player == null || !isStorageReady()) {
-            callback.accept(new HistoryPage(player, safePage, size, 0, List.of()));
+            callback.accept(new HistoryPage(player, safePage, size, 0, List.of(), Map.of()));
             return;
         }
         plugin.getDatabaseManager().executeAsync(() -> {
@@ -512,11 +519,18 @@ public class EconomyManager {
             try {
                 Connection connection = connection();
                 int total = EconomyStore.countHistory(connection, player);
-                List<LedgerEntry> entries = EconomyStore.history(connection, player, size, (safePage - 1) * size);
-                result = new HistoryPage(player, safePage, size, total, entries);
+                int shownPage = Math.min(safePage, Math.max(1, (total + size - 1) / size));
+                List<LedgerEntry> entries = EconomyStore.history(connection, player, size, (shownPage - 1) * size);
+                Map<UUID, String> names = new HashMap<>();
+                for (LedgerEntry entry : entries) {
+                    if (entry.counterparty() != null && !names.containsKey(entry.counterparty())) {
+                        names.put(entry.counterparty(), plugin.getDatabaseManager().getLastKnownUsername(entry.counterparty()));
+                    }
+                }
+                result = new HistoryPage(player, shownPage, size, total, entries, names);
             } catch (SQLException exception) {
                 plugin.getLogger().log(Level.WARNING, "Could not read the economy ledger of " + player, exception);
-                result = new HistoryPage(player, safePage, size, 0, List.of());
+                result = new HistoryPage(player, safePage, size, 0, List.of(), Map.of());
             }
             HistoryPage answer = result;
             plugin.getSpigotScheduler().runGlobal(() -> callback.accept(answer));

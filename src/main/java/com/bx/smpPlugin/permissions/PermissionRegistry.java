@@ -432,6 +432,12 @@ public final class PermissionRegistry {
                 "New in 3.1. Replaces smpplugin.staff.giveaway and smpplugin.admin.giveaway.money. Only the manager,"
                         + " developer, co-owner and owner roles include it.");
 
+        // ── 3.2: the economy ledger, events and rank perks ──────────────────────────
+        player("smpplugin.baltop", "See the richest players with /baltop.", "New in 3.2.");
+        player("smpplugin.transactions", "See your own balance history with /transactions.", "New in 3.2.");
+        admin("smpplugin.admin.economy.history", "See any player's balance history with /eco history.", "New in 3.2.");
+        admin("smpplugin.admin.economy.stats", "See the money supply and money flows with /eco stats.", "New in 3.2.");
+
         // ── Legacy bundles kept so 1.5 grants behave the same ───────────────────────
         node("smpplugin.staff.punishments.create", "Legacy bundle: every punishment-creating action.",
                 PermissionCategory.LEGACY,

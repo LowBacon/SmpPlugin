@@ -49,7 +49,8 @@ config, docs. **P4** polish.
 | E10 | P1 | Shared-connection proxy releases transaction ownership on `commit()`/`rollback()` while auto-commit is still off, so another thread's statements can join the next transaction. | `DatabaseManager.ThreadSafeConnectionHandler` | fixed (M1) |
 | E11 | P1 | A login preloads the player row asynchronously; an offline balance change between that read and the join is overwritten by the stale preloaded copy. | `JoinPreloadListener`, `PlayerDataManager.loadOrCreate` | fixed (M1) |
 | C1 | P1 | Daily rewards are handed out when the claim animation ends; a crash during the spin keeps the claim and loses the prize. The animation decides delivery. | `engagement/DailyRewards` | open |
-| F1 | P3 | No `/baltop`, no `/eco`, no transaction history, no pay limits or tax, no economy statistics. | commands | open |
+| F1 | P3 | No `/baltop`, no `/eco`, no transaction history, no pay limits or tax, no economy statistics. | commands | fixed (M1, M3) |
+| P1 | P2 | `LeaderboardManager` reloads every player row synchronously on the calling (main) thread when its 30 s cache expires or an offline balance changes; placeholders and /baltop then stall the tick on big databases. | `LeaderboardManager.getSortedPlayers` | open |
 | D1 | P3 | "MongoDB" mode is a local SQLite file copied to MongoDB on autosave; docs call it MongoDB storage. | `DatabaseManager` MongoDB bridge, docs | open |
 | D2 | P3 | `SkinsRestorer` is used but missing from `softdepend`, so it can load after SmpPlugin. | `plugin.yml` | open |
 | D3 | P3 | Compiled `target/` output (1,087 files) is tracked in git; `.gitignore` has no `target/` entry. | repository | fixed (M0) |
@@ -129,11 +130,34 @@ loss closes, offline roulette winner closes all holds in one transaction, refuse
 once, failed take leaves no debit and no hold, 3.1 file migration once), `coinflip/CoinFlipStorageTest` (+1).
 **Commands run.** `mvn -o -s tools/central-only-settings.xml test` → 320 tests, 0 failures, 0 errors, 8 skipped.
 
+### M3: economy commands
+
+- `/baltop [page]` (aliases `balancetop`, `moneytop`; `smpplugin.baltop`, default everyone; under the
+  LEADERBOARDS feature): the money ranking from the same cache as `/leaderboard money`, own rank, clickable pages,
+  page size `ECONOMY.BALTOP.PAGE-SIZE`.
+- `/transactions [page]` (alias `moneylog`; `smpplugin.transactions`, default everyone): the player's own ledger,
+  newest first, read on the database thread, with names of the other players resolved there.
+- `/eco give|take|set|reset|history|stats` (alias `smpeco`): give/take/set reuse the `addmoney`/`removemoney`/
+  `setmoney` nodes, reset (starting balance) needs `setmoney`, history needs `smpplugin.admin.economy.history`,
+  stats needs `smpplugin.admin.economy.stats` (money supply, credits/debits per reason in a window, balance-writer
+  queue/failures/conflicts). Every staff change stores the staff name as actor and an optional note.
+- `/addmoney`, `/removemoney`, `/setmoney` now run through the same code: they record the actor and report the
+  real reason a change failed (the balance limit, the database, insufficient funds) instead of "player not found".
+- Permissions regenerated (`plugin.yml`, `docs/permissions-reference.md`) with
+  `mvn test -Dtest=PermissionRegistryTest -Dsmpplugin.regenerate=true`.
+
+**Note:** `/eco` is also used by EssentialsX. When both are installed the first plugin to register wins; `/smpeco`
+and `/smpplugin:eco` always reach SmpPlugin.
+
+**Tests.** `commands/EcoCommandTest` (5: actor and note recorded, insufficient funds explained, limit refused,
+reset, per-subcommand permissions and tab completion). **Commands run.** full suite → 325 tests, 0 failures,
+0 errors, 8 skipped.
+
 ## Current task
 
-Economy commands: `/baltop`, `/eco`, `/balance history` (F1).
+Seasonal events platform: `/events`, `/advent`, `/halloween`, `/trickortreat`.
 
 ## Next tasks
 
-1. Seasonal events platform: `/events`, `/advent`, `/halloween`, `/trickortreat`.
-2. VIP / VIP+ perks.
+1. VIP / VIP+ perks.
+2. Leaderboard reload off the main thread (P1 row above).

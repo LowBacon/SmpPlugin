@@ -771,6 +771,15 @@ public final class SmpPlugin extends JavaPlugin {
         BalanceCommand balCmd = new BalanceCommand(this);
         setExecutor("balance", balCmd);
         setExecutor("pay", new PayCommand(this));
+        BaltopCommand baltopCommand = new BaltopCommand(this);
+        setExecutor("baltop", baltopCommand, FeatureManager.Feature.LEADERBOARDS);
+        setTabCompleter("baltop", baltopCommand);
+        TransactionsCommand transactionsCommand = new TransactionsCommand(this);
+        setExecutor("transactions", transactionsCommand);
+        setTabCompleter("transactions", transactionsCommand);
+        EcoCommand ecoCommand = new EcoCommand(this);
+        setExecutor("eco", ecoCommand);
+        setTabCompleter("eco", ecoCommand);
         setExecutor("addmoney", new AddMoneyCommand(this));
         setExecutor("removemoney", new RemoveMoneyCommand(this));
         setExecutor("setmoney", new SetMoneyCommand(this));

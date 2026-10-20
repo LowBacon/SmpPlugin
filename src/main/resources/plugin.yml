@@ -210,6 +210,22 @@ commands:
   pay:
     description: Pay a player
     usage: /pay <player> <amount>
+  baltop:
+    description: See the richest players
+    usage: /baltop [page]
+    aliases:
+    - balancetop
+    - moneytop
+  transactions:
+    description: See your own balance history
+    usage: /transactions [page]
+    aliases:
+    - moneylog
+  eco:
+    description: Staff economy tools (give, take, set, reset, history, stats)
+    usage: /eco <give|take|set|reset|history|stats> ...
+    aliases:
+    - smpeco
   addmoney:
     description: Add money to a player
     usage: /addmoney <player> <amount>
@@ -1103,6 +1119,8 @@ permissions:
       smpplugin.admin.sidebar: true
       smpplugin.admin.border: true
       smpplugin.bypass.border: true
+      smpplugin.admin.economy.history: true
+      smpplugin.admin.economy.stats: true
   smpplugin.message:
     description: 'Send private messages with /msg and reply with /reply.'
     default: true
@@ -1862,6 +1880,18 @@ permissions:
     default: false
   smpplugin.giveaway.manage:
     description: 'Start, cancel and give away money with /giveaway. Ops are always allowed.'
+    default: false
+  smpplugin.baltop:
+    description: 'See the richest players with /baltop.'
+    default: true
+  smpplugin.transactions:
+    description: 'See your own balance history with /transactions.'
+    default: true
+  smpplugin.admin.economy.history:
+    description: 'See any player''s balance history with /eco history.'
+    default: false
+  smpplugin.admin.economy.stats:
+    description: 'See the money supply and money flows with /eco stats.'
     default: false
   smpplugin.staff.punishments.create:
     description: 'Legacy bundle: every punishment-creating action.'

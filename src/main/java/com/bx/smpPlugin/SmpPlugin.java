@@ -120,6 +120,7 @@ public final class SmpPlugin extends JavaPlugin {
     private QuickBuySearchPrompt quickBuySearchPrompt;
     private ServerNotificationManager serverNotificationManager;
     private PlayerSettingToggles playerSettingToggles;
+    private com.bx.smpPlugin.core.V3Module v3Module;
     private DialogGateway dialogManager;
     private PortalManager portalManager;
     private AmethystToolsManager amethystToolsManager;
@@ -387,6 +388,10 @@ public final class SmpPlugin extends JavaPlugin {
         // Off unless SHOP-GUI.WEB-SERVER.ENABLED is true in shop.yml; binds to 127.0.0.1 by default.
         com.bx.smpPlugin.managers.SellStatsExporter.startEmbeddedHttpServer(this);
 
+        // 9. Everything added in 3.0 (calendar, daily rewards, events, extra commands).
+        v3Module = new com.bx.smpPlugin.core.V3Module(this);
+        v3Module.enable();
+
         syncCommands();
         verifyPermissionRegistration();
         logCapabilitySummary();
@@ -432,6 +437,9 @@ public final class SmpPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (v3Module != null) {
+            v3Module.disable();
+        }
         com.bx.smpPlugin.managers.SellStatsExporter.stopEmbeddedHttpServer();
         boolean suppressWipeSaves = serverWipeManager != null
                 && serverWipeManager.shouldSuppressShutdownSaves();
@@ -788,8 +796,8 @@ public final class SmpPlugin extends JavaPlugin {
         setExecutor("ffastats", new FfaStatsCommand(this), FeatureManager.Feature.FFA);
         setExecutor("ffaarena", new FfaArenaCommand(this), FeatureManager.Feature.FFA);
         AuctionHouseCommand auctionHouseCommand = new AuctionHouseCommand(this);
-        setExecutor("auctionhouse", auctionHouseCommand, FeatureManager.Feature.AUCTION_HOUSE);
-        setTabCompleter("auctionhouse", auctionHouseCommand);
+        setExecutor("ah", auctionHouseCommand, FeatureManager.Feature.AUCTION_HOUSE);
+        setTabCompleter("ah", auctionHouseCommand);
         setExecutor("enderchest", new EnderChestCommand(this), FeatureManager.Feature.ENDER_CHEST);
         setExecutor("ecsee", new EcseeCommand(this), FeatureManager.Feature.ENDER_CHEST);
         SellCommand sellCmd = new SellCommand(this);
@@ -1388,6 +1396,11 @@ public final class SmpPlugin extends JavaPlugin {
 
     public FakePlayerManager getFakePlayerManager() {
         return fakePlayerManager;
+    }
+
+    /** The 3.0 features; null until the plugin has finished enabling. */
+    public com.bx.smpPlugin.core.V3Module getV3Module() {
+        return v3Module;
     }
 
     public HideManager getHideManager() {

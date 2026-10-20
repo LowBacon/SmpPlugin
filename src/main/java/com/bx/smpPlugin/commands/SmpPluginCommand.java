@@ -51,7 +51,8 @@ public class SmpPluginCommand implements CommandExecutor, TabCompleter {
     /** Root subcommand → permission that must be held to see it in tab completion. */
     private static final Map<String, String> ROOT_COMPLETIONS = rootCompletions();
     private static final List<String> SETUP_COMPLETIONS = List.of("status", "apply", "setspawn", "setafk", "commands");
-    private static final List<String> COMMAND_CATEGORIES = List.of("all", "starter", "economy", "market", "pvp", "staff", "admin", "setup");
+    private static final List<String> COMMAND_CATEGORIES = List.of("all", "starter", "economy", "market", "pvp",
+            "community", "fun", "utility", "staff", "admin", "setup");
 
     private final SmpPlugin plugin;
 
@@ -522,7 +523,19 @@ public class SmpPluginCommand implements CommandExecutor, TabCompleter {
                     "shop", "sell", "sellhand", "sellall", "sellhistory", "worth"
             );
             case "market" -> List.of(
-                    "auctionhouse", "orders", "billford", "bounty", "crate", "crates", "keys", "spawner"
+                    "ah", "orders", "billford", "bounty", "crate", "crates", "keys", "spawner"
+            );
+            case "community" -> List.of(
+                    "halloween", "trickortreat", "daily", "challenges", "poll", "giveaway", "chatgame", "mail"
+            );
+            case "fun" -> List.of(
+                    "hug", "slap", "highfive", "poke", "wave", "cheer", "dice", "8ball", "rps", "rate", "firework",
+                    "sit", "hat"
+            );
+            case "utility" -> List.of(
+                    "craft", "anvil", "grindstone", "stonecutter", "loom", "smithing", "cartography", "trash", "back",
+                    "near", "seen", "coords", "suicide", "ptime", "pweather", "repair", "skull", "lore", "glow",
+                    "online", "uptime", "calc"
             );
             case "pvp" -> List.of(
                     "duel", "queue", "leave", "draw", "arena", "ffa", "ffastats", "ffaarena"
@@ -531,12 +544,15 @@ public class SmpPluginCommand implements CommandExecutor, TabCompleter {
                     "staffmode", "stafflist", "staffchat", "helpop", "report", "freeze", "fly",
                     "heal", "feed", "gamemode", "randomteleport", "teleport", "alts", "vanish",
                     "invsee", "profileviewer", "punishments", "ban", "tempban", "mute", "tempmute",
-                    "warn", "kick", "blacklist", "unban", "unmute", "unblacklist", "findplayer", "rename"
+                    "warn", "kick", "blacklist", "unban", "unmute", "unblacklist", "findplayer", "rename",
+                    "notes", "whois", "socialspy", "commandspy", "speed", "countdown"
             );
             case "admin" -> List.of(
                     "customsmp", "clearlag", "cuboid", "setwarp", "delwarp", "warpmanager",
                     "portalmanager", "amethysttool", "arena", "ffaarena", "crate", "spawner",
-                    "shop", "orders", "auctionhouse", "enderchest", "freeze", "staffmode", "invsee", "worth"
+                    "shop", "orders", "ah", "enderchest", "freeze", "staffmode", "invsee", "worth",
+                    "perms", "broadcast", "announcer", "day", "night", "sun", "rain", "thunder", "smite", "butcher",
+                    "spawnmob", "more", "performance", "spook"
             );
             default -> List.of();
         };

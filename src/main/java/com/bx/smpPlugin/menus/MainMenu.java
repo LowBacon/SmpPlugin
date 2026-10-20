@@ -100,7 +100,7 @@ public class MainMenu extends BaseMenu {
         // One tick later, so the command's own menu opens after this one has closed.
         plugin.getSpigotScheduler().runEntityLater(player, () -> {
             if (player.isOnline()) {
-                player.performCommand(command);
+                player.performCommand(com.bx.smpPlugin.utils.SpigotScheduler.renamedCommand(command));
             }
         }, 1L);
     }

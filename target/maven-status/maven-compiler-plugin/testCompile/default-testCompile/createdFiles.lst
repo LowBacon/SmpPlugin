@@ -12,6 +12,7 @@ com\bx\smpPlugin\managers\WorthManagerTest.class
 com\bx\smpPlugin\managers\RTPZoneManagerTest.class
 com\bx\smpPlugin\managers\ShardManagerTest$2.class
 com\bx\smpPlugin\commands\PunishmentCommandPermissionTest$TestPermissible.class
+com\bx\smpPlugin\halloween\CalendarRulesTest.class
 com\bx\smpPlugin\managers\VoiceMuteManagerTest.class
 com\bx\smpPlugin\managers\DatabaseManagerPlayerUnwipeTest.class
 com\bx\smpPlugin\utils\ColorUtilsTest.class
@@ -26,6 +27,7 @@ com\bx\smpPlugin\utils\NumberUtilsLanguageTest.class
 com\bx\smpPlugin\platform\ServerApiCompatTest$PaperDisplay.class
 com\bx\smpPlugin\utils\ItemSerializationUtilsTest.class
 com\bx\smpPlugin\anticheat\AntiCheatCoreTest.class
+com\bx\smpPlugin\extras\ExtrasLogicTest.class
 com\bx\smpPlugin\managers\LanguageManagerTest.class
 com\bx\smpPlugin\menus\SpawnerMenuTest.class
 com\bx\smpPlugin\menus\StatsAndChatLogMenuTest.class
@@ -33,6 +35,7 @@ com\bx\smpPlugin\menus\WorthMenuTest.class
 com\bx\smpPlugin\coinflip\CoinFlipModelTest.class
 com\bx\smpPlugin\managers\ConfigManagerTest.class
 com\bx\smpPlugin\managers\DatabaseManagerServerWipeTest.class
+com\bx\smpPlugin\utils\VersionComparatorTest.class
 com\bx\smpPlugin\coinflip\CoinFlipTestHarness$RecordingNotifier.class
 com\bx\smpPlugin\managers\OffenseManagerTest.class
 com\bx\smpPlugin\coinflip\CoinFlipTestHarness$ScriptedRandom.class
@@ -44,7 +47,9 @@ com\bx\smpPlugin\models\OrdersModelTest.class
 com\bx\smpPlugin\managers\HideIdentityPolicyTest.class
 com\bx\smpPlugin\platform\ServerApiCompatTest$SpigotDisplay.class
 com\bx\smpPlugin\platform\ServerApiCompatTest$Frame.class
+com\bx\smpPlugin\moderation\ModerationLogicTest.class
 com\bx\smpPlugin\afk\AfkTest.class
+com\bx\smpPlugin\engagement\EngagementLogicTest.class
 com\bx\smpPlugin\listeners\CombatListenerTest.class
 com\bx\smpPlugin\anticheat\AntiCheatDetectionTest.class
 com\bx\smpPlugin\managers\EcseeConfigurationTest.class
@@ -60,6 +65,7 @@ com\bx\smpPlugin\managers\DatabaseManagerHideStateTest.class
 com\bx\smpPlugin\storage\ShopPreferenceRepositoryTest.class
 com\bx\smpPlugin\coinflip\CoinFlipServiceTest.class
 com\bx\smpPlugin\permissions\PermissionRegistryTest$1.class
+com\bx\smpPlugin\dialogs\screens\StatsDialogTest.class
 com\bx\smpPlugin\models\AuctionBrowseEngineTest.class
 com\bx\smpPlugin\managers\ShopManagerTest.class
 com\bx\smpPlugin\platform\PlatformPolicyTest.class

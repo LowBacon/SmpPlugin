@@ -120,7 +120,8 @@ public class ServerInfoMenu extends BaseMenu {
                     return;
                 }
 
-                boolean executed = player.performCommand(action.command());
+                boolean executed = player.performCommand(
+                        com.bx.smpPlugin.utils.SpigotScheduler.renamedCommand(action.command()));
                 if (!executed) {
                     player.sendMessage(ColorUtils.toComponent("&cᴛʜᴀᴛ ᴀᴄᴛɪᴏɴ ɪѕ ᴜɴᴀᴠᴀɪʟᴀʙʟᴇ ʀɪɢʜᴛ ɴᴏᴡ."));
                 }
@@ -330,7 +331,7 @@ public class ServerInfoMenu extends BaseMenu {
             ));
             case "ECONOMY" -> ButtonAction.info(List.of(
                     "&7ᴇᴀʀɴ " + plugin.getCurrencyManager().plural(com.bx.smpPlugin.managers.CurrencyManager.CurrencyType.MONEY)
-                            + " ᴡɪᴛʜ &f/sell &7ᴀɴᴅ ᴛʀᴀᴅᴇ ʙᴇᴛᴛᴇʀ ɢᴇᴀʀ ᴛʜʀᴏᴜɢʜ &f/auctionhouse&7."
+                            + " ᴡɪᴛʜ &f/sell &7ᴀɴᴅ ᴛʀᴀᴅᴇ ʙᴇᴛᴛᴇʀ ɢᴇᴀʀ ᴛʜʀᴏᴜɢʜ &f/ah&7."
             ));
             default -> ButtonAction.info(List.of("&7ᴛʜɪѕ ʙᴜᴛᴛᴏɴ ɪѕ ɪɴꜰᴏʀᴍᴀᴛɪᴏɴᴀʟ ᴏɴʟʏ."));
         };
@@ -441,7 +442,7 @@ public class ServerInfoMenu extends BaseMenu {
                                 "&#00A4FCᴍᴀᴋᴇ " + moneyPlural,
                                 List.of(
                                         "&fѕᴇʟʟ ʙʟᴏᴄᴋѕ, ᴏʀᴇѕ, ᴀɴᴅ ᴅʀᴏᴘѕ ᴡɪᴛʜ",
-                                        "&b/sell &fᴏʀ ʟɪѕᴛ ɪᴛᴇᴍѕ ɪɴ &b/auctionhouse&f.",
+                                        "&b/sell &fᴏʀ ʟɪѕᴛ ɪᴛᴇᴍѕ ɪɴ &b/ah&f.",
                                         "",
                                         "&#00A4FCᴛɪᴘ: &fᴋᴇᴇᴘ ʀᴀʀᴇ ʟᴏᴏᴛ ᴛᴏ ᴛʀᴀᴅᴇ."
                                 ),

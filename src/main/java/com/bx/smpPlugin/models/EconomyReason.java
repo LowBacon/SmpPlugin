@@ -22,5 +22,7 @@ public enum EconomyReason {
     AMETHYST_SELL,
     COINFLIP_STAKE,
     COINFLIP_PAYOUT,
-    COINFLIP_REFUND
+    COINFLIP_REFUND,
+    /** Daily rewards, the Halloween calendar, challenges, chat games and other 3.0 prizes. */
+    REWARD
 }

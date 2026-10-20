@@ -4,6 +4,9 @@ import com.bx.smpPlugin.SmpPlugin;
 import com.bx.smpPlugin.dialogs.screens.QuickBuyItemDialog;
 import com.bx.smpPlugin.dialogs.screens.RtpQueueDialog;
 import com.bx.smpPlugin.dialogs.screens.SettingsDialog;
+import com.bx.smpPlugin.dialogs.screens.NoticeDialog;
+import com.bx.smpPlugin.dialogs.screens.StatsDialog;
+import com.bx.smpPlugin.utils.NoticeSpec;
 import com.bx.smpPlugin.utils.DialogGateway;
 import io.papermc.paper.dialog.DialogResponseView;
 import net.kyori.adventure.key.Key;
@@ -34,6 +37,8 @@ public final class DialogManager implements DialogGateway {
     private final SettingsDialog settings;
     private final RtpQueueDialog rtpQueue;
     private final QuickBuyItemDialog quickBuyItem;
+    private final StatsDialog stats;
+    private final NoticeDialog notice;
     private final List<DialogScreen> screens;
 
     /**
@@ -56,7 +61,9 @@ public final class DialogManager implements DialogGateway {
         this.quickBuyItem = new QuickBuyItemDialog(plugin, config, sessions);
         // Ordered so the cheap exact-match screens answer before the prefix-matching ones.
         this.homes = new com.bx.smpPlugin.dialogs.screens.HomesDialog(plugin, config, sessions);
-        this.screens = List.of(settings, rtpQueue, quickBuyItem, homes);
+        this.stats = new StatsDialog(plugin, config, sessions);
+        this.notice = new NoticeDialog(plugin, config, sessions);
+        this.screens = List.of(settings, rtpQueue, quickBuyItem, homes, stats, notice);
     }
 
     @SuppressWarnings("unchecked")
@@ -91,6 +98,26 @@ public final class DialogManager implements DialogGateway {
     @Override
     public boolean openHomes(Player player) {
         return config.isScreenEnabled("HOMES") && homes.open(player);
+    }
+
+    @Override
+    public boolean openStats(Player player) {
+        return config.isScreenEnabled("STATS") && stats.open(player);
+    }
+
+    @Override
+    public boolean openStats(Player player, UUID target, String targetName) {
+        return config.isScreenEnabled("STATS") && stats.openFor(player, target, targetName);
+    }
+
+    @Override
+    public boolean showNotice(Player player, NoticeSpec spec) {
+        return config.isEnabled() && notice.show(player, spec);
+    }
+
+    @Override
+    public boolean showNoticeAnimated(Player player, List<NoticeSpec> frames, long periodTicks) {
+        return config.isEnabled() && notice.animate(player, frames, periodTicks);
     }
 
     @Override
@@ -148,6 +175,7 @@ public final class DialogManager implements DialogGateway {
     @Override
     public void forget(UUID playerId) {
         sessions.remove(playerId);
+        notice.forget(playerId);
         DialogSupport.forget(playerId);
         if (plugin.getPlayerSettingToggles() != null) {
             plugin.getPlayerSettingToggles().dropAuctionCache(playerId);

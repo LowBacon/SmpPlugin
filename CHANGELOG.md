@@ -1,5 +1,155 @@
 # Changelog
 
+## 3.0.0 — 20 October 2026
+
+**CustomSmp 3.0: a Halloween calendar, daily rewards and challenges, live events, 63 new commands,
+ready-made staff roles, and a simpler /stats.** Runs on the same versions as 2.1.0 (Minecraft 1.21.11
+to 26.3) from one jar per server family.
+
+### 🎃 Spooky Calendar (`/halloween`)
+- **One door for every day of October.** Click today's door: it spins through candy, slows down
+  and reveals the prize, with sounds and particles. On Paper and Purpur the reveal ends in an
+  animated pop-up.
+- **The calendar opens with a wave** of doors and its frame shimmers orange, black and purple.
+  Locked doors show when they open, and opened doors show what was inside. Day 31 is the big
+  Halloween door in the middle, and opening it is announced to the server.
+- **You choose the prizes:**
+  - `/halloween edit` shows every door. Click one and drop items into it.
+  - Click the gold and amethyst buttons to set money and shards, then Save.
+  - Console commands and defaults live in `halloween.yml`.
+- **Rules you can change:** season dates, time zone, daily doors or everything on the 31st,
+  catch-up for missed doors, and grace days.
+- **Admin tools:**
+  - `/halloween preview <date>` tests the calendar outside October.
+  - `/halloween stats` shows how many players opened each door.
+  - `/halloween give` and `/halloween reset`.
+- **`/trickortreat`** (once an hour): a weighted treat, or a harmless trick (bats, a scare, a
+  launch, darkness, a fake creeper). Rare treats are announced.
+- **Halloween ambience during the season:**
+  - a greeting title once a day
+  - a clickable reminder about unopened doors
+  - monsters drop Halloween Candy, which gives a random boost when eaten
+  - zombies and skeletons spawn in pumpkin masks
+
+### 🎁 Daily rewards and challenges
+- **`/daily`:**
+  - a 7-day reward strip with a streak, where day 7 is the big one
+  - a weekly money bonus for long streaks
+  - grace days so one missed day doesn't reset the streak
+  - a spinning claim animation and a pop-up reveal
+  - a join reminder
+- **`/challenges`:**
+  - three goals a day, the same for everyone: break blocks, place blocks, kill mobs, kill players,
+    play time, or earn money
+  - progress bars, automatic payouts, and a bonus for finishing all of them
+  - progress comes from stats the plugin already tracks, so nothing extra runs per block or per kill
+
+### 🎉 Live events
+- **`/poll`:** clickable options, a boss-bar timer and a bar-chart result.
+- **`/giveaway`:**
+  - Give away the item in your hand, or money (admins only, since that money is created).
+  - Players join with a click.
+  - An item goes back to the host if nobody joins. A host who is offline gets it on their next join.
+- **Chat games:**
+  - unscramble, quick maths, fast typer and trivia
+  - start by themselves every few minutes when enough players are online
+  - the first correct answer in chat wins
+  - muted or filtered messages never count
+- **Announcer:** rotating tips from `extras.yml`. `/announcer` lists them, sends one now or pauses them.
+- **`/countdown`:** a server-wide countdown with titles and a boss bar.
+- **`/mail`:**
+  - leave messages for offline players
+  - unread mail is announced on join
+  - mutes and ignores are respected
+
+### 😄 Fun commands
+- **Emotes:** `/hug`, `/slap`, `/highfive`, `/poke`, `/wave` and `/cheer`, with particles and
+  sounds. They are seen by nearby players and respect `/ignore`.
+- **Games:** `/dice` (animated roll), `/8ball`, `/rps` (a countdown against the server), `/rate`.
+- **Others:**
+  - `/firework` is harmless and can't hurt anyone.
+  - `/sit` sits you down; sneak to stand up.
+  - `/hat` wears the item in your hand.
+
+### 🧰 Utility commands
+- **Portable workstations:** `/craft`, `/anvil`, `/grindstone`, `/stonecutter`, `/loom`, `/smithing`
+  and `/cartography`. These are rank perks.
+- **`/back`:** returns you after a teleport, or after death with a perk. It never returns you into
+  a duel or FFA arena or the lobby, and doesn't work in combat.
+- **Information:**
+  - `/near` lists nearby players with distance and direction.
+  - `/seen` shows when a player was last online.
+  - `/coords` shows your coordinates and can share them with your team.
+  - `/online`, `/uptime` (with TPS), and `/calc`, a safe calculator that understands `1.5m` and `64x27`.
+- **Items:**
+  - `/trash` deletes what you put in it.
+  - `/repair [all]` has a cooldown.
+  - `/skull`, `/lore` and `/glow`.
+- **Personal:** `/ptime` and `/pweather` change your own time and weather; `/suicide` asks you to confirm.
+
+### 🛡️ Staff, moderation and permissions
+- **Ready-made staff roles.** Give one node to a rank:
+  - `smpplugin.role.helper`
+  - `smpplugin.role.moderator`
+  - `smpplugin.role.admin`
+  - `smpplugin.role.owner`
+
+  Each includes the one below it. No role grants anti-cheat or privacy bypasses.
+- **`/perms`:**
+  - list the roles
+  - list every node in a role
+  - explain a node
+  - check why a player has a node
+  - see which roles a player has
+- **Watching players:**
+  - `/notes <player>` keeps private staff notes; other online staff are alerted.
+  - `/whois <player>` shows one player's details. The IP also needs `smpplugin.staff.alts`.
+  - `/socialspy` and `/commandspy` never show login or password commands.
+- **World and server tools:**
+  - `/broadcast [-title]`, `/day` and `/night`, `/sun`, `/rain` and `/thunder`
+  - `/smite` (harmless unless `-damage`)
+  - `/butcher` never removes named, tamed or leashed mobs, or villagers
+  - `/spawnmob`, `/more`, `/speed` (1 = normal, 10 = max), `/performance` (TPS, MSPT, memory,
+    chunks, entities) and `/spook`
+- **More than 60 new permission nodes**, all listed in `docs/permissions-reference.md`. Ops get the
+  staff and admin tools through `smpplugin.admin` as before.
+
+### 📊 /stats, simpler
+- **The pop-up opens on your own stats:**
+  - three short lines: money, kills and deaths, playtime
+  - Search Player, Leaderboards and Close buttons
+  - no player list to get lost in
+- **The chest menu is one small row:** money, shards, kills, playtime and blocks mined, under your
+  head, with Leaderboards and Close.
+- **Unchanged:** offline players still load in the background, and disguised players still show
+  their alias and no skin.
+
+### Changed
+- **`/auctionhouse` is gone; the Auction House is `/ah` only.** Menu buttons in config files written
+  for 2.x that run `auctionhouse` keep working.
+- **`/menu` has a new row:** daily reward, challenges, Spooky Calendar, mail and the crafting table.
+  Buttons for commands a player can't use are hidden.
+- **`/smpplugin setup commands <category>`** has new categories: community, fun and utility.
+- **New config files:** `halloween.yml` and `extras.yml`. Every new message can be changed in
+  `messages.yml` under `V3`.
+- **New feature switches:** HALLOWEEN, DAILY_REWARDS, CHALLENGES, EVENTS, ANNOUNCER, MAIL, FUN,
+  UTILITIES and STAFF_EXTRAS. Each is on by default.
+- **New PlaceholderAPI values:** `%smpplugin_daily_streak%`, `%smpplugin_daily_ready%`,
+  `%smpplugin_halloween_opened%`, `%smpplugin_halloween_ready%`, `%smpplugin_halloween_countdown%`,
+  `%smpplugin_challenges_done%` and `%smpplugin_challenges_total%`.
+- **Older `dialog.yml` files:** keys missing from a server's copy are read from the plugin's
+  built-in copy, so new screens work without editing the file.
+
+### Performance
+- **Fast lookups:** per-player 3.0 data (streaks, opened doors, challenge progress, spy toggles)
+  is loaded while the player is logging in, so every check while they play is a memory read.
+- **Background writes:** saves go to the database thread in order. Data is stored in your existing
+  database (SQLite, MySQL or the MongoDB bridge) in three small tables.
+- **Animations cost nothing when closed:** they run only while the menu is open and stop the
+  moment it closes.
+- **Cheap timers:** challenge checks run every 30 seconds, and the announcer and chat-game timers
+  are a time comparison when idle.
+
 ## 2.1.0 — 16 October 2026
 
 **Runs on Minecraft 1.21.11, 26.1, 26.1.1, 26.1.2, 26.2 and 26.3.** 2.0.0 ran on 26.3 only.

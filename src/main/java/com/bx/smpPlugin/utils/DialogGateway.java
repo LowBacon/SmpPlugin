@@ -26,6 +26,29 @@ public interface DialogGateway {
         return false;
     }
 
+    /** The /stats player list; false when dialogs or that screen are off, so the chest menu is used. */
+    default boolean openStats(Player player) {
+        return false;
+    }
+
+    /** One player's stat sheet, for /stats &lt;player&gt;. The caller has already resolved the name. */
+    default boolean openStats(Player player, UUID target, String targetName) {
+        return false;
+    }
+
+    /** A simple pop-up (title, icon, lines, buttons). False when dialogs are unavailable. */
+    default boolean showNotice(Player player, NoticeSpec notice) {
+        return false;
+    }
+
+    /**
+     * Plays a short animation by showing each frame in turn, {@code periodTicks} apart; the last
+     * frame stays open. False when dialogs are unavailable, so the caller can use chat instead.
+     */
+    default boolean showNoticeAnimated(Player player, java.util.List<NoticeSpec> frames, long periodTicks) {
+        return false;
+    }
+
     /** The item search used by the Auction House and Quick Buy. */
     boolean openQuickBuySearch(Player player, String currentQuery, String source);
 

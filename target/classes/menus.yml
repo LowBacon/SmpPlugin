@@ -1539,7 +1539,7 @@ SERVER-INFO-MENU:
           - '&fYou can earn server money by selling items in game.'
           - '&fThis allows you to buy better things like armor and pvp gear.'
           - ''
-          - '&#00A4FCCommands: &f/sell and /auctionhouse'
+          - '&#00A4FCCommands: &f/sell and /ah'
         RULES:
           MATERIAL: KNOWLEDGE_BOOK
           SLOT: 12
@@ -1617,7 +1617,7 @@ SERVER-INFO-MENU:
           LORE:
           - '&fSell blocks, ores, and drops with'
           - '&b/sell &for list items in'
-          - '&b/auctionhouse&f.'
+          - '&b/ah&f.'
           - ''
           - '&#00A4FCTip: &fKeep rare loot to trade.'
           COMMAND: sell
@@ -2085,10 +2085,10 @@ SERVERS-MENU:
 # {player} works in names and lore. Slot 4 shows the player's own head and opens /stats.
 MAIN-MENU:
   TITLE: '&8Menu'
-  SIZE: 45
+  SIZE: 54
   FILLER: GRAY_STAINED_GLASS_PANE
   PROFILE-SLOT: 4
-  CLOSE-SLOT: 40
+  CLOSE-SLOT: 49
   BUTTONS:
     HOMES:
       SLOT: 10
@@ -2137,7 +2137,7 @@ MAIN-MENU:
       MATERIAL: GOLD_INGOT
       NAME: '&6Auction House'
       LORE: ['&7Buy and sell with players']
-      COMMAND: auctionhouse
+      COMMAND: ah
     SHOP:
       SLOT: 20
       MATERIAL: EMERALD
@@ -2216,3 +2216,33 @@ MAIN-MENU:
       NAME: '&eRules'
       LORE: ['&7Server rules']
       COMMAND: rules
+    DAILY:
+      SLOT: 38
+      MATERIAL: CHEST_MINECART
+      NAME: '&aDaily Reward'
+      LORE: ['&7Claim a reward every day', '&7and build a streak']
+      COMMAND: daily
+    CHALLENGES:
+      SLOT: 39
+      MATERIAL: TARGET
+      NAME: '&bDaily Challenges'
+      LORE: ['&7Three new goals every day']
+      COMMAND: challenges
+    HALLOWEEN:
+      SLOT: 40
+      MATERIAL: JACK_O_LANTERN
+      NAME: '&6Spooky Calendar'
+      LORE: ['&7Open a door every day in October']
+      COMMAND: halloween
+    MAIL:
+      SLOT: 41
+      MATERIAL: PAPER
+      NAME: '&eMail'
+      LORE: ['&7Read your mail']
+      COMMAND: mail
+    CRAFT:
+      SLOT: 42
+      MATERIAL: CRAFTING_TABLE
+      NAME: '&eCrafting Table'
+      LORE: ['&7A crafting table anywhere']
+      COMMAND: craft

@@ -2489,7 +2489,7 @@ BUILTIN:
   f611e51641ed6ebf3061: open <crate> &7- open a crate directly
   e969f79d7e1f42d238e2: type <crate> <choose_one|gacha> &7- set crate type
   fef567638f22cb64901b: take <player> <crate> <amount> &7- remove keys
-  115620d253b205d50f22: with &f/sell &7and trade better gear through &f/auctionhouse&7.
+  115620d253b205d50f22: with &f/sell &7and trade better gear through &f/ah&7.
   76a96b56c02df387cfec: ${price}X &lshards
   7ffe6140f6316a2a89ae: '&#00A4FCrtp guide'
   925060ac7d172cff446c: '&#00A4FCrules'
@@ -2749,7 +2749,7 @@ BUILTIN:
   ec8ed3963b00bfe3da12: '&7enabled: &f'
   1b4c992b8e1f5c068dff: '&7entries shown: &f'
   93c18f71c8d95a6754bc: '&7entries: &f'
-  dadab7422c9e843ae22c: '&7earn money with &f/sell &7and trade better gear through &f/auctionhouse&7.'
+  dadab7422c9e843ae22c: '&7earn money with &f/sell &7and trade better gear through &f/ah&7.'
   40cc716d9d187b8a71dc: '&7keys: &f'
   217844e86b0605bfed29: '&7keys: &f{keys}'
   0efc0f9dc828680b9ded: '&7managed spawners: &f'
@@ -2996,7 +2996,7 @@ BUILTIN:
   f65d6c028262eecf8d5e: '&b/rtp &7- random teleport'
   f7442cc2300c4a554e27: '&b/rules &7- view server rules'
   ead2136806666eca8dcd: '&b/sell &7- sell your items'
-  8de3cb32549259df17ba: '&b/sell &for list items in &b/auctionhouse&f.'
+  8de3cb32549259df17ba: '&b/sell &for list items in &b/ah&f.'
   9eb475d93e63e7c1a6cc: '&b/settings &7- player settings'
   26734e50c4814d20cfec: '&b/shards &7- check your'
   49e748d7e9df86b4356b: '&b/shards &7- check your shards'

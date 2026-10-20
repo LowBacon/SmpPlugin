@@ -6,12 +6,15 @@
 # Purpur. On Spigot, or when a screen is turned off below, the command opens the
 # chest menu from menus.yml instead, so this file is safe on every server.
 #
-# Screens in this version: /settings, the /rtpq confirmation and the Quick Buy
-# item picker in the Auction House.
+# Screens in this version: /settings, /homes, /stats, the /rtpq confirmation and
+# the Quick Buy item picker in the Auction House.
+#
+# Keys missing from your copy of this file are read from the plugin's built-in
+# copy, so screens added in an update work without editing anything.
 #
 # BUTTONS take one of:
 #   ACTION:  "smpplugin:<id>"   a screen or toggle handled by the plugin
-#   COMMAND: "auctionhouse"     closes the dialog, then runs the command
+#   COMMAND: "ah"               closes the dialog, then runs the command
 # ACTION wins when both are present. Only a-z, 0-9, '.', '_' and '-' are legal
 # in an action id.
 #
@@ -31,6 +34,8 @@ SCREENS:
   RTP-QUEUE: true
   # /homes as a grid of slots with a manage screen per home. false uses the chest menu.
   HOMES: true
+  # /stats as a player list with heads, then a stat sheet. false uses the chest menu.
+  STATS: true
 
 SETTINGS_DIALOG:
   TITLE: "Settings"
@@ -266,3 +271,46 @@ DELETE_HOME_CONFIRM_DIALOG:
       ACTION: "smpplugin:manage_home_%slot%"
     - LABEL: "&cDelete"
       ACTION: "smpplugin:execute_delete_home_%slot%"
+
+# /stats: your own stats in a few lines, with a search button and the leaderboards.
+STATS_SEARCH_DIALOG:
+  TITLE: "Search Player"
+  EXTERNAL-TITLE: "Search Player"
+  DESCRIPTION: "Type a player's name to see their stats"
+  COLUMNS: 2
+  BUTTON-WIDTH: 120
+  INPUTS:
+    - ID: "player_name"
+      LABEL: "Player Name"
+      WIDTH: 240
+      MAX-LENGTH: 16
+  BUTTONS:
+    - LABEL: "&#00FC00Search"
+      ACTION: "smpplugin:execute_add_stats_player"
+    - LABEL: "Back"
+      ACTION: "smpplugin:stats_menu"
+
+# Tokens: %player% %status% %team% %money% %shards% %kills% %deaths% %kd% %playtime%
+# %blocks_broken% %blocks_placed% %mobs_killed% %kill_streak% %highest_kill_streak%
+PLAYER_STATS_DIALOG:
+  TITLE: "%player%"
+  EXTERNAL-TITLE: "%player%"
+  # The line next to the player's head at the top.
+  HEADER: "&f&l%player% &r%status%"
+  AFTER-ACTION: CLOSE
+  COLUMNS: 2
+  BUTTON-WIDTH: 120
+  TEXT-WIDTH: 220
+  ONLINE-STATUS: "&a● Online"
+  OFFLINE-STATUS: "&7● Offline"
+  NO-TEAM: "&7none"
+  STATS-FORMAT:
+    - "&7Money &a$%money%"
+    - "&7Kills &f%kills%  &8|  &7Deaths &f%deaths%"
+    - "&7Playtime &f%playtime%"
+  BUTTONS:
+    - LABEL: "&eSearch Player"
+      ACTION: "smpplugin:stats_add_prompt"
+    - LABEL: "&6Leaderboards"
+      COMMAND: "leaderboard"
+  CLOSE-LABEL: "Close"

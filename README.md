@@ -2,13 +2,31 @@
 
 A complete, feature-rich **Minecraft SMP core plugin** for **Minecraft 1.21.11 – 26.3** on **Paper, Purpur, Spigot and CraftBukkit**.
 
-> **2.1.0** runs on Minecraft **1.21.11, 26.1, 26.1.1, 26.1.2, 26.2 and 26.3** from one jar per server family. Run `/smpplugin version` to see what is installed. See [COMPATIBILITY.md](COMPATIBILITY.md),
+> **3.0.0** adds the Spooky Calendar (`/halloween`), daily rewards, daily challenges, polls, giveaways, chat games,
+> 63 new commands and ready-made staff roles. It runs on Minecraft **1.21.11, 26.1, 26.1.1, 26.1.2, 26.2 and 26.3**
+> from one jar per server family. Run `/smpplugin version` to see what is installed. See [COMPATIBILITY.md](COMPATIBILITY.md),
 > [CHANGELOG.md](CHANGELOG.md) and the upgrade status in [docs/UPGRADE-26.3-STATUS.md](docs/UPGRADE-26.3-STATUS.md).
 > Permissions changed; read [docs/permissions-migration-and-luckperms.md](docs/permissions-migration-and-luckperms.md) before upgrading.
 
 SmpPlugin is designed to provide an entire SMP server experience from a single, highly configurable plugin. It combines gameplay, economy, social features, moderation, player utilities, competitive systems, GUI menus, statistics, server management, and extensive integrations into one unified system.
 
 Instead of running a small army of plugins just to make an SMP function, SmpPlugin brings the majority of the core systems together in one optimized and configurable package.
+
+## 🆕 New in 3.0
+
+| | |
+|---|---|
+| 🎃 **Spooky Calendar** | `/halloween`: a door for every day of October with a spinning reveal. Choose the prizes in game with `/halloween edit`. Trick or Treat, candy drops and pumpkin-headed mobs during the season. |
+| 🎁 **Daily rewards** | `/daily`: a 7-day streak with a big day-7 reward and weekly bonuses. |
+| 🎯 **Daily challenges** | `/challenges`: three goals a day for everyone, paid out automatically. |
+| 🎉 **Live events** | `/poll`, `/giveaway`, automatic chat games, `/countdown`, a rotating announcer and `/mail`. |
+| 😄 **Fun** | `/hug` `/slap` `/highfive` `/poke` `/wave` `/cheer` `/dice` `/8ball` `/rps` `/rate` `/firework` `/sit` `/hat` |
+| 🧰 **Utilities** | `/craft` `/anvil` `/grindstone` `/stonecutter` `/loom` `/smithing` `/cartography` `/trash` `/back` `/near` `/seen` `/coords` `/ptime` `/pweather` `/repair` `/skull` `/lore` `/glow` `/online` `/uptime` `/calc` `/suicide` |
+| 🛡️ **Staff** | Roles `smpplugin.role.helper` / `moderator` / `admin` / `owner`, `/perms`, `/notes`, `/whois`, `/socialspy`, `/commandspy`, `/broadcast`, `/day` `/night` `/sun` `/rain` `/thunder`, `/smite`, `/butcher`, `/spawnmob`, `/more`, `/speed`, `/performance`, `/spook` |
+| 📊 **Simpler /stats** | Your own stats in three lines, with Search Player and Leaderboards buttons. |
+
+The Auction House is now only `/ah` (`/auctionhouse` was removed). Everything new is configured in
+`halloween.yml` and `extras.yml`, and each part can be switched off as a feature.
 
 ## ✨ Features
 
@@ -232,7 +250,7 @@ This makes it possible to integrate SmpPlugin data into scoreboards, tablists, h
 
 ## 🖥️ Command System
 
-SmpPlugin currently provides **130+ commands** covering practically every major part of the plugin.
+SmpPlugin provides **210+ commands** covering practically every major part of the plugin.
 
 Examples include:
 
@@ -244,7 +262,7 @@ Examples include:
 /rtp
 /shop
 /orders
-/auctionhouse
+/ah
 /sell
 /sellall
 /balance
@@ -254,6 +272,10 @@ Examples include:
 /crates
 /keys
 /stats
+/daily
+/challenges
+/halloween
+/mail
 /playtime
 /ping
 /team
@@ -323,11 +345,11 @@ mvn clean package
 This builds the jar for **Paper and Purpur**:
 
 ```text
-target/SmpPlugin-2.1.0-paper.jar
+target/SmpPlugin-3.0.0-paper.jar
 ```
 
 For **Spigot and CraftBukkit**, build with `mvn clean package -Pspigot`, which produces
-`target/SmpPlugin-2.1.0-spigot.jar`. The two APIs are not binary compatible; use the matching jar.
+`target/SmpPlugin-3.0.0-spigot.jar`. The two APIs are not binary compatible; use the matching jar.
 
 ## 📦 Installation
 

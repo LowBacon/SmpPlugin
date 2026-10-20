@@ -39,6 +39,11 @@ public class InventoryClickListener implements Listener {
             return;
         }
 
+        if (menu instanceof com.bx.smpPlugin.core.InteractiveMenu interactive) {
+            interactive.handleInventoryClick(event);
+            return;
+        }
+
         if (menu instanceof RTPMenu) {
             handleRtpMenuClick(event, player, menu);
             return;
@@ -77,6 +82,11 @@ public class InventoryClickListener implements Listener {
 
         if (menu instanceof SellMenu sellMenu) {
             sellMenu.handleInventoryDrag(event);
+            return;
+        }
+
+        if (menu instanceof com.bx.smpPlugin.core.InteractiveMenu interactive) {
+            interactive.handleInventoryDrag(event);
             return;
         }
 

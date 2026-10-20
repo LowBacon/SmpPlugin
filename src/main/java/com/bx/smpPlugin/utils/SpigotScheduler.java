@@ -166,10 +166,11 @@ public final class SpigotScheduler {
     }
 
     /** Runs a command as the given player, on the main thread. */
-    public boolean dispatchPlayerCommand(Player player, String command) {
-        if (player == null || command == null || command.isBlank()) {
+    public boolean dispatchPlayerCommand(Player player, String rawCommand) {
+        if (player == null || rawCommand == null || rawCommand.isBlank()) {
             return false;
         }
+        String command = renamedCommand(rawCommand);
         if (Bukkit.isPrimaryThread()) {
             return player.performCommand(command);
         }
@@ -186,6 +187,20 @@ public final class SpigotScheduler {
         });
         return true;
     }
+    /**
+     * Commands renamed in 3.0, so menu buttons in config files written for 2.x keep working:
+     * /auctionhouse is now only /ah.
+     */
+    public static String renamedCommand(String command) {
+        String trimmed = command.trim();
+        String body = trimmed.startsWith("/") ? trimmed.substring(1) : trimmed;
+        String lower = body.toLowerCase(java.util.Locale.ROOT);
+        if (lower.equals("auctionhouse") || lower.startsWith("auctionhouse ")) {
+            return "ah" + body.substring("auctionhouse".length());
+        }
+        return command;
+    }
+
     public void forEachOnlinePlayer(Consumer<Player> consumer) {
         Runnable iteration = () -> {
             for (Player player : Bukkit.getOnlinePlayers()) {

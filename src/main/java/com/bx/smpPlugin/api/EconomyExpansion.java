@@ -80,6 +80,11 @@ public class EconomyExpansion extends PlaceholderExpansion {
 
     @Override
     public @Nullable String onRequest(OfflinePlayer offlinePlayer, @NotNull String params) {
+        // 3.0: daily streak, Spooky Calendar and challenges, e.g. %smpplugin_daily_streak%.
+        String extra = plugin.getV3Module() == null ? null : plugin.getV3Module().placeholder(offlinePlayer, params);
+        if (extra != null) {
+            return extra;
+        }
         String leaderboardValue = leaderboardPlaceholderResolver.resolve(offlinePlayer, params);
         if (leaderboardValue != null) {
             return leaderboardValue;

@@ -8,12 +8,12 @@ An all-in-one **Minecraft SMP core plugin**. One jar replaces the usual stack of
 
 | | |
 |---|---|
-| **Plugin version** | `2.1.0`; `/smpplugin version` shows the installed build |
+| **Plugin version** | `3.0.0`; `/smpplugin version` shows the installed build |
 | **Minecraft** | `1.21.11`, `26.1`, `26.1.1`, `26.1.2`, `26.2` and `26.3` on Paper, Purpur, Spigot and CraftBukkit |
 | **Folia** | Not supported |
 | **Java** | 21 on 1.21.11, 25 on 26.x (the jars are Java 21 bytecode) |
 | **API** | Compiled against Paper API `1.21.11` (Spigot build: Spigot API `1.21.11`), checked against 26.3; `api-version: 1.21`, `folia-supported: false` |
-| **Build** | `mvn clean package` → `target/SmpPlugin-2.1.0-paper.jar` (Paper/Purpur); `-Pspigot` → `…-spigot.jar` (Spigot/CraftBukkit) |
+| **Build** | `mvn clean package` → `target/SmpPlugin-3.0.0-paper.jar` (Paper/Purpur); `-Pspigot` → `…-spigot.jar` (Spigot/CraftBukkit) |
 | **Size** | ~590 classes, ~152,000 lines of Java, 145 commands, 110+ GUI menus, 36 config files |
 | **Update checker** | Checks GitHub (`LowBacon/SmpPlugin`, `version.txt` on `main`) for a newer version on startup |
 
@@ -45,6 +45,94 @@ disable itself. See [COMPATIBILITY.md](COMPATIBILITY.md).
 19. [Storage](#%EF%B8%8F-storage)
 20. [Configuration Files](#%EF%B8%8F-configuration-files)
 21. [How It Works](#-how-it-works)
+22. [New in 3.0](#-new-in-30)
+
+---
+
+## 🆕 New in 3.0
+
+### 🎃 Spooky Calendar (`/halloween`, `halloween.yml`)
+- **The calendar:**
+  - one door per day of the season (1 to 31 October by default)
+  - the last door is the big Halloween prize, in the middle of the bottom row
+- **Opening it:**
+  - the doors appear in a wave and the frame shimmers
+  - today's door spins through candy, slows down and reveals its prize
+  - on Paper and Purpur, an animated pop-up finishes the reveal
+- **Door states:** open (glowing jack-o'-lantern), locked (shows when it opens), opened (shows
+  what was inside), and missed (when catch-up is off).
+- **Prizes:**
+  - `/halloween edit`: drop items into a door, click to set money and shards, then Save. These are
+    stored in `data/halloween-prizes.yml`.
+  - `halloween.yml` `DOORS.<day>` and `DOORS.DEFAULT` cover the rest, with console commands.
+- **Rules:** time zone, month and days, `DAILY` or `ALL-ON-LAST-DAY`, catch-up, grace days, and a
+  preview date for testing.
+- **Admin:** `/halloween give <player> <door>`, `reset <player> [door]`, `preview <yyyy-MM-dd|off>`,
+  `stats`, `reload`.
+- **`/trickortreat`:**
+  - hourly by default
+  - treats are picked by weight
+  - tricks are harmless: SCARE, BATS, LAUNCH, SPIN, DARKNESS, FAKE_CREEPER
+- **Ambience during the season:**
+  - a daily greeting title and an unopened-door reminder
+  - Halloween Candy from monsters, which gives a random 20-second boost when eaten
+  - pumpkin masks on naturally spawning zombies and skeletons
+
+### 🎁 Daily rewards and challenges (`extras.yml`)
+- **`/daily`:**
+  - seven reward days, then the cycle repeats with a weekly money bonus
+  - `GRACE-DAYS` days can be skipped without breaking the streak
+  - spinning claim animation, pop-up reveal and a join reminder
+- **`/challenges`:**
+  - `PER-DAY` goals picked from `POOL` with the date as the seed, so everyone gets the same ones
+  - types: BREAK_BLOCKS, PLACE_BLOCKS, KILL_MOBS, KILL_PLAYERS, PLAY_MINUTES, EARN_MONEY
+  - automatic payouts every 30 seconds, plus `ALL-DONE-BONUS`
+
+### 🎉 Events
+- **`/poll start <seconds> <question> | <a> | <b>`:** clickable votes, a boss bar and a bar-chart result.
+- **`/giveaway start [seconds]`:** gives away the held item.
+- **`/giveaway money <amount> [seconds] [winners]`:** gives away money that is created for it (admins only).
+- **Chat games:** UNSCRAMBLE, MATH, TYPE and TRIVIA. They start every `INTERVAL-MINUTES` when
+  `MIN-PLAYERS` are online, or with `/chatgame start [type]`.
+- **Announcer:** `ANNOUNCER.MESSAGES` rotate every `INTERVAL-SECONDS`. `/announcer list|send|toggle`.
+- **`/countdown <seconds> [what]`:** titles and a boss bar for everyone.
+- **`/mail send|read|clear`:**
+  - offline delivery, with a join notice for unread mail
+  - an inbox limit and a send cooldown
+  - muted players cannot send mail
+
+### 😄 Fun and 🧰 utilities
+- **Emotes** (`EMOTES.LIST`): hug, slap, highfive, poke, wave and cheer, each with a message,
+  particle, sound and optional push. They are seen by `NEARBY` players or the whole `SERVER`.
+- **Games and extras:**
+  - `/dice [sides]`, `/8ball`, `/rps`, `/rate`
+  - `/firework` never damages anyone
+  - `/sit` (sneak to stand), `/hat`
+- **Workstations:** `/craft`, `/anvil`, `/grindstone`, `/stonecutter`, `/loom`, `/smithing` and
+  `/cartography`, each with its own perk node.
+- **Teleport and location:**
+  - `/back` covers teleports, and deaths with `smpplugin.back.death`. It never goes into arenas or
+    the lobby and is blocked in combat.
+  - `/near`, `/seen`, `/coords [share]`
+- **Items and personal:** `/trash`, `/repair [all]`, `/skull`, `/lore`, `/glow`, `/ptime`, `/pweather`.
+- **Information:** `/online`, `/uptime`, `/calc`, and `/suicide` (asks to confirm).
+
+### 🛡️ Staff roles and tools
+- **Roles:** `smpplugin.role.helper` → `moderator` → `admin` → `owner`. Each contains the one
+  before it.
+  - Owner adds destructive actions and rank perks.
+  - No role grants security bypasses.
+- **`/perms`:** `roles`, `role <name>`, `explain <node>`, `check <player> <node>`, `player <player>`.
+- **Player tools:**
+  - `/notes <player> [add|remove]`
+  - `/whois <player>`
+  - `/socialspy`, `/commandspy` (logins and passwords are never shown)
+- **World tools:** `/broadcast [-title]`, `/day`, `/night`, `/sun`, `/rain`, `/thunder`, `/smite
+  [-damage]`, `/butcher [radius] [all]`, `/spawnmob`, `/more`, `/speed`, `/performance`, `/spook`.
+
+### 📊 Simpler /stats
+- **The pop-up** shows your own stats in three lines, with Search Player, Leaderboards and Close.
+- **The chest menu** is one row of five numbers under your head.
 
 ---
 
@@ -175,7 +263,7 @@ The plugin registers itself as a **Vault economy provider**, so other plugins ca
 - Orders can **sync across servers** through Redis
 
 ### Auction House
-- `/auctionhouse` (`/ah`) `[sell|my|claims|cancel|search|reload]`
+- `/ah` `[sell|my|claims|cancel|search|reload]` (`/auctionhouse` was removed in 3.0)
 - Browse by category and filter, list items, see your listings, claim expired or sold items
 - Smarter search: partial names (`neth`) and enchant shortcuts (`prot 4`)
 - **Quick Buy**: pin items and buy the cheapest listing in one click (dialogs on Paper/Purpur, forms on Bedrock)
@@ -467,9 +555,8 @@ Chat · Ignore · Messaging · Bounty · Cuboids · AFK · Shards · Warps · Te
 - Only changed headers, footers and names are sent, so a big player count costs little
 
 ### Stats
-- `/stats [player]`: stats menu with every stat and the player's leaderboard places
-
-### Leaderboards
+- `/stats [player]`: your own stats (or another player's) in a short pop-up on Paper/Purpur, with Search
+  Player and Leaderboards; a one-row chest menu on Spigot or when `SCREENS.STATS` is off
 - `/leaderboard [type]` (`/lb`, `/top`, `/leaderboards`) with a GUI
 - **12 types**: money, shards, kills, deaths, playtime, blocksPlaced, blocksBroken, mobsKilled, killStreak, highestKillStreak, moneySpent, moneyMade
 

@@ -61,7 +61,9 @@ public class ConfigManager {
             "database.yml",
             "server-wipe.yml",
             "discord.yml",
-            "anvil-moderation.yml"
+            "anvil-moderation.yml",
+            "halloween.yml",
+            "extras.yml"
     );
 
     private static final DateTimeFormatter BACKUP_TIMESTAMP_FORMAT =
@@ -104,6 +106,8 @@ public class ConfigManager {
     private FileConfiguration anvilModeration;
     private FileConfiguration enchantments;
     private FileConfiguration filter;
+    private FileConfiguration halloween;
+    private FileConfiguration extras;
 
     public ConfigManager(SmpPlugin plugin) {
         this.plugin = plugin;
@@ -129,7 +133,9 @@ public class ConfigManager {
         sounds       = load("sounds.yml", sounds);
         billford     = load("billford.yml", billford);
         rtp          = load("rtp.yml", rtp);
-        dialog       = load("dialog.yml", dialog);
+        dialog       = withBundledDefaults("dialog.yml", load("dialog.yml", dialog));
+        halloween    = load("halloween.yml", halloween);
+        extras       = load("extras.yml", extras);
         lobby        = load("lobby.yml", lobby);
         worth        = load("worth.yml", worth);
         amethystTools = load("amethyst-tools.yml", amethystTools);
@@ -1832,6 +1838,23 @@ public class ConfigManager {
         return false;
     }
 
+    /**
+     * Lets a server's own copy of a file read any key it lacks from the copy inside the jar. A
+     * dialog.yml written by an older version then still gets the screens added since, while every
+     * key the owner did write keeps its value. Defaults are only read, never saved into the file.
+     */
+    private FileConfiguration withBundledDefaults(String name, FileConfiguration configuration) {
+        if (configuration == null) {
+            return null;
+        }
+        try {
+            configuration.setDefaults(loadBundledYaml(name));
+        } catch (IOException | InvalidConfigurationException | IllegalArgumentException missing) {
+            plugin.getLogger().log(Level.FINE, "No bundled defaults for " + name, missing);
+        }
+        return configuration;
+    }
+
     private YamlConfiguration loadBundledYaml(String name) throws IOException, InvalidConfigurationException {
         try (InputStream input = plugin.getResource(name)) {
             if (input == null) {
@@ -2026,6 +2049,10 @@ public class ConfigManager {
     public FileConfiguration getAnvilModeration() { return anvilModeration; }
     public FileConfiguration getEnchantments()  { return enchantments; }
     public FileConfiguration getFilter()        { return filter; }
+    /** Spooky Calendar, Trick or Treat and the Halloween ambience (3.0). */
+    public FileConfiguration getHalloween()     { return halloween; }
+    /** Daily rewards, challenges, events, emotes and the other 3.0 extras. */
+    public FileConfiguration getExtras()        { return extras; }
 
     public FileConfiguration getLegacyMessages() { return messages; }
     public FileConfiguration getLegacyDeathMessages() { return deathMessages; }

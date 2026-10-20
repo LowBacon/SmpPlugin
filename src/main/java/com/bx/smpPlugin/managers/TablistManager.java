@@ -539,6 +539,20 @@ public class TablistManager {
         return cached != null && cached.isValid() ? cached : null;
     }
 
+    /**
+     * The skin to draw for this player's head in a menu, from what the tab list already knows.
+     * It never asks Mojang's session servers, so it is safe on the main thread.
+     * Null when nothing is known yet (usually a player who has not joined since the restart).
+     */
+    public SkinTexture knownSkinTexture(UUID playerId) {
+        SkinTexture cached = cachedSkinTexture(playerId);
+        if (cached != null) {
+            return cached;
+        }
+        Player online = playerId == null ? null : Bukkit.getPlayer(playerId);
+        return online == null ? null : resolveKnownSkinTexture(online);
+    }
+
     SkinTexture cachedSkinsRestorerTexture(UUID playerId) {
         if (playerId == null || !skinsRestorerSkinHeadTextures.contains(playerId)) {
             return null;
@@ -2622,8 +2636,8 @@ public class TablistManager {
         return plugin.getConfigManager().getConfig();
     }
 
-    record SkinTexture(String value, String signature) {
-        boolean isValid() {
+    public record SkinTexture(String value, String signature) {
+        public boolean isValid() {
             return value != null && !value.isBlank();
         }
 

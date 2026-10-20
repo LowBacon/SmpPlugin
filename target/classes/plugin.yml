@@ -1,10 +1,10 @@
 name: SmpPlugin
-version: 2.0.0-alpha.5
+version: 3.0.0
 main: com.bx.smpPlugin.SmpPlugin
 authors: [LowBacon]
 website: https://github.com/LowBacon/SmpPlugin
 # Minimum Minecraft version; filled from minecraft.api.version in pom.xml.
-api-version: "26.3"
+api-version: "1.21"
 # No Folia 26.3 build has been tested. See COMPATIBILITY.md.
 folia-supported: false
 softdepend:
@@ -152,11 +152,9 @@ commands:
     permission: smpplugin.admin.ffa
     description: Manage FFA arenas
     usage: /ffaarena <create|delete|setpos|setdisplay|settings|enable|disable|list|reload>
-  auctionhouse:
+  ah:
     description: Open the Auction House
-    usage: /auctionhouse [sell|my|claims|cancel|reload]
-    aliases:
-    - ah
+    usage: /ah [sell|my|claims|cancel|reload]
   enderchest:
     description: Open your custom Ender Chest
     usage: /enderchest [reload]
@@ -641,6 +639,331 @@ commands:
     permission: smpplugin.coinflip.inspect
     aliases:
     - cfadmin
+  halloween:
+    description: Open the Spooky Calendar and open today's door
+    usage: /halloween [edit|give|reset|preview|stats|reload]
+    permission: smpplugin.halloween
+    aliases:
+    - spooky
+    - spookycalendar
+  trickortreat:
+    description: Knock for a Halloween treat (or a harmless trick)
+    usage: /trickortreat
+    permission: smpplugin.halloween.trickortreat
+    aliases:
+    - tot
+  daily:
+    description: Claim your daily reward and keep your streak
+    usage: /daily
+    permission: smpplugin.daily
+    aliases:
+    - dailyreward
+  challenges:
+    description: See today's challenges and your progress
+    usage: /challenges
+    permission: smpplugin.challenges
+    aliases:
+    - challenge
+  poll:
+    description: Vote in (or start) a poll
+    usage: /poll [vote <n>|start <seconds> <question> | <a> | <b>|end]
+    permission: smpplugin.poll.vote
+  giveaway:
+    description: Join (or host) a giveaway
+    usage: /giveaway [join|start [seconds]|money <amount> [seconds] [winners]|cancel]
+    permission: smpplugin.giveaway.join
+    aliases:
+    - ga
+  chatgame:
+    description: See the current chat game, or start one
+    usage: /chatgame [start [type]|stop]
+    aliases:
+    - chatgames
+  announcer:
+    description: Manage the automatic announcements
+    usage: /announcer [list|send <n>|toggle]
+    permission: smpplugin.admin.announcer
+  mail:
+    description: Send mail to any player, even offline
+    usage: /mail [read|send <player> <message>|clear]
+    permission: smpplugin.mail
+    aliases:
+    - inbox
+  hug:
+    description: Give a player a hug
+    usage: /hug <player>
+    permission: smpplugin.fun.emotes
+  slap:
+    description: Slap a player
+    usage: /slap <player>
+    permission: smpplugin.fun.emotes
+  highfive:
+    description: High-five a player
+    usage: /highfive <player>
+    permission: smpplugin.fun.emotes
+  poke:
+    description: Poke a player
+    usage: /poke <player>
+    permission: smpplugin.fun.emotes
+  wave:
+    description: Wave at everyone
+    usage: /wave
+    permission: smpplugin.fun.emotes
+  cheer:
+    description: Cheer!
+    usage: /cheer
+    permission: smpplugin.fun.emotes
+  dice:
+    description: Roll a dice
+    usage: /dice [sides]
+    permission: smpplugin.fun.games
+    aliases:
+    - roll
+  8ball:
+    description: Ask the magic 8-ball
+    usage: /8ball <question>
+    permission: smpplugin.fun.games
+    aliases:
+    - eightball
+  rps:
+    description: Rock, paper, scissors against the server
+    usage: /rps <rock|paper|scissors>
+    permission: smpplugin.fun.games
+    aliases:
+    - rockpaperscissors
+  rate:
+    description: Let the server rate anything out of 10
+    usage: /rate <anything>
+    permission: smpplugin.fun.games
+  firework:
+    description: Launch a harmless firework
+    usage: /firework
+    permission: smpplugin.fun.firework
+    aliases:
+    - fw
+  sit:
+    description: Sit down where you stand
+    usage: /sit
+    permission: smpplugin.fun.sit
+  hat:
+    description: Wear the item in your hand
+    usage: /hat
+    permission: smpplugin.fun.hat
+  craft:
+    description: Open a crafting table
+    usage: /craft
+    permission: smpplugin.workbench.craft
+    aliases:
+    - workbench
+    - wb
+  anvil:
+    description: Open an anvil
+    usage: /anvil
+    permission: smpplugin.workbench.anvil
+  grindstone:
+    description: Open a grindstone
+    usage: /grindstone
+    permission: smpplugin.workbench.grindstone
+  stonecutter:
+    description: Open a stonecutter
+    usage: /stonecutter
+    permission: smpplugin.workbench.stonecutter
+  loom:
+    description: Open a loom
+    usage: /loom
+    permission: smpplugin.workbench.loom
+  smithing:
+    description: Open a smithing table
+    usage: /smithing
+    permission: smpplugin.workbench.smithing
+    aliases:
+    - smithingtable
+  cartography:
+    description: Open a cartography table
+    usage: /cartography
+    permission: smpplugin.workbench.cartography
+    aliases:
+    - cartographytable
+  trash:
+    description: Open a bin that deletes items
+    usage: /trash
+    permission: smpplugin.trash
+    aliases:
+    - disposal
+    - bin
+  back:
+    description: Go back to where you were before your last teleport
+    usage: /back
+    permission: smpplugin.back
+  near:
+    description: List players near you
+    usage: /near
+    permission: smpplugin.near
+  seen:
+    description: See when a player was last online
+    usage: /seen <player>
+    permission: smpplugin.seen
+    aliases:
+    - lastseen
+  coords:
+    description: Show (or share) your coordinates
+    usage: /coords [share]
+    permission: smpplugin.coords
+    aliases:
+    - coordinates
+    - pos
+  suicide:
+    description: Respawn (asks to confirm)
+    usage: /suicide
+    permission: smpplugin.suicide
+  ptime:
+    description: Set your own time of day
+    usage: /ptime <day|night|...|reset>
+    permission: smpplugin.ptime
+    aliases:
+    - playertime
+  pweather:
+    description: Set your own weather
+    usage: /pweather <clear|rain|reset>
+    permission: smpplugin.pweather
+    aliases:
+    - playerweather
+  repair:
+    description: Repair the item in your hand
+    usage: /repair [all]
+    permission: smpplugin.repair
+    aliases:
+    - fix
+  skull:
+    description: Get a player's head
+    usage: /skull [player]
+    permission: smpplugin.skull
+    aliases:
+    - playerhead
+  lore:
+    description: Edit the lore of the item in your hand
+    usage: /lore <add|set|remove|clear>
+    permission: smpplugin.lore
+  glow:
+    description: Toggle a glowing outline
+    usage: /glow
+    permission: smpplugin.glow
+  online:
+    description: List the players online
+    usage: /online
+    permission: smpplugin.online
+    aliases:
+    - players
+  uptime:
+    description: Server uptime and TPS
+    usage: /uptime
+    permission: smpplugin.uptime
+  calc:
+    description: Do a sum
+    usage: /calc <sum>
+    permission: smpplugin.calc
+    aliases:
+    - calculate
+    - math
+  perms:
+    description: Permission and role tools
+    usage: /perms [roles|role <name>|explain <node>|check <player> <node>|player <player>]
+    permission: smpplugin.admin.perms
+    aliases:
+    - permissions
+  broadcast:
+    description: Send a server-wide announcement
+    usage: /broadcast [-title] <message>
+    permission: smpplugin.admin.broadcast
+    aliases:
+    - bc
+    - announce
+  day:
+    description: Set the time to day
+    usage: /day [world]
+    permission: smpplugin.admin.time
+  night:
+    description: Set the time to night
+    usage: /night [world]
+    permission: smpplugin.admin.time
+  sun:
+    description: Clear the weather
+    usage: /sun [world]
+    permission: smpplugin.admin.weather
+  rain:
+    description: Make it rain
+    usage: /rain [world]
+    permission: smpplugin.admin.weather
+  thunder:
+    description: Start a thunderstorm
+    usage: /thunder [world]
+    permission: smpplugin.admin.weather
+  smite:
+    description: Strike a player with lightning
+    usage: /smite <player> [-damage]
+    permission: smpplugin.admin.smite
+    aliases:
+    - lightning
+  butcher:
+    description: Remove nearby hostile mobs
+    usage: /butcher [radius] [all]
+    permission: smpplugin.admin.butcher
+    aliases:
+    - killmobs
+  spawnmob:
+    description: Spawn mobs
+    usage: /spawnmob <type> [amount] [player]
+    permission: smpplugin.admin.spawnmob
+    aliases:
+    - mob
+  more:
+    description: Fill the held stack
+    usage: /more
+    permission: smpplugin.admin.more
+  countdown:
+    description: Show a countdown to everyone
+    usage: /countdown <seconds> [what is starting]
+    permission: smpplugin.staff.countdown
+  performance:
+    description: TPS, memory, chunks and entities
+    usage: /performance
+    permission: smpplugin.admin.performance
+    aliases:
+    - perf
+  speed:
+    description: Set walk or fly speed
+    usage: /speed <1-10> [walk|fly] [player]
+    permission: smpplugin.staff.speed
+  whois:
+    description: Look up a player
+    usage: /whois <player>
+    permission: smpplugin.staff.whois
+    aliases:
+    - lookup
+  spook:
+    description: Jump-scare a player
+    usage: /spook <player|all>
+    permission: smpplugin.admin.spook
+    aliases:
+    - boo
+  notes:
+    description: Private staff notes about a player
+    usage: /notes <player> [add <text>|remove <id>]
+    permission: smpplugin.staff.notes
+    aliases:
+    - staffnotes
+  socialspy:
+    description: See private messages between players
+    usage: /socialspy
+    permission: smpplugin.staff.socialspy
+    aliases:
+    - sspy
+  commandspy:
+    description: See the commands players run
+    usage: /commandspy
+    permission: smpplugin.staff.commandspy
+    aliases:
+    - cspy
 # BEGIN GENERATED PERMISSIONS - edit PermissionRegistry.java, not this section
 permissions:
   smpplugin.admin:
@@ -761,6 +1084,28 @@ permissions:
       smpplugin.admin.maintenance.bypass: true
       smpplugin.admin.playerwipe: true
       smpplugin.admin.playerunwipe: true
+      smpplugin.staff.poll: true
+      smpplugin.staff.giveaway: true
+      smpplugin.staff.chatgame: true
+      smpplugin.staff.countdown: true
+      smpplugin.staff.speed: true
+      smpplugin.staff.whois: true
+      smpplugin.staff.notes: true
+      smpplugin.staff.socialspy: true
+      smpplugin.staff.commandspy: true
+      smpplugin.admin.halloween: true
+      smpplugin.admin.giveaway.money: true
+      smpplugin.admin.announcer: true
+      smpplugin.admin.broadcast: true
+      smpplugin.admin.time: true
+      smpplugin.admin.weather: true
+      smpplugin.admin.smite: true
+      smpplugin.admin.butcher: true
+      smpplugin.admin.spawnmob: true
+      smpplugin.admin.more: true
+      smpplugin.admin.performance: true
+      smpplugin.admin.spook: true
+      smpplugin.admin.perms: true
   smpplugin.message:
     description: 'Send private messages with /msg and reply with /reply.'
     default: true
@@ -1323,6 +1668,186 @@ permissions:
   smpplugin.admin.ecsee.edit:
     description: 'Edit another player''s Ender Chest through /ecsee.'
     default: false
+  smpplugin.halloween:
+    description: 'Open the Spooky Calendar with /halloween and open its doors.'
+    default: true
+  smpplugin.halloween.trickortreat:
+    description: 'Knock for a treat (or a harmless trick) with /trickortreat during the Halloween season.'
+    default: true
+  smpplugin.daily:
+    description: 'Claim the daily reward and keep a streak with /daily.'
+    default: true
+  smpplugin.challenges:
+    description: 'See and finish the daily challenges with /challenges.'
+    default: true
+  smpplugin.poll.vote:
+    description: 'Vote in polls started by staff.'
+    default: true
+  smpplugin.giveaway.join:
+    description: 'Join giveaways started by staff.'
+    default: true
+  smpplugin.mail:
+    description: 'Send and read /mail, including to offline players.'
+    default: true
+  smpplugin.fun.emotes:
+    description: 'Use /hug, /slap, /highfive, /poke, /wave and /cheer.'
+    default: true
+  smpplugin.fun.games:
+    description: 'Use /dice, /8ball, /rps and /rate.'
+    default: true
+  smpplugin.fun.sit:
+    description: 'Sit down where you stand with /sit.'
+    default: true
+  smpplugin.fun.hat:
+    description: 'Wear the item in your hand with /hat.'
+    default: true
+  smpplugin.trash:
+    description: 'Open a bin that deletes items with /trash.'
+    default: true
+  smpplugin.back:
+    description: 'Return to where you were before your last teleport with /back.'
+    default: true
+  smpplugin.seen:
+    description: 'See when a player was last online with /seen.'
+    default: true
+  smpplugin.coords:
+    description: 'Show your coordinates and share them with your team with /coords.'
+    default: true
+  smpplugin.suicide:
+    description: 'Respawn with /suicide (asks to confirm; not in combat).'
+    default: true
+  smpplugin.online:
+    description: 'List the players online with /online.'
+    default: true
+  smpplugin.uptime:
+    description: 'See how long the server has been up, and its TPS, with /uptime.'
+    default: true
+  smpplugin.calc:
+    description: 'Do sums with /calc.'
+    default: true
+  smpplugin.fun.firework:
+    description: 'Launch a harmless firework with /firework.'
+    default: false
+  smpplugin.fun.bypasscooldown:
+    description: 'No cooldown on emotes and the fun commands.'
+    default: false
+  smpplugin.workbench.craft:
+    description: 'Open a crafting table anywhere with /craft.'
+    default: false
+  smpplugin.workbench.anvil:
+    description: 'Open an anvil anywhere with /anvil.'
+    default: false
+  smpplugin.workbench.grindstone:
+    description: 'Open a grindstone anywhere with /grindstone.'
+    default: false
+  smpplugin.workbench.stonecutter:
+    description: 'Open a stonecutter anywhere with /stonecutter.'
+    default: false
+  smpplugin.workbench.loom:
+    description: 'Open a loom anywhere with /loom.'
+    default: false
+  smpplugin.workbench.smithing:
+    description: 'Open a smithing table anywhere with /smithing.'
+    default: false
+  smpplugin.workbench.cartography:
+    description: 'Open a cartography table anywhere with /cartography.'
+    default: false
+  smpplugin.back.death:
+    description: 'Use /back to return to where you died.'
+    default: false
+  smpplugin.near:
+    description: 'List players near you with /near.'
+    default: false
+  smpplugin.ptime:
+    description: 'Set your own time of day with /ptime.'
+    default: false
+  smpplugin.pweather:
+    description: 'Set your own weather with /pweather.'
+    default: false
+  smpplugin.repair:
+    description: 'Repair the item in your hand with /repair (cooldown in extras.yml).'
+    default: false
+  smpplugin.repair.all:
+    description: 'Repair your whole inventory with /repair all.'
+    default: false
+  smpplugin.repair.bypasscooldown:
+    description: 'No cooldown on /repair.'
+    default: false
+  smpplugin.skull:
+    description: 'Get a player''s head with /skull.'
+    default: false
+  smpplugin.lore:
+    description: 'Edit the lore of the item in your hand with /lore.'
+    default: false
+  smpplugin.glow:
+    description: 'Toggle a glowing outline with /glow.'
+    default: false
+  smpplugin.staff.poll:
+    description: 'Start and end polls with /poll.'
+    default: false
+  smpplugin.staff.giveaway:
+    description: 'Give away the item in your hand with /giveaway.'
+    default: false
+  smpplugin.staff.chatgame:
+    description: 'Start and stop chat games with /chatgame.'
+    default: false
+  smpplugin.staff.countdown:
+    description: 'Show a server-wide countdown with /countdown.'
+    default: false
+  smpplugin.staff.speed:
+    description: 'Change walk and fly speed with /speed.'
+    default: false
+  smpplugin.staff.whois:
+    description: 'Look up a player''s details with /whois (the IP also needs smpplugin.staff.alts).'
+    default: false
+  smpplugin.staff.notes:
+    description: 'Read and write private staff notes about players with /notes.'
+    default: false
+  smpplugin.staff.socialspy:
+    description: 'See private messages between players with /socialspy.'
+    default: false
+  smpplugin.staff.commandspy:
+    description: 'See the commands players run with /commandspy.'
+    default: false
+  smpplugin.admin.halloween:
+    description: 'Edit Spooky Calendar prizes and use /halloween give, reset, preview and stats.'
+    default: false
+  smpplugin.admin.giveaway.money:
+    description: 'Give away money that is created for the giveaway (/giveaway money).'
+    default: false
+  smpplugin.admin.announcer:
+    description: 'List, send and pause the automatic announcements with /announcer.'
+    default: false
+  smpplugin.admin.broadcast:
+    description: 'Send a server-wide announcement with /broadcast.'
+    default: false
+  smpplugin.admin.time:
+    description: 'Set the time with /day and /night.'
+    default: false
+  smpplugin.admin.weather:
+    description: 'Set the weather with /sun, /rain and /thunder.'
+    default: false
+  smpplugin.admin.smite:
+    description: 'Strike a player with (harmless) lightning with /smite.'
+    default: false
+  smpplugin.admin.butcher:
+    description: 'Remove nearby hostile mobs with /butcher.'
+    default: false
+  smpplugin.admin.spawnmob:
+    description: 'Spawn mobs with /spawnmob.'
+    default: false
+  smpplugin.admin.more:
+    description: 'Fill the held stack with /more.'
+    default: false
+  smpplugin.admin.performance:
+    description: 'See TPS, memory, chunks and entities with /performance.'
+    default: false
+  smpplugin.admin.spook:
+    description: 'Jump-scare a player (or everyone) with /spook.'
+    default: false
+  smpplugin.admin.perms:
+    description: 'Inspect roles and permissions with /perms.'
+    default: false
   smpplugin.staff.punishments.create:
     description: 'Legacy bundle: every punishment-creating action.'
     default: false
@@ -1445,4 +1970,118 @@ permissions:
     default: false
     children:
       smpplugin.auctionhouse.fastsell: true
+  smpplugin.role.helper:
+    description: 'Helper role: staff chat, reports, warn, kick, temp-mute, staff notes, /whois and events.'
+    default: false
+    children:
+      smpplugin.staff.chat.use: true
+      smpplugin.staff.helpop.receive: true
+      smpplugin.staff.report.receive: true
+      smpplugin.staff.alerts.receive: true
+      smpplugin.staff.mode.stafflist: true
+      smpplugin.staff.punishments.view: true
+      smpplugin.staff.punishments.warn: true
+      smpplugin.staff.punishments.kick: true
+      smpplugin.staff.punishments.tempmute: true
+      smpplugin.staff.chat.clear: true
+      smpplugin.staff.notes: true
+      smpplugin.staff.whois: true
+      smpplugin.staff.poll: true
+      smpplugin.staff.chatgame: true
+      smpplugin.staff.countdown: true
+  smpplugin.role.moderator:
+    description: 'Moderator role: everything a helper has, plus staff mode, vanish, freeze, bans, mutes, invsee and spy.'
+    default: false
+    children:
+      smpplugin.role.helper: true
+      smpplugin.staff.mode: true
+      smpplugin.staff.mode.vanish: true
+      smpplugin.staff.mode.seevanished: true
+      smpplugin.staff.mode.betterview: true
+      smpplugin.staff.mode.randomtp: true
+      smpplugin.staff.mode.spectator: true
+      smpplugin.staff.freeze: true
+      smpplugin.staff.freeze.alert: true
+      smpplugin.staff.teleport: true
+      smpplugin.staff.invsee: true
+      smpplugin.staff.profileviewer: true
+      smpplugin.staff.alts: true
+      smpplugin.staff.seehomes: true
+      smpplugin.staff.punishments.mute: true
+      smpplugin.staff.punishments.ban: true
+      smpplugin.staff.punishments.tempban: true
+      smpplugin.staff.punishments.unmute: true
+      smpplugin.staff.punishments.unban: true
+      smpplugin.staff.punishments.offend: true
+      smpplugin.staff.punishments.vcmute: true
+      smpplugin.staff.punishments.vcunmute: true
+      smpplugin.staff.chat.mute: true
+      smpplugin.staff.chat.unmute: true
+      smpplugin.staff.chat.delay: true
+      smpplugin.staff.socialspy: true
+      smpplugin.staff.commandspy: true
+      smpplugin.staff.giveaway: true
+      smpplugin.staff.speed: true
+      smpplugin.admin.chatlog: true
+      smpplugin.security.alerts: true
+  smpplugin.role.admin:
+    description: 'Admin role: everything a moderator has plus every tool in smpplugin.admin (no destructive actions).'
+    default: false
+    children:
+      smpplugin.role.moderator: true
+      smpplugin.admin: true
+  smpplugin.role.owner:
+    description: 'Owner role: the admin role plus every destructive action (wipes, set-money) and every rank perk. Security bypasses (anti-cheat, hidden names) are still granted one by one.'
+    default: false
+    children:
+      smpplugin.role.admin: true
+      smpplugin.chat.color: true
+      smpplugin.auctionhouse.fastbuy: true
+      smpplugin.auctionhouse.fastsell: true
+      smpplugin.donutplus: true
+      smpplugin.donutplusplus: true
+      smpplugin.donutplusplusplus: true
+      smpplugin.rtp.priority.vip++: true
+      smpplugin.rtp.priority.vip+: true
+      smpplugin.rtp.priority.vip: true
+      smpplugin.rtp.priority.high: true
+      smpplugin.rtp.cooldown.vip++: true
+      smpplugin.rtp.cooldown.vip+: true
+      smpplugin.rtp.cooldown.vip: true
+      smpplugin.player.fly: true
+      smpplugin.shards.everywhere: true
+      smpplugin.servers: true
+      smpplugin.hide.scramble: true
+      smpplugin.hide.disguise: true
+      smpplugin.afk.statusbypass: true
+      smpplugin.coinflip.admin.resolve: true
+      smpplugin.coinflip.admin.resetstats: true
+      smpplugin.admin.serverwipe: true
+      smpplugin.admin.statswipe: true
+      smpplugin.staff.punishments.delete: true
+      smpplugin.admin.setmoney: true
+      smpplugin.admin.setkills: true
+      smpplugin.admin.setdeaths: true
+      smpplugin.admin.setplaytime: true
+      smpplugin.staff.invsee.modify: true
+      smpplugin.admin.ecsee.edit: true
+      smpplugin.fun.firework: true
+      smpplugin.fun.bypasscooldown: true
+      smpplugin.workbench.craft: true
+      smpplugin.workbench.anvil: true
+      smpplugin.workbench.grindstone: true
+      smpplugin.workbench.stonecutter: true
+      smpplugin.workbench.loom: true
+      smpplugin.workbench.smithing: true
+      smpplugin.workbench.cartography: true
+      smpplugin.back.death: true
+      smpplugin.near: true
+      smpplugin.ptime: true
+      smpplugin.pweather: true
+      smpplugin.repair: true
+      smpplugin.repair.all: true
+      smpplugin.repair.bypasscooldown: true
+      smpplugin.skull: true
+      smpplugin.lore: true
+      smpplugin.glow: true
 # END GENERATED PERMISSIONS

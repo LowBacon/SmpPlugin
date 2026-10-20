@@ -4,6 +4,7 @@ import com.bx.smpPlugin.SmpPlugin;
 import com.bx.smpPlugin.menus.StatsMenu;
 import com.bx.smpPlugin.models.PlayerData;
 import com.bx.smpPlugin.utils.ColorUtils;
+import com.bx.smpPlugin.utils.DialogGateway;
 import com.bx.smpPlugin.utils.NumberUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -14,7 +15,10 @@ import org.bukkit.entity.Player;
 
 import java.util.UUID;
 
-/** /stats [player]: the stats menu for players, a short summary for the console. */
+/**
+ * /stats [player]: the stats dialogs on Paper and Purpur (a player list, then a stat sheet), the
+ * chest stats menu where dialogs are off or unavailable, and a short summary for the console.
+ */
 public class StatsCommand implements CommandExecutor {
 
     private final SmpPlugin plugin;
@@ -34,7 +38,10 @@ public class StatsCommand implements CommandExecutor {
                 sender.sendMessage("Usage: /" + label + " <player>");
                 return true;
             }
-            new StatsMenu(plugin, player.getUniqueId(), plugin.getHideManager().publicName(player)).open(player);
+            DialogGateway dialogs = plugin.getDialogManager();
+            if (dialogs == null || !dialogs.openStats(player)) {
+                new StatsMenu(plugin, player.getUniqueId(), plugin.getHideManager().publicName(player)).open(player);
+            }
             return true;
         }
 
@@ -74,7 +81,10 @@ public class StatsCommand implements CommandExecutor {
 
     private void show(CommandSender sender, UUID uuid, String name) {
         if (sender instanceof Player player) {
-            new StatsMenu(plugin, uuid, name).open(player);
+            DialogGateway dialogs = plugin.getDialogManager();
+            if (dialogs == null || !dialogs.openStats(player, uuid, name)) {
+                new StatsMenu(plugin, uuid, name).open(player);
+            }
             return;
         }
         PlayerData data = plugin.getPlayerDataManager().get(uuid);

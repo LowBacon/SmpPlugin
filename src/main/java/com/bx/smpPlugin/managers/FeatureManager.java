@@ -77,7 +77,16 @@ public class FeatureManager {
         FRIENDS("FRIENDS", "friends", "player friends/follows system.", "PLAYER_HEAD", "FRIEND"),
         SAFETY("SAFETY", "safety", "safety command and info.", "BOOK", "SAFETY"),
         ANTICHEAT("ANTICHEAT", "anti-cheat", "server-side movement, combat, block, inventory and x-ray checks with staff alerts and a ban queue.", "OBSERVER", null),
-        COINFLIP("COINFLIP", "coinflip", "1v1 coin flips for in-game currency with practice mode, history, stats and leaderboards.", "SUNFLOWER", null);
+        COINFLIP("COINFLIP", "coinflip", "1v1 coin flips for in-game currency with practice mode, history, stats and leaderboards.", "SUNFLOWER", null),
+        HALLOWEEN("HALLOWEEN", "halloween", "Spooky Calendar, Trick or Treat, candy drops and pumpkin heads.", "JACK_O_LANTERN", null),
+        DAILY_REWARDS("DAILY_REWARDS", "daily rewards", "/daily login rewards with a 7-day streak.", "CHEST_MINECART", null),
+        CHALLENGES("CHALLENGES", "challenges", "/challenges: three new daily goals for everyone.", "TARGET", null),
+        EVENTS("EVENTS", "events", "polls, giveaways, chat games and countdowns.", "FIREWORK_ROCKET", null),
+        ANNOUNCER("ANNOUNCER", "announcer", "rotating automatic announcements.", "BELL", null),
+        MAIL("MAIL", "mail", "/mail for players who are offline.", "PAPER", null),
+        FUN("FUN", "fun commands", "emotes, dice, 8ball, rock paper scissors, sit, hat and fireworks.", "CAKE", null),
+        UTILITIES("UTILITIES", "utility commands", "portable workbenches, trash, back, near, seen and other helpers.", "CRAFTING_TABLE", null),
+        STAFF_EXTRAS("STAFF_EXTRAS", "staff extras", "staff notes, social and command spy, whois, permission tools and world commands.", "SPYGLASS", null);
 
         private final String configKey;
         private final String displayName;
@@ -188,7 +197,7 @@ public class FeatureManager {
             case "orders" -> new Feature[]{Feature.ORDERS};
             case "duel", "create", "queue", "draw", "arena" -> new Feature[]{Feature.DUELS};
             case "ffa", "ffastats", "ffaarena" -> new Feature[]{Feature.FFA};
-            case "auctionhouse" -> new Feature[]{Feature.AUCTION_HOUSE};
+            case "ah", "auctionhouse" -> new Feature[]{Feature.AUCTION_HOUSE};
             case "enderchest", "ecsee" -> new Feature[]{Feature.ENDER_CHEST};
             case "sell", "sellhand", "sellall", "sellhistory" -> new Feature[]{Feature.SELL};
             case "worth" -> new Feature[]{Feature.SELL, Feature.WORTH};
@@ -226,6 +235,20 @@ public class FeatureManager {
             case "safety" -> new Feature[]{Feature.SAFETY};
             case "anticheat" -> new Feature[]{Feature.ANTICHEAT};
             case "coinflip", "cf" -> new Feature[]{Feature.COINFLIP};
+            case "halloween", "trickortreat" -> new Feature[]{Feature.HALLOWEEN};
+            case "daily" -> new Feature[]{Feature.DAILY_REWARDS};
+            case "challenges" -> new Feature[]{Feature.CHALLENGES};
+            case "poll", "giveaway", "chatgame", "countdown" -> new Feature[]{Feature.EVENTS};
+            case "announcer" -> new Feature[]{Feature.ANNOUNCER};
+            case "mail" -> new Feature[]{Feature.MAIL};
+            case "hug", "slap", "highfive", "wave", "poke", "cheer", "dice", "8ball", "rps", "firework", "rate",
+                    "sit", "hat" -> new Feature[]{Feature.FUN};
+            case "craft", "anvil", "grindstone", "stonecutter", "loom", "smithing", "cartography", "trash",
+                    "near", "seen", "coords", "back", "suicide", "ptime", "pweather", "repair", "skull", "lore",
+                    "glow", "online", "uptime", "calc" -> new Feature[]{Feature.UTILITIES};
+            case "perms", "broadcast", "day", "night", "sun", "rain", "thunder", "smite", "butcher", "spawnmob",
+                    "more", "performance", "speed", "socialspy", "commandspy", "notes", "whois", "spook"
+                    -> new Feature[]{Feature.STAFF_EXTRAS};
             default -> new Feature[0];
         };
     }

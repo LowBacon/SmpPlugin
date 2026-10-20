@@ -78,7 +78,7 @@ public class UniversalCommandTabCompleter implements TabCompleter {
             case "ffa" -> completeFfa(sender, args);
             case "ffastats" -> completeKnownPlayer(args, sender, true);
             case "ffaarena" -> completeFfaArena(sender, args, 0);
-            case "auctionhouse" -> completeAuctionHouse(sender, args);
+            case "ah", "auctionhouse" -> completeAuctionHouse(sender, args);
             case "enderchest" -> completeReloadOnly(sender, args, "smpplugin.admin.enderchest");
             case "ecsee" -> completeEcsee(sender, args);
             case "sellhand" -> singleArg(args, AMOUNTS);

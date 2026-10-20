@@ -1,0 +1,167 @@
+# ==============================================================================
+# CustomSmp - Halloween (Spooky Calendar, Trick or Treat, candy and pumpkins)
+# ==============================================================================
+#
+# /halloween opens the Spooky Calendar: one door for every day of the season.
+# Behind each door is a prize. Players open today's door with a click, watch it
+# spin, and get the prize. The last door is the big Halloween prize.
+#
+# Choosing prizes:
+#   - In game: /halloween edit. Click a door, drop items into the top area,
+#     click the gold and amethyst buttons to set money and shards, then Save.
+#     Prizes made there are kept in data/halloween-prizes.yml and win over
+#     what is written below.
+#   - In this file: DOORS.<day> (or DOORS.DEFAULT for every door without its
+#     own prize). Each door takes MONEY, SHARDS, ITEMS ("MATERIAL:amount"),
+#     COMMANDS (run by the console, %player% = the player) and DISPLAY (lines
+#     shown instead of the automatic summary). COMMANDS always come from here.
+#
+# Test the calendar outside October with /halloween preview 2026-10-13
+# (pretends it is that day until the next restart), or set PREVIEW-DATE.
+# ==============================================================================
+
+ENABLED: true
+
+# Time zone used to decide what day it is, e.g. "Europe/Helsinki" or
+# "America/New_York". Empty uses the server's own time zone.
+TIME-ZONE: ""
+
+# The season: doors FIRST-DAY to LAST-DAY of MONTH (10 = October).
+MONTH: 10
+FIRST-DAY: 1
+LAST-DAY: 31
+
+# DAILY: door 13 opens on the 13th. ALL-ON-LAST-DAY: every door opens on the
+# last day (31 October), so Halloween itself is one big unboxing.
+MODE: DAILY
+
+# true: players can still open doors from earlier days they missed, until the
+# season ends. false: a missed door turns into a cobweb.
+CATCH-UP: true
+
+# Extra days after LAST-DAY when unopened doors can still be claimed.
+GRACE-DAYS: 0
+
+# Pretend it is this date (yyyy-MM-dd), for testing. Leave empty on a live server.
+PREVIEW-DATE: ""
+
+CALENDAR:
+  TITLE: "&8🎃 &6&lSpooky Calendar"
+  # Doors appear in a wave and the frame shimmers while the calendar is open.
+  OPEN-ANIMATION: true
+  BORDER-ANIMATION: true
+  BORDER-COLOURS:
+    - ORANGE_STAINED_GLASS_PANE
+    - BLACK_STAINED_GLASS_PANE
+    - PURPLE_STAINED_GLASS_PANE
+    - BLACK_STAINED_GLASS_PANE
+  # Show what is behind a door before it is opened. false keeps it a surprise.
+  SHOW-PRIZES: false
+  # How many steps the door spins before it reveals the prize.
+  SPIN-STEPS: 18
+  # On Paper and Purpur, finish the reveal in an animated pop-up dialog.
+  DIALOG-REVEAL: true
+  ICONS:
+    OPEN: JACK_O_LANTERN
+    LOCKED: CARVED_PUMPKIN
+    CLAIMED: ORANGE_CANDLE
+    MISSED: COBWEB
+    LAST-DOOR: JACK_O_LANTERN
+  # Items the door spins through before the reveal.
+  SPIN-ITEMS:
+    - COOKIE
+    - PUMPKIN_PIE
+    - HONEY_BOTTLE
+    - SWEET_BERRIES
+    - GLOW_BERRIES
+    - CAKE
+    - MELON_SLICE
+    - GOLDEN_CARROT
+  # Tell everyone when someone opens the last door.
+  ANNOUNCE-LAST-DOOR: true
+
+DOORS:
+  # Used by every door that has no prize of its own.
+  DEFAULT:
+    MONEY: 750
+    SHARDS: 3
+    ITEMS:
+      - "COOKIE:8"
+  1:
+    NAME: "&6Candy Corn"
+    MONEY: 500
+    ITEMS:
+      - "PUMPKIN_PIE:4"
+  7:
+    NAME: "&5Witch's Brew"
+    MONEY: 1500
+    SHARDS: 10
+    ITEMS:
+      - "GOLDEN_APPLE:2"
+  13:
+    NAME: "&8Friday the 13th"
+    MONEY: 2500
+    SHARDS: 13
+    ITEMS:
+      - "ENDER_PEARL:13"
+  21:
+    NAME: "&6Pumpkin Patch"
+    MONEY: 3000
+    SHARDS: 15
+    ITEMS:
+      - "JACK_O_LANTERN:16"
+  31:
+    NAME: "&6&l★ HALLOWEEN ★"
+    MONEY: 25000
+    SHARDS: 100
+    ITEMS:
+      - "ENCHANTED_GOLDEN_APPLE:1"
+      - "TOTEM_OF_UNDYING:1"
+    COMMANDS: []
+
+TRICK-OR-TREAT:
+  ENABLED: true
+  # Minutes between knocks for each player.
+  COOLDOWN-MINUTES: 60
+  # Percent chance of a treat; the rest are harmless tricks.
+  TREAT-CHANCE: 70
+  # Treats are picked by WEIGHT.
+  TREATS:
+    small:
+      WEIGHT: 60
+      MONEY: 250
+    candy:
+      WEIGHT: 25
+      ITEMS:
+        - "COOKIE:16"
+    shards:
+      WEIGHT: 12
+      SHARDS: 10
+    jackpot:
+      WEIGHT: 3
+      MONEY: 5000
+      SHARDS: 25
+      # Told to the whole server.
+      ANNOUNCE: true
+  # Which tricks can happen. Remove any you do not want.
+  TRICKS:
+    - SCARE
+    - BATS
+    - LAUNCH
+    - SPIN
+    - DARKNESS
+    - FAKE_CREEPER
+
+AMBIENCE:
+  # Only during the season (and grace days).
+  # A greeting title once a day, and a clickable reminder about unopened doors.
+  JOIN-REMINDER: true
+  # Hostile mobs killed by players can drop Halloween Candy. Eating it gives a
+  # short random boost (speed, jump, night vision, regeneration, ...).
+  CANDY-DROPS:
+    ENABLED: true
+    CHANCE-PERCENT: 8
+  # Naturally spawning zombies and skeletons wear pumpkins.
+  PUMPKIN-HEADS:
+    ENABLED: true
+    CHANCE-PERCENT: 25

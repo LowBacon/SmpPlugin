@@ -58,8 +58,16 @@ public class LeaderboardManager {
 
     private final SmpPlugin plugin;
     private final Map<LeaderboardType, CachedLeaderboard> leaderboardCache = new java.util.concurrent.ConcurrentHashMap<>();
-    /** One read of the players table shared by every leaderboard type, instead of one read each. */
+    /**
+     * One read of the players table shared by every leaderboard type, instead of one read each. It is reloaded on
+     * the database thread; until a reload finishes the last rows keep being shown, so no caller (a placeholder on
+     * the main thread, /baltop) ever waits for a full table read.
+     */
     private volatile CachedLeaderboard storedRows;
+    private final java.util.concurrent.atomic.AtomicBoolean reloading = new java.util.concurrent.atomic.AtomicBoolean();
+    /** Bumped by every invalidation, so a reload that started before one does not count as fresh. */
+    private final java.util.concurrent.atomic.AtomicLong generation = new java.util.concurrent.atomic.AtomicLong();
+    private volatile long loadedGeneration = -1L;
 
     public LeaderboardManager(SmpPlugin plugin) {
         this.plugin = plugin;
@@ -156,12 +164,12 @@ public class LeaderboardManager {
         return numericValue(type, data);
     }
 
-    /** After an edit that may have touched an offline player's row: re-read the table next time. */
+    /** After an edit that may have touched an offline player's row: re-read the table (in the background). */
     public void invalidate(LeaderboardType type) {
         if (type != null) {
             leaderboardCache.remove(type);
         }
-        storedRows = null;
+        generation.incrementAndGet();
     }
 
     /** After a change to an online player only: their live copy is merged in, so no re-read is needed. */
@@ -173,7 +181,29 @@ public class LeaderboardManager {
 
     public void invalidateAll() {
         leaderboardCache.clear();
-        storedRows = null;
+        generation.incrementAndGet();
+    }
+
+    /** Starts the first read of the players table, so the first /baltop already has every player. */
+    public void warmUp() {
+        requestReload();
+    }
+
+    private void requestReload() {
+        DatabaseManager database = plugin.getDatabaseManager();
+        if (database == null || !reloading.compareAndSet(false, true)) {
+            return;
+        }
+        long startedAt = generation.get();
+        database.executeAsync(() -> {
+            try {
+                storedRows = new CachedLeaderboard(System.currentTimeMillis(), List.copyOf(database.loadAllPlayers()));
+                loadedGeneration = startedAt;
+                leaderboardCache.clear();
+            } finally {
+                reloading.set(false);
+            }
+        });
     }
 
     private List<PlayerData> getSortedPlayers(LeaderboardType type) {
@@ -184,13 +214,14 @@ public class LeaderboardManager {
         }
 
         CachedLeaderboard rows = storedRows;
-        if (rows == null || now - rows.cachedAtMillis() >= STORED_ROWS_TTL_MS) {
-            rows = new CachedLeaderboard(now, List.copyOf(plugin.getDatabaseManager().loadAllPlayers()));
-            storedRows = rows;
+        if (rows == null || now - rows.cachedAtMillis() >= STORED_ROWS_TTL_MS || loadedGeneration != generation.get()) {
+            requestReload();
         }
         Map<UUID, PlayerData> merged = new LinkedHashMap<>();
-        for (PlayerData stored : rows.players()) {
-            merged.put(stored.getUuid(), stored);
+        if (rows != null) {
+            for (PlayerData stored : rows.players()) {
+                merged.put(stored.getUuid(), stored);
+            }
         }
         for (PlayerData live : plugin.getPlayerDataManager().getAll()) {
             merged.put(live.getUuid(), live);

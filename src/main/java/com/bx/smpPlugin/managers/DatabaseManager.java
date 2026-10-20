@@ -157,8 +157,29 @@ public class DatabaseManager {
             plugin.getLogger().info("Database connected successfully using " + databaseType.name() + ".");
         } catch (Exception e) {
             ready = false;
-            plugin.getLogger().log(Level.SEVERE, "Failed to initialize database", e);
+            // Driver errors can repeat the connection string, which may hold a user name and password.
+            plugin.getLogger().log(Level.SEVERE, "Failed to initialize database", redacted(e, 0));
         }
+    }
+
+    /** Hides credentials in connection strings: {@code scheme://user:secret@host} and {@code password=...}. */
+    static String redact(String text) {
+        if (text == null) {
+            return null;
+        }
+        return text.replaceAll("(?i)([a-z][a-z0-9+.-]*://)[^\\s/@]+@", "$1***@")
+                .replaceAll("(?i)(password|pwd)=[^&;\\s]*", "$1=***");
+    }
+
+    /** A copy of an exception chain with every message passed through {@link #redact}, keeping the stack traces. */
+    static Throwable redacted(Throwable original, int depth) {
+        if (original == null || depth > 8) {
+            return null;
+        }
+        Throwable copy = new Exception(original.getClass().getName() + ": " + redact(original.getMessage()),
+                redacted(original.getCause(), depth + 1));
+        copy.setStackTrace(original.getStackTrace());
+        return copy;
     }
 
     /**

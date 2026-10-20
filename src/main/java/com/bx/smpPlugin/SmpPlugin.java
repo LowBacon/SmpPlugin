@@ -285,6 +285,7 @@ public final class SmpPlugin extends JavaPlugin {
         billfordManager = new BillfordManager(this);
         billfordManager.load();
         leaderboardManager = new LeaderboardManager(this);
+        leaderboardManager.warmUp();
         enderChestManager = new EnderChestManager(this);
         freezeManager = new FreezeManager(this);
         godModeManager = new GodModeManager();
@@ -579,47 +580,8 @@ public final class SmpPlugin extends JavaPlugin {
     private void printStartupBanner() {
         var console = getServer().getConsoleSender();
         console.sendMessage("");
-        console.sendMessage("§b§lCustomSmp §7v" + getDescription().getVersion());
+        console.sendMessage("§b§lSmpPlugin §7v" + getDescription().getVersion());
         console.sendMessage("§aPlugin enabled successfully.");
-        console.sendMessage("");
-    }
-
-    @SuppressWarnings("unused")
-    private void printLegacyStartupBanner() {
-        var console = getServer().getConsoleSender();
-        String v = getDescription().getVersion();
-
-        console.sendMessage("");
-        console.sendMessage("§6§l  ██╗   ██╗██╗  ████████╗██╗███╗   ███╗ █████╗ ████████╗███████╗");
-        console.sendMessage("§6§l  ██║   ██║██║  ╚══██╔══╝██║████╗ ████║██╔══██╗╚══██╔══╝██╔════╝");
-        console.sendMessage("§6§l  ██║   ██║██║     ██║   ██║██╔████╔██║███████║   ██║   █████╗  ");
-        console.sendMessage("§6§l  ██║   ██║██║     ██║   ██║██║╚██╔╝██║██╔══██║   ██║   ██╔══╝  ");
-        console.sendMessage("§6§l  ╚██████╔╝███████╗██║   ██║██║ ╚═╝ ██║██║  ██║   ██║   ███████╗");
-        console.sendMessage("§6§l   ╚═════╝ ╚══════╝╚═╝   ╚═╝╚═╝     ╚═╝╚═╝  ╚═╝   ╚═╝   ╚══════╝");
-        console.sendMessage("");
-        console.sendMessage("§e§l  ██████╗  ██████╗ ███╗   ██╗██╗   ██╗████████╗    ███████╗███╗   ███╗██████╗ ");
-        console.sendMessage("§e§l  ██╔══██╗██╔═══██╗████╗  ██║██║   ██║╚══██╔══╝    ██╔════╝████╗ ████║██╔══██╗");
-        console.sendMessage("§e§l  ██║  ██║██║   ██║██╔██╗ ██║██║   ██║   ██║       ███████╗██╔████╔██║██████╔╝");
-        console.sendMessage("§e§l  ██║  ██║██║   ██║██║╚██╗██║██║   ██║   ██║       ╚════██║██║╚██╔╝██║██╔═══╝ ");
-        console.sendMessage("§e§l  ██████╔╝╚██████╔╝██║ ╚████║╚██████╔╝   ██║       ███████║██║ ╚═╝ ██║██║     ");
-        console.sendMessage("§e§l  ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝    ╚═╝       ╚══════╝╚═╝     ╚═╝╚═╝     ");
-        console.sendMessage("");
-        console.sendMessage("§8  ═══════════════════════════════════════════════════════════════════════════════");
-        console.sendMessage("§7                       §fᴍᴀᴅᴇ ʙʏ §b§lʙᴇᴇѕᴛᴏxᴅ §8| §fᴠᴇʀѕɪᴏɴ §a§l" + v);
-        console.sendMessage("§7                   §fᴅɪѕᴄᴏʀᴅ: §9§nhttps://dsc.gg/hellstarr");
-        console.sendMessage("§8  ═══════════════════════════════════════════════════════════════════════════════");
-        console.sendMessage("");
-        console.sendMessage("§8  ╔═══════════════════════════════════════════════════════════════════════════╗");
-        console.sendMessage("§8  ║                                                                         ║");
-        console.sendMessage("§8  ║  §e§l⚠ §6§lɴᴏᴛᴇ                                                              §8║");
-        console.sendMessage("§8  ║                                                                         ║");
-        console.sendMessage("§8  ║  §fɢᴜʏѕ, ᴘʟᴇᴀѕᴇ ᴅᴏɴᴀᴛᴇ ᴛᴏ ᴛʜɪѕ ᴘʀᴏᴊᴇᴄᴛ ᴏʀ ᴛʜɪѕ ᴘʟᴜɢɪɴ ɪꜰ ʏᴏᴜ ʀᴇᴀʟʟʏ      §8║");
-        console.sendMessage("§8  ║  §fʟɪᴋᴇ ᴛʜɪѕ ᴘʟᴜɢɪɴ, ꜰᴏʀ ᴛʜᴇ ᴅᴏɴᴀᴛɪᴏɴ ʟɪɴᴋ ᴊᴜѕᴛ ᴅᴍ ᴍᴇ ᴏɴ ᴅɪѕᴄᴏʀᴅ,        §8║");
-        console.sendMessage("§8  ║  §fᴀɴᴅ ꜰᴏʀ ᴛʜᴏѕᴇ ᴡʜᴏ ʜᴀᴠᴇ ᴅᴏɴᴀᴛᴇᴅ ᴛᴏ ᴍᴇ, ᴍᴀʏ ɢᴏᴅ ʙʟᴇѕѕ ʏᴏᴜ ᴀɴᴅ ᴍᴀʏ       §8║");
-        console.sendMessage("§8  ║  §fʏᴏᴜ ᴀʟᴡᴀʏѕ ʙᴇ ʜᴇᴀʟᴛʜʏ ᴀɴᴅ ɪ ᴀᴍ ᴠᴇʀʏ ɢʀᴀᴛᴇꜰᴜʟ ꜰᴏʀ ᴛʜᴇ ᴅᴏɴᴀᴛɪᴏɴѕ        §8║");
-        console.sendMessage("§8  ║  §fᴛʜᴀᴛ ʜᴀᴠᴇ ʙᴇᴇɴ ɢɪᴠᴇɴ ᴛᴏ ᴍᴇ §e:)                                       §8║");
-        console.sendMessage("§8  ║                                                                         ║");
-        console.sendMessage("§8  ╚═══════════════════════════════════════════════════════════════════════════╝");
         console.sendMessage("");
     }
 

@@ -18,6 +18,7 @@ softdepend:
 - Multiverse-Core
 - floodgate
 - FancyNpcs
+- SkinsRestorer
 - voicechat
 loadbefore:
 - EconomyShopGUI

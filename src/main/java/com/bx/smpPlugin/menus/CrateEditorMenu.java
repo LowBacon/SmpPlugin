@@ -71,6 +71,12 @@ public class CrateEditorMenu extends BaseMenu {
         if (!(event.getWhoClicked() instanceof Player player)) {
             return;
         }
+        // Checked again on every click: the editor stays open while permissions can change.
+        if (!com.bx.smpPlugin.utils.PermissionUtils.has(player, com.bx.smpPlugin.commands.CrateCommand.ADMIN_PERMISSION)) {
+            event.setCancelled(true);
+            player.closeInventory();
+            return;
+        }
 
         CrateManager.CrateDefinition crate = getCrate();
         if (crate == null) {

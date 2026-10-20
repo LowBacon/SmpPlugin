@@ -28,7 +28,7 @@ import java.util.UUID;
 
 public class CrateCommand implements CommandExecutor, TabCompleter {
 
-    private static final String ADMIN_PERMISSION = "smpplugin.admin.crate";
+    public static final String ADMIN_PERMISSION = "smpplugin.admin.crate";
     private static final String RELOAD_PERMISSION = "smpplugin.admin.crate.reload";
     private static final String KEYALL_PERMISSION = "smpplugin.admin.crate.keyall";
     private static final int TARGET_BLOCK_DISTANCE = 6;

@@ -337,11 +337,7 @@ public final class Giveaways implements CommandExecutor, TabCompleter {
         }
         Player host = giveaway.host == null ? null : Bukkit.getPlayer(giveaway.host);
         if (host != null) {
-            Runnable giveBack = () -> {
-                for (ItemStack rest : host.getInventory().addItem(giveaway.item.clone()).values()) {
-                    host.getWorld().dropItemNaturally(host.getLocation(), rest);
-                }
-            };
+            Runnable giveBack = () -> PendingItems.giveOrKeep(plugin, host, List.of(giveaway.item));
             if (now) {
                 giveBack.run();
             } else {
@@ -350,8 +346,9 @@ public final class Giveaways implements CommandExecutor, TabCompleter {
             return;
         }
         // The host logged off: keep the item for them until they join again.
-        if (giveaway.host != null) {
-            PendingItems.add(plugin, giveaway.host, giveaway.item);
+        if (giveaway.host != null && !PendingItems.add(plugin, giveaway.host, giveaway.item)) {
+            plugin.getLogger().warning("Could not keep the giveaway item " + giveaway.item + " for offline host "
+                    + giveaway.host + "; give it back by hand.");
         }
     }
 

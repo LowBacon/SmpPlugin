@@ -1,0 +1,60 @@
+# ==============================================================================
+# SmpPlugin - rank perks (VIP, VIP+ and any other ranks you want)
+# ==============================================================================
+#
+# A rank is a permission. Give the permission to a group in your permissions
+# plugin (for example with LuckPerms: /lp group vip permission set
+# smpplugin.rank.vip) and everyone in that group gets the rank's perks.
+#
+# Nothing about ranks is built in: rename them, add more, remove them. When a
+# player has several rank permissions, only the rank with the highest PRIORITY
+# counts. Ranks never add up, so write each rank's full perks.
+#
+# Perks stay fair: they only add to event rewards and shorten event waits. No
+# perk changes gambling odds, prices, anti-cheat, moderation, or anything that
+# another player would lose out on.
+#
+# Perks (all whole numbers; each has a hard limit in brackets):
+#   CALENDAR-BONUS-PERCENT              more money and shards behind Advent and
+#                                       Halloween doors                [100]
+#   CALENDAR-STREAK-GRACE-DAYS          days a calendar streak survives a
+#                                       missed day                       [3]
+#   DAILY-BONUS-PERCENT                 more money and shards from /daily [100]
+#   TRICK-OR-TREAT-COOLDOWN-CUT-PERCENT shorter wait between knocks     [50]
+#   TRICK-OR-TREAT-EXTRA-KNOCKS         extra knocks a day              [10]
+#   CANDY-BONUS-PERCENT                 more Halloween candy           [100]
+#
+# Players see the ranks and their perks with /perks. Staff can check which rank
+# a player has with /perks check <player>.
+# ==============================================================================
+
+ENABLED: true
+
+# Lower limits for every rank at once. A value above the hard limit is ignored.
+CAPS:
+  CALENDAR-BONUS-PERCENT: 50
+  DAILY-BONUS-PERCENT: 50
+
+RANKS:
+  vip:
+    PERMISSION: smpplugin.rank.vip
+    PRIORITY: 10
+    DISPLAY: "&a&lVIP"
+    PERKS:
+      CALENDAR-BONUS-PERCENT: 10
+      CALENDAR-STREAK-GRACE-DAYS: 1
+      DAILY-BONUS-PERCENT: 10
+      TRICK-OR-TREAT-COOLDOWN-CUT-PERCENT: 15
+      TRICK-OR-TREAT-EXTRA-KNOCKS: 1
+      CANDY-BONUS-PERCENT: 10
+  vipplus:
+    PERMISSION: smpplugin.rank.vipplus
+    PRIORITY: 20
+    DISPLAY: "&6&lVIP+"
+    PERKS:
+      CALENDAR-BONUS-PERCENT: 20
+      CALENDAR-STREAK-GRACE-DAYS: 2
+      DAILY-BONUS-PERCENT: 20
+      TRICK-OR-TREAT-COOLDOWN-CUT-PERCENT: 25
+      TRICK-OR-TREAT-EXTRA-KNOCKS: 2
+      CANDY-BONUS-PERCENT: 20

@@ -438,6 +438,15 @@ public final class PermissionRegistry {
         admin("smpplugin.admin.economy.history", "See any player's balance history with /eco history.", "New in 3.2.");
         admin("smpplugin.admin.economy.stats", "See the money supply and money flows with /eco stats.", "New in 3.2.");
         player("smpplugin.events", "See which seasonal events run with /events.", "New in 3.2.");
+        player("smpplugin.advent", "Open the Advent Calendar with /advent and open its doors.", "New in 3.2.");
+        admin("smpplugin.admin.advent", "Edit Advent Calendar gifts and use /advent give, reset, test and stats.",
+                "New in 3.2.");
+        player("smpplugin.perks", "See the ranks and their perks with /perks.", "New in 3.2.");
+        admin("smpplugin.admin.perks", "See which rank an online player gets with /perks check.", "New in 3.2.");
+        perk("smpplugin.rank.vip", "The VIP rank of perks.yml (rank permissions can be renamed there).", "New in 3.2.");
+        perk("smpplugin.rank.vipplus", "The VIP+ rank of perks.yml (rank permissions can be renamed there).", "New in 3.2.");
+        player("smpplugin.claimitems", "Collect reward items that did not fit in your inventory with /claimitems.",
+                "New in 3.2.");
         admin("smpplugin.admin.events", "Switch seasonal events on, off or back to their dates with /events.",
                 "New in 3.2.");
 

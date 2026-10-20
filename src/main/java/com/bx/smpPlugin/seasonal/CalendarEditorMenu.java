@@ -1,4 +1,4 @@
-package com.bx.smpPlugin.halloween;
+package com.bx.smpPlugin.seasonal;
 
 import com.bx.smpPlugin.SmpPlugin;
 import com.bx.smpPlugin.core.Reward;
@@ -16,18 +16,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** /halloween edit: every door with its prize; click one to change what is behind it. */
+/** /&lt;calendar&gt; edit: every door with its prize; click one to change what is behind it. */
 public final class CalendarEditorMenu extends BaseMenu {
 
     private static final int BACK_SLOT = 45;
     private static final int HELP_SLOT = 53;
 
-    private final HalloweenManager halloween;
+    private final SeasonCalendar calendar;
     private final Map<Integer, Integer> doorBySlot = new HashMap<>();
 
-    public CalendarEditorMenu(SmpPlugin plugin, HalloweenManager halloween) {
-        super(plugin, "&8✎ &6Edit Halloween prizes", 54);
-        this.halloween = halloween;
+    public CalendarEditorMenu(SmpPlugin plugin, SeasonCalendar calendar) {
+        super(plugin, "&8✎ " + calendar.theme().accent() + "Edit " + calendar.id().displayName() + " prizes", 54);
+        this.calendar = calendar;
     }
 
     @Override
@@ -35,23 +35,13 @@ public final class CalendarEditorMenu extends BaseMenu {
         clear();
         doorBySlot.clear();
         fill(Material.BLACK_STAINED_GLASS_PANE);
-        CalendarRules rules = halloween.rules();
-        int year = halloween.seasonYear();
-        int lastDoor = rules.lastDayIn(year);
-        int index = 0;
-        for (int door = rules.firstDay(); door <= lastDoor; door++) {
-            int slot;
-            if (door == lastDoor) {
-                slot = 49;
-            } else if (index < CalendarMenu.DOOR_SLOTS.length - 1) {
-                slot = CalendarMenu.DOOR_SLOTS[index++];
-            } else {
-                continue;
-            }
+        for (Map.Entry<Integer, Integer> entry : CalendarMenu.layout(calendar.rules(), calendar.seasonYear()).entrySet()) {
+            int slot = entry.getKey();
+            int door = entry.getValue();
             doorBySlot.put(slot, door);
-            Reward prize = halloween.prize(door);
+            Reward prize = calendar.prize(door);
             List<String> lore = new ArrayList<>();
-            lore.add(halloween.hasOverride(door) ? "&aSet in game" : "&7From halloween.yml");
+            lore.add(calendar.hasOverride(door) ? "&aSet in game" : "&7From calendar.yml");
             lore.add("");
             List<String> lines = prize.describe(plugin);
             if (lines.isEmpty()) {
@@ -65,7 +55,7 @@ public final class CalendarEditorMenu extends BaseMenu {
             }
             lore.add("");
             lore.add("&e▶ Click to edit");
-            ItemStack item = prize.previewItem(plugin, "&6Door " + door + " &8- " + halloween.doorName(door), null);
+            ItemStack item = prize.previewItem(plugin, calendar.theme().accent() + "Door " + door + " &8- " + calendar.doorName(door), null);
             item = ItemUtils.withLore(item, lore);
             item.setAmount(Math.max(1, Math.min(64, door)));
             set(slot, item);
@@ -79,23 +69,23 @@ public final class CalendarEditorMenu extends BaseMenu {
                 "&8• &7press &aSave",
                 "",
                 "&7Console commands are set in",
-                "&fhalloween.yml &7(DOORS.<day>.COMMANDS).")));
+                "&fcalendar.yml &7(DOORS.<day>.COMMANDS).")));
     }
 
     @Override
     public void handleClick(int slot, Player player, ClickType clickType) {
-        if (!PermissionUtils.has(player, HalloweenCommand.ADMIN_PERMISSION)) {
+        if (!PermissionUtils.has(player, calendar.adminPermission())) {
             player.closeInventory();
             return;
         }
         if (slot == BACK_SLOT) {
-            new CalendarMenu(plugin, halloween).open(player);
+            new CalendarMenu(plugin, calendar).open(player);
             return;
         }
         Integer door = doorBySlot.get(slot);
         if (door != null) {
             player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.5F, 1.2F);
-            new DoorEditorMenu(plugin, halloween, door).open(player);
+            new DoorEditorMenu(plugin, calendar, door).open(player);
         }
     }
 }

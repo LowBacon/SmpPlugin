@@ -63,6 +63,8 @@ public class ConfigManager {
             "discord.yml",
             "anvil-moderation.yml",
             "halloween.yml",
+            "advent.yml",
+            "perks.yml",
             "extras.yml",
             "guide.yml",
             "borders.yml"
@@ -109,6 +111,8 @@ public class ConfigManager {
     private FileConfiguration enchantments;
     private FileConfiguration filter;
     private FileConfiguration halloween;
+    private FileConfiguration advent;
+    private FileConfiguration perks;
     private FileConfiguration extras;
     private FileConfiguration guide;
     private FileConfiguration borders;
@@ -139,6 +143,8 @@ public class ConfigManager {
         rtp          = load("rtp.yml", rtp);
         dialog       = withBundledDefaults("dialog.yml", load("dialog.yml", dialog));
         halloween    = load("halloween.yml", halloween);
+        advent       = load("advent.yml", advent);
+        perks        = load("perks.yml", perks);
         extras       = load("extras.yml", extras);
         guide        = load("guide.yml", guide);
         borders      = load("borders.yml", borders);
@@ -2106,6 +2112,10 @@ public class ConfigManager {
     public FileConfiguration getFilter()        { return filter; }
     /** Spooky Calendar, Trick or Treat and the Halloween ambience (3.0). */
     public FileConfiguration getHalloween()     { return halloween; }
+    /** The Advent Calendar (3.2). */
+    public FileConfiguration getAdvent()        { return advent; }
+    /** Ranks (VIP, VIP+ ...) and what each one adds (3.2). */
+    public FileConfiguration getPerks()         { return perks; }
     /** Daily rewards, challenges, events, emotes and the other 3.0 extras. */
     public FileConfiguration getExtras()        { return extras; }
     public FileConfiguration getGuide()         { return guide; }

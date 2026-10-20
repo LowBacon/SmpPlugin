@@ -1,4 +1,4 @@
-package com.bx.smpPlugin.halloween;
+package com.bx.smpPlugin.seasonal;
 
 import com.bx.smpPlugin.SmpPlugin;
 import com.bx.smpPlugin.core.InteractiveMenu;
@@ -38,17 +38,17 @@ public final class DoorEditorMenu extends BaseMenu implements InteractiveMenu {
     private static final int RESET_SLOT = 51;
     private static final int SAVE_SLOT = 53;
 
-    private final HalloweenManager halloween;
+    private final SeasonCalendar calendar;
     private final int door;
     private double money;
     private long shards;
     private boolean saved;
 
-    public DoorEditorMenu(SmpPlugin plugin, HalloweenManager halloween, int door) {
-        super(plugin, "&8✎ &6Door " + door + " prize", 54);
-        this.halloween = halloween;
+    public DoorEditorMenu(SmpPlugin plugin, SeasonCalendar calendar, int door) {
+        super(plugin, "&8✎ " + calendar.theme().accent() + "Door " + door + " prize", 54);
+        this.calendar = calendar;
         this.door = door;
-        Reward prize = halloween.prize(door);
+        Reward prize = calendar.prize(door);
         this.money = prize.money();
         this.shards = prize.shards();
         int slot = 0;
@@ -81,17 +81,17 @@ public final class DoorEditorMenu extends BaseMenu implements InteractiveMenu {
         List<String> info = new ArrayList<>();
         info.add("&7Drop the prize items into the");
         info.add("&7area above, then press &aSave&7.");
-        List<String> commands = halloween.prize(door).commands();
+        List<String> commands = calendar.prize(door).commands();
         if (!commands.isEmpty()) {
             info.add("");
-            info.add("&7Also runs (from halloween.yml):");
+            info.add("&7Also runs (from " + calendar.fileName() + "):");
             for (String command : commands) {
                 info.add("&8/ &f" + command);
             }
         }
-        inventory.setItem(INFO_SLOT, ItemUtils.createItem(Material.BOOK, "&e" + Text.color(halloween.doorName(door)), info));
-        inventory.setItem(RESET_SLOT, ItemUtils.createItem(Material.LAVA_BUCKET, "&cUse halloween.yml again",
-                List.of("&7Removes the in-game prize for", "&7this door.", halloween.hasOverride(door) ? "" : "&8(nothing set in game)")));
+        inventory.setItem(INFO_SLOT, ItemUtils.createItem(Material.BOOK, "&e" + Text.color(calendar.doorName(door)), info));
+        inventory.setItem(RESET_SLOT, ItemUtils.createItem(Material.LAVA_BUCKET, "&cUse " + calendar.fileName() + " again",
+                List.of("&7Removes the in-game prize for", "&7this door.", calendar.hasOverride(door) ? "" : "&8(nothing set in game)")));
         inventory.setItem(SAVE_SLOT, ItemUtils.createItem(Material.LIME_DYE, "&a&lSave", List.of("&7Saves this door's prize.")));
     }
 
@@ -101,7 +101,7 @@ public final class DoorEditorMenu extends BaseMenu implements InteractiveMenu {
             event.setCancelled(true);
             return;
         }
-        if (!PermissionUtils.has(player, HalloweenCommand.ADMIN_PERMISSION)) {
+        if (!PermissionUtils.has(player, calendar.adminPermission())) {
             event.setCancelled(true);
             player.closeInventory();
             return;
@@ -145,14 +145,14 @@ public final class DoorEditorMenu extends BaseMenu implements InteractiveMenu {
                 ping(player);
             }
             case BACK_SLOT -> plugin.getSpigotScheduler().runEntity(player,
-                    () -> new CalendarEditorMenu(plugin, halloween).open(player));
+                    () -> new CalendarEditorMenu(plugin, calendar).open(player));
             case RESET_SLOT -> {
-                halloween.clearOverride(door);
+                calendar.clearOverride(door);
                 saved = true;
                 returnItems(player);
-                Text.send(player, "HALLOWEEN.EDIT-RESET", "&7Door &6{door} &7uses the prize from halloween.yml again.",
-                        "{door}", Integer.toString(door));
-                plugin.getSpigotScheduler().runEntity(player, () -> new CalendarEditorMenu(plugin, halloween).open(player));
+                Text.send(player, "CALENDAR.EDIT-RESET", "&7Door {door} uses the prize from {file} again.",
+                        "{door}", Integer.toString(door), "{file}", calendar.fileName());
+                plugin.getSpigotScheduler().runEntity(player, () -> new CalendarEditorMenu(plugin, calendar).open(player));
             }
             case SAVE_SLOT -> {
                 List<ItemStack> items = new ArrayList<>();
@@ -162,16 +162,16 @@ public final class DoorEditorMenu extends BaseMenu implements InteractiveMenu {
                         items.add(item.clone());
                     }
                 }
-                halloween.saveOverride(door, new Reward(money, shards, items, List.of(), List.of()));
+                calendar.saveOverride(door, new Reward(money, shards, items, List.of(), List.of()));
                 saved = true;
                 // The items now live in the prize; clear the area so closing does not hand them back.
                 for (int i = 0; i < AREA; i++) {
                     inventory.setItem(i, null);
                 }
                 player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.7F, 1.4F);
-                Text.send(player, "HALLOWEEN.EDIT-SAVED", "&aSaved the prize behind door &6{door}&a.",
+                Text.send(player, "CALENDAR.EDIT-SAVED", "&aSaved the prize behind door {door}.",
                         "{door}", Integer.toString(door));
-                plugin.getSpigotScheduler().runEntity(player, () -> new CalendarEditorMenu(plugin, halloween).open(player));
+                plugin.getSpigotScheduler().runEntity(player, () -> new CalendarEditorMenu(plugin, calendar).open(player));
             }
             default -> {
             }
@@ -205,7 +205,7 @@ public final class DoorEditorMenu extends BaseMenu implements InteractiveMenu {
      * prize, which the editor never owned, so only items that are not part of the saved prize go back.
      */
     private void returnItems(Player player) {
-        List<ItemStack> original = new ArrayList<>(halloween.prize(door).items());
+        List<ItemStack> original = new ArrayList<>(calendar.prize(door).items());
         Inventory area = inventory;
         for (int i = 0; i < AREA; i++) {
             ItemStack item = area.getItem(i);
@@ -216,9 +216,7 @@ public final class DoorEditorMenu extends BaseMenu implements InteractiveMenu {
             if (removeMatch(original, item)) {
                 continue;
             }
-            for (ItemStack rest : player.getInventory().addItem(item).values()) {
-                player.getWorld().dropItemNaturally(player.getLocation(), rest);
-            }
+            com.bx.smpPlugin.engagement.PendingItems.giveOrKeep(plugin, player, List.of(item));
         }
     }
 

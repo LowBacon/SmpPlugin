@@ -76,10 +76,18 @@ public final class PlayerStore {
         return plugin.getDatabaseManager() == null ? null : plugin.getDatabaseManager().getConnection();
     }
 
-    /** Reads every value a player has. Blocks; call it on the login thread or the database thread. */
-    public void loadBlocking(UUID uuid) {
+    /**
+     * Reads every value a player has. Blocks; call it on the login thread or the database thread.
+     *
+     * <p>When the read fails the player stays not loaded, so features answer "still loading" instead of treating
+     * them as a new player: an empty copy would let them claim every calendar door again and would overwrite what
+     * the database holds on the next save.
+     *
+     * @return true when the player's values are in memory
+     */
+    public boolean loadBlocking(UUID uuid) {
         if (!ready || uuid == null) {
-            return;
+            return false;
         }
         Map<String, String> values = new ConcurrentHashMap<>();
         try (PreparedStatement statement = connection().prepareStatement(
@@ -94,13 +102,16 @@ public final class PlayerStore {
                 }
             }
         } catch (SQLException exception) {
-            plugin.getLogger().log(Level.WARNING, "Could not load 3.0 data for " + uuid, exception);
+            plugin.getLogger().log(Level.WARNING, "Could not load 3.0 data for " + uuid
+                    + "; their calendar, daily rewards and challenges stay unavailable until it loads.", exception);
+            return isLoaded(uuid);
         }
         // A value written while the read was running wins over what the read found.
         Map<String, String> existing = cache.putIfAbsent(uuid, values);
         if (existing != null) {
             values.forEach(existing::putIfAbsent);
         }
+        return true;
     }
 
     /** Loads in the background, for players already online when the plugin starts. */
@@ -120,6 +131,20 @@ public final class PlayerStore {
     public String get(UUID uuid, String section) {
         Map<String, String> values = cache.get(uuid);
         return values == null ? null : values.get(section);
+    }
+
+    /** Every loaded value of a player whose section is {@code prefix} or starts with {@code prefix + "."}. */
+    public Map<String, String> sections(UUID uuid, String prefix) {
+        Map<String, String> values = cache.get(uuid);
+        Map<String, String> out = new java.util.TreeMap<>();
+        if (values != null) {
+            values.forEach((section, value) -> {
+                if (section.equals(prefix) || section.startsWith(prefix + ".")) {
+                    out.put(section, value);
+                }
+            });
+        }
+        return out;
     }
 
     /** Reads a value for any player, online or not, and answers on the main thread. */
@@ -173,24 +198,31 @@ public final class PlayerStore {
     }
 
     private void writeBlocking(UUID uuid, String section, String value, long now) {
-        try (PreparedStatement delete = connection().prepareStatement(
-                "DELETE FROM " + TABLE + " WHERE player_uuid = ? AND section = ?")) {
-            delete.setString(1, uuid.toString());
-            delete.setString(2, section);
-            delete.executeUpdate();
-            if (value == null) {
-                return;
-            }
-            try (PreparedStatement insert = connection().prepareStatement(
-                    "INSERT INTO " + TABLE + " (player_uuid, section, data_value, updated_at) VALUES (?, ?, ?, ?)")) {
-                insert.setString(1, uuid.toString());
-                insert.setString(2, section);
-                insert.setString(3, value);
-                insert.setLong(4, now);
-                insert.executeUpdate();
-            }
+        // One transaction: a crash between the delete and the insert must not lose the value (a lost calendar
+        // value would let every door be opened again).
+        try {
+            com.bx.smpPlugin.economy.EconomyStore.inTransaction(connection(), connection -> {
+                try (PreparedStatement delete = connection.prepareStatement(
+                        "DELETE FROM " + TABLE + " WHERE player_uuid = ? AND section = ?")) {
+                    delete.setString(1, uuid.toString());
+                    delete.setString(2, section);
+                    delete.executeUpdate();
+                }
+                if (value == null) {
+                    return null;
+                }
+                try (PreparedStatement insert = connection.prepareStatement(
+                        "INSERT INTO " + TABLE + " (player_uuid, section, data_value, updated_at) VALUES (?, ?, ?, ?)")) {
+                    insert.setString(1, uuid.toString());
+                    insert.setString(2, section);
+                    insert.setString(3, value);
+                    insert.setLong(4, now);
+                    insert.executeUpdate();
+                }
+                return null;
+            });
         } catch (SQLException exception) {
-            plugin.getLogger().log(Level.WARNING, "Could not save 3.0 data for " + uuid, exception);
+            plugin.getLogger().log(Level.WARNING, "Could not save 3.0 data for " + uuid + " (" + section + ")", exception);
         }
     }
 

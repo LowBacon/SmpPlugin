@@ -79,6 +79,8 @@ public class FeatureManager {
         ANTICHEAT("ANTICHEAT", "anti-cheat", "server-side movement, combat, block, inventory and x-ray checks with staff alerts and a ban queue.", "OBSERVER", null),
         COINFLIP("COINFLIP", "coinflip", "1v1 coin flips for in-game currency with practice mode, history, stats and leaderboards.", "SUNFLOWER", null),
         HALLOWEEN("HALLOWEEN", "halloween", "Spooky Calendar, Trick or Treat, candy drops and pumpkin heads.", "JACK_O_LANTERN", null),
+        ADVENT("ADVENT", "advent calendar", "/advent: a winter calendar with a gift behind each door until Christmas Eve.", "SNOW_BLOCK", null),
+        PERKS("PERKS", "rank perks", "VIP, VIP+ and other rank perks from perks.yml (/perks).", "NETHER_STAR", null),
         DAILY_REWARDS("DAILY_REWARDS", "daily rewards", "/daily login rewards with a 7-day streak.", "CHEST_MINECART", null),
         CHALLENGES("CHALLENGES", "challenges", "/challenges: three new daily goals for everyone.", "TARGET", null),
         EVENTS("EVENTS", "events", "polls, giveaways, chat games and countdowns.", "FIREWORK_ROCKET", null),
@@ -239,6 +241,8 @@ public class FeatureManager {
             case "anticheat" -> new Feature[]{Feature.ANTICHEAT};
             case "coinflip", "cf" -> new Feature[]{Feature.COINFLIP};
             case "halloween", "trickortreat" -> new Feature[]{Feature.HALLOWEEN};
+            case "advent" -> new Feature[]{Feature.ADVENT};
+            case "perks" -> new Feature[]{Feature.PERKS};
             case "daily" -> new Feature[]{Feature.DAILY_REWARDS};
             case "challenges" -> new Feature[]{Feature.CHALLENGES};
             case "poll", "giveaway", "chatgame", "countdown" -> new Feature[]{Feature.EVENTS};

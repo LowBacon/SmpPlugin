@@ -668,6 +668,12 @@ commands:
     permission: smpplugin.halloween.trickortreat
     aliases:
     - tot
+  advent:
+    description: Open the Advent Calendar and open today's door
+    usage: /advent [edit|give|reset|test|stats|reload]
+    permission: smpplugin.advent
+    aliases:
+    - adventcalendar
   events:
     description: See the seasonal events; staff switch them on, off or back to their dates
     usage: /events [status|<advent|halloween|trickortreat> [on|off|auto]]
@@ -675,6 +681,19 @@ commands:
     aliases:
     - seasonalevents
     - smpevents
+  perks:
+    description: See the ranks and what each one adds
+    usage: /perks [rank|check <player>]
+    permission: smpplugin.perks
+    aliases:
+    - ranks
+    - vip
+  claimitems:
+    description: Collect reward items that did not fit in your inventory
+    usage: /claimitems
+    permission: smpplugin.claimitems
+    aliases:
+    - rewardvault
   daily:
     description: Claim your daily reward and keep your streak
     usage: /daily
@@ -1128,6 +1147,8 @@ permissions:
       smpplugin.bypass.border: true
       smpplugin.admin.economy.history: true
       smpplugin.admin.economy.stats: true
+      smpplugin.admin.advent: true
+      smpplugin.admin.perks: true
       smpplugin.admin.events: true
   smpplugin.message:
     description: 'Send private messages with /msg and reply with /reply.'
@@ -1904,6 +1925,27 @@ permissions:
   smpplugin.events:
     description: 'See which seasonal events run with /events.'
     default: true
+  smpplugin.advent:
+    description: 'Open the Advent Calendar with /advent and open its doors.'
+    default: true
+  smpplugin.admin.advent:
+    description: 'Edit Advent Calendar gifts and use /advent give, reset, test and stats.'
+    default: false
+  smpplugin.perks:
+    description: 'See the ranks and their perks with /perks.'
+    default: true
+  smpplugin.admin.perks:
+    description: 'See which rank an online player gets with /perks check.'
+    default: false
+  smpplugin.rank.vip:
+    description: 'The VIP rank of perks.yml (rank permissions can be renamed there).'
+    default: false
+  smpplugin.rank.vipplus:
+    description: 'The VIP+ rank of perks.yml (rank permissions can be renamed there).'
+    default: false
+  smpplugin.claimitems:
+    description: 'Collect reward items that did not fit in your inventory with /claimitems.'
+    default: true
   smpplugin.admin.events:
     description: 'Switch seasonal events on, off or back to their dates with /events.'
     default: false
@@ -2156,6 +2198,8 @@ permissions:
       smpplugin.lore: true
       smpplugin.glow: true
       smpplugin.gambling.bypasscooldown: true
+      smpplugin.rank.vip: true
+      smpplugin.rank.vipplus: true
   smpplugin.role.coowner:
     description: 'Co-owner role: everything the owner role has.'
     default: false

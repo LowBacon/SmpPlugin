@@ -62,6 +62,9 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.baltop` | See the richest players with /baltop. | everyone | New in 3.2. |
 | `smpplugin.transactions` | See your own balance history with /transactions. | everyone | New in 3.2. |
 | `smpplugin.events` | See which seasonal events run with /events. | everyone | New in 3.2. |
+| `smpplugin.advent` | Open the Advent Calendar with /advent and open its doors. | everyone | New in 3.2. |
+| `smpplugin.perks` | See the ranks and their perks with /perks. | everyone | New in 3.2. |
+| `smpplugin.claimitems` | Collect reward items that did not fit in your inventory with /claimitems. | everyone | New in 3.2. |
 
 ## Rank perks (default: nobody)
 
@@ -106,6 +109,8 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.lore` | Edit the lore of the item in your hand with /lore. | nobody | New in 3.0. |
 | `smpplugin.glow` | Toggle a glowing outline with /glow. | nobody | New in 3.0. |
 | `smpplugin.gambling.bypasscooldown` | No cooldown between /dice rolls. | nobody | New in 3.1. |
+| `smpplugin.rank.vip` | The VIP rank of perks.yml (rank permissions can be renamed there). | nobody | New in 3.2. |
+| `smpplugin.rank.vipplus` | The VIP+ rank of perks.yml (rank permissions can be renamed there). | nobody | New in 3.2. |
 
 ## Staff tools (default: nobody; ops via smpplugin.admin)
 
@@ -251,6 +256,8 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.admin.border` | Set up the spawn and lobby world borders with /border. | nobody | New in 3.1. |
 | `smpplugin.admin.economy.history` | See any player's balance history with /eco history. | nobody | New in 3.2. |
 | `smpplugin.admin.economy.stats` | See the money supply and money flows with /eco stats. | nobody | New in 3.2. |
+| `smpplugin.admin.advent` | Edit Advent Calendar gifts and use /advent give, reset, test and stats. | nobody | New in 3.2. |
+| `smpplugin.admin.perks` | See which rank an online player gets with /perks check. | nobody | New in 3.2. |
 | `smpplugin.admin.events` | Switch seasonal events on, off or back to their dates with /events. | nobody | New in 3.2. |
 
 ## Operational bypasses (default: nobody; ops via smpplugin.admin)
@@ -312,13 +319,13 @@ including destructive actions and bypasses. Only use one when you mean that.
 
 | Node | Allows | Default | Notes |
 |---|---|---|---|
-| `smpplugin.admin` | Default-op administrator bundle: staff tools, administration and operational bypasses. Excludes destructive actions and security bypasses. | ops | In 2.0 this no longer includes destructive actions or security bypasses. Contains 141 nodes: every node in the staff, administration and operational-bypass tables. |
+| `smpplugin.admin` | Default-op administrator bundle: staff tools, administration and operational bypasses. Excludes destructive actions and security bypasses. | ops | In 2.0 this no longer includes destructive actions or security bypasses. Contains 143 nodes: every node in the staff, administration and operational-bypass tables. |
 | `smpplugin.role.helper` | Helper role: staff chat, reports, warn, kick, temp-mute, /whois and events. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 14 nodes: every node in the staff, administration and operational-bypass tables. |
 | `smpplugin.role.moderator` | Moderator role: everything a helper has, plus staff mode, vanish, freeze, bans, mutes, invsee and spy. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 31 nodes: every node in the staff, administration and operational-bypass tables. |
 | `smpplugin.role.admin` | Admin role: everything a moderator has plus every tool in smpplugin.admin (no destructive actions). | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 2 nodes: every node in the staff, administration and operational-bypass tables. |
 | `smpplugin.role.manager` | Manager role: the admin role plus managing giveaways. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 2 nodes: every node in the staff, administration and operational-bypass tables. |
 | `smpplugin.role.developer` | Developer role: the admin role plus managing giveaways. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 2 nodes: every node in the staff, administration and operational-bypass tables. |
-| `smpplugin.role.owner` | Owner role: the admin role plus every destructive action (wipes, set-money) and every rank perk. Security bypasses (anti-cheat, hidden names) are still granted one by one. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 52 nodes: every node in the staff, administration and operational-bypass tables. |
+| `smpplugin.role.owner` | Owner role: the admin role plus every destructive action (wipes, set-money) and every rank perk. Security bypasses (anti-cheat, hidden names) are still granted one by one. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 54 nodes: every node in the staff, administration and operational-bypass tables. |
 | `smpplugin.role.coowner` | Co-owner role: everything the owner role has. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 1 nodes: every node in the staff, administration and operational-bypass tables. |
 
 ## Legacy names and bundles

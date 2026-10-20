@@ -64,7 +64,7 @@ public final class HalloweenListener implements Listener {
             if (!player.isOnline() || !halloween.inSeason()) {
                 return;
             }
-            String today = halloween.today().toString();
+            String today = halloween.now().toLocalDate().toString();
             if (!today.equals(store.get(player.getUniqueId(), GREETED))) {
                 store.set(player.getUniqueId(), GREETED, today);
                 long untilHalloween = halloween.rules().secondsUntilLastDay(halloween.now());

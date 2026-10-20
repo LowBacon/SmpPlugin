@@ -40,6 +40,34 @@ class CoinFlipStorageTest {
     }
 
     @Test
+    void aBalanceWriteNeverReplacesANewerStoredBalanceAndCountsAnEqualOneAsSaved() throws Exception {
+        try (CoinFlipTestHarness h = new CoinFlipTestHarness(folder, yaml -> { })) {
+            UUID alice = h.player("Alice", 50_000);
+            // The economy's own writer stored version 7 before CoinFlip's transaction ran.
+            await(h.repository.transaction(dao -> {
+                dao.writeBalance(alice, new EconomyGateway.StoredBalance(480D, 7L));
+                return null;
+            }));
+            // Same version: already durable, not an error (the stake must not be reversed).
+            await(h.repository.transaction(dao -> {
+                dao.writeBalance(alice, new EconomyGateway.StoredBalance(480D, 7L));
+                return null;
+            }));
+            // An older version arriving late is ignored.
+            await(h.repository.transaction(dao -> {
+                dao.writeBalance(alice, new EconomyGateway.StoredBalance(500D, 6L));
+                return null;
+            }));
+            assertEquals(480D, h.storedMoney(alice), 1e-9);
+            UUID nobody = UUID.randomUUID();
+            org.junit.jupiter.api.Assertions.assertThrows(Exception.class, () -> await(h.repository.transaction(dao -> {
+                dao.writeBalance(nobody, new EconomyGateway.StoredBalance(1D, 1L));
+                return null;
+            })), "a missing account is still a failure");
+        }
+    }
+
+    @Test
     void historyIsPagedNewestFirstWithoutLoadingEverything() throws Exception {
         try (CoinFlipTestHarness h = new CoinFlipTestHarness(folder, yaml -> yaml.set("MATCHES.MAX-ACTIVE-PER-PLAYER", 10))) {
             UUID alice = h.player("Alice", 1_000_000);

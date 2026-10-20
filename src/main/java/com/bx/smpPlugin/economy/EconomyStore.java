@@ -78,7 +78,7 @@ public final class EconomyStore {
             executor.execute(statement, "CREATE INDEX IF NOT EXISTS idx_economy_ledger_time ON " + LEDGER_TABLE
                     + " (created_at)");
             executor.execute(statement, "CREATE TABLE IF NOT EXISTS " + HOLDS_TABLE + " ("
-                    + " hold_id VARCHAR(40) PRIMARY KEY,"
+                    + " hold_id VARCHAR(64) PRIMARY KEY,"
                     + " player_uuid VARCHAR(36) NOT NULL,"
                     + " player_name VARCHAR(64),"
                     + " cents BIGINT NOT NULL,"

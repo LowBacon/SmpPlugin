@@ -3,19 +3,23 @@ package com.bx.smpPlugin.testsupport;
 import com.bx.smpPlugin.SmpPlugin;
 import com.bx.smpPlugin.economy.EconomyStore;
 import com.bx.smpPlugin.managers.ConfigManager;
+import com.bx.smpPlugin.managers.CurrencyManager;
 import com.bx.smpPlugin.managers.DatabaseManager;
 import com.bx.smpPlugin.managers.EconomyManager;
 import com.bx.smpPlugin.managers.PlayerDataManager;
 import com.bx.smpPlugin.models.PlayerData;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -41,6 +45,8 @@ public final class EconomyHarness implements AutoCloseable {
     public final EconomyManager economy;
     public final YamlConfiguration config = new YamlConfiguration();
     public final Map<UUID, Player> online = new ConcurrentHashMap<>();
+    /** The plugin's data folder, a fresh temporary directory. */
+    public final File dataFolder;
     private final Connection raw;
 
     public EconomyHarness() throws Exception {
@@ -51,6 +57,9 @@ public final class EconomyHarness implements AutoCloseable {
         set(ConfigManager.class, configManager, "database", new YamlConfiguration());
         set(ConfigManager.class, configManager, "menus", new YamlConfiguration());
         set(SmpPlugin.class, plugin, "configManager", configManager);
+        set(SmpPlugin.class, plugin, "currencyManager", new CurrencyManager(plugin));
+        dataFolder = Files.createTempDirectory("smpplugin-harness").toFile();
+        set(JavaPlugin.class, plugin, "dataFolder", dataFolder);
         installServer();
 
         raw = DriverManager.getConnection("jdbc:sqlite::memory:");
@@ -160,6 +169,8 @@ public final class EconomyHarness implements AutoCloseable {
         Server server = (Server) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{Server.class},
                 (proxy, method, args) -> switch (method.getName()) {
                     case "getPlayer" -> args != null && args.length == 1 && args[0] instanceof UUID id ? online.get(id) : null;
+                    case "getOfflinePlayer" -> args != null && args.length == 1 && args[0] instanceof UUID id
+                            ? offlinePlayer(id) : null;
                     case "getLogger" -> Logger.getLogger("EconomyHarnessServer");
                     case "isPrimaryThread" -> true;
                     case "hashCode" -> System.identityHashCode(proxy);
@@ -170,6 +181,22 @@ public final class EconomyHarness implements AutoCloseable {
         Field serverField = Bukkit.class.getDeclaredField("server");
         serverField.setAccessible(true);
         serverField.set(null, server);
+    }
+
+    private OfflinePlayer offlinePlayer(UUID uuid) {
+        Player live = online.get(uuid);
+        return (OfflinePlayer) Proxy.newProxyInstance(EconomyHarness.class.getClassLoader(),
+                new Class<?>[]{OfflinePlayer.class},
+                (proxy, method, args) -> switch (method.getName()) {
+                    case "getUniqueId" -> uuid;
+                    case "getName" -> live == null ? null : live.getName();
+                    case "isOnline" -> live != null;
+                    case "getPlayer" -> live;
+                    case "hasPlayedBefore" -> true;
+                    case "hashCode" -> uuid.hashCode();
+                    case "equals" -> proxy == args[0];
+                    default -> method.getReturnType() == boolean.class ? false : null;
+                });
     }
 
     /** A stand-in online player that only knows its id and name. */

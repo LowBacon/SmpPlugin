@@ -277,17 +277,19 @@ public final class Roulette implements CommandExecutor, TabCompleter {
             Text.send(player, "ROULETTE.FULL", "&7This round is full ({max} players).", "{max}", Integer.toString(maxPlayers()));
             return;
         }
-        if (!wallet.take(player, stake, "the roulette")) {
+        int number = round == null ? rounds + 1 : round.number;
+        // Unique across restarts too (the round counter starts again at 1): a held payout may outlive a run.
+        String holdId = "roulette-" + number + "-" + player.getUniqueId() + "-" + Long.toString(now, 36);
+        if (!wallet.take(player, new GamblingEscrow.Hold(holdId, player.getUniqueId(), player.getName(), stake,
+                "roulette round"))) {
             Text.send(player, "ROULETTE.TOO-POOR", "&cYou only have &f{balance}&c.", "{balance}", wallet.money(wallet.balance(player)));
             return;
         }
         if (round == null) {
             round = new Round(++rounds);
         }
-        String holdId = "roulette-" + round.number + "-" + player.getUniqueId();
         Entry entry = new Entry(player.getUniqueId(), player.getName(), stake, holdId);
         round.entries.add(entry);
-        escrow.open(new GamblingEscrow.Hold(holdId, player.getUniqueId(), player.getName(), stake, "roulette round"));
         startTicker();
 
         long pot = round.pot();
@@ -466,14 +468,14 @@ public final class Roulette implements CommandExecutor, TabCompleter {
         current.settleIn = 100;
         last = current;
         Entry winner = current.entries.get(current.winner);
-        boolean paid = wallet.pay(winner.player(), winner.name(), current.payout, EconomyReason.GAMBLE_PAYOUT, "Roulette win:");
-        for (Entry entry : current.entries) {
-            if (entry == winner && !paid) {
-                // Keep the whole payout in escrow so it is paid at the next start.
-                escrow.update(entry.holdId(), current.payout);
-            } else {
-                escrow.close(entry.holdId());
-            }
+        // The payout and the closing of every bet of the round are one transaction.
+        List<String> holdIds = current.entries.stream().map(Entry::holdId).toList();
+        boolean paid = wallet.pay(winner.player(), winner.name(), current.payout, EconomyReason.GAMBLE_PAYOUT,
+                "Roulette win:", holdIds);
+        if (!paid) {
+            // Keep the whole payout held so it is paid at the next start; the other bets are in it.
+            escrow.keepAsPayout(winner.holdId(), current.payout,
+                    holdIds.stream().filter(id -> !id.equals(winner.holdId())).toList());
         }
         String chance = RouletteMath.chance(winner.stake(), current.pot());
         Text.broadcast(Text.prefix() + Text.get("ROULETTE.WINNER", "&6🎰 &f{player} &6won &f{payout} &6in the roulette with a &f{chance} &6chance!",
@@ -515,9 +517,8 @@ public final class Roulette implements CommandExecutor, TabCompleter {
     }
 
     private void refund(Entry entry, String why) {
-        if (wallet.pay(entry.player(), entry.name(), entry.stake(), EconomyReason.GAMBLE_REFUND, "Refund from " + why + ":")) {
-            escrow.close(entry.holdId());
-        }
+        wallet.pay(entry.player(), entry.name(), entry.stake(), EconomyReason.GAMBLE_REFUND, "Refund from " + why + ":",
+                entry.holdId());
     }
 
     /** Server stopping: pay a drawn winner, give every other bet back. Nothing is scheduled. */

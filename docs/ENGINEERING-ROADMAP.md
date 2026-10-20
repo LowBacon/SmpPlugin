@@ -39,7 +39,7 @@ config, docs. **P4** polish.
 |---|---|---|---|---|
 | E1 | P0 | Online players' balance changes live only in memory until the 5-minute autosave or quit; a crash loses every payment, sale, purchase and reward since the last save. | `EconomyManager.saveLoadedAccount`, `tasks/AutoSaveTask` | fixed (M1) |
 | E2 | P0 | Offline balance changes load a copy of the row, change it and save it asynchronously with a full-row `REPLACE`: two changes before the first save lands lose one of them (lost update). | `EconomyManager.loadAccount/saveLoadedAccount` | fixed (M1) |
-| E3 | P0 | Gambling escrow can mint money on a crash: the bet leaves the balance only in memory (saved later), while the hold is written to `data/gambling-escrow.yml` at once and refunded at the next start. A crash in between refunds a bet whose debit was never saved. A settled win whose hold removal was not yet written is refunded too. | `gambling/GamblingEscrow`, `gambling/Wallet` | open |
+| E3 | P0 | Gambling escrow can mint money on a crash: the bet leaves the balance only in memory (saved later), while the hold is written to `data/gambling-escrow.yml` at once and refunded at the next start. A crash in between refunds a bet whose debit was never saved. A settled win whose hold removal was not yet written is refunded too. | `gambling/GamblingEscrow`, `gambling/Wallet` | fixed (M2) |
 | E4 | P0 | Crate money rewards bypass the economy service (`PlayerData.addMoney`): no rounding, no log, no limit, saved only at autosave. | `CrateManager.grantMoneyReward` | fixed (M1) |
 | E5 | P0 | CoinFlip writes an absolute balance on its own database connection; it can land after a newer save of the same player and overwrite it. | `coinflip/storage/CoinFlipDao.writeBalance` | fixed (M1) |
 | E6 | P1 | A database that fails to start is only logged; the plugin keeps running every feature (including Vault payments) against no storage. | `DatabaseManager.initialize`, `SmpPlugin.onEnable` | fixed (M1) |
@@ -110,12 +110,30 @@ DatabaseManager/PlayerDataManager/EconomyManager on in-memory SQLite.
 **Not verified here.** MySQL statements (no MySQL server in the sandbox; the statement shape is unit-tested),
 behaviour on a live server.
 
+### M2: gambling holds in the same transaction as the money
+
+- `/dice` and `/roulette` holds are rows of `economy_holds`. A hold is inserted in the transaction that takes the
+  bet and deleted in the transaction that pays the result (a roulette payout closes every hold of the round), so
+  after a crash a hold exists exactly when its bet was taken and not yet paid. Start-up refunds each one in one
+  transaction with its deletion, so a second start refunds nothing.
+- A refused payout (e.g. `ECONOMY.MAX-BALANCE`) keeps the winner's hold at the payout and closes the others.
+- Holds left in a 3.1 `data/gambling-escrow.yml` are refunded once, entry by entry, then the file is renamed
+  `.recovered`.
+- Hold ids now include a time part, so a held payout from an earlier run cannot collide with a new round.
+- CoinFlip: regression test that its balance write treats an equal stored version as saved and ignores an older one.
+
+**Files.** `gambling/GamblingEscrow.java` (rewritten), `gambling/Wallet.java`, `gambling/DiceGame.java`,
+`gambling/Roulette.java`, `gambling/Gambling.java`, `economy/EconomyStore.java` (hold id 64 chars).
+**Tests.** `gambling/GamblingEscrowTest` (9 cases: take opens hold, unaffordable bet, win pays and closes,
+loss closes, offline roulette winner closes all holds in one transaction, refused payout kept, crash recovery
+once, failed take leaves no debit and no hold, 3.1 file migration once), `coinflip/CoinFlipStorageTest` (+1).
+**Commands run.** `mvn -o -s tools/central-only-settings.xml test` → 320 tests, 0 failures, 0 errors, 8 skipped.
+
 ## Current task
 
-M2: gambling escrow in the same database transaction as the balance change (E3).
+Economy commands: `/baltop`, `/eco`, `/balance history` (F1).
 
 ## Next tasks
 
-1. Economy commands: `/baltop`, `/eco`, `/balance history` (F1).
-2. Seasonal events platform: `/events`, `/advent`, `/halloween`, `/trickortreat`.
-3. VIP / VIP+ perks.
+1. Seasonal events platform: `/events`, `/advent`, `/halloween`, `/trickortreat`.
+2. VIP / VIP+ perks.

@@ -8,13 +8,13 @@ An all-in-one **Minecraft SMP core plugin**. One jar replaces the usual stack of
 
 | | |
 |---|---|
-| **Plugin version** | `3.1.0`; `/smpplugin version` shows the installed build |
+| **Plugin version** | `3.2.0`; `/smpplugin version` shows the installed build |
 | **Minecraft** | `1.21.11`, `26.1`, `26.1.1`, `26.1.2`, `26.2` and `26.3` on Paper, Purpur, Spigot and CraftBukkit |
 | **Folia** | Not supported |
 | **Java** | 21 on 1.21.11, 25 on 26.x (the jars are Java 21 bytecode) |
 | **API** | Compiled against Paper API `1.21.11` (Spigot build: Spigot API `1.21.11`), checked against 26.3; `api-version: 1.21`, `folia-supported: false` |
-| **Build** | `mvn clean package` → `target/SmpPlugin-3.1.0-paper.jar` (Paper/Purpur); `-Pspigot` → `…-spigot.jar` (Spigot/CraftBukkit) |
-| **Size** | ~590 classes, ~152,000 lines of Java, 145 commands, 110+ GUI menus, 36 config files |
+| **Build** | `mvn clean package` → `target/SmpPlugin-3.2.0-paper.jar` (Paper/Purpur); `-Pspigot` → `…-spigot.jar` (Spigot/CraftBukkit) |
+| **Size** | ~700 Java files, ~177,000 lines of Java, 220 commands, 100+ GUI menus, 43 config files and 8 language files |
 | **Update checker** | Checks GitHub (`LowBacon/SmpPlugin`, `version.txt` on `main`) for a newer version on startup |
 
 Servers older than 1.21.11 are refused at start-up; for 1.21.10 and older use version 1.5. Folia makes the plugin
@@ -47,6 +47,7 @@ disable itself. See [COMPATIBILITY.md](COMPATIBILITY.md).
 21. [How It Works](#-how-it-works)
 22. [New in 3.0](#-new-in-30)
 23. [New in 3.1](#-new-in-31)
+24. [New in 3.2](#-new-in-32)
 
 ---
 
@@ -235,7 +236,11 @@ The plugin registers itself as a **Vault economy provider**, so other plugins ca
 ### Money
 - `/balance [player]` (`/bal`, `/money`)
 - `/pay <player> <amount>`, with an optional confirm menu
-- `/addmoney`, `/removemoney`, `/setmoney <player> <amount>` *(admin)*
+- `/addmoney`, `/removemoney`, `/setmoney <player> <amount>` *(admin)*, and `/eco give|take|set|reset|history|stats`
+- `/baltop` and `/transactions [page]` (your own balance history)
+- Exact money: whole cents, written at once on every change, each change recorded in a ledger with who did it
+  and why (see [docs/economy.md](docs/economy.md))
+- Pay rules in `config.yml` `ECONOMY.PAY`: minimum, maximum, tax and cooldown; a balance limit in `ECONOMY.MAX-BALANCE`
 - Tracks **money made** and **money spent** per player
 - Configurable currency name, symbol and colours
 
@@ -667,10 +672,12 @@ Set in `database.yml`:
 |---|---|
 | **SQLite** *(default)* | `data/data.db`, no setup needed |
 | **MySQL** | Host, port, database, user, password, auto-create database |
-| **MongoDB** | With a local cache file and sync on autosave |
+| **MongoDB** | A mirror, not a live store: the plugin works on a local SQLite file (`data/mongodb-cache.db`) and copies it to MongoDB every `MONGODB.SYNC-INTERVAL-SECONDS` and at shutdown. Not for several servers sharing one database. |
 | **Redis** *(optional)* | Only for network features, not main storage |
 
-- Data is auto-saved periodically
+- Money is written at once on every change; the rest of a player's row every `AUTOSAVE-SECONDS` (60 by default)
+  and when they leave
+- If the database cannot start, the plugin stops instead of running without storage
 - SQLite, Redis and commons-pool are shaded and relocated into the jar to avoid conflicts with other plugins
 
 ---
@@ -707,6 +714,11 @@ Set in `database.yml`:
 | `server-wipe.yml` | Season reset |
 | `anticheat.yml` | Anti-cheat checks, thresholds, enforcement and ban queue |
 | `coinflip.yml`, `coinflip-messages.yml` | CoinFlip limits, fee, animation, leaderboards and all its messages |
+| `halloween.yml` | The Halloween hub, Spooky Calendar, Trick or Treat, candy, quests, candy shop and milestones |
+| `advent.yml` | The Advent Calendar, its streak bonuses and completion prize |
+| `perks.yml` | Ranks (VIP, VIP+ …) and what each one adds |
+| `extras.yml` | Daily rewards, challenges, polls, giveaways, chat games, dice, roulette, mail and other 3.0 extras |
+| `guide.yml`, `borders.yml` | `/guide` pages; spawn and lobby borders |
 
 ---
 
@@ -814,3 +826,68 @@ until a Folia 26.3 build exists and the modules are verified there.
 
 ### 🧹 Removed
 - `/hug`, `/8ball`, `/hat`, `/trash` and `/notes`.
+
+---
+
+## 🆕 New in 3.2
+
+### 💵 Economy you can trust
+- **Whole cents.** Amounts are rounded half-up to the cent once, when they come in; nothing is stored as a
+  fraction of a cent. `ECONOMY.MAX-BALANCE` keeps balances in the range a stored value holds exactly.
+- **Saved at once.** Every balance change is written in the background the moment it happens, in one database
+  transaction with its ledger row. A crash loses at most the writes still queued, never a whole autosave interval.
+- **Versioned.** Each balance has a version; an older copy can never overwrite a newer one (an offline payment
+  made while the player logs in, a full player save racing a payment, CoinFlip's own writes).
+- **Ledger.** Every change is a row in `economy_ledger`: player, other player, reason, amount, balance after, who
+  did it and a note. `ECONOMY.LEDGER.RETENTION-DAYS` prunes it daily (0 keeps everything).
+- **Commands:** `/transactions [page]`, `/baltop [page]`, `/eco give|take|set|reset <player> <amount> [note]`,
+  `/eco history <player> [page]`, `/eco stats [hours]`. Each `/eco` action has its own permission.
+- **Bets:** dice and roulette stakes are held in `economy_holds` in the same transaction that takes the money, and
+  paid back at the next start if a crash interrupted the round.
+
+### 🗓️ Seasonal events (`/events`)
+- One status per event: **running**, **starts in …**, **over for this year** or **switched off**.
+- Staff: `/events <advent|halloween|trickortreat> on|off|auto`, or left click / right click / shift click in the
+  menu. ON runs the event outside its dates, OFF stops it during them, AUTO follows the dates again. The switch is
+  kept in `data/events.yml` (a damaged file is never overwritten) and every change is logged with who made it.
+- The server is told once when an event starts or ends. Placeholders: `%smpplugin_events_<event>%`.
+
+### ❄️ Advent Calendar (`/advent`, `advent.yml`)
+- A door a day from 1 to 24 December (any month and days can be set), with catch-up and grace days that may run
+  into January.
+- The gift is the player's the moment they click; the spin and the pop-up only show it.
+- **Streaks:** days in a row with a door opened; `STREAK.BONUSES` pay once at 3, 7, 14 and 24 days by default.
+- **Completion prize** for opening every door.
+- `/advent edit` to choose gifts in game, `/advent give|reset|stats|reload`, and
+  **`/advent test <date>`**: see the calendar as on that day, only for you, with nothing given or saved.
+- Placeholders: `advent_opened`, `advent_ready`, `advent_streak`, `advent_countdown`.
+
+### 🎃 Halloween hub (`/halloween`)
+- **Spooky Calendar** (`/halloween calendar`), on the same engine as Advent, paid at the click.
+- **Candy:** the Halloween currency, earned from treats, quests, the daily treat bag and monsters; it belongs to
+  one season. `/halloween candy` shows yours; staff use `/halloween candy <player> give|take|set <n>`.
+- **Daily treat bag:** a free bag of money and candy every day of the season.
+- **Quests:** season goals (monsters, a mob, a block, knocks, doors, candy eaten) with candy and a reward.
+- **Candy shop:** items, shards, money or console commands (crate keys, titles from other plugins), with a
+  per-season limit and a two-click buy.
+- **Milestones:** prizes for the candy earned this season, given the moment they are reached.
+- **Leaderboard:** the top candy earners this season.
+
+### 🚪 Trick or Treat (`/trickortreat`)
+- Decided and paid at the knock; the knock and the reveal only show it.
+- Treat weights are checked when read; `/trickortreat odds` shows each treat's real chance.
+- A wait between knocks and a daily limit. **Houses:** spots set with `/trickortreat house add <id>`, or FancyNpcs
+  NPCs named in `TRICK-OR-TREAT.NPCS`; with `REQUIRE-HOUSE` players go door to door and the wait counts per house.
+- Tricks are harmless: a scare, bats, a launch with slow falling, a spin, darkness, a fake creeper.
+
+### ⭐ Rank perks (`/perks`, `perks.yml`)
+- Ranks are permissions with a priority; there is no built-in order and any number of ranks can exist. A player
+  gets the perks of their highest rank only.
+- Perks: more calendar money and shards, streak grace days, more `/daily` money and shards, a shorter Trick or
+  Treat wait, extra knocks and more candy. Each has a hard limit in code and an optional lower `CAPS` value.
+- No perk touches gambling odds, prices, anti-cheat or moderation. `/perks check <player>` shows staff which rank a
+  player gets.
+
+### 📦 Reward vault (`/claimitems`)
+- Reward items that do not fit an inventory (calendar doors, treats, milestones, the shop, giveaways handed back)
+  go to the vault instead of the ground, and are handed over on join or with `/claimitems`.

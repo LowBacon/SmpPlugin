@@ -2,15 +2,35 @@
 
 A complete, feature-rich **Minecraft SMP core plugin** for **Minecraft 1.21.11 – 26.3** on **Paper, Purpur, Spigot and CraftBukkit**.
 
-> **3.1.0** adds `/dice` and the `/roulette` head jackpot, a one-screen CoinFlip, `/guide`, an in-game scoreboard
-> editor, a cleaner tab list and real Minecraft borders for the spawn and the lobby. It runs on Minecraft **1.21.11, 26.1, 26.1.1, 26.1.2, 26.2 and 26.3**
-> from one jar per server family. Run `/smpplugin version` to see what is installed. See [COMPATIBILITY.md](COMPATIBILITY.md),
-> [CHANGELOG.md](CHANGELOG.md) and the upgrade status in [docs/UPGRADE-26.3-STATUS.md](docs/UPGRADE-26.3-STATUS.md).
+> **3.2.0** makes every balance change exact and saved at once, with a ledger behind `/transactions`, `/baltop`
+> and `/eco`, and adds seasonal events you can switch live with `/events`: an **Advent Calendar**, a **Halloween hub**
+> (candy, quests, a candy shop, milestones, a leaderboard) and a reworked **Trick or Treat**, plus rank perks in
+> `perks.yml` and a reward vault so prizes never fall on the ground. It runs on Minecraft **1.21.11, 26.1, 26.1.1,
+> 26.1.2, 26.2 and 26.3** from one jar per server family. Run `/smpplugin version` to see what is installed. See
+> [COMPATIBILITY.md](COMPATIBILITY.md), [CHANGELOG.md](CHANGELOG.md), [docs/economy.md](docs/economy.md) and
+> [docs/seasonal-events.md](docs/seasonal-events.md).
 > Permissions changed; read [docs/permissions-migration-and-luckperms.md](docs/permissions-migration-and-luckperms.md) before upgrading.
 
 SmpPlugin is designed to provide an entire SMP server experience from a single, highly configurable plugin. It combines gameplay, economy, social features, moderation, player utilities, competitive systems, GUI menus, statistics, server management, and extensive integrations into one unified system.
 
 Instead of running a small army of plugins just to make an SMP function, SmpPlugin brings the majority of the core systems together in one optimized and configurable package.
+
+## 🆕 New in 3.2
+
+| | |
+|---|---|
+| 💵 **Exact, saved money** | Balances are whole cents. Every change is written at once (no more waiting for the autosave) and recorded in a ledger, in the same database transaction. Offline payments can no longer be undone by a stale login copy. |
+| 📒 **`/transactions`, `/baltop`, `/eco`** | Your own balance history; the richest players; staff `give`, `take`, `set`, `reset`, `history <player>` and `stats` (money supply and flows), each with its own permission and the staff member's name in the ledger. |
+| 💸 **Pay rules** | `ECONOMY.PAY` in `config.yml`: minimum and maximum, a tax and a cooldown. A balance limit (`ECONOMY.MAX-BALANCE`) keeps every cent exact. |
+| 🎰 **Bets held safely** | Dice and roulette bets are held in the database in the same transaction that takes the money, and given back on the next start after a crash. |
+| 🗓️ **`/events`** | One menu for the seasonal events: running, starts in…, over, or switched off. Staff switch an event on, off or back to its dates; the switch survives restarts and never changes the dates or anyone's progress. |
+| ❄️ **Advent Calendar** | `/advent`: a door a day from 1 to 24 December, streak bonuses, a prize for opening every door, and gifts chosen in game. |
+| 🎃 **Halloween hub** | `/halloween`: the Spooky Calendar, Trick or Treat, a daily treat bag, season quests, a candy shop, candy milestones and a candy leaderboard. |
+| 🚪 **Trick or Treat** | Decided and paid at the knock, with checked weights (`/trickortreat odds`), a daily limit, and houses (spots or FancyNpcs NPCs) for going door to door. |
+| ⭐ **Rank perks** | `perks.yml`: VIP, VIP+ or any ranks you define, by permission and priority. Bigger event rewards and shorter event waits, each capped; never odds, prices or moderation. `/perks` shows them. |
+| 🧪 **Test without giving** | `/advent test 2026-12-13` (or `/halloween test …`) shows the calendar as on that day to you only; nothing is given or saved. |
+| 📦 **Reward vault** | Reward items that do not fit go to `/claimitems` instead of the ground. |
+| 🛠️ **Fixes** | Prizes are handed over when you click, not when an animation ends; a failed database start stops the plugin instead of running without storage; leaderboards reload in the background; connection strings with passwords stay out of the log. |
 
 ## 🆕 New in 3.1
 
@@ -80,6 +100,9 @@ The Auction House is now only `/ah` (`/auctionhouse` was removed). Everything ne
 * Shop system
 * Orders system
 * Auction House with Quick Buy, smarter search, Your Items and transaction history
+* Exact money in whole cents, written at once on every change, with a ledger (`/transactions`, `/eco history`)
+* `/baltop`, `/eco give|take|set|reset|history|stats`, pay limits, a pay tax and a pay cooldown
+  (see [docs/economy.md](docs/economy.md))
 * Economy leaderboards
 * Economy PlaceholderAPI expansions
 * CoinFlip Nexus: 1v1 coin flips for in-game currency with a journaled, crash-safe money flow, challenges,
@@ -234,18 +257,20 @@ Optional integrations are handled through soft dependencies where possible, allo
 
 ## 🗄️ Storage & Databases
 
-The plugin includes database support for persistent server data and can work with multiple storage technologies, including:
+Set `DATABASE.TYPE` in `database.yml`:
 
-* SQLite
-* MySQL
-* MongoDB
-* Redis
+| Type | What it really is |
+|---|---|
+| **SQLite** *(default)* | A local file, `data/data.db`. No setup. |
+| **MySQL** | A shared MySQL or MariaDB database. |
+| **MongoDB** | A **mirror**, not a live store: the plugin works on a local SQLite file and copies it to MongoDB every `MONGODB.SYNC-INTERVAL-SECONDS` and at shutdown. Use it for off-site copies, not for several servers sharing one database. |
+| **Redis** *(optional)* | Only for network features (cross-server messages), never for player data. |
 
-This allows SmpPlugin to scale beyond a simple single-server setup and provides flexibility for different server infrastructures.
+If the database cannot start, SmpPlugin stops instead of running without storage.
 
 ## 🌐 Folia
 
-Version 2.x does **not** support Folia: its modules have not been checked on Folia, so the plugin refuses to
+SmpPlugin does **not** support Folia: its modules have not been checked on Folia, so the plugin refuses to
 start there and declares `folia-supported: false`. See [COMPATIBILITY.md](COMPATIBILITY.md).
 
 ## ⚡ Performance
@@ -264,7 +289,7 @@ This makes it possible to integrate SmpPlugin data into scoreboards, tablists, h
 
 ## 🖥️ Command System
 
-SmpPlugin provides **210+ commands** covering practically every major part of the plugin.
+SmpPlugin provides **220 commands** covering practically every major part of the plugin.
 
 Examples include:
 
@@ -287,12 +312,19 @@ Examples include:
 /keys
 /stats
 /daily
+/advent
+/events
+/perks
+/transactions
+/baltop
+/claimitems
 /challenges
 /guide
 /dice
 /roulette
 /coinflip
 /halloween
+/trickortreat
 /mail
 /playtime
 /ping
@@ -342,6 +374,7 @@ Server owners can configure systems such as:
 * Server settings
 * Database settings
 * Feature toggles
+* Seasonal events (`advent.yml`, `halloween.yml`) and rank perks (`perks.yml`)
 
 ## 🛠️ Development
 
@@ -365,11 +398,11 @@ mvn clean package
 This builds the jar for **Paper and Purpur**:
 
 ```text
-target/SmpPlugin-3.1.0-paper.jar
+target/SmpPlugin-3.2.0-paper.jar
 ```
 
 For **Spigot and CraftBukkit**, build with `mvn clean package -Pspigot`, which produces
-`target/SmpPlugin-3.1.0-spigot.jar`. The two APIs are not binary compatible; use the matching jar.
+`target/SmpPlugin-3.2.0-spigot.jar`. The two APIs are not binary compatible; use the matching jar.
 
 ## 📦 Installation
 
@@ -380,6 +413,20 @@ For **Spigot and CraftBukkit**, build with `mvn clean package -Pspigot`, which p
 4. Configure the generated configuration files.
 5. Install optional dependencies for the integrations you want to use.
 6. Restart the server, or run `/smpplugin reload`, after configuration changes.
+
+### Upgrading to 3.2
+
+- Your configuration is kept; `advent.yml` and `perks.yml` are created, and new settings (`ECONOMY` in
+  `config.yml`, `AUTOSAVE-SECONDS` and `MONGODB.SYNC-INTERVAL-SECONDS` in `database.yml`, the new Halloween
+  sections) fall back to safe defaults when missing.
+- The players table gets a `money_version` column and two tables are added, `economy_ledger` and
+  `economy_holds`. Nothing is deleted or reset.
+- Unfinished bets in `data/gambling-escrow.yml` are paid back once and the file is renamed `.recovered`.
+- `/halloween` now opens the Halloween hub; `/halloween calendar` opens the calendar. `/halloween preview` is now
+  `/halloween test` and only changes what you see.
+- `/eco` is also registered by EssentialsX; use `/smpeco` (or `/smpplugin:eco`) if EssentialsX owns `/eco`.
+- Rank perks use `smpplugin.rank.vip` and `smpplugin.rank.vipplus` by default (renameable in `perks.yml`); they are
+  `default: false`, so nobody has a rank until you give it.
 
 ### Upgrading to 3.1
 

@@ -1,5 +1,73 @@
 # Changelog
 
+## 3.2.0 — unreleased
+
+**SmpPlugin 3.2: money you can trust, and seasonal events you can switch live.** Every balance change is exact,
+saved at once and recorded in a ledger. `/events` controls a new Advent Calendar, a Halloween hub and a reworked
+Trick or Treat; ranks get capped, fair perks from `perks.yml`. Runs on the same versions as 3.1 (Minecraft 1.21.11
+to 26.3). See [docs/economy.md](docs/economy.md) and [docs/seasonal-events.md](docs/seasonal-events.md).
+
+### Added
+- **`/transactions [page]`**, **`/baltop [page]`** and **`/eco give|take|set|reset|history|stats`** (`/smpeco`),
+  each `/eco` action with its own permission. Every balance change is a row in the new `economy_ledger` table
+  with who did it and why.
+- **Pay rules** in `config.yml` `ECONOMY`: a balance limit, minimum and maximum payment, a pay tax and a pay
+  cooldown; `ECONOMY.LEDGER.RETENTION-DAYS` and `ECONOMY.BALTOP.PAGE-SIZE`.
+- **`/events`:** the status of every seasonal event (running, starts in…, over, off) and, for staff, a live
+  on / off / back-to-its-dates switch that survives restarts (`data/events.yml`) and never changes dates or progress.
+- **Advent Calendar** (`/advent`, `advent.yml`): a door a day from 1 to 24 December, streak bonuses, a prize for
+  opening every door, gifts chosen in game, and `/advent test <date>` to try it without giving anything.
+- **Halloween hub** (`/halloween`): the Spooky Calendar, Trick or Treat, a daily treat bag, season quests, a candy
+  shop, candy milestones and a candy leaderboard. Candy is the new Halloween currency.
+- **Trick or Treat houses:** spots set with `/trickortreat house add`, or FancyNpcs NPCs, for going door to door;
+  a daily knock limit; `/trickortreat odds`.
+- **Rank perks** (`perks.yml`, `/perks`): ranks by permission and priority, with capped perks for calendars,
+  `/daily`, Trick or Treat and candy. Bundled ranks: `smpplugin.rank.vip`, `smpplugin.rank.vipplus`.
+- **Reward vault** (`/claimitems`): reward items that do not fit go here instead of the ground.
+- New permissions: `smpplugin.baltop`, `smpplugin.transactions`, `smpplugin.admin.economy.history`,
+  `smpplugin.admin.economy.stats`, `smpplugin.events`, `smpplugin.admin.events`, `smpplugin.advent`,
+  `smpplugin.admin.advent`, `smpplugin.perks`, `smpplugin.admin.perks`, `smpplugin.rank.vip`,
+  `smpplugin.rank.vipplus`, `smpplugin.claimitems`.
+- Placeholders: `events_<event>`, `advent_opened`, `advent_ready`, `advent_streak`, `advent_countdown`.
+- New features in `/smpplugin features`: `ADVENT` and `PERKS`.
+
+### Changed
+- **Money is whole cents**, rounded half-up once when it comes in, and **written at once** on every change instead
+  of waiting for the autosave. `DATABASE.AUTOSAVE-SECONDS` (default 60) saves the rest of the player row.
+- **Balances are versioned:** an older copy can no longer overwrite a newer one.
+- **Prizes are handed over at the click**, before any animation: calendar doors, `/daily`, Trick or Treat. Leaving
+  during a spin no longer undoes a claim.
+- **`/halloween` opens the hub**; `/halloween calendar` opens the calendar. `/halloween preview` became
+  `/halloween test` and now only changes what the staff member sees, with nothing given.
+- Dice and roulette stakes are held in the new `economy_holds` table, in the same transaction that takes the money.
+- Vault payments by other plugins are recorded as `VAULT_DEPOSIT` / `VAULT_WITHDRAW` (they were filed as Auction
+  House and sell payouts).
+- Leaderboards reload stored players in the background instead of on the main thread.
+- `database.yml` says plainly that MongoDB mode is a mirror of a local SQLite file, synced every
+  `MONGODB.SYNC-INTERVAL-SECONDS` and at shutdown.
+- SkinsRestorer is a soft dependency, so it loads before SmpPlugin.
+
+### Fixed
+- A balance change could be lost in a crash before the next autosave, or overwritten by a full player save, a
+  stale login copy or CoinFlip's own write.
+- `/pay` amounts above the stored precision lost cents, and very large inputs could overflow.
+- The full player save reset columns it did not list to their defaults.
+- The shared database connection could let another thread's statements into a running transaction.
+- A database that failed to start left the plugin running every feature without storage.
+- A crash during a dice or roulette round could give a stake back on top of a payout.
+- A crash during the `/daily` or calendar spin lost the prize while keeping the claim.
+- The Halloween preview date applied to everyone, with real prizes.
+- A failed load of 3.0 player data made the player look new, so every calendar door could be opened again; a crash
+  between the two statements of a player-data write could lose the value.
+- Reward items that did not fit an inventory were dropped on the ground.
+- Connection strings with a user name and password could be written to the log when the database failed to start.
+- The crate editor and the feature toggle menu did not check the permission again on later clicks.
+
+### Upgrading
+- New tables (`economy_ledger`, `economy_holds`) and a `money_version` column are added; nothing is deleted or reset.
+- `data/gambling-escrow.yml` is paid back once and renamed `.recovered`.
+- `/eco` clashes with EssentialsX; use `/smpeco` when EssentialsX owns `/eco`.
+
 ## 3.1.0 — 20 October 2026
 
 **CustomSmp 3.1: dice and a head roulette, a one-screen CoinFlip, a getting-started guide, an

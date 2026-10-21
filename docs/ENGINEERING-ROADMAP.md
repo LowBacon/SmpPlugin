@@ -48,13 +48,22 @@ config, docs. **P4** polish.
 | E9 | P1 | The full-row `REPLACE INTO players` resets any column it does not list back to its default. | `DatabaseManager.savePlayer` | fixed (M1) |
 | E10 | P1 | Shared-connection proxy releases transaction ownership on `commit()`/`rollback()` while auto-commit is still off, so another thread's statements can join the next transaction. | `DatabaseManager.ThreadSafeConnectionHandler` | fixed (M1) |
 | E11 | P1 | A login preloads the player row asynchronously; an offline balance change between that read and the join is overwritten by the stale preloaded copy. | `JoinPreloadListener`, `PlayerDataManager.loadOrCreate` | fixed (M1) |
-| C1 | P1 | Daily rewards are handed out when the claim animation ends; a crash during the spin keeps the claim and loses the prize. The animation decides delivery. | `engagement/DailyRewards` | open |
+| C1 | P1 | Daily rewards are handed out when the claim animation ends; a crash during the spin keeps the claim and loses the prize. The animation decides delivery. | `engagement/DailyRewards` | fixed (M6) |
 | F1 | P3 | No `/baltop`, no `/eco`, no transaction history, no pay limits or tax, no economy statistics. | commands | fixed (M1, M3) |
-| P1 | P2 | `LeaderboardManager` reloads every player row synchronously on the calling (main) thread when its 30 s cache expires or an offline balance changes; placeholders and /baltop then stall the tick on big databases. | `LeaderboardManager.getSortedPlayers` | open |
-| D1 | P3 | "MongoDB" mode is a local SQLite file copied to MongoDB on autosave; docs call it MongoDB storage. | `DatabaseManager` MongoDB bridge, docs | open |
-| D2 | P3 | `SkinsRestorer` is used but missing from `softdepend`, so it can load after SmpPlugin. | `plugin.yml` | open |
+| P1 | P2 | `LeaderboardManager` reloads every player row synchronously on the calling (main) thread when its 30 s cache expires or an offline balance changes; placeholders and /baltop then stall the tick on big databases. | `LeaderboardManager.getSortedPlayers` | fixed (M7) |
+| D1 | P3 | "MongoDB" mode is a local SQLite file copied to MongoDB on autosave; docs call it MongoDB storage. | `DatabaseManager` MongoDB bridge, docs | fixed (M1 config text, M8 docs) |
+| D2 | P3 | `SkinsRestorer` is used but missing from `softdepend`, so it can load after SmpPlugin. | `plugin.yml` | fixed (M7) |
 | D3 | P3 | Compiled `target/` output (1,087 files) is tracked in git; `.gitignore` has no `target/` entry. | repository | fixed (M0) |
-| D4 | P3 | Docs disagree with the code (command count, line count, config file count, package counts, "2.x" wording, mixed SmpPlugin/CustomSmp/FinnishSMP branding). | `README.md`, `Features.md`, `docs/*` | open |
+| D4 | P3 | Docs disagree with the code (command count, line count, config file count, package counts, "2.x" wording, mixed SmpPlugin/CustomSmp/FinnishSMP branding). | `README.md`, `Features.md`, `docs/*` | fixed (M8); the server name `CustomSmp` in default configs and the `%customsmp_…%` placeholder are kept, since renaming them would break existing servers |
+| S1 | P0 | A failed read of 3.0 player data still marked the player loaded with empty data: every calendar door could be opened again, and the next write overwrote what the database held. | `core/PlayerStore.loadBlocking` | fixed (M5) |
+| S2 | P0 | A 3.0 player-data write was a DELETE and an INSERT without a transaction; a crash between them lost the value (a calendar claim mask, so every door again). | `core/PlayerStore.writeBlocking` | fixed (M5) |
+| S3 | P1 | `/halloween preview <date>` moved the date for every player, with real prizes. | `halloween/HalloweenManager` | fixed (M5, per-staff test mode that gives nothing) |
+| S4 | P1 | Calendar prizes were handed out when the spin ended; a crash mid-spin kept the claim and lost the prize. | `halloween/CalendarMenu` | fixed (M5) |
+| S5 | P1 | Reward items that did not fit an inventory were dropped on the ground (lost, or picked up by others). | `core/Reward.give`, `engagement/PendingItems`, `Giveaways` | fixed (M5, reward vault) |
+| S6 | P1 | Trick or Treat consumed the cooldown, then decided the outcome 30 ticks later; leaving in between lost the treat. Treat weights were never checked. | `halloween/TrickOrTreatCommand` | fixed (M6) |
+| S7 | P2 | A database that failed to start could log its connection string with the user name and password. | `DatabaseManager.initialize` | fixed (M7) |
+| S8 | P3 | The crate editor and the feature toggle menu checked the admin permission only when opened. | `menus/CrateEditorMenu`, `menus/FeatureToggleMenu` | fixed (M7) |
+| S9 | P3 | Calendar config mistakes (bad time zone, unused door or streak keys, a live PREVIEW-DATE) were ignored silently. | `seasonal/SeasonCalendar.validate` | fixed (M7) |
 
 ## Milestones
 
@@ -153,11 +162,88 @@ and `/smpplugin:eco` always reach SmpPlugin.
 reset, per-subcommand permissions and tab completion). **Commands run.** full suite → 325 tests, 0 failures,
 0 errors, 8 skipped.
 
+### M4: `/events` (commit af6afc6)
+
+- `seasonal/EventId`, `EventMode` (AUTO, ON, OFF), `EventStatus` (ACTIVE, SCHEDULED, DISABLED, COMPLETED; a pure
+  rule from config switch, feature switch, mode and dates), `EventControl` (`data/events.yml`, temp file + atomic
+  move, a damaged file is never overwritten and locks the switches), `SeasonalEvents` (one `Source` per event, a
+  minute tick that announces each start and stop once, every change logged with the actor), `EventsCommand` and
+  `EventsMenu` (permission and state checked on every click).
+- **Tests.** `seasonal/SeasonalEventsTest` (12). Full suite 337, 0 failures.
+
+### M5: one calendar engine, Advent, rank perks, reward vault (commit 2d0a058)
+
+- `seasonal/SeasonCalendar`: rules, per-viewer test dates (nothing given or saved), claim-and-pay in one step
+  (store write queued before the money), rank bonus on money and shards only, streaks (`ClaimStreak`) with one-off
+  `STREAK.BONUSES`, a `COMPLETION` prize, in-game prize overrides (`data/<event>-prizes.yml`, atomic write), door
+  statistics. `CalendarMenu`, `CalendarEditorMenu`, `DoorEditorMenu`, `CalendarCommand` and `CalendarTheme` are
+  shared; `HalloweenManager` and `advent/AdventManager` are thin subclasses.
+- `perks/`: `Perk` (six perks with hard caps), `Rank`, `Perks` (ranks by permission and priority, highest wins,
+  `CAPS`, problems logged), `PerksCommand` (`/perks`, `/perks <rank>`, `/perks check <player>`).
+- `engagement/PendingItems` is now a vault of independent entries (no read-modify-write, so a concurrent add can
+  only be delayed to the next login, never lost); `Reward.give` and giveaways use it; `/claimitems`.
+- `core/PlayerStore`: failed loads stay unloaded (S1), writes in one transaction (S2), a retry on join.
+- **Tests.** `seasonal/ClaimStreakTest` (5), `perks/PerksTest` (5), `advent/AdventCalendarTest` (7: pay once,
+  rank bonus, streak and completion once, catch-up streak, test mode, /events off, unloaded player). Full suite
+  354, 0 failures.
+
+### M6: Halloween hub, Trick or Treat, `/daily` (commit 28ea5fc)
+
+- `halloween/HalloweenHub`: candy (`CandyAccount`, one season, written at once, per-player lock), milestones paid
+  when reached, quests (`Quest`, `QuestType`, `QuestProgress`; progress saved in batches with
+  `PlayerStore.setDeferred`, completion at once), the daily treat bag, the candy shop (two-click buy, limits), a
+  one-minute leaderboard cache read on the database thread. `HalloweenMenus` (hub and five pages),
+  `HalloweenCommand` (`calendar`, `candy`, staff candy changes).
+- `TrickOrTreatCommand`: decide and pay at the knock, `TreatTable` (checked weights, `/trickortreat odds`),
+  `KnockLog` (daily limit), houses (spots in `data/trickortreat-houses.yml`, FancyNpcs NPCs through
+  `TrickOrTreatNpcListener`, created only when FancyNpcs is installed), rank perks for the wait, knocks and candy.
+- `DailyRewards` pays at the click with `DAILY-BONUS-PERCENT` and checks permission, feature and data on every click.
+- **Tests.** `halloween/HalloweenModelTest` (9), `halloween/HalloweenHubTest` (8). Full suite 371, 0 failures.
+
+### M7: remaining defects (commits 0fb8b3f, 7200b2e)
+
+- `LeaderboardManager`: stored rows reload on the database thread, single flight, stale rows shown meanwhile (P1).
+- `DatabaseManager.redact` / `redacted`: credentials removed from the whole cause chain of a start failure (S7).
+- Permission re-checks in the crate editor and feature menu (S8); `SkinsRestorer` in `softdepend` (D2); startup
+  line says SmpPlugin; the unused legacy banner removed.
+- `SeasonCalendar.validate()` at start and on reload (S9); a player is told when a reward's money is refused.
+- **Tests.** `managers/DatabaseManagerRedactionTest` (2), `AdventCalendarTest` (+1), `HalloweenHubTest` (+1).
+  Full suite 375, 0 failures, 8 skipped. `mvn -o -s tools/central-only-settings.xml package` builds
+  `SmpPlugin-3.2.0-paper.jar` (27.7 MB); the local API stand-ins are not in it.
+
+### M8: documentation
+
+- Version 3.2.0 in `pom.xml`. README (New in 3.2, honest storage table, upgrade notes), Features.md (real sizes,
+  New in 3.2, storage, config files), CHANGELOG 3.2.0, COMPATIBILITY (3.2.0 not yet run on a live server),
+  Modrinth text, and two guides: `docs/economy.md`, `docs/seasonal-events.md`.
+
+## Risks and limits that remain
+
+- **Nothing in 3.2 has been run on a live Minecraft server.** Everything server-facing (menus, sounds, particles,
+  dialogs, FancyNpcs clicks, item rewards) is compiled against the Paper API and reviewed, not played.
+- Item-giving paths and `PendingItems` serialisation need a running server (the Paper registry) and are not
+  unit-tested; their logic around the store is.
+- The Spigot profile (`-Pspigot`) was not built here.
+- MySQL statements are tested only by shape; no MySQL server in the sandbox.
+- A hard crash can lose writes still queued on the database thread (milliseconds); quest progress can lose up to
+  30 seconds.
+- Several servers sharing one MySQL database resolve a balance changed on both by version (newest wins, counted),
+  not by merging. MongoDB is a mirror of a local file.
+- Folia stays unsupported (`folia-supported: false`).
+
 ## Current task
 
-Seasonal events platform: `/events`, `/advent`, `/halloween`, `/trickortreat`.
+None in progress. 3.2.0 is complete on branch `claude/hopeful-darwin-btvnxm`.
 
-## Next tasks
+## Next tasks (suggested)
 
-1. VIP / VIP+ perks.
-2. Leaderboard reload off the main thread (P1 row above).
+1. Run 3.2.0 on a Paper 1.21.11 test server: `/events`, a full Advent test with `/advent test`, the Halloween hub
+   pages, Trick or Treat houses with FancyNpcs, `/claimitems` with a full inventory, `/eco stats`.
+2. Build the Spigot profile on a machine that reaches `hub.spigotmc.org`.
+3. Run the economy against a real MySQL server (the upsert statements and deadlock retries).
+
+## Resuming
+
+`git log --oneline` shows the milestones above. Build with the commands at the top of this file; the full suite
+must stay at 0 failures. Regenerate permissions after editing `PermissionRegistry` with
+`mvn test -Dtest=PermissionRegistryTest -Dsmpplugin.regenerate=true`, then run that test again without the flag.

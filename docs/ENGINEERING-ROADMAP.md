@@ -226,6 +226,14 @@ reset, per-subcommand permissions and tab completion). **Commands run.** full su
   `[release]`; the tag must match `pom.xml`. Release jars come from there, never from the sandbox build (which
   compiles against locally built APIs). This session can push only its own branch (a tag push got HTTP 403), so
   4.0.0 was published with a `[release]` commit.
+- The first GitHub builds found three problems the sandbox could not: the SkinsRestorer 15.12 API is Java 25 class
+  files, so the build needs JDK 25 (as the README says; `--release 21` keeps the jars Java 21); the Spigot API
+  declares `JavaPlugin.logger` as `PluginLogger`, so `EconomyHarness` now makes one when needed; and on the Spigot
+  API a test that loads `Sound` runs `Registry`'s static setup against the test server and breaks it for every
+  later test, so the hub plays sounds by key (`MenuFx.soundKey`). Run 39611310856 then built and tested both jars
+  (Paper 375 tests, Spigot 372 without the Paper-only dialogs) and published
+  https://github.com/LowBacon/SmpPlugin/releases/tag/v4.0.0 (tag on `d557afd`) with both jars and
+  `SHA256SUMS.txt`. The downloaded jars match the checksums, say 4.0.0 and are Java 21 bytecode.
 
 ## Risks and limits that remain
 
@@ -233,7 +241,7 @@ reset, per-subcommand permissions and tab completion). **Commands run.** full su
   dialogs, FancyNpcs clicks, item rewards) is compiled against the Paper API and reviewed, not played.
 - Item-giving paths and `PendingItems` serialisation need a running server (the Paper registry) and are not
   unit-tested; their logic around the store is.
-- The Spigot profile (`-Pspigot`) was not built here.
+- The Spigot profile (`-Pspigot`) cannot be built in the sandbox; GitHub Actions builds and tests it on every push.
 - MySQL statements are tested only by shape; no MySQL server in the sandbox.
 - A hard crash can lose writes still queued on the database thread (milliseconds); quest progress can lose up to
   30 seconds.
@@ -249,8 +257,9 @@ Release 4.0.0 from branch `claude/hopeful-darwin-btvnxm` (tag `v4.0.0`).
 
 1. Run 4.0.0 on a Paper 1.21.11 test server: `/events`, a full Advent test with `/advent test`, the Halloween hub
    pages, Trick or Treat houses with FancyNpcs, `/claimitems` with a full inventory, `/eco stats`.
-2. Build the Spigot profile on a machine that reaches `hub.spigotmc.org`.
-3. Run the economy against a real MySQL server (the upsert statements and deadlock retries).
+2. Run the economy against a real MySQL server (the upsert statements and deadlock retries).
+3. Bring `main` up to date with the release (it is still 3.1.0, so `version.txt` there does not announce 4.0.0 to
+   servers yet, and a manual run of the workflow needs the workflow on `main`).
 
 ## Resuming
 

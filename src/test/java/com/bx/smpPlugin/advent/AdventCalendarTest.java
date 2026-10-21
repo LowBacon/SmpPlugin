@@ -210,6 +210,33 @@ class AdventCalendarTest {
     }
 
     @Test
+    void theBundledFilesPassTheCheckAndMistakesAreNamed() throws Exception {
+        ConfigManager config = harness.plugin.getConfigManager();
+        EconomyHarness.set(ConfigManager.class, config, "advent",
+                YamlConfiguration.loadConfiguration(new File("src/main/resources/advent.yml")));
+        assertEquals(List.of(), calendar.validate());
+
+        YamlConfiguration broken = new YamlConfiguration();
+        broken.loadFromString("""
+                TIME-ZONE: "Mars/Olympus"
+                MONTH: 13
+                FIRST-DAY: 20
+                LAST-DAY: 10
+                PREVIEW-DATE: "2026-12-01"
+                DOORS:
+                  christmas: {MONEY: 1}
+                  40: {MONEY: 1}
+                STREAK:
+                  BONUSES:
+                    week: {MONEY: 1}
+                """);
+        EconomyHarness.set(ConfigManager.class, config, "advent", broken);
+        List<String> problems = calendar.validate();
+        assertEquals(7, problems.size(), problems.toString());
+        assertTrue(problems.stream().anyMatch(p -> p.contains("Mars/Olympus")), problems.toString());
+    }
+
+    @Test
     void aPlayerWhoseDataDidNotLoadCannotOpenDoors() throws Exception {
         Player holly = join(HOLLY, "Holly");
         store.unload(HOLLY);

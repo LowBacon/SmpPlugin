@@ -72,6 +72,9 @@ public class CalendarCommand implements CommandExecutor, TabCompleter {
                 calendar.loadOverrides();
                 Text.send(sender, "CALENDAR.RELOADED", "&aReloaded {file} and the in-game prizes.",
                         "{file}", calendar.fileName());
+                for (String problem : calendar.validate()) {
+                    Text.raw(sender, "&e ⚠ " + problem);
+                }
             }
             default -> Text.send(sender, "CALENDAR.ADMIN-USAGE",
                     "&7/{command} &8[&fedit&8|&fgive <player> <door>&8|&freset <player> [door]&8|&ftest <yyyy-MM-dd|off>&8|&fstats&8|&freload&8]",

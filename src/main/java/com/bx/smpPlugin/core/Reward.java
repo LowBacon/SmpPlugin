@@ -162,6 +162,9 @@ public record Reward(double money, long shards, List<ItemStack> items, List<Stri
             if (!result.success()) {
                 plugin.getLogger().warning("Could not pay the " + money + " reward to " + player.getName() + ": "
                         + result.failureReason());
+                Text.send(player, "REWARD.MONEY-FAILED", result.failureReason() == com.bx.smpPlugin.models.EconomyFailureReason.BALANCE_LIMIT
+                                ? "&cThe money part of this reward could not be paid: your balance is at the limit."
+                                : "&cThe money part of this reward could not be paid right now. Staff can see why in the console.");
             }
         }
         if (shards > 0L) {

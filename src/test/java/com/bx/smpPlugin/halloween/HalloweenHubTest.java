@@ -228,6 +228,13 @@ class HalloweenHubTest {
     }
 
     @Test
+    void theBundledHalloweenFilePassesTheCalendarCheck() throws Exception {
+        EconomyHarness.set(ConfigManager.class, harness.plugin.getConfigManager(), "halloween",
+                YamlConfiguration.loadConfiguration(new File("src/main/resources/halloween.yml")));
+        assertEquals(List.of(), hub.halloween().validate());
+    }
+
+    @Test
     void staffCanChangeTheCandyOfAnOfflinePlayer() throws Exception {
         AtomicLong result = new AtomicLong(-1);
         hub.adjust(REMY, balance -> balance + 40, result::set);

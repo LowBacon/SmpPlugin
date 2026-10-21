@@ -109,6 +109,9 @@ public class SeasonCalendar {
         this.usePermission = usePermission;
         this.adminPermission = adminPermission;
         loadOverrides();
+        for (String problem : validate()) {
+            plugin.getLogger().warning("[" + id.displayName() + "] " + problem);
+        }
         events.register(id, new SeasonalEvents.Source() {
             @Override
             public boolean configEnabled() {
@@ -135,6 +138,66 @@ public class SeasonCalendar {
                 return SeasonCalendar.this.command();
             }
         });
+    }
+
+    /**
+     * What is wrong in the event file, in plain words. Nothing here stops the calendar: bad values are clamped or
+     * skipped, and this list says which.
+     */
+    public List<String> validate() {
+        List<String> problems = new ArrayList<>();
+        FileConfiguration c = config();
+        String zone = c.getString("TIME-ZONE", "");
+        if (zone != null && !zone.isBlank()) {
+            try {
+                ZoneId.of(zone.trim());
+            } catch (RuntimeException unknown) {
+                problems.add("TIME-ZONE \"" + zone + "\" is not a time zone; the server's own zone is used.");
+            }
+        }
+        int month = c.getInt("MONTH", defaultRules.month());
+        if (month < 1 || month > 12) {
+            problems.add("MONTH " + month + " is not a month (1-12).");
+        }
+        int first = c.getInt("FIRST-DAY", defaultRules.firstDay());
+        int last = c.getInt("LAST-DAY", defaultRules.lastDay());
+        if (first < 1 || first > 31 || last < first || last > 31) {
+            problems.add("FIRST-DAY " + first + " and LAST-DAY " + last + " are not a range of days (1-31, first <= last).");
+        }
+        if (!c.getString("PREVIEW-DATE", "").isBlank()) {
+            problems.add("PREVIEW-DATE is set: every player sees that date and gets real prizes. Clear it on a live"
+                    + " server and use /" + command() + " test instead.");
+        }
+        ConfigurationSection doors = c.getConfigurationSection("DOORS");
+        if (doors != null) {
+            for (String key : doors.getKeys(false)) {
+                if (key.equalsIgnoreCase("DEFAULT")) {
+                    continue;
+                }
+                try {
+                    int door = Integer.parseInt(key.trim());
+                    if (door < 1 || door > 31) {
+                        problems.add("DOORS." + key + " is not a day of the month and is never used.");
+                    }
+                } catch (NumberFormatException notADay) {
+                    problems.add("DOORS." + key + " is not a day of the month and is never used.");
+                }
+            }
+        }
+        ConfigurationSection bonuses = c.getConfigurationSection("STREAK.BONUSES");
+        if (bonuses != null) {
+            for (String key : bonuses.getKeys(false)) {
+                try {
+                    int length = Integer.parseInt(key.trim());
+                    if (length < 1 || length > 62) {
+                        problems.add("STREAK.BONUSES." + key + " must be a streak of 1 to 62 days.");
+                    }
+                } catch (NumberFormatException notANumber) {
+                    problems.add("STREAK.BONUSES." + key + " is not a number of days and is never given.");
+                }
+            }
+        }
+        return problems;
     }
 
     // ------------------------------------------------------------------ identity and settings
@@ -439,7 +502,7 @@ public class SeasonCalendar {
                     out.put(length, section);
                 }
             } catch (NumberFormatException ignored) {
-                // Not a streak length; the config check reports it.
+                // Not a streak length; validate() reports it.
             }
         }
         return out;

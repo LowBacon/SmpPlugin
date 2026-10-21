@@ -120,6 +120,11 @@ public class ScoreboardManager {
     }
 
     /** Called once on player join. */
+    /** The private sidebar boards this manager gave players, for the name tags (NametagManager). */
+    public java.util.List<Scoreboard> ownedBoards() {
+        return java.util.List.copyOf(playerBoards.values());
+    }
+
     public void setupPlayer(Player player) {
         if (folia) {
             setupPlayerFolia(player);
@@ -284,6 +289,10 @@ public class ScoreboardManager {
 
         playerBoards.put(player.getUniqueId(), board);
         boardCache.remove(player.getUniqueId());
+        // A private board shows only its own teams, so it needs everyone's name tag before the player sees it.
+        if (plugin.getNametagManager() != null) {
+            plugin.getNametagManager().applyAllTo(board);
+        }
         player.setScoreboard(board);
         updateTextSpigot(player, board, obj, true);
     }

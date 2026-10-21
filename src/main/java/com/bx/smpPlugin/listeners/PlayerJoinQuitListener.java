@@ -174,6 +174,8 @@ public class PlayerJoinQuitListener implements Listener {
 
         // Setup scoreboard
         plugin.getScoreboardManager().setupPlayer(player);
+        // Their rank above their head, on every board
+        plugin.getNametagManager().refresh(player);
 
         // Update tablist name
         plugin.getTablistManager().updateTablistName(player);
@@ -333,7 +335,8 @@ public class PlayerJoinQuitListener implements Listener {
         // Unload homes
         plugin.getHomeManager().unloadHomes(player.getUniqueId());
 
-        // Remove scoreboard
+        // Remove scoreboard and name tag
+        plugin.getNametagManager().remove(player);
         plugin.getScoreboardManager().removePlayer(player.getUniqueId());
         plugin.getTablistManager().removePlayer(player.getUniqueId());
 

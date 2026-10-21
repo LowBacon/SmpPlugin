@@ -121,6 +121,7 @@ public final class SmpPlugin extends JavaPlugin {
     private ServerNotificationManager serverNotificationManager;
     private PlayerSettingToggles playerSettingToggles;
     private com.bx.smpPlugin.core.V3Module v3Module;
+    private NametagManager nametagManager;
     private DialogGateway dialogManager;
     private PortalManager portalManager;
     private AmethystToolsManager amethystToolsManager;
@@ -335,6 +336,8 @@ public final class SmpPlugin extends JavaPlugin {
         tablistManager = new TablistManager(this);
         hideManager = new HideManager(this);
         hideManager.loadAll();
+        nametagManager = new NametagManager(this);
+        nametagManager.start(getServer().getOnlinePlayers());
         teleportManager = new TeleportManager(this);
         rtpManager = new RTPManager(this);
         rtpZoneManager = new RTPZoneManager(this);
@@ -357,6 +360,8 @@ public final class SmpPlugin extends JavaPlugin {
         // 7. Background tasks
         ScoreboardTask.start(this);
         TablistTask.start(this);
+        getSpigotScheduler().runGlobalTimer(() -> nametagManager.refreshAll(getServer().getOnlinePlayers()),
+                nametagManager.updateTicks(), nametagManager.updateTicks());
         ShardTask.start(this); // passive "everywhere" shards (per minute)
         ShardCuboidTask.start(this); // spawn cuboid countdown + reward (per second)
         RTPZoneTask.start(this);
@@ -448,6 +453,10 @@ public final class SmpPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (nametagManager != null) {
+            // The main scoreboard is saved with the world; the name tag teams must not be.
+            nametagManager.shutdown();
+        }
         if (v3Module != null) {
             v3Module.disable();
         }
@@ -1261,6 +1270,7 @@ public final class SmpPlugin extends JavaPlugin {
         leaderboardManager.invalidateAll();
         scoreboardManager.updateAll();
         tablistManager.updateAll();
+        nametagManager.reload(getServer().getOnlinePlayers());
         if (lunarRichPresenceManager != null) {
             lunarRichPresenceManager.reload();
         } else {
@@ -1484,6 +1494,10 @@ public final class SmpPlugin extends JavaPlugin {
 
     public LeaderboardManager getLeaderboardManager() {
         return leaderboardManager;
+    }
+
+    public NametagManager getNametagManager() {
+        return nametagManager;
     }
 
     public ScoreboardManager getScoreboardManager() {

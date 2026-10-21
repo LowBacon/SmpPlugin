@@ -554,6 +554,26 @@ TABLIST:
     # AFK players and players in an AFK zone drop to the bottom
     AFK-AT-BOTTOM: true
 # Configuration section for Optimization.
+# Configuration section for the name tags above players' heads.
+# Shows each player's rank (the same LuckPerms, PlaceholderAPI or Vault prefix as the tab list and chat) in front of
+# their name. Players hidden with /hide never show it. Nothing is changed while TAB or NametagEdit is installed.
+NAMETAGS:
+  # Determines whether rank name tags are enabled or disabled. Available options: true, false
+  ENABLED: true
+  # Text before the name. {prefix} is the rank prefix, {player} the name; PlaceholderAPI placeholders work too.
+  # Available options: Any valid string text
+  PREFIX: '{prefix}'
+  # Text after the name, e.g. ' &7[%some_placeholder%]'. Available options: Any valid string text
+  SUFFIX: ''
+  # Colour of the name itself. Available options: AUTO (the last colour of the prefix) or a colour name such as
+  # WHITE, GOLD, RED, AQUA
+  NAME-COLOR: WHITE
+  # Determines whether a player who is already in another plugin's scoreboard team (on the main scoreboard) is moved
+  # into their name tag team. Available options: true, false
+  OVERRIDE-OTHER-TEAMS: false
+  # Ticks between checks for rank changes (20 ticks = 1 second). Available options: Any whole number from 10
+  UPDATE-TICKS: 40
+
 OPTIMIZATION:
   # Determines whether Enabled is enabled or disabled. Available options: true, false
   ENABLED: true

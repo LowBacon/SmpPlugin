@@ -19,11 +19,13 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.UnaryOperator;
 import java.util.logging.Level;
 
 public class ConfigManager {
@@ -202,6 +204,7 @@ public class ConfigManager {
                 + (skipped > 0 ? ", " + skipped + " skipped" : "")
                 + ".");
         migrateTablistFooter(backupDirectory);
+        migrateMaxBalance(backupDirectory);
     }
 
     /** The two footer lines 3.0 shipped with: personal stats, then online count, ping, TPS and world. */
@@ -217,25 +220,70 @@ public class ConfigManager {
      * changed is left exactly as it is.
      */
     private void migrateTablistFooter(File backupDirectory) {
+        migrateConfigLines(backupDirectory, ConfigManager::migrateFooterLines, "the tab list footer",
+                "Simplified the default tab list footer in config.yml (no money, stats, ping or TPS).");
+    }
+
+    /** The comment 4.0 shipped above ECONOMY.MAX-BALANCE, and the limit of 10 trillion it set by default. */
+    static final List<String> OLD_MAX_BALANCE_COMMENT = List.of(
+            "  # The highest balance a deposit can reach. A balance already above it is kept but cannot grow.",
+            "  # Available options: Any number up to 35000000000000 (the largest amount the database stores with exact cents)");
+    static final String OLD_MAX_BALANCE_LINE = "  MAX-BALANCE: 10000000000000";
+    static final List<String> NEW_MAX_BALANCE_COMMENT = List.of(
+            "  # The highest balance a deposit can reach; 0 means no limit. A balance already above a limit is kept but",
+            "  # cannot grow. Available options: 0, or any amount up to 92233720368547758 (the most a balance can hold)");
+    static final String NEW_MAX_BALANCE_LINE = "  MAX-BALANCE: 0";
+
+    /**
+     * 4.1 has no balance limit unless one is set. A config.yml with the exact comment 4.0 shipped above
+     * ECONOMY.MAX-BALANCE gets the new comment, and the old default limit of 10 trillion becomes 0, no limit;
+     * a limit anyone chose themselves is kept.
+     */
+    private void migrateMaxBalance(File backupDirectory) {
+        migrateConfigLines(backupDirectory, ConfigManager::migrateMaxBalanceLines, "the balance limit",
+                "Updated ECONOMY.MAX-BALANCE in config.yml: there is no balance limit unless you set one"
+                        + " (a limit you chose yourself is kept).");
+    }
+
+    /** Pure part of {@link #migrateMaxBalance}: only the exact old default lines are touched. */
+    static List<String> migrateMaxBalanceLines(List<String> lines) {
+        int comment = Collections.indexOfSubList(lines, OLD_MAX_BALANCE_COMMENT);
+        int value = comment + OLD_MAX_BALANCE_COMMENT.size();
+        if (comment < 0 || value >= lines.size() || !lines.get(value).startsWith("  MAX-BALANCE:")) {
+            return lines;
+        }
+        List<String> updated = new ArrayList<>(lines);
+        for (int i = 0; i < NEW_MAX_BALANCE_COMMENT.size(); i++) {
+            updated.set(comment + i, NEW_MAX_BALANCE_COMMENT.get(i));
+        }
+        if (OLD_MAX_BALANCE_LINE.equals(lines.get(value))) {
+            updated.set(value, NEW_MAX_BALANCE_LINE);
+        }
+        return updated;
+    }
+
+    /** Rewrites config.yml with {@code migration} when it changes anything, after backing the file up. */
+    private void migrateConfigLines(File backupDirectory, UnaryOperator<List<String>> migration, String subject,
+                                    String done) {
         File file = new File(plugin.getDataFolder(), "config.yml");
         if (!file.isFile() || invalidConfigurations.contains("config.yml")) {
             return;
         }
         try {
             List<String> lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
-            List<String> updated = migrateFooterLines(lines);
+            List<String> updated = migration.apply(lines);
             if (updated.equals(lines)) {
                 return;
             }
             if (!backupExistingFile(file, backupDirectory)) {
-                plugin.getLogger().warning("Kept the old tab list footer because config.yml could not be backed up first.");
+                plugin.getLogger().warning("Kept " + subject + " in config.yml as it was because the file could not be"
+                        + " backed up first.");
                 return;
             }
             Files.write(file.toPath(), updated, StandardCharsets.UTF_8);
-            plugin.getLogger().info("Simplified the default tab list footer in config.yml (no money, stats, ping or TPS)."
-                    + " The old file is in config-backups.");
+            plugin.getLogger().info(done + " The old file is in config-backups.");
         } catch (IOException exception) {
-            plugin.getLogger().log(Level.WARNING, "Could not update the tab list footer in config.yml", exception);
+            plugin.getLogger().log(Level.WARNING, "Could not update " + subject + " in config.yml", exception);
         }
     }
 
@@ -1975,6 +2023,10 @@ public class ConfigManager {
         }
 
         File backup = new File(backupDirectory, file.getName());
+        if (backup.isFile()) {
+            // Several steps of one sync can change the same file; the first copy is the one from before any of them.
+            return true;
+        }
         try {
             Files.createDirectories(backupDirectory.toPath());
             Files.copy(file.toPath(), backup.toPath(), StandardCopyOption.REPLACE_EXISTING);

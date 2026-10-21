@@ -1,12 +1,16 @@
 package com.bx.smpPlugin.models;
 
+import com.bx.smpPlugin.economy.Money;
+
+import java.util.OptionalLong;
 import java.util.UUID;
 
 public class PlayerData {
 
     private final UUID uuid;
     private String username;
-    private double money;
+    /** The balance in whole cents; see {@link Money}. */
+    private long moneyCents;
     private long shards;
     private int kills;
     private int deaths;
@@ -66,7 +70,11 @@ public class PlayerData {
     private long moneyVersion;
 
     /** The money columns read together, so a save never mixes two different changes. */
-    public record MoneyState(double money, double moneySpent, double moneyMade, long version) {
+    public record MoneyState(long cents, double moneySpent, double moneyMade, long version) {
+        /** The balance as the double the {@code money} column holds next to the exact {@code money_cents}. */
+        public double money() {
+            return Money.toUnits(cents);
+        }
     }
 
     // New Settings
@@ -85,7 +93,7 @@ public class PlayerData {
     public PlayerData(UUID uuid, String username) {
         this.uuid = uuid;
         this.username = username;
-        this.money = 0;
+        this.moneyCents = 0L;
         this.shards = 0;
         this.kills = 0;
         this.deaths = 0;
@@ -171,15 +179,25 @@ public class PlayerData {
 
     // Money is read by the database writer while the server thread changes it, so these methods share one lock.
 
-    public synchronized double getMoney() {
-        return money;
+    public synchronized long getMoneyCents() {
+        return moneyCents;
     }
 
-    /** Sets the balance and moves the balance version on. */
-    public synchronized void setMoney(double money) {
-        this.money = Math.max(0, money);
+    /** Sets the balance in whole cents and moves the balance version on. */
+    public synchronized void setMoneyCents(long cents) {
+        this.moneyCents = Math.max(0L, cents);
         moneyVersion++;
         dirty = true;
+    }
+
+    /** The balance as a double for display, placeholders and Vault; never more than the cents ({@link Money#toUnits}). */
+    public synchronized double getMoney() {
+        return Money.toUnits(moneyCents);
+    }
+
+    /** Sets the balance from an amount, rounded to the nearest cent, and moves the balance version on. */
+    public synchronized void setMoney(double money) {
+        setMoneyCents(Money.storedToCents(money));
     }
 
     /**
@@ -187,19 +205,21 @@ public class PlayerData {
      * {@link com.bx.smpPlugin.managers.EconomyManager#deposit} so the change is logged and saved at once.
      */
     public synchronized void addMoney(double amount) {
-        setMoney(this.money + amount);
+        setMoneyCents(Money.add(moneyCents, Money.toCents(amount).orElse(0L)).orElse(Money.MAX_CENTS));
     }
 
     public synchronized boolean removeMoney(double amount) {
-        if (this.money < amount) {
+        OptionalLong cents = Money.toCents(amount);
+        if (cents.isEmpty() || cents.getAsLong() < 0L || moneyCents < cents.getAsLong()) {
             return false;
         }
-        setMoney(this.money - amount);
+        setMoneyCents(moneyCents - cents.getAsLong());
         return true;
     }
 
     public synchronized boolean hasMoney(double amount) {
-        return this.money >= amount;
+        OptionalLong cents = Money.toCents(amount);
+        return cents.isPresent() && moneyCents >= cents.getAsLong();
     }
 
     public synchronized long getMoneyVersion() {
@@ -213,7 +233,7 @@ public class PlayerData {
 
     /** The balance, totals and balance version as one consistent reading. */
     public synchronized MoneyState moneyState() {
-        return new MoneyState(money, moneySpent, moneyMade, moneyVersion);
+        return new MoneyState(moneyCents, moneySpent, moneyMade, moneyVersion);
     }
 
     /**

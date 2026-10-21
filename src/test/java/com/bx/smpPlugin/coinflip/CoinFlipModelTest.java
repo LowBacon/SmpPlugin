@@ -50,6 +50,10 @@ class CoinFlipModelTest {
         assertEquals("1,234", StakeMath.format(123_400L));
         assertEquals("2.5%", StakeMath.percent(250));
         assertEquals(1_234_56L, StakeMath.fromEconomy(1_234.567D));
+        // Balances have no limit now; a double beyond the largest one reads as the most cents there are.
+        assertEquals(9_200_000_000_000_000_000L, StakeMath.fromEconomy(9.2e16D));
+        assertEquals(Long.MAX_VALUE, StakeMath.fromEconomy(9.3e16D));
+        assertEquals(Long.MAX_VALUE, StakeMath.fromEconomy(1e300D));
         assertEquals(1_234.56D, StakeMath.toEconomy(123_456L));
     }
 

@@ -2,6 +2,7 @@ package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
 import com.bx.smpPlugin.economy.EconomyStore;
+import com.bx.smpPlugin.economy.Money;
 import com.bx.smpPlugin.utils.ItemSerializationUtils;
 import com.bx.smpPlugin.utils.LazyLocation;
 import com.bx.smpPlugin.models.PlayerWipeArchive;
@@ -744,6 +745,8 @@ public class DatabaseManager {
         ensureColumnExists("players", "explosion_sounds_enabled", "INTEGER DEFAULT 1");
         ensureColumnExists("players", "display_donutplus_enabled", "INTEGER DEFAULT 1");
         ensureColumnExists("players", "money_version", "BIGINT DEFAULT 0");
+        // The exact balance; NULL on rows from before 4.1.0 until they are next saved (see EconomyStore.resolveCents).
+        ensureColumnExists("players", "money_cents", "BIGINT");
     }
 
     private void ensurePortalColumns() throws SQLException {
@@ -977,7 +980,7 @@ public class DatabaseManager {
                 UUID.fromString(rs.getString("uuid")),
                 rs.getString("username")
         );
-        data.setMoney(rs.getDouble("money"));
+        data.setMoneyCents(EconomyStore.resolveCents(rs.getDouble("money"), optionalNullableLong(rs, "money_cents")));
         data.setShards(rs.getLong("shards"));
         data.setKills(rs.getInt("kills"));
         data.setDeaths(rs.getInt("deaths"));
@@ -1041,7 +1044,7 @@ public class DatabaseManager {
         data.setFollowAlertsEnabled(rs.getInt("follow_alerts_enabled") != 0);
         data.setExplosionSoundsEnabled(rs.getInt("explosion_sounds_enabled") != 0);
         data.setDisplayDonutPlusEnabled(rs.getInt("display_donutplus_enabled") != 0);
-        // After setMoney, which moves the in-memory version on.
+        // After setMoneyCents, which moves the in-memory version on.
         data.setMoneyVersion(optionalLong(rs, "money_version"));
         data.setDirty(false);
         return data;
@@ -1049,13 +1052,20 @@ public class DatabaseManager {
 
     /** A long column that older tables (or test schemas) may not have yet; 0 when it is missing. */
     private static long optionalLong(ResultSet rs, String column) throws SQLException {
+        Long value = optionalNullableLong(rs, column);
+        return value == null ? 0L : value;
+    }
+
+    /** A long column that may be missing or NULL; null in both cases. */
+    private static Long optionalNullableLong(ResultSet rs, String column) throws SQLException {
         ResultSetMetaData meta = rs.getMetaData();
         for (int i = 1; i <= meta.getColumnCount(); i++) {
             if (column.equalsIgnoreCase(meta.getColumnLabel(i))) {
-                return rs.getLong(i);
+                long value = rs.getLong(i);
+                return rs.wasNull() ? null : value;
             }
         }
-        return 0L;
+        return null;
     }
 
     public UUID findPlayerUuidByUsername(String username) {
@@ -1481,9 +1491,11 @@ public class DatabaseManager {
             "phantom_disabled_until", "destroy_pearl_on_death", "randomized_coords", "death_messages_choice",
             "advancement_messages_choice", "join_leave_messages_choice", "teleport_alerts_enabled",
             "follow_alerts_enabled", "explosion_sounds_enabled", "display_donutplus_enabled",
-            "combat_timer_enabled", "sell_shulkers_enabled", "private_transactions_enabled", "money_version");
+            "combat_timer_enabled", "sell_shulkers_enabled", "private_transactions_enabled", "money_cents",
+            "money_version");
     /** Columns a save only overwrites when it carries a balance version at least as new as the stored one. */
-    private static final Set<String> VERSIONED_MONEY_COLUMNS = Set.of("money", "money_spent", "money_made");
+    private static final Set<String> VERSIONED_MONEY_COLUMNS =
+            Set.of("money", "money_cents", "money_spent", "money_made");
     private static final String SQLITE_PLAYER_UPSERT = playerUpsertSql(false);
     private static final String MYSQL_PLAYER_UPSERT = playerUpsertSql(true);
 
@@ -1589,7 +1601,8 @@ public class DatabaseManager {
             ps.setInt(64, data.isCombatTimerEnabled() ? 1 : 0);
             ps.setInt(65, data.isSellShulkersEnabled() ? 1 : 0);
             ps.setInt(66, data.isPrivateTransactionsEnabled() ? 1 : 0);
-            ps.setLong(67, money.version());
+            ps.setLong(67, money.cents());
+            ps.setLong(68, money.version());
             ps.executeUpdate();
         } catch (SQLException e) {
             data.setDirty(true);
@@ -1632,8 +1645,15 @@ public class DatabaseManager {
     }
 
     public int resetAllPlayerMoney(double defaultMoney) {
-        String sql = "UPDATE players SET money = " + defaultMoney;
-        return executeUpdate(sql);
+        long cents = Money.storedToCents(defaultMoney);
+        try (PreparedStatement ps = connection.prepareStatement("UPDATE players SET money = ?, money_cents = ?")) {
+            ps.setDouble(1, Money.toUnits(cents));
+            ps.setLong(2, cents);
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.WARNING, "Failed to reset every balance", e);
+        }
+        return 0;
     }
 
     public int resetAllPlayerShards() {
@@ -3726,12 +3746,13 @@ public class DatabaseManager {
      * The player columns a wipe resets, each beside the value it goes back to. Both wipes read this
      * one map, and so do the backup and restore behind {@code /playerunwipe}, so a column added here
      * cannot be reset by one wipe and missed by the other, or drop out of a backup and leave a
-     * restored player short. {@code money} is the exception: it is overwritten with the configured
-     * starting balance rather than the placeholder below.
+     * restored player short. {@code money} and {@code money_cents} are the exception: they are
+     * overwritten with the configured starting balance rather than the placeholders below.
      */
     private static Map<String, Object> wipeStatResets() {
         Map<String, Object> resets = new LinkedHashMap<>();
         resets.put("money", 0D);
+        resets.put("money_cents", 0L);
         resets.put("shards", 0);
         resets.put("kills", 0);
         resets.put("deaths", 0);
@@ -4089,16 +4110,19 @@ public class DatabaseManager {
     }
 
     /**
-     * Binds every stat column back to the value a wipe resets it to, with {@code money} taking the
-     * configured starting balance. Returns the next free parameter index, which a player wipe uses
-     * for the {@code WHERE uuid = ?} a server wipe does not have.
+     * Binds every stat column back to the value a wipe resets it to, with {@code money} and
+     * {@code money_cents} taking the configured starting balance. Returns the next free parameter
+     * index, which a player wipe uses for the {@code WHERE uuid = ?} a server wipe does not have.
      */
     private int bindWipeStatResets(PreparedStatement statement, double startingMoney) throws SQLException {
+        long startingCents = Money.storedToCents(startingMoney);
         int index = 1;
         for (Map.Entry<String, Object> reset : WIPE_STAT_RESETS.entrySet()) {
-            statement.setObject(index++, "money".equals(reset.getKey())
-                    ? Math.max(0D, startingMoney)
-                    : reset.getValue());
+            statement.setObject(index++, switch (reset.getKey()) {
+                case "money" -> Money.toUnits(startingCents);
+                case "money_cents" -> startingCents;
+                default -> reset.getValue();
+            });
         }
         return index;
     }
@@ -4735,6 +4759,7 @@ public class DatabaseManager {
                 try (PreparedStatement statement = connection.prepareStatement("""
                         UPDATE players SET
                             money = ?,
+                            money_cents = ?,
                             shards = 0,
                             kills = 0,
                             deaths = 0,
@@ -4751,7 +4776,9 @@ public class DatabaseManager {
                             mob_spawn_disabled_until = 0,
                             phantom_disabled_until = 0
                         """)) {
-                    statement.setDouble(1, Math.max(0D, startingMoney));
+                    long startingCents = Money.storedToCents(startingMoney);
+                    statement.setDouble(1, Money.toUnits(startingCents));
+                    statement.setLong(2, startingCents);
                     affected.put("players", statement.executeUpdate());
                 }
             }

@@ -1,5 +1,6 @@
 package com.bx.smpPlugin.managers;
 
+import com.bx.smpPlugin.economy.Money;
 import com.bx.smpPlugin.models.PlayerData;
 import com.bx.smpPlugin.testsupport.EconomyHarness;
 import org.junit.jupiter.api.AfterEach;
@@ -64,7 +65,38 @@ class DatabaseManagerPlayerSaveTest {
 
         PlayerData loaded = harness.database.loadPlayer(DAVE);
         assertEquals(250D, loaded.getMoney(), 1e-9, "the newer balance stays");
+        assertEquals(25_000L, harness.storedCents(DAVE), "in the exact column too");
         assertEquals(9, loaded.getKills(), "the other columns are saved as before");
+    }
+
+    @Test
+    void aBalanceFarAboveThirtyFiveTrillionIsSavedAndLoadedToTheCent() throws Exception {
+        PlayerData data = new PlayerData(DAVE, "Dave");
+        data.setMoneyCents(1_234_567_890_123_456_789L);
+        harness.database.savePlayer(data);
+        assertEquals(1_234_567_890_123_456_789L, harness.database.loadPlayer(DAVE).getMoneyCents());
+
+        data.setMoneyCents(Money.MAX_CENTS);
+        harness.database.savePlayer(data);
+        assertEquals(Money.MAX_CENTS, harness.database.loadPlayer(DAVE).getMoneyCents());
+    }
+
+    @Test
+    void aBalanceChangedOnlyInTheMoneyColumnIsLoadedFromThere() throws Exception {
+        PlayerData data = new PlayerData(DAVE, "Dave");
+        data.setMoneyCents(1_234_567_890_123_456_789L);
+        harness.database.savePlayer(data);
+        try (Statement statement = harness.connection().createStatement()) {
+            // What a wipe, an older plugin version or a hand-written SQL change does.
+            statement.executeUpdate("UPDATE players SET money = 250 WHERE uuid = '" + DAVE + "'");
+        }
+        assertEquals(25_000L, harness.database.loadPlayer(DAVE).getMoneyCents());
+
+        try (Statement statement = harness.connection().createStatement()) {
+            // A row no 4.1.0 or later save has written yet.
+            statement.executeUpdate("UPDATE players SET money = 12.34, money_cents = NULL WHERE uuid = '" + DAVE + "'");
+        }
+        assertEquals(1_234L, harness.database.loadPlayer(DAVE).getMoneyCents());
     }
 
     @Test
@@ -91,8 +123,9 @@ class DatabaseManagerPlayerSaveTest {
         assertTrue(sql.startsWith("INSERT INTO players ("));
         assertTrue(sql.contains("ON DUPLICATE KEY UPDATE"));
         int money = sql.indexOf("money = IF(VALUES(money_version) >= money_version");
+        int cents = sql.indexOf("money_cents = IF(VALUES(money_version) >= money_version");
         int version = sql.indexOf("money_version = GREATEST(");
-        assertTrue(money > 0 && version > money, "MySQL applies assignments in order");
+        assertTrue(money > 0 && cents > 0 && version > Math.max(money, cents), "MySQL applies assignments in order");
         assertTrue(sql.endsWith("money_version = GREATEST(money_version, VALUES(money_version))"));
     }
 }

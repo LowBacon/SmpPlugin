@@ -474,11 +474,12 @@ public final class CoinFlipDao {
         // Only a newer version is written, so this can never put back an older balance that another writer
         // (the economy's own database writer, a quit save) has already replaced.
         try (PreparedStatement statement = prepare(
-                "UPDATE players SET money = ?, money_version = ? WHERE uuid = ? AND money_version < ?")) {
+                "UPDATE players SET money = ?, money_cents = ?, money_version = ? WHERE uuid = ? AND money_version < ?")) {
             statement.setDouble(1, balance.money());
-            statement.setLong(2, balance.version());
-            statement.setString(3, player.toString());
-            statement.setLong(4, balance.version());
+            statement.setLong(2, balance.cents());
+            statement.setLong(3, balance.version());
+            statement.setString(4, player.toString());
+            statement.setLong(5, balance.version());
             if (statement.executeUpdate() > 0) {
                 return;
             }

@@ -95,9 +95,9 @@ SETTINGS:
   DISABLE-PHANTOM-SPAWN-LIMIT-SECONDS: 3600
 # Configuration section for the economy: balances, /pay, /baltop and the ledger of every balance change.
 ECONOMY:
-  # The highest balance a deposit can reach. A balance already above it is kept but cannot grow.
-  # Available options: Any number up to 35000000000000 (the largest amount the database stores with exact cents)
-  MAX-BALANCE: 10000000000000
+  # The highest balance a deposit can reach; 0 means no limit. A balance already above a limit is kept but
+  # cannot grow. Available options: 0, or any amount up to 92233720368547758 (the most a balance can hold)
+  MAX-BALANCE: 0
   # Configuration section for /pay.
   PAY:
     # The smallest amount one payment can send. Available options: Any number from 0.01

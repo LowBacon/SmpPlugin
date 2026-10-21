@@ -1,6 +1,7 @@
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
+import com.bx.smpPlugin.economy.Money;
 import com.bx.smpPlugin.models.PlayerData;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -237,10 +238,11 @@ public class StatsWipeManager {
         }
 
         int count = 0;
-        double defaultMoney = plugin.getConfigManager().getConfig().getDouble("SETTINGS.MONEY-PER-DEFAULT", 1000.0);
+        long defaultCents = Money.storedToCents(
+                plugin.getConfigManager().getConfig().getDouble("SETTINGS.MONEY-PER-DEFAULT", 1000.0));
         for (PlayerData data : merged.values()) {
             if (money) {
-                if (Double.compare(data.getMoney(), defaultMoney) != 0) {
+                if (data.getMoneyCents() != defaultCents) {
                     count++;
                 }
             } else {

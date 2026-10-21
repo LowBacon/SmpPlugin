@@ -46,6 +46,42 @@ class EconomyStoreTest {
     }
 
     @Test
+    void balancesFarAboveThirtyFiveTrillionAreStoredToTheCent() throws Exception {
+        try (Connection connection = memory()) {
+            insertPlayer(connection, ALICE, 10D, 0L);
+            assertEquals(1_000L, EconomyStore.readBalance(connection, ALICE).cents(), "a row from before 4.1.0");
+            long huge = 1_234_567_890_123_456_789L;
+            assertTrue(EconomyStore.writeSnapshot(connection, snapshot(ALICE, huge, 1L)));
+            assertEquals(huge, EconomyStore.readBalance(connection, ALICE).cents());
+            assertTrue(EconomyStore.compareAndSet(connection, ALICE, 1L, Long.MAX_VALUE));
+            assertEquals(Long.MAX_VALUE, EconomyStore.readBalance(connection, ALICE).cents());
+        }
+    }
+
+    @Test
+    void aBalanceChangedOnlyInTheMoneyColumnIsReadFromThere() throws Exception {
+        try (Connection connection = memory()) {
+            insertPlayer(connection, ALICE, 10D, 0L);
+            assertTrue(EconomyStore.writeSnapshot(connection, snapshot(ALICE, 48_000L, 1L)));
+            try (Statement statement = connection.createStatement()) {
+                // A wipe, an older plugin version or a hand-written SQL change sets money without money_cents.
+                statement.executeUpdate("UPDATE players SET money = 25 WHERE uuid = '" + ALICE + "'");
+            }
+            assertEquals(2_500L, EconomyStore.readBalance(connection, ALICE).cents());
+        }
+    }
+
+    @Test
+    void theExactColumnIsTrustedOnlyWhenItMatchesTheMoneyColumn() {
+        assertEquals(48_000L, EconomyStore.resolveCents(480D, 48_000L));
+        assertEquals(48_000L, EconomyStore.resolveCents(480D, null), "no exact value yet");
+        assertEquals(2_500L, EconomyStore.resolveCents(25D, 48_000L), "money was changed alone");
+        long huge = 1_234_567_890_123_456_789L;
+        assertEquals(huge, EconomyStore.resolveCents(Money.toUnits(huge), huge));
+        assertEquals(0L, EconomyStore.resolveCents(0D, -5L), "a negative exact value is never trusted");
+    }
+
+    @Test
     void compareAndSetFailsWhenTheRowMovedOn() throws Exception {
         try (Connection connection = memory()) {
             insertPlayer(connection, ALICE, 10D, 7L);
@@ -223,7 +259,7 @@ class EconomyStoreTest {
     private static void createSchema(Connection connection) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             statement.execute("CREATE TABLE IF NOT EXISTS players (uuid TEXT PRIMARY KEY, username TEXT,"
-                    + " money REAL DEFAULT 0, money_spent REAL DEFAULT 0, money_made REAL DEFAULT 0,"
+                    + " money REAL DEFAULT 0, money_cents BIGINT, money_spent REAL DEFAULT 0, money_made REAL DEFAULT 0,"
                     + " money_version BIGINT DEFAULT 0)");
         }
         EconomyStore.createSchema(connection, Statement::execute);

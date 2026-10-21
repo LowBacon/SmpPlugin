@@ -6,54 +6,73 @@ import java.util.OptionalLong;
 
 /**
  * Money as whole cents. The economy adds, subtracts and compares {@code long} cents, so balances never drift;
- * {@code double} only appears at the edges (Vault, config files and the {@code REAL} database column).
+ * {@code double} only appears at the edges (Vault, config files, placeholders and the {@code money} column).
  *
- * <p>A {@code REAL} column stores the amount in units (cents / 100). Below 2^45 units the gap between two
- * neighbouring doubles is under one cent, so every whole-cent amount up to {@link #MAX_EXACT_CENTS} reads back
- * exactly. Amounts outside that range are refused rather than rounded.</p>
+ * <p>A balance holds up to {@link #MAX_CENTS} ({@code Long.MAX_VALUE} cents, about 92 quadrillion) and is stored
+ * exactly in {@code players.money_cents}. A double carries every cent only up to {@link #DOUBLE_EXACT_CENTS}
+ * (2^45 units, about 35 trillion): above that neighbouring doubles are more than a cent apart, so an amount passed
+ * as a double is the nearest one the double can still tell apart.</p>
  */
 public final class Money {
 
     public static final long CENTS_PER_UNIT = 100L;
 
-    /** 2^45 units (about 35 trillion) in cents: the largest amount whose cents survive the REAL column. */
-    public static final long MAX_EXACT_CENTS = (1L << 45) * CENTS_PER_UNIT;
+    /** The largest balance there is: 92,233,720,368,547,758.07. */
+    public static final long MAX_CENTS = Long.MAX_VALUE;
 
-    private static final double MAX_EXACT_UNITS = (double) (1L << 45);
+    /** 2^45 units (about 35 trillion) in cents: up to here a double carries every cent exactly. */
+    public static final long DOUBLE_EXACT_CENTS = (1L << 45) * CENTS_PER_UNIT;
+
+    /** Every amount from here on is beyond {@link #MAX_CENTS}; checked first so it never becomes a huge decimal. */
+    private static final double BEYOND_MAX_UNITS = 1e17D;
+    private static final BigDecimal MAX_DECIMAL = BigDecimal.valueOf(MAX_CENTS);
 
     private Money() {
     }
 
     /**
      * Converts an amount to cents, rounding half up to the nearest cent. Empty for NaN, infinity and amounts
-     * outside the exact range.
+     * beyond {@link #MAX_CENTS} either way.
      */
     public static OptionalLong toCents(double amount) {
-        if (!Double.isFinite(amount) || Math.abs(amount) > MAX_EXACT_UNITS) {
+        if (!Double.isFinite(amount) || Math.abs(amount) >= BEYOND_MAX_UNITS) {
             return OptionalLong.empty();
         }
-        return OptionalLong.of(BigDecimal.valueOf(amount).setScale(2, RoundingMode.HALF_UP).movePointRight(2)
-                .longValueExact());
+        BigDecimal cents = BigDecimal.valueOf(amount).setScale(2, RoundingMode.HALF_UP).movePointRight(2);
+        return cents.abs().compareTo(MAX_DECIMAL) > 0 ? OptionalLong.empty() : OptionalLong.of(cents.longValueExact());
     }
 
-    /** The amount for whole cents; reads back exactly for every value up to {@link #MAX_EXACT_CENTS}. */
+    /**
+     * The amount for whole cents. Up to {@link #DOUBLE_EXACT_CENTS} it reads back as exactly these cents; above
+     * that it is the nearest double that does not read back as more, so a balance shown or handed to another
+     * plugin as a double is never overstated (and withdrawing all of it still succeeds).
+     */
     public static double toUnits(long cents) {
-        return cents / (double) CENTS_PER_UNIT;
+        double units = cents / (double) CENTS_PER_UNIT;
+        if (cents >= -DOUBLE_EXACT_CENTS && cents <= DOUBLE_EXACT_CENTS) {
+            return units;
+        }
+        while (overstates(units, cents)) {
+            units = cents > 0L ? Math.nextDown(units) : Math.nextUp(units);
+        }
+        return units;
+    }
+
+    private static boolean overstates(double units, long cents) {
+        OptionalLong back = toCents(units);
+        return back.isEmpty() || (cents > 0L ? back.getAsLong() > cents : back.getAsLong() < cents);
     }
 
     /**
      * Reads a stored balance as cents. Rows written by older versions can carry float noise
-     * (e.g. {@code 10.000000001}), which is rounded to the nearest cent; negative, NaN and out-of-range
-     * values read as 0 and {@link #MAX_EXACT_CENTS}.
+     * (e.g. {@code 10.000000001}), which is rounded to the nearest cent; negative and NaN values read as 0 and
+     * values beyond the largest balance as {@link #MAX_CENTS}.
      */
     public static long storedToCents(double stored) {
         if (Double.isNaN(stored) || stored <= 0D) {
             return 0L;
         }
-        if (stored >= MAX_EXACT_UNITS) {
-            return MAX_EXACT_CENTS;
-        }
-        return toCents(stored).orElse(0L);
+        return toCents(stored).orElse(MAX_CENTS);
     }
 
     /**
@@ -68,11 +87,11 @@ public final class Money {
                 .divide(BigDecimal.valueOf(100L), 0, RoundingMode.HALF_UP).longValueExact();
     }
 
-    /** {@code a + b}, or empty when the result leaves the exact range or overflows. */
+    /** {@code a + b}, or empty when the result would pass {@link #MAX_CENTS} either way. */
     public static OptionalLong add(long a, long b) {
         try {
             long sum = Math.addExact(a, b);
-            return Math.abs(sum) > MAX_EXACT_CENTS ? OptionalLong.empty() : OptionalLong.of(sum);
+            return sum == Long.MIN_VALUE ? OptionalLong.empty() : OptionalLong.of(sum);
         } catch (ArithmeticException overflow) {
             return OptionalLong.empty();
         }

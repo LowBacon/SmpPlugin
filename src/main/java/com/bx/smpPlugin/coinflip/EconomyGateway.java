@@ -1,5 +1,7 @@
 package com.bx.smpPlugin.coinflip;
 
+import com.bx.smpPlugin.economy.Money;
+
 import java.util.Optional;
 import java.util.UUID;
 
@@ -27,7 +29,11 @@ public interface EconomyGateway {
      */
     Optional<StoredBalance> storedBalance(UUID player);
 
-    /** A balance and the version it was saved under (see {@code players.money_version}). */
-    record StoredBalance(double money, long version) {
+    /** A balance in whole cents and the version it was saved under (see {@code players.money_version}). */
+    record StoredBalance(long cents, long version) {
+        /** The balance as the double the {@code money} column holds next to the exact {@code money_cents}. */
+        public double money() {
+            return Money.toUnits(cents);
+        }
     }
 }

@@ -34,7 +34,7 @@ public final class SmpEconomyGateway implements EconomyGateway {
     @Override
     public long balanceCents(UUID player) {
         PlayerData data = plugin.getPlayerDataManager().get(player);
-        return data == null ? 0L : StakeMath.fromEconomy(data.getMoney());
+        return data == null ? 0L : data.getMoneyCents();
     }
 
     @Override
@@ -74,7 +74,7 @@ public final class SmpEconomyGateway implements EconomyGateway {
             return Optional.empty();
         }
         PlayerData.MoneyState state = data.moneyState();
-        return Optional.of(new StoredBalance(state.money(), state.version()));
+        return Optional.of(new StoredBalance(state.cents(), state.version()));
     }
 
     private void log(Player player, String type, String detail) {

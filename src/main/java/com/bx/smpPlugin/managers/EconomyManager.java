@@ -32,7 +32,8 @@ import java.util.logging.Level;
 
 /**
  * The one service that changes money balances. Every change is computed in whole cents, checked against the
- * balance limit, and written to the {@code economy_ledger} together with the new balance:
+ * balance limit (none unless ECONOMY.MAX-BALANCE sets one), and written to the {@code economy_ledger} together
+ * with the new balance:
  *
  * <ul>
  *   <li><b>Online players</b> (and players whose quit save is still queued): the balance changes in memory at once
@@ -50,8 +51,6 @@ public class EconomyManager {
 
     private static final int OFFLINE_ATTEMPTS = 5;
     private static final int WRITE_ATTEMPTS = 3;
-    /** Default ECONOMY.MAX-BALANCE: 10 trillion. */
-    public static final double DEFAULT_MAX_BALANCE = 10_000_000_000_000D;
 
     public record AccountReference(UUID uuid, String displayName, Player onlinePlayer) {
         public boolean isOnline() {
@@ -274,7 +273,7 @@ public class EconomyManager {
         }
         PlayerData live = liveData(uuid);
         if (live != null) {
-            return Money.storedToCents(live.getMoney());
+            return live.getMoneyCents();
         }
         EconomyStore.StoredBalance stored = readStored(uuid);
         return stored == null ? 0L : stored.cents();
@@ -299,14 +298,14 @@ public class EconomyManager {
         return cents.isPresent() && getBalanceCents(uuid) >= cents.getAsLong();
     }
 
-    /** ECONOMY.MAX-BALANCE in cents: deposits may not take a balance above it. */
+    /**
+     * ECONOMY.MAX-BALANCE in cents: deposits may not take a balance above it. 0 (the default) means no limit, which
+     * leaves only the largest balance there is, {@link Money#MAX_CENTS}.
+     */
     public long maxBalanceCents() {
-        double configured = plugin.getConfigManager().getConfig().getDouble("ECONOMY.MAX-BALANCE", DEFAULT_MAX_BALANCE);
+        double configured = plugin.getConfigManager().getConfig().getDouble("ECONOMY.MAX-BALANCE", 0D);
         OptionalLong cents = Money.toCents(configured);
-        if (cents.isEmpty() || cents.getAsLong() <= 0L) {
-            return Money.MAX_EXACT_CENTS;
-        }
-        return Math.min(cents.getAsLong(), Money.MAX_EXACT_CENTS);
+        return cents.isEmpty() || cents.getAsLong() <= 0L ? Money.MAX_CENTS : cents.getAsLong();
     }
 
     /** True when money may move: the database started and is still open. */
@@ -669,7 +668,7 @@ public class EconomyManager {
             List<LiveLeg> planned = new ArrayList<>(legs.size());
             for (int i = 0; i < legs.size(); i++) {
                 PlayerData data = live.get(i);
-                long before = Money.storedToCents(data.getMoney());
+                long before = data.getMoneyCents();
                 Plan plan = plan(legs.get(i).op(), before, legs.get(i).cents(), max);
                 if (!plan.ok()) {
                     return Outcome.fail(plan.failure(), i, before);
@@ -680,7 +679,7 @@ public class EconomyManager {
             List<LegResult> results = new ArrayList<>(legs.size());
             List<PlayerData.MoneyState> states = new ArrayList<>(legs.size());
             for (LiveLeg leg : planned) {
-                leg.data().setMoney(Money.toUnits(leg.afterCents()));
+                leg.data().setMoneyCents(leg.afterCents());
                 PlayerData.MoneyState state = leg.data().moneyState();
                 states.add(state);
                 Leg source = legs.get(leg.index());
@@ -714,7 +713,7 @@ public class EconomyManager {
                         Leg leg = legs.get(i);
                         PlayerData data = live.get(i);
                         if (data != null) {
-                            before[i] = Money.storedToCents(data.getMoney());
+                            before[i] = data.getMoneyCents();
                         } else {
                             EconomyStore.StoredBalance stored = EconomyStore.readBalance(connection, leg.uuid());
                             if (stored == null && leg.createIfMissing()) {
@@ -751,12 +750,12 @@ public class EconomyManager {
                             continue;
                         }
                         synchronized (data) {
-                            long current = Money.storedToCents(data.getMoney());
+                            long current = data.getMoneyCents();
                             Plan plan = plan(legs.get(i).op(), current, legs.get(i).cents(), max);
                             if (!plan.ok()) {
                                 throw new IllegalStateException("balance changed during the transaction");
                             }
-                            data.setMoney(Money.toUnits(plan.after()));
+                            data.setMoneyCents(plan.after());
                             applied.add(new LiveLeg(i, data, current, plan.after()));
                             before[i] = current;
                             after[i] = plan.after();
@@ -812,7 +811,7 @@ public class EconomyManager {
 
     private void revert(List<LiveLeg> applied) {
         for (LiveLeg leg : applied) {
-            leg.data().setMoney(Money.toUnits(leg.beforeCents()));
+            leg.data().setMoneyCents(leg.beforeCents());
         }
     }
 
@@ -945,8 +944,8 @@ public class EconomyManager {
     }
 
     private static EconomyStore.BalanceSnapshot snapshot(UUID uuid, PlayerData.MoneyState state) {
-        return new EconomyStore.BalanceSnapshot(uuid, Money.storedToCents(state.money()), state.moneySpent(),
-                state.moneyMade(), state.version());
+        return new EconomyStore.BalanceSnapshot(uuid, state.cents(), state.moneySpent(), state.moneyMade(),
+                state.version());
     }
 
     private void createAccountRow(Connection connection, UUID uuid, String nameHint) throws SQLException {
@@ -962,7 +961,7 @@ public class EconomyManager {
         PlayerSettingDefaults.applyDefaults(plugin, created);
         double startMoney = plugin.getConfigManager().getConfig().getDouble("SETTINGS.MONEY-PER-DEFAULT", 1000.0D);
         long startCents = Money.toCents(startMoney).orElse(0L);
-        created.setMoney(Money.toUnits(Math.max(0L, Math.min(startCents, maxBalanceCents()))));
+        created.setMoneyCents(Math.max(0L, Math.min(startCents, maxBalanceCents())));
         return created;
     }
 

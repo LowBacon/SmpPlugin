@@ -45,6 +45,7 @@ class DatabaseManagerServerWipeTest {
             manager.resetForServerWipe(1000D, Set.of("resource"), "wipe-1");
 
             assertEquals(1000D, queryDouble(connection, "SELECT money FROM players"), 0.001D);
+            assertEquals(100_000, queryInt(connection, "SELECT money_cents FROM players"), "the exact balance too");
             assertEquals(0, queryInt(connection, "SELECT shards FROM players"));
             assertEquals(0, queryInt(connection, "SELECT kills FROM players"));
             assertEquals(1, queryInt(connection, "SELECT scoreboard_visible FROM players"));
@@ -110,7 +111,8 @@ class DatabaseManagerServerWipeTest {
                         keyall_remaining_seconds INTEGER,
                         shard_booster_expiry INTEGER,
                         mob_spawn_disabled_until BIGINT,
-                        phantom_disabled_until BIGINT
+                        phantom_disabled_until BIGINT,
+                        money_cents BIGINT
                     )
                     """);
             statement.execute("CREATE TABLE homes (owner_uuid TEXT, name TEXT)");
@@ -143,7 +145,7 @@ class DatabaseManagerServerWipeTest {
         try (Statement statement = connection.createStatement()) {
             statement.executeUpdate("""
                     INSERT INTO players VALUES (
-                        'player-1', 'Player', 500, 25, 9, 3, 900, 12, 13, 14, 4, 8, 200, 300, 1, 60, 12345, 0, 0
+                        'player-1', 'Player', 500, 25, 9, 3, 900, 12, 13, 14, 4, 8, 200, 300, 1, 60, 12345, 0, 0, 50000
                     )
                     """);
             statement.executeUpdate("INSERT INTO homes VALUES ('player-1', 'base')");

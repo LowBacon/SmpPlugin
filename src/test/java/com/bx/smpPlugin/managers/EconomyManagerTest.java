@@ -4,6 +4,7 @@ import com.bx.smpPlugin.SmpPlugin;
 import com.bx.smpPlugin.economy.EconomyContext;
 import com.bx.smpPlugin.economy.EconomyStore;
 import com.bx.smpPlugin.economy.LedgerEntry;
+import com.bx.smpPlugin.economy.Money;
 import com.bx.smpPlugin.listeners.JoinPreloadListener;
 import com.bx.smpPlugin.models.EconomyFailureReason;
 import com.bx.smpPlugin.models.EconomyReason;
@@ -174,6 +175,45 @@ class EconomyManagerTest {
                 economy.deposit(account(ALICE, "Alice"), 1D, EconomyReason.REWARD).failureReason());
         assertTrue(economy.withdraw(account(ALICE, "Alice"), 100D, EconomyReason.SHOP_PURCHASE).success());
         assertEquals(900D, alice.getMoney(), 1e-9);
+    }
+
+    @Test
+    void thereIsNoBalanceLimitUnlessOneIsSet() throws Exception {
+        PlayerData alice = harness.addOnline(ALICE, "Alice", 0D);
+        assertEquals(Money.MAX_CENTS, economy.maxBalanceCents());
+
+        // Far past the 10 trillion 4.0 stopped at, and past the 35 trillion a double carries to the cent.
+        assertTrue(economy.deposit(account(ALICE, "Alice"), 50_000_000_000_000D, EconomyReason.REWARD).success());
+        assertTrue(economy.deposit(account(ALICE, "Alice"), 0.01D, EconomyReason.REWARD).success());
+        assertEquals(5_000_000_000_000_001L, alice.getMoneyCents());
+
+        harness.drainWrites();
+        assertEquals(5_000_000_000_000_001L, harness.storedCents(ALICE), "stored to the cent");
+        assertEquals(5_000_000_000_000_001L, harness.database.loadPlayer(ALICE).getMoneyCents(), "and read back");
+        assertEquals(5_000_000_000_000_001L, harness.ledgerSum(ALICE));
+    }
+
+    @Test
+    void balancesUpToTheLargestThereIsStayExactOffline() throws Exception {
+        harness.addOffline(BOB, "Bob", 0D);
+
+        // 90 quadrillion and one cent, each change a database transaction on the stored row.
+        assertTrue(economy.deposit(account(BOB, "Bob"), 90_000_000_000_000_000D, EconomyReason.REWARD).success());
+        assertTrue(economy.deposit(account(BOB, "Bob"), 0.01D, EconomyReason.REWARD).success());
+        assertEquals(9_000_000_000_000_000_001L, economy.getBalanceCents(BOB));
+        assertEquals(9_000_000_000_000_000_001L, harness.storedCents(BOB));
+
+        // Past the largest balance there is (about 92 quadrillion) a deposit is refused, never wrapped around.
+        EconomyTransactionResult tooMuch = economy.deposit(account(BOB, "Bob"), 3_000_000_000_000_000D,
+                EconomyReason.REWARD);
+        assertEquals(EconomyFailureReason.BALANCE_LIMIT, tooMuch.failureReason());
+        assertEquals(9_000_000_000_000_000_001L, economy.getBalanceCents(BOB));
+
+        // Read as a double (Vault, placeholders) the balance is never more than Bob has, so taking all of it works.
+        double shown = economy.getBalance(BOB);
+        assertTrue(economy.has(BOB, shown));
+        assertTrue(economy.withdraw(account(BOB, "Bob"), shown, EconomyReason.SHOP_PURCHASE).success());
+        assertEquals(1L, economy.getBalanceCents(BOB), "the cent the double could not show is still there");
     }
 
     @Test

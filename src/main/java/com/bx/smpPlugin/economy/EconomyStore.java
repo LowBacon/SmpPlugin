@@ -17,6 +17,9 @@ import java.util.UUID;
  * <p>Balances carry a version ({@code players.money_version}) that grows with every change. A balance is only
  * ever written with a newer version than the stored one, so writes that arrive out of order (the database writer,
  * CoinFlip's own connection, a quit save) can never put an older balance back.</p>
+ *
+ * <p>A balance is written twice: exactly as whole cents in {@code money_cents} and as a double in {@code money},
+ * which older tools, wipes and hand-written SQL read and change. See {@link #resolveCents} for which one is read.</p>
  */
 public final class EconomyStore {
 
@@ -138,14 +141,15 @@ public final class EconomyStore {
      */
     public static boolean writeSnapshot(Connection connection, BalanceSnapshot snapshot) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
-                "UPDATE players SET money = ?, money_spent = ?, money_made = ?, money_version = ?"
+                "UPDATE players SET money = ?, money_cents = ?, money_spent = ?, money_made = ?, money_version = ?"
                         + " WHERE uuid = ? AND money_version < ?")) {
             statement.setDouble(1, Money.toUnits(snapshot.cents()));
-            statement.setDouble(2, Math.max(0D, snapshot.moneySpent()));
-            statement.setDouble(3, Math.max(0D, snapshot.moneyMade()));
-            statement.setLong(4, snapshot.version());
-            statement.setString(5, snapshot.player().toString());
-            statement.setLong(6, snapshot.version());
+            statement.setLong(2, snapshot.cents());
+            statement.setDouble(3, Math.max(0D, snapshot.moneySpent()));
+            statement.setDouble(4, Math.max(0D, snapshot.moneyMade()));
+            statement.setLong(5, snapshot.version());
+            statement.setString(6, snapshot.player().toString());
+            statement.setLong(7, snapshot.version());
             return statement.executeUpdate() > 0;
         }
     }
@@ -153,15 +157,29 @@ public final class EconomyStore {
     /** The stored balance of one player, or null when they have no row. */
     public static StoredBalance readBalance(Connection connection, UUID player) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
-                "SELECT money, money_version FROM players WHERE uuid = ?")) {
+                "SELECT money, money_cents, money_version FROM players WHERE uuid = ?")) {
             statement.setString(1, player.toString());
             try (ResultSet rs = statement.executeQuery()) {
                 if (!rs.next()) {
                     return null;
                 }
-                return new StoredBalance(Money.storedToCents(rs.getDouble(1)), rs.getLong(2));
+                long cents = rs.getLong(2);
+                return new StoredBalance(resolveCents(rs.getDouble(1), rs.wasNull() ? null : cents), rs.getLong(3));
             }
         }
+    }
+
+    /**
+     * The balance a row holds. {@code moneyCents} carries every cent of any balance, but it is trusted only while
+     * it still matches {@code money}: a wipe, an older plugin version or a hand-written SQL change sets
+     * {@code money} alone, and then {@code money} is the balance. A NULL {@code moneyCents} (a row 4.1.0 or later has
+     * not written yet) also reads {@code money}.
+     */
+    public static long resolveCents(double money, Long moneyCents) {
+        if (moneyCents != null && moneyCents >= 0L && Double.compare(Money.toUnits(moneyCents), money) == 0) {
+            return moneyCents;
+        }
+        return Money.storedToCents(money);
     }
 
     /**
@@ -171,11 +189,12 @@ public final class EconomyStore {
     public static boolean compareAndSet(Connection connection, UUID player, long expectedVersion, long newCents)
             throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
-                "UPDATE players SET money = ?, money_version = ? WHERE uuid = ? AND money_version = ?")) {
+                "UPDATE players SET money = ?, money_cents = ?, money_version = ? WHERE uuid = ? AND money_version = ?")) {
             statement.setDouble(1, Money.toUnits(newCents));
-            statement.setLong(2, expectedVersion + 1L);
-            statement.setString(3, player.toString());
-            statement.setLong(4, expectedVersion);
+            statement.setLong(2, newCents);
+            statement.setLong(3, expectedVersion + 1L);
+            statement.setString(4, player.toString());
+            statement.setLong(5, expectedVersion);
             return statement.executeUpdate() > 0;
         }
     }
@@ -252,7 +271,7 @@ public final class EconomyStore {
         return totals;
     }
 
-    /** Number of accounts and the sum of their balances. */
+    /** Number of accounts and the sum of their balances (a double sum: a statistic, not a balance). */
     public static MoneySupply moneySupply(Connection connection) throws SQLException {
         try (Statement statement = connection.createStatement();
              ResultSet rs = statement.executeQuery("SELECT COUNT(*), COALESCE(SUM(money), 0) FROM players")) {

@@ -120,6 +120,21 @@ public final class EconomyHarness implements AutoCloseable {
         return queryDouble("SELECT money FROM players WHERE uuid = ?", uuid);
     }
 
+    /** The exact stored balance, {@code players.money_cents}; null when no 4.1.0 or later save wrote it. */
+    public Long storedCents(UUID uuid) throws SQLException {
+        try (PreparedStatement statement = connection().prepareStatement(
+                "SELECT money_cents FROM players WHERE uuid = ?")) {
+            statement.setString(1, uuid.toString());
+            try (ResultSet rs = statement.executeQuery()) {
+                if (!rs.next()) {
+                    return null;
+                }
+                long cents = rs.getLong(1);
+                return rs.wasNull() ? null : cents;
+            }
+        }
+    }
+
     public long storedVersion(UUID uuid) throws SQLException {
         return (long) queryDouble("SELECT money_version FROM players WHERE uuid = ?", uuid);
     }

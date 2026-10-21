@@ -58,7 +58,7 @@ final class CoinFlipTestHarness implements AutoCloseable {
         this.config = CoinFlipConfig.from(yaml);
         try (Connection connection = open(); Statement statement = connection.createStatement()) {
             statement.execute("CREATE TABLE IF NOT EXISTS players (uuid TEXT PRIMARY KEY, username TEXT, money REAL DEFAULT 0,"
-                    + " money_version BIGINT DEFAULT 0)");
+                    + " money_cents BIGINT, money_version BIGINT DEFAULT 0)");
         }
         start();
     }
@@ -204,7 +204,7 @@ final class CoinFlipTestHarness implements AutoCloseable {
         @Override
         public Optional<StoredBalance> storedBalance(UUID player) {
             return balances.containsKey(player)
-                    ? Optional.of(new StoredBalance(balances.get(player) / 100D, versions.getOrDefault(player, 0L)))
+                    ? Optional.of(new StoredBalance(balances.get(player), versions.getOrDefault(player, 0L)))
                     : Optional.empty();
         }
     }

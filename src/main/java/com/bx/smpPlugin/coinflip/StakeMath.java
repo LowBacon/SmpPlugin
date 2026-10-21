@@ -117,12 +117,16 @@ public final class StakeMath {
         return BigDecimal.valueOf(cents, 2).doubleValue();
     }
 
-    /** Converts an economy balance to whole cents, rounding down so a balance is never overstated. */
+    /**
+     * Converts an economy balance to whole cents, rounding down so a balance is never overstated. Amounts beyond
+     * the largest balance read as {@code Long.MAX_VALUE} cents.
+     */
     public static long fromEconomy(double amount) {
         if (!Double.isFinite(amount) || amount <= 0D) {
             return 0L;
         }
-        return BigDecimal.valueOf(amount).movePointRight(2).setScale(0, RoundingMode.FLOOR).longValue();
+        BigDecimal cents = BigDecimal.valueOf(amount).movePointRight(2).setScale(0, RoundingMode.FLOOR);
+        return cents.compareTo(BigDecimal.valueOf(Long.MAX_VALUE)) >= 0 ? Long.MAX_VALUE : cents.longValueExact();
     }
 
     /** "1,234" or "1,234.50". */

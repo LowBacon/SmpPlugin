@@ -2,61 +2,28 @@
 
 A complete, feature-rich **Minecraft SMP core plugin** for **Minecraft 1.21.11 – 26.3** on **Paper, Purpur, Spigot and CraftBukkit**.
 
-> **4.0.0** brands your server **CustomSMP** on the scoreboard, tab list and menus from one setting,
-> counts money in whole cents with a full audit ledger, and adds ranked PvP with Elo, seasonal events
-> (`/advent`, Christmas presents, an Easter egg hunt, Summer and your own events), item bans, versioned
-> database migrations and `/smp diagnostics`. It runs on Minecraft **1.21.11, 26.1, 26.1.1, 26.1.2, 26.2 and 26.3**
-> from one jar per server family. Run `/smp version` to see what is installed. See
-> [docs/INSTALL.md](docs/INSTALL.md), [CHANGELOG.md](CHANGELOG.md), [COMPATIBILITY.md](COMPATIBILITY.md) and
-> [docs/MIGRATING-TO-4.0.md](docs/MIGRATING-TO-4.0.md) when upgrading.
+> **4.1.0** shows each player's rank (for example **Owner**) above their head and removes the balance limit:
+> balances stay exact to the cent all the way to 92 quadrillion.
+> **4.0.0** made every balance change exact and saved at once, with a ledger behind `/transactions`, `/baltop`
+> and `/eco`, and added seasonal events you can switch live with `/events`: an **Advent Calendar**, a **Halloween hub**
+> (candy, quests, a candy shop, milestones, a leaderboard) and a reworked **Trick or Treat**, plus rank perks in
+> `perks.yml` and a reward vault so prizes never fall on the ground. It runs on Minecraft **1.21.11, 26.1, 26.1.1,
+> 26.1.2, 26.2 and 26.3** from one jar per server family. Run `/smpplugin version` to see what is installed. See
+> [COMPATIBILITY.md](COMPATIBILITY.md), [CHANGELOG.md](CHANGELOG.md), [docs/economy.md](docs/economy.md) and
+> [docs/seasonal-events.md](docs/seasonal-events.md).
+> Permissions changed; read [docs/permissions-migration-and-luckperms.md](docs/permissions-migration-and-luckperms.md) before upgrading.
 
 SmpPlugin is designed to provide an entire SMP server experience from a single, highly configurable plugin. It combines gameplay, economy, social features, moderation, player utilities, competitive systems, GUI menus, statistics, server management, and extensive integrations into one unified system.
 
 Instead of running a small army of plugins just to make an SMP function, SmpPlugin brings the majority of the core systems together in one optimized and configurable package.
 
-## 🆕 New in 4.0
+## 🆕 New in 4.1
 
 | | |
 |---|---|
-| 🏷️ **CustomSMP branding** | `BRANDING.SERVER-NAME` in `config.yml` (default **CustomSMP**) is the name on the scoreboard title, the tab list, menus and messages. `{server_name}`, `{server_title}` and `{server_address}` work in any text. The plugin itself stays **SmpPlugin**. |
-| 📋 **New default scoreboard** | Player, Rank, Balance, Shards, Kills, Deaths, K/D, Playtime, Team, Online and Server. Placeholders work **with or without PlaceholderAPI**, and one nothing can fill is left out instead of shown as code. |
-| 💵 **Safe money** | Every change is worked out in whole cents with overflow checks and a balance cap; NaN, infinite and sub-cent amounts are refused. Two quick payments to an offline player can no longer lose one. |
-| 🧾 **Economy ledger** | Every money and shard change is recorded with a transaction id, the reason, who caused it and the balance before and after. `/balance history`, `/economy history <player>`. |
-| 🏦 **`/economy`** | `give`, `take`, `set`, `reset` (with confirmation), `history`, `stats`. Admin changes record the admin and the reason. Optional `/pay` limits, cooldown and fee. `/baltop`. |
-| 🏆 **Ranked PvP** | `/ranked`: an Elo-rated queue on your duel arenas, tiers, a leaderboard, match history, win rewards and anti-boosting (pair limits, same-IP block, minimum match length). |
-| 🎄 **Seasonal events** | `/event`: the **Advent Calendar** (`/advent`), **Christmas presents**, the **Easter egg hunt** (`/easter`), **Summer Splash** and your own events, each on its dates or switched on by staff. Progress is kept and rewards are never paid twice. |
-| 🚫 **Item bans** | `survival-rules.yml`: stop items from being placed, used, crafted or picked up, and disable recipes, per world if you like. |
-| 🩺 **`/smp diagnostics`** | TPS, memory, database health and queue, cache sizes, the slowest commands and anything that failed to start. `/smp modules` turns modules on and off for real. |
-| 🗃️ **Database migrations** | Numbered, run-once schema changes in a transaction, shown in `/smp status`. |
+| 🏷️ **Ranks above heads** | The name tag above a player shows their rank prefix from LuckPerms or Vault, the same one chat uses, on every scoreboard. `NAMETAGS` in `config.yml` sets the format and the name colour. It steps aside for TAB and NametagEdit, and for other plugins' teams unless you tell it not to. |
+| ♾️ **No balance limit** | `ECONOMY.MAX-BALANCE` is `0` (no limit) by default, and every balance is exact to the cent up to 92,233,720,368,547,758.07 (a new `money_cents` column). A config still on the 4.0 default of 10 trillion is moved to no limit; a limit you set yourself is kept. |
 
-## 🆕 New in 3.1
-
-| | |
-|---|---|
-| 🎲 **Dice** | `/dice <bet> [high\|low\|1-6]` against the house. Shows the chance, payout and average return with a **[ROLL]** button before any money moves. Fair dice rolled by the server; payouts in `extras.yml` can never be set above the fair odds. `/dice roll` is still a free roll. |
-| 🪙 **CoinFlip** | `/cf`: start a flip or click someone's; it starts at once. The two heads spin and the middle one wins, a fair 50/50. No maximum bet (3.2). |
-| 📖 **`/guide`** | A getting-started guide from `guide.yml`, page by page, with clickable commands. It only shows commands that exist, are turned on and the reader may use. |
-| 📋 **Scoreboard text** | Edit the sidebar in game with `/sidebar lines\|add\|set\|insert\|remove\|title`. Only changed lines are sent, at a configurable `LINE-UPDATE-TICKS`. |
-| 🧾 **Cleaner tab list** | The default footer no longer shows money, stats, ping or TPS; servers still on the old default footer are updated (with a backup). |
-| 🧱 **Spawn and lobby borders** | `/border spawn set 200`: a real Minecraft border. In PLAYER mode only players inside are held, so it is safe in a survival world; WORLD mode uses the world's own border. |
-| 🎁 **Giveaways for senior staff** | Only ops and the Manager, Developer, Co-Owner and Owner ranks (or `smpplugin.giveaway.manage`) can start or cancel giveaways. |
-| 🧹 **Removed** | `/hug`, `/8ball`, `/hat`, `/trash` and `/notes`. |
-
-## 🆕 New in 3.0
-
-| | |
-|---|---|
-| 🎃 **Spooky Calendar** | `/halloween`: a door for every day of October with a spinning reveal. Choose the prizes in game with `/halloween edit`. Trick or Treat, candy drops and pumpkin-headed mobs during the season. |
-| 🎁 **Daily rewards** | `/daily`: a 7-day streak with a big day-7 reward and weekly bonuses. |
-| 🎯 **Daily challenges** | `/challenges`: three goals a day for everyone, paid out automatically. |
-| 🎉 **Live events** | `/poll`, `/giveaway`, automatic chat games, `/countdown`, a rotating announcer and `/mail`. |
-| 😄 **Fun** | `/slap` `/highfive` `/poke` `/wave` `/cheer` `/dice` `/rps` `/rate` `/firework` `/sit` |
-| 🧰 **Utilities** | `/craft` `/anvil` `/grindstone` `/stonecutter` `/loom` `/smithing` `/cartography` `/back` `/near` `/seen` `/coords` `/ptime` `/pweather` `/repair` `/skull` `/lore` `/glow` `/online` `/uptime` `/calc` `/suicide` |
-| 🛡️ **Staff** | Roles `smpplugin.role.helper` / `moderator` / `admin` / `manager` / `developer` / `coowner` / `owner`, `/perms`, `/whois`, `/socialspy`, `/commandspy`, `/broadcast`, `/day` `/night` `/sun` `/rain` `/thunder`, `/smite`, `/butcher`, `/spawnmob`, `/more`, `/speed`, `/performance`, `/spook` |
-| 📊 **Simpler /stats** | Your own stats in three lines, with Search Player and Leaderboards buttons. |
-
-The Auction House is now only `/ah` (`/auctionhouse` was removed). Everything new is configured in
-`halloween.yml` and `extras.yml`, and each part can be switched off as a feature.
 
 ## ✨ Features
 
@@ -96,9 +63,13 @@ The Auction House is now only `/ah` (`/auctionhouse` was removed). Everything ne
 * Shop system
 * Orders system
 * Auction House with Quick Buy, smarter search, Your Items and transaction history
+* Exact money in whole cents, written at once on every change, with a ledger (`/transactions`, `/eco history`)
+* `/baltop`, `/eco give|take|set|reset|history|stats`, pay limits, a pay tax and a pay cooldown
+  (see [docs/economy.md](docs/economy.md))
 * Economy leaderboards
 * Economy PlaceholderAPI expansions
-* CoinFlip (`/cf`): start a coin flip or join one; the two players' heads spin and the middle one wins the pot
+* CoinFlip Nexus: 1v1 coin flips for in-game currency with a journaled, crash-safe money flow, challenges,
+  practice mode, history, statistics, leaderboards and achievements (`/coinflip`, see [docs/coinflip.md](docs/coinflip.md))
 
 ### 💎 Shards
 
@@ -228,11 +199,7 @@ The Auction House is now only `/ah` (`/auctionhouse` was removed). Everything ne
 
 ## 🔌 Integrations
 
-All integrations are optional: when a plugin is missing, the features that need it are switched off and
-`/smp status` says so. **Tested on a running Paper 26.3 server with 4.0.0:** PlaceholderAPI 2.12.3,
-LuckPerms 5.5.87, Vault 1.7.3 and ProtocolLib 5.4.0 (start-up, `/smp status`, PlaceholderAPI parsing).
-The others below are supported by the code but were not part of that test; see
-[docs/INSTALL.md](docs/INSTALL.md#optional-plugins).
+SmpPlugin supports a wide range of popular Minecraft server plugins and APIs, including:
 
 * PlaceholderAPI
 * LuckPerms
@@ -253,44 +220,39 @@ Optional integrations are handled through soft dependencies where possible, allo
 
 ## 🗄️ Storage & Databases
 
-The plugin includes database support for persistent server data and can work with multiple storage technologies, including:
+Set `DATABASE.TYPE` in `database.yml`:
 
-* **SQLite** (default, nothing to set up)
-* **MySQL** (`database.yml`)
-* **MongoDB** (a bridge: SQLite runs locally and its tables are copied to MongoDB)
-* **Redis** (optional, for network staff chat, alerts and cross-server sync)
+| Type | What it really is |
+|---|---|
+| **SQLite** *(default)* | A local file, `data/data.db`. No setup. |
+| **MySQL** | A shared MySQL or MariaDB database. |
+| **MongoDB** | A **mirror**, not a live store: the plugin works on a local SQLite file and copies it to MongoDB every `MONGODB.SYNC-INTERVAL-SECONDS` and at shutdown. Use it for off-site copies, not for several servers sharing one database. |
+| **Redis** *(optional)* | Only for network features (cross-server messages), never for player data. |
 
-Schema changes since 4.0 are numbered migrations recorded in the `schema_migrations` table.
+If the database cannot start, SmpPlugin stops instead of running without storage.
 
 ## 🌐 Folia
 
-Version 4.x does **not** support Folia: its modules have not been checked on Folia's region threads, so the
-plugin declares `folia-supported: false`. See [COMPATIBILITY.md](COMPATIBILITY.md).
+SmpPlugin does **not** support Folia: its modules have not been checked on Folia, so the plugin refuses to
+start there and declares `folia-supported: false`. See [COMPATIBILITY.md](COMPATIBILITY.md).
 
 ## ⚡ Performance
 
-* Database writes run in order on one background thread with a bounded queue; joins read player data
-  on the login thread, before the player is in the world.
-* Leaderboards are read from the database in the background and cached; the scoreboard and placeholders
-  never query the database.
-* The scoreboard and tab list send only the lines that changed.
-* `/smp diagnostics` shows measured numbers from your own server: TPS and tick time, the database's
-  query time and queue wait, queued writes, cache sizes and the slowest commands. No benchmark numbers
-  are published here because they depend on your hardware and players.
-* Maven Shade relocates the bundled libraries so they cannot clash with other plugins.
+Performance and scalability are core design goals.
+
+SmpPlugin uses dedicated managers, tasks, storage systems, listeners, menus, APIs, and integrations to keep the codebase organized and allow individual systems to operate independently.
+
+The project also uses Maven Shade with dependency relocation to reduce library conflicts when distributing the plugin as a standalone JAR.
 
 ## 🧩 PlaceholderAPI
 
-SmpPlugin's own placeholders work in its scoreboard, tab list, menus and messages **without PlaceholderAPI**.
-With PlaceholderAPI installed they also work in other plugins, under the prefixes `%smp_...%` (new in 4.0),
-`%economy_...%`, `%smpplugin_...%` and `%customsmp_...%`. The full list is in [docs/placeholders.md](docs/placeholders.md).
+SmpPlugin provides custom PlaceholderAPI expansions for server and player information, including economy-related placeholders, rankings, leaderboards, AFK status and CustomSmp-specific data (`%economy_...%`, `%smpplugin_...%` or `%customsmp_...%`).
 
 This makes it possible to integrate SmpPlugin data into scoreboards, tablists, holograms, menus, chat formats, and other plugins supporting PlaceholderAPI.
 
 ## 🖥️ Command System
 
-SmpPlugin provides **215+ commands** covering practically every major part of the plugin. The full list,
-with aliases and permissions, is in [docs/commands.md](docs/commands.md).
+SmpPlugin provides **220 commands** covering practically every major part of the plugin.
 
 Examples include:
 
@@ -313,11 +275,19 @@ Examples include:
 /keys
 /stats
 /daily
+/advent
+/events
+/perks
+/transactions
+/baltop
+/claimitems
 /challenges
 /guide
 /dice
-/cf
+/roulette
+/coinflip
 /halloween
+/trickortreat
 /mail
 /playtime
 /ping
@@ -339,13 +309,6 @@ Examples include:
 /maintenance
 /border
 /sidebar
-/smp
-/economy
-/baltop
-/ranked
-/event
-/advent
-/easter
 ```
 
 Administrative commands are protected using dedicated permission nodes, making the plugin suitable for both normal players and staff teams.
@@ -373,11 +336,8 @@ Server owners can configure systems such as:
 * Staff systems
 * Server settings
 * Database settings
-* Feature toggles (`/smp modules`)
-* Server branding (`BRANDING` in `config.yml`)
-* Ranked PvP (`ranked.yml`)
-* Seasonal events (`events.yml`, `advent.yml`)
-* Banned items and recipes (`survival-rules.yml`)
+* Feature toggles
+* Seasonal events (`advent.yml`, `halloween.yml`) and rank perks (`perks.yml`)
 
 ## 🛠️ Development
 
@@ -389,45 +349,47 @@ SmpPlugin is written in **Java** and uses **Maven** as its build system.
 * Maven 3.9 or newer
 * To run: Paper, Purpur, Spigot or CraftBukkit **1.21.11 – 26.3** (Java 21 on 1.21.11, Java 25 on 26.x)
 
-Version 2.1 runs on **Minecraft 1.21.11 to 26.3** (`api-version: 1.21`, minimum checked at start-up).
+SmpPlugin runs on **Minecraft 1.21.11 to 26.3** (`api-version: 1.21`, minimum checked at start-up).
 For 1.21.10 and older use SmpPlugin 1.5. See [COMPATIBILITY.md](COMPATIBILITY.md).
 
 ### Build
 
-The Maven wrapper downloads the right Maven by itself:
-
 ```bash
-./mvnw clean package
+mvn clean package
 ```
 
-On Windows use `mvnw.cmd clean package`; with Maven installed, `mvn clean package` works too. This builds
-the jar for **Paper and Purpur** and runs the tests:
+This builds the jar for **Paper and Purpur**:
 
 ```text
-target/SmpPlugin-4.0.0-paper.jar
+target/SmpPlugin-4.1.0-paper.jar
 ```
 
-For **Spigot and CraftBukkit**, build with `./mvnw clean package -Pspigot`, which produces
-`target/SmpPlugin-4.0.0-spigot.jar`. The two APIs are not binary compatible; use the matching jar.
+For **Spigot and CraftBukkit**, build with `mvn clean package -Pspigot`, which produces
+`target/SmpPlugin-4.1.0-spigot.jar`. The two APIs are not binary compatible; use the matching jar.
 
 ## 📦 Installation
 
-On a fresh Paper or Purpur server (full guide: [docs/INSTALL.md](docs/INSTALL.md)):
-
-1. Download `SmpPlugin-4.0.0-paper.jar` (Paper and Purpur) or `SmpPlugin-4.0.0-spigot.jar` (Spigot and
-   CraftBukkit) from the [latest release](https://github.com/LowBacon/SmpPlugin/releases/latest).
-2. Put it in the server's `plugins` folder. Optional: add PlaceholderAPI, LuckPerms and Vault.
-3. Start the server once. The configuration files are created in `plugins/SmpPlugin/`.
-4. Set your server's name and address in `config.yml` under `BRANDING` (the name defaults to **CustomSMP**).
-5. Give your staff ranks a role node, e.g. `smpplugin.role.admin` (see
-   [docs/permissions-reference.md](docs/permissions-reference.md)).
-6. Run `/smp reload` (or restart) after editing the files, and `/smp status` to check everything started.
+1. Download the jar for your server from the latest release: `SmpPlugin-<version>-paper.jar` for Paper and
+   Purpur, `SmpPlugin-<version>-spigot.jar` for Spigot and CraftBukkit.
+2. Place it in your server's `plugins` folder (remove the old SmpPlugin jar when upgrading).
+3. Start or restart your server.
+4. Configure the generated configuration files.
+5. Install optional dependencies for the integrations you want to use.
+6. Restart the server, or run `/smpplugin reload`, after configuration changes.
 
 ### Upgrading to 4.0
 
-Replace the old jar and restart; nothing has to be done by hand. Settings are added to your files (old
-copies go to `config-backups/`), the database is migrated, and your scoreboard and tab list keep their
-lines. What changes and how to undo it: [docs/MIGRATING-TO-4.0.md](docs/MIGRATING-TO-4.0.md).
+- Your configuration is kept; `advent.yml` and `perks.yml` are created, and new settings (`ECONOMY` in
+  `config.yml`, `AUTOSAVE-SECONDS` and `MONGODB.SYNC-INTERVAL-SECONDS` in `database.yml`, the new Halloween
+  sections) fall back to safe defaults when missing.
+- The players table gets a `money_version` column and two tables are added, `economy_ledger` and
+  `economy_holds`. Nothing is deleted or reset.
+- Unfinished bets in `data/gambling-escrow.yml` are paid back once and the file is renamed `.recovered`.
+- `/halloween` now opens the Halloween hub; `/halloween calendar` opens the calendar. `/halloween preview` is now
+  `/halloween test` and only changes what you see.
+- `/eco` is also registered by EssentialsX; use `/smpeco` (or `/smpplugin:eco`) if EssentialsX owns `/eco`.
+- Rank perks use `smpplugin.rank.vip` and `smpplugin.rank.vipplus` by default (renameable in `perks.yml`); they are
+  `default: false`, so nobody has a rank until you give it.
 
 ### Upgrading to 3.1
 
@@ -447,7 +409,7 @@ SmpPlugin is intended for:
 
 * Survival SMP servers
 * Community servers
-* CustomSMP and similar SMP servers
+* CustomSmp and similar SMP servers
 * Economy SMP servers
 * PvP SMP servers
 * Competitive survival servers
@@ -466,7 +428,7 @@ See [`LICENSE`](LICENSE) for the complete license.
 
 ---
 
-## ❤️ CustomSMP
+## ❤️ CustomSmp
 
 SmpPlugin was built around the idea of creating a complete, polished SMP experience without requiring an excessive number of separate plugins.
 

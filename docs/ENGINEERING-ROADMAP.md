@@ -269,6 +269,15 @@ reset, per-subcommand permissions and tab completion). **Commands run.** full su
   tests, `CoinFlipModelTest`, `CoinFlipStorageTest` and the new `managers/V41ConfigTest`. Full suite 399,
   0 failures, 8 skipped.
 
+### M12: release 4.1.0
+
+- Version 4.1.0 (`pom.xml`, `version.txt`, README, Features, CHANGELOG, COMPATIBILITY, Modrinth text,
+  `docs/economy.md`), release text in `.github/release-notes/v4.1.0.md`, published with a `[release]` commit.
+- Run 39619821276 built and tested both jars and published
+  https://github.com/LowBacon/SmpPlugin/releases/tag/v4.1.0 (tag on `132ce7c`, marked latest) with
+  `SmpPlugin-4.1.0-paper.jar`, `SmpPlugin-4.1.0-spigot.jar` and `SHA256SUMS.txt`. The downloaded jars match the
+  checksums, say 4.1.0, are Java 21 bytecode and contain `NametagManager`.
+
 ## Risks and limits that remain
 
 - **Nothing in 4.0 or 4.1 has been run on a live Minecraft server.** Everything server-facing (menus, sounds,
@@ -288,7 +297,7 @@ reset, per-subcommand permissions and tab completion). **Commands run.** full su
 
 ## Current task
 
-Release 4.1.0 (rank name tags and no balance limit) from branch `claude/hopeful-darwin-btvnxm` (tag `v4.1.0`).
+None. 4.1.0 (rank name tags and no balance limit) is released from branch `claude/hopeful-darwin-btvnxm`.
 
 ## Next tasks (suggested)
 

@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The look shared by the 3.2 menus (events, Advent, the Halloween hub): a dark frame, one accent colour per
+ * The look shared by the 4.0 menus (events, Advent, the Halloween hub): a dark frame, one accent colour per
  * screen, the same wording for buttons and states, and one action line at the bottom of every item.
  */
 public final class MenuStyle {

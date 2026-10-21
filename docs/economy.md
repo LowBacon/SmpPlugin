@@ -1,7 +1,7 @@
 # Economy
 
 How SmpPlugin keeps money, what each command does, and what to check after a crash. Everything here applies to
-3.2.0 and later.
+4.0.0 and later.
 
 ## How money is kept
 

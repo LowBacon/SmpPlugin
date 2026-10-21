@@ -59,12 +59,12 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.roulette` | Put money into the head roulette with /roulette. | everyone | New in 3.1. |
 | `smpplugin.guide` | Read the getting-started guide with /guide. | everyone | New in 3.1. |
 | `smpplugin.sidebar` | Show or hide your own scoreboard with /sidebar. | everyone | New in 3.1. |
-| `smpplugin.baltop` | See the richest players with /baltop. | everyone | New in 3.2. |
-| `smpplugin.transactions` | See your own balance history with /transactions. | everyone | New in 3.2. |
-| `smpplugin.events` | See which seasonal events run with /events. | everyone | New in 3.2. |
-| `smpplugin.advent` | Open the Advent Calendar with /advent and open its doors. | everyone | New in 3.2. |
-| `smpplugin.perks` | See the ranks and their perks with /perks. | everyone | New in 3.2. |
-| `smpplugin.claimitems` | Collect reward items that did not fit in your inventory with /claimitems. | everyone | New in 3.2. |
+| `smpplugin.baltop` | See the richest players with /baltop. | everyone | New in 4.0. |
+| `smpplugin.transactions` | See your own balance history with /transactions. | everyone | New in 4.0. |
+| `smpplugin.events` | See which seasonal events run with /events. | everyone | New in 4.0. |
+| `smpplugin.advent` | Open the Advent Calendar with /advent and open its doors. | everyone | New in 4.0. |
+| `smpplugin.perks` | See the ranks and their perks with /perks. | everyone | New in 4.0. |
+| `smpplugin.claimitems` | Collect reward items that did not fit in your inventory with /claimitems. | everyone | New in 4.0. |
 
 ## Rank perks (default: nobody)
 
@@ -109,8 +109,8 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.lore` | Edit the lore of the item in your hand with /lore. | nobody | New in 3.0. |
 | `smpplugin.glow` | Toggle a glowing outline with /glow. | nobody | New in 3.0. |
 | `smpplugin.gambling.bypasscooldown` | No cooldown between /dice rolls. | nobody | New in 3.1. |
-| `smpplugin.rank.vip` | The VIP rank of perks.yml (rank permissions can be renamed there). | nobody | New in 3.2. |
-| `smpplugin.rank.vipplus` | The VIP+ rank of perks.yml (rank permissions can be renamed there). | nobody | New in 3.2. |
+| `smpplugin.rank.vip` | The VIP rank of perks.yml (rank permissions can be renamed there). | nobody | New in 4.0. |
+| `smpplugin.rank.vipplus` | The VIP+ rank of perks.yml (rank permissions can be renamed there). | nobody | New in 4.0. |
 
 ## Staff tools (default: nobody; ops via smpplugin.admin)
 
@@ -254,11 +254,11 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.admin.roulette` | Cancel a head-roulette round and refund everyone with /roulette cancel. | nobody | New in 3.1. |
 | `smpplugin.admin.sidebar` | Edit the scoreboard title and lines in game with /sidebar. | nobody | New in 3.1. |
 | `smpplugin.admin.border` | Set up the spawn and lobby world borders with /border. | nobody | New in 3.1. |
-| `smpplugin.admin.economy.history` | See any player's balance history with /eco history. | nobody | New in 3.2. |
-| `smpplugin.admin.economy.stats` | See the money supply and money flows with /eco stats. | nobody | New in 3.2. |
-| `smpplugin.admin.advent` | Edit Advent Calendar gifts and use /advent give, reset, test and stats. | nobody | New in 3.2. |
-| `smpplugin.admin.perks` | See which rank an online player gets with /perks check. | nobody | New in 3.2. |
-| `smpplugin.admin.events` | Switch seasonal events on, off or back to their dates with /events. | nobody | New in 3.2. |
+| `smpplugin.admin.economy.history` | See any player's balance history with /eco history. | nobody | New in 4.0. |
+| `smpplugin.admin.economy.stats` | See the money supply and money flows with /eco stats. | nobody | New in 4.0. |
+| `smpplugin.admin.advent` | Edit Advent Calendar gifts and use /advent give, reset, test and stats. | nobody | New in 4.0. |
+| `smpplugin.admin.perks` | See which rank an online player gets with /perks check. | nobody | New in 4.0. |
+| `smpplugin.admin.events` | Switch seasonal events on, off or back to their dates with /events. | nobody | New in 4.0. |
 
 ## Operational bypasses (default: nobody; ops via smpplugin.admin)
 

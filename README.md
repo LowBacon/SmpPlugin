@@ -2,7 +2,7 @@
 
 A complete, feature-rich **Minecraft SMP core plugin** for **Minecraft 1.21.11 – 26.3** on **Paper, Purpur, Spigot and CraftBukkit**.
 
-> **3.2.0** makes every balance change exact and saved at once, with a ledger behind `/transactions`, `/baltop`
+> **4.0.0** makes every balance change exact and saved at once, with a ledger behind `/transactions`, `/baltop`
 > and `/eco`, and adds seasonal events you can switch live with `/events`: an **Advent Calendar**, a **Halloween hub**
 > (candy, quests, a candy shop, milestones, a leaderboard) and a reworked **Trick or Treat**, plus rank perks in
 > `perks.yml` and a reward vault so prizes never fall on the ground. It runs on Minecraft **1.21.11, 26.1, 26.1.1,
@@ -15,7 +15,7 @@ SmpPlugin is designed to provide an entire SMP server experience from a single, 
 
 Instead of running a small army of plugins just to make an SMP function, SmpPlugin brings the majority of the core systems together in one optimized and configurable package.
 
-## 🆕 New in 3.2
+## 🆕 New in 4.0
 
 | | |
 |---|---|
@@ -398,11 +398,11 @@ mvn clean package
 This builds the jar for **Paper and Purpur**:
 
 ```text
-target/SmpPlugin-3.2.0-paper.jar
+target/SmpPlugin-4.0.0-paper.jar
 ```
 
 For **Spigot and CraftBukkit**, build with `mvn clean package -Pspigot`, which produces
-`target/SmpPlugin-3.2.0-spigot.jar`. The two APIs are not binary compatible; use the matching jar.
+`target/SmpPlugin-4.0.0-spigot.jar`. The two APIs are not binary compatible; use the matching jar.
 
 ## 📦 Installation
 
@@ -414,7 +414,7 @@ For **Spigot and CraftBukkit**, build with `mvn clean package -Pspigot`, which p
 5. Install optional dependencies for the integrations you want to use.
 6. Restart the server, or run `/smpplugin reload`, after configuration changes.
 
-### Upgrading to 3.2
+### Upgrading to 4.0
 
 - Your configuration is kept; `advent.yml` and `perks.yml` are created, and new settings (`ECONOMY` in
   `config.yml`, `AUTOSAVE-SECONDS` and `MONGODB.SYNC-INTERVAL-SECONDS` in `database.yml`, the new Halloween

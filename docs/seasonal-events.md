@@ -1,7 +1,7 @@
 # Seasonal events
 
 The Advent Calendar, the Halloween hub and Trick or Treat: how they start and stop, how to set them up, how to test
-them, and what rank perks add. For 3.2.0 and later.
+them, and what rank perks add. For 4.0.0 and later.
 
 ## Switching events: `/events`
 

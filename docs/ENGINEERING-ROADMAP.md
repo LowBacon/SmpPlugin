@@ -1,6 +1,6 @@
 # SmpPlugin engineering roadmap
 
-The working log for the 3.2 reliability pass. Each milestone records what changed, the commands that were run
+The working log for the 4.0 reliability pass. Each milestone records what changed, the commands that were run
 and their real results. Read this first when resuming work.
 
 ## How to build and test in this environment
@@ -209,17 +209,25 @@ reset, per-subcommand permissions and tab completion). **Commands run.** full su
 - `SeasonCalendar.validate()` at start and on reload (S9); a player is told when a reward's money is refused.
 - **Tests.** `managers/DatabaseManagerRedactionTest` (2), `AdventCalendarTest` (+1), `HalloweenHubTest` (+1).
   Full suite 375, 0 failures, 8 skipped. `mvn -o -s tools/central-only-settings.xml package` builds
-  `SmpPlugin-3.2.0-paper.jar` (27.7 MB); the local API stand-ins are not in it.
+  `SmpPlugin-4.0.0-paper.jar` (27.7 MB); the local API stand-ins are not in it.
 
 ### M8: documentation
 
-- Version 3.2.0 in `pom.xml`. README (New in 3.2, honest storage table, upgrade notes), Features.md (real sizes,
-  New in 3.2, storage, config files), CHANGELOG 3.2.0, COMPATIBILITY (3.2.0 not yet run on a live server),
+- Version 4.0.0 in `pom.xml`. README (New in 4.0, honest storage table, upgrade notes), Features.md (real sizes,
+  New in 4.0, storage, config files), CHANGELOG 4.0.0, COMPATIBILITY (4.0.0 not yet run on a live server),
   Modrinth text, and two guides: `docs/economy.md`, `docs/seasonal-events.md`.
+
+### M9: release 4.0.0
+
+- Version renamed from 3.2.0 to 4.0.0 (`pom.xml`, `version.txt`, docs, permission notes).
+- `.github/workflows/release.yml` builds the Paper and Spigot jars from the official repositories on GitHub
+  Actions, runs the tests for both, checks that the tag matches `pom.xml`, and publishes the release with
+  `.github/release-notes/<tag>.md`, both jars and `SHA256SUMS.txt`. Release jars come from there, never from the
+  sandbox build (which compiles against locally built APIs).
 
 ## Risks and limits that remain
 
-- **Nothing in 3.2 has been run on a live Minecraft server.** Everything server-facing (menus, sounds, particles,
+- **Nothing in 4.0 has been run on a live Minecraft server.** Everything server-facing (menus, sounds, particles,
   dialogs, FancyNpcs clicks, item rewards) is compiled against the Paper API and reviewed, not played.
 - Item-giving paths and `PendingItems` serialisation need a running server (the Paper registry) and are not
   unit-tested; their logic around the store is.
@@ -233,11 +241,11 @@ reset, per-subcommand permissions and tab completion). **Commands run.** full su
 
 ## Current task
 
-None in progress. 3.2.0 is complete on branch `claude/hopeful-darwin-btvnxm`.
+Release 4.0.0 from branch `claude/hopeful-darwin-btvnxm` (tag `v4.0.0`).
 
 ## Next tasks (suggested)
 
-1. Run 3.2.0 on a Paper 1.21.11 test server: `/events`, a full Advent test with `/advent test`, the Halloween hub
+1. Run 4.0.0 on a Paper 1.21.11 test server: `/events`, a full Advent test with `/advent test`, the Halloween hub
    pages, Trick or Treat houses with FancyNpcs, `/claimitems` with a full inventory, `/eco stats`.
 2. Build the Spigot profile on a machine that reaches `hub.spigotmc.org`.
 3. Run the economy against a real MySQL server (the upsert statements and deadlock retries).

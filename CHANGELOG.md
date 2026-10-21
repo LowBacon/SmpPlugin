@@ -1,8 +1,8 @@
 # Changelog
 
-## 3.2.0 — unreleased
+## 4.0.0 — 21 October 2026
 
-**SmpPlugin 3.2: money you can trust, and seasonal events you can switch live.** Every balance change is exact,
+**SmpPlugin 4.0: money you can trust, and seasonal events you can switch live.** Every balance change is exact,
 saved at once and recorded in a ledger. `/events` controls a new Advent Calendar, a Halloween hub and a reworked
 Trick or Treat; ranks get capped, fair perks from `perks.yml`. Runs on the same versions as 3.1 (Minecraft 1.21.11
 to 26.3). See [docs/economy.md](docs/economy.md) and [docs/seasonal-events.md](docs/seasonal-events.md).

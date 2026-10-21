@@ -1,0 +1,93 @@
+# Builds the Paper and Spigot jars from the official repositories, runs the tests for both, and publishes a
+# GitHub release with the jars and their checksums.
+#
+# Runs when a tag such as v4.0.0 is pushed, or by hand (Actions > Release > Run workflow) with the tag to create.
+# The tag must match <version> in pom.xml, and .github/release-notes/<tag>.md holds the release text.
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to publish, for example v4.0.0 (created on the chosen branch if it does not exist yet)'
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.event.inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  TAG: ${{ github.event.inputs.tag || github.ref_name }}
+
+jobs:
+  build:
+    name: Build the ${{ matrix.flavor }} jar
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        flavor: [paper, spigot]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Check that the tag matches pom.xml
+        run: |
+          VERSION=$(mvn -B -q help:evaluate -Dexpression=project.version -DforceStdout)
+          echo "pom.xml version: $VERSION, tag: $TAG"
+          if [ "v$VERSION" != "$TAG" ]; then
+            echo "::error::The tag $TAG does not match the pom.xml version $VERSION"
+            exit 1
+          fi
+          test -f ".github/release-notes/$TAG.md" || { echo "::error::.github/release-notes/$TAG.md is missing"; exit 1; }
+
+      - name: Build and test
+        run: mvn -B -P${{ matrix.flavor }} clean package
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SmpPlugin-${{ matrix.flavor }}
+          path: target/SmpPlugin-*-${{ matrix.flavor }}.jar
+          if-no-files-found: error
+
+  release:
+    name: Publish the release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Checksums
+        run: |
+          cd dist
+          ls -la
+          sha256sum *.jar > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG }}
+          target_commitish: ${{ github.sha }}
+          name: SmpPlugin ${{ env.TAG }}
+          body_path: .github/release-notes/${{ env.TAG }}.md
+          files: |
+            dist/*.jar
+            dist/SHA256SUMS.txt
+          fail_on_unmatched_files: true
+          make_latest: true

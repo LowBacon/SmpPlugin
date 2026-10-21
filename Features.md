@@ -8,12 +8,12 @@ An all-in-one **Minecraft SMP core plugin**. One jar replaces the usual stack of
 
 | | |
 |---|---|
-| **Plugin version** | `3.2.0`; `/smpplugin version` shows the installed build |
+| **Plugin version** | `4.0.0`; `/smpplugin version` shows the installed build |
 | **Minecraft** | `1.21.11`, `26.1`, `26.1.1`, `26.1.2`, `26.2` and `26.3` on Paper, Purpur, Spigot and CraftBukkit |
 | **Folia** | Not supported |
 | **Java** | 21 on 1.21.11, 25 on 26.x (the jars are Java 21 bytecode) |
 | **API** | Compiled against Paper API `1.21.11` (Spigot build: Spigot API `1.21.11`), checked against 26.3; `api-version: 1.21`, `folia-supported: false` |
-| **Build** | `mvn clean package` → `target/SmpPlugin-3.2.0-paper.jar` (Paper/Purpur); `-Pspigot` → `…-spigot.jar` (Spigot/CraftBukkit) |
+| **Build** | `mvn clean package` → `target/SmpPlugin-4.0.0-paper.jar` (Paper/Purpur); `-Pspigot` → `…-spigot.jar` (Spigot/CraftBukkit) |
 | **Size** | ~700 Java files, ~177,000 lines of Java, 220 commands, 100+ GUI menus, 43 config files and 8 language files |
 | **Update checker** | Checks GitHub (`LowBacon/SmpPlugin`, `version.txt` on `main`) for a newer version on startup |
 
@@ -47,7 +47,7 @@ disable itself. See [COMPATIBILITY.md](COMPATIBILITY.md).
 21. [How It Works](#-how-it-works)
 22. [New in 3.0](#-new-in-30)
 23. [New in 3.1](#-new-in-31)
-24. [New in 3.2](#-new-in-32)
+24. [New in 4.0](#-new-in-40)
 
 ---
 
@@ -829,7 +829,7 @@ until a Folia 26.3 build exists and the modules are verified there.
 
 ---
 
-## 🆕 New in 3.2
+## 🆕 New in 4.0
 
 ### 💵 Economy you can trust
 - **Whole cents.** Amounts are rounded half-up to the cent once, when they come in; nothing is stored as a

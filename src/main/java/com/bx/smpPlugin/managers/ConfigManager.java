@@ -2112,9 +2112,9 @@ public class ConfigManager {
     public FileConfiguration getFilter()        { return filter; }
     /** Spooky Calendar, Trick or Treat and the Halloween ambience (3.0). */
     public FileConfiguration getHalloween()     { return halloween; }
-    /** The Advent Calendar (3.2). */
+    /** The Advent Calendar (4.0). */
     public FileConfiguration getAdvent()        { return advent; }
-    /** Ranks (VIP, VIP+ ...) and what each one adds (3.2). */
+    /** Ranks (VIP, VIP+ ...) and what each one adds (4.0). */
     public FileConfiguration getPerks()         { return perks; }
     /** Daily rewards, challenges, events, emotes and the other 3.0 extras. */
     public FileConfiguration getExtras()        { return extras; }

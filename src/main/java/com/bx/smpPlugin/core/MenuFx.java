@@ -36,20 +36,13 @@ public final class MenuFx {
     }
 
     /**
-     * Plays a sound by its Bukkit name. For services that also run without a server (in tests the sound registry
-     * does not exist); unknown names are skipped.
+     * Plays a sound by its Minecraft key, e.g. {@code ui.toast.challenge_complete}. It never loads the
+     * {@link Sound} class, whose constants come from the server's registry, so services that also run without a
+     * server (the unit tests) can use it without breaking that registry for everything that runs after them.
      */
-    public static void sound(Player player, String name, float volume, float pitch) {
-        if (player == null) {
-            return;
-        }
-        try {
-            Sound sound = Text.sound(name);
-            if (sound != null) {
-                player.playSound(player.getLocation(), sound, volume, pitch);
-            }
-        } catch (LinkageError noRegistry) {
-            // No server, no sounds.
+    public static void soundKey(Player player, String key, float volume, float pitch) {
+        if (player != null && key != null && !key.isBlank()) {
+            player.playSound(player.getLocation(), key, volume, pitch);
         }
     }
 

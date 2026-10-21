@@ -135,7 +135,7 @@ public final class HalloweenHub {
             String name = milestone.getValue().getString("NAME", "&6" + milestone.getKey() + " " + candyName());
             Text.send(player, "HALLOWEEN.MILESTONE", "&6&lMilestone! &7{name}&7: {prize}", "{name}", name,
                     "{prize}", String.join("&7, ", reward.describe(plugin)));
-            com.bx.smpPlugin.core.MenuFx.sound(player, "UI_TOAST_CHALLENGE_COMPLETE", 0.7F, 1.2F);
+            com.bx.smpPlugin.core.MenuFx.soundKey(player, "ui.toast.challenge_complete", 0.7F, 1.2F);
         }
         return added;
     }
@@ -275,7 +275,7 @@ public final class HalloweenHub {
             }
             Text.send(player, "HALLOWEEN.QUEST-DONE", "&6&lQuest done! &7{quest}&7: {prize}", "{quest}", quest.name(),
                     "{prize}", String.join("&7, ", prize));
-            com.bx.smpPlugin.core.MenuFx.sound(player, "UI_TOAST_CHALLENGE_COMPLETE", 0.8F, 1.0F);
+            com.bx.smpPlugin.core.MenuFx.soundKey(player, "ui.toast.challenge_complete", 0.8F, 1.0F);
         }
     }
 

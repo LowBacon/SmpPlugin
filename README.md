@@ -386,7 +386,7 @@ SmpPlugin is written in **Java** and uses **Maven** as its build system.
 * Maven 3.9 or newer
 * To run: Paper, Purpur, Spigot or CraftBukkit **1.21.11 – 26.3** (Java 21 on 1.21.11, Java 25 on 26.x)
 
-Version 2.1 runs on **Minecraft 1.21.11 to 26.3** (`api-version: 1.21`, minimum checked at start-up).
+SmpPlugin runs on **Minecraft 1.21.11 to 26.3** (`api-version: 1.21`, minimum checked at start-up).
 For 1.21.10 and older use SmpPlugin 1.5. See [COMPATIBILITY.md](COMPATIBILITY.md).
 
 ### Build

@@ -78,10 +78,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # JDK 25 to build, as the README says: some provided APIs (SkinsRestorer 15.12) are Java 25 class files.
+      # pom.xml compiles with --release 21, so the jars stay Java 21 bytecode for 1.21.11 servers.
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '25'
           cache: maven
 
       - name: Build and test

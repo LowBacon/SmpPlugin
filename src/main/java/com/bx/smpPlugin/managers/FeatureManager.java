@@ -77,8 +77,10 @@ public class FeatureManager {
         FRIENDS("FRIENDS", "friends", "player friends/follows system.", "PLAYER_HEAD", "FRIEND"),
         SAFETY("SAFETY", "safety", "safety command and info.", "BOOK", "SAFETY"),
         ANTICHEAT("ANTICHEAT", "anti-cheat", "server-side movement, combat, block, inventory and x-ray checks with staff alerts and a ban queue.", "OBSERVER", null),
-        COINFLIP("COINFLIP", "coinflip", "/cf: start a coin flip or join one; the flip starts the moment someone joins.", "SUNFLOWER", null),
+        COINFLIP("COINFLIP", "coinflip", "1v1 coin flips for in-game currency with practice mode, history, stats and leaderboards.", "SUNFLOWER", null),
         HALLOWEEN("HALLOWEEN", "halloween", "Spooky Calendar, Trick or Treat, candy drops and pumpkin heads.", "JACK_O_LANTERN", null),
+        ADVENT("ADVENT", "advent calendar", "/advent: a winter calendar with a gift behind each door until Christmas Eve.", "SNOW_BLOCK", null),
+        PERKS("PERKS", "rank perks", "VIP, VIP+ and other rank perks from perks.yml (/perks).", "NETHER_STAR", null),
         DAILY_REWARDS("DAILY_REWARDS", "daily rewards", "/daily login rewards with a 7-day streak.", "CHEST_MINECART", null),
         CHALLENGES("CHALLENGES", "challenges", "/challenges: three new daily goals for everyone.", "TARGET", null),
         EVENTS("EVENTS", "events", "polls, giveaways, chat games and countdowns.", "FIREWORK_ROCKET", null),
@@ -87,12 +89,9 @@ public class FeatureManager {
         FUN("FUN", "fun commands", "emotes, rock paper scissors, rate, sit and fireworks.", "CAKE", null),
         UTILITIES("UTILITIES", "utility commands", "portable workbenches, back, near, seen and other helpers.", "CRAFTING_TABLE", null),
         STAFF_EXTRAS("STAFF_EXTRAS", "staff extras", "social and command spy, whois, permission tools and world commands.", "SPYGLASS", null),
-        GAMBLING("GAMBLING", "gambling", "/dice bets against the house.", "EMERALD", null),
+        GAMBLING("GAMBLING", "gambling", "/dice bets against the house and the /roulette head jackpot.", "EMERALD", null),
         GUIDE("GUIDE", "guide", "/guide: a getting-started guide that only lists features that are turned on.", "WRITTEN_BOOK", null),
-        BORDERS("BORDERS", "spawn and lobby borders", "real Minecraft world borders around the spawn and the lobby.", "IRON_BARS", null),
-        RANKED("RANKED", "ranked pvp", "/ranked: Elo-rated duels with a queue, tiers and a leaderboard.", "DIAMOND_SWORD", null),
-        SEASONAL_EVENTS("SEASONAL_EVENTS", "seasonal events", "/event: Advent, Christmas presents, the Easter egg hunt, Summer and custom events.", "CAKE", null),
-        SURVIVAL_RULES("SURVIVAL_RULES", "survival rules", "banned items and disabled recipes from survival-rules.yml.", "BARRIER", null);
+        BORDERS("BORDERS", "spawn and lobby borders", "real Minecraft world borders around the spawn and the lobby.", "IRON_BARS", null);
 
         private final String configKey;
         private final String displayName;
@@ -242,17 +241,17 @@ public class FeatureManager {
             case "anticheat" -> new Feature[]{Feature.ANTICHEAT};
             case "coinflip", "cf" -> new Feature[]{Feature.COINFLIP};
             case "halloween", "trickortreat" -> new Feature[]{Feature.HALLOWEEN};
+            case "advent" -> new Feature[]{Feature.ADVENT};
+            case "perks" -> new Feature[]{Feature.PERKS};
             case "daily" -> new Feature[]{Feature.DAILY_REWARDS};
             case "challenges" -> new Feature[]{Feature.CHALLENGES};
             case "poll", "giveaway", "chatgame", "countdown" -> new Feature[]{Feature.EVENTS};
             case "announcer" -> new Feature[]{Feature.ANNOUNCER};
             case "mail" -> new Feature[]{Feature.MAIL};
             case "slap", "highfive", "wave", "poke", "cheer", "rps", "firework", "rate", "sit" -> new Feature[]{Feature.FUN};
-            case "dice" -> new Feature[]{Feature.GAMBLING};
+            case "dice", "roulette" -> new Feature[]{Feature.GAMBLING};
             case "guide" -> new Feature[]{Feature.GUIDE};
             case "border" -> new Feature[]{Feature.BORDERS};
-            case "ranked" -> new Feature[]{Feature.DUELS, Feature.RANKED};
-            case "event", "advent", "easter" -> new Feature[]{Feature.SEASONAL_EVENTS};
             case "sidebar" -> new Feature[]{Feature.SCOREBOARD};
             case "craft", "anvil", "grindstone", "stonecutter", "loom", "smithing", "cartography",
                     "near", "seen", "coords", "back", "suicide", "ptime", "pweather", "repair", "skull", "lore",
@@ -458,12 +457,6 @@ public class FeatureManager {
             case OPTIMIZATION -> {
                 if (plugin.getOptimizationManager() != null) {
                     plugin.getOptimizationManager().reload();
-                }
-            }
-            case RANKED, SEASONAL_EVENTS, SURVIVAL_RULES -> {
-                // 4.0 parts start and stop for real: listeners, tasks and queues go away when off.
-                if (plugin.getV4Module() != null) {
-                    plugin.getV4Module().applyFeature(feature, isEnabled(feature));
                 }
             }
             default -> {

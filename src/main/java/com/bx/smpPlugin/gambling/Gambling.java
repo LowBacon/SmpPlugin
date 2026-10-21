@@ -3,36 +3,37 @@ package com.bx.smpPlugin.gambling;
 import com.bx.smpPlugin.SmpPlugin;
 
 /**
- * Starts and stops /dice and /cf as one unit. On start, any bet a crash left in escrow is given
- * back first, and money the old (pre-3.2) CoinFlip still held is returned. On stop, every roll and
- * flip is settled before the escrow file is closed.
+ * Starts and stops /dice and /roulette as one unit. On start, any bet a crash left in escrow is
+ * given back first. On stop, every roll and round is settled (the database writer then saves it).
  */
 public final class Gambling {
 
     private final GamblingEscrow escrow;
     private final DiceGame dice;
-    private final CoinFlip coinFlip;
+    private final Roulette roulette;
 
     public Gambling(SmpPlugin plugin) {
-        Wallet wallet = new Wallet(plugin);
-        this.escrow = new GamblingEscrow(plugin, wallet);
+        this.escrow = new GamblingEscrow(plugin);
+        Wallet wallet = new Wallet(plugin, escrow);
         escrow.recover();
-        LegacyCoinFlipCleanup.run(plugin, wallet);
         this.dice = new DiceGame(plugin, wallet, escrow);
-        this.coinFlip = new CoinFlip(plugin, wallet, escrow);
+        this.roulette = new Roulette(plugin, wallet, escrow);
     }
 
     public DiceGame dice() {
         return dice;
     }
 
-    public CoinFlip coinFlip() {
-        return coinFlip;
+    public Roulette roulette() {
+        return roulette;
     }
 
     public void shutdown() {
         dice.shutdown();
-        coinFlip.shutdown();
-        escrow.shutdown();
+        roulette.shutdown();
+        if (escrow.size() > 0) {
+            // Only possible when a payout was refused; those holds are paid at the next start.
+            org.bukkit.Bukkit.getLogger().info("[Gambling] " + escrow.size() + " bet(s) stay held until the next start.");
+        }
     }
 }

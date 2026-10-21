@@ -2,145 +2,98 @@ package com.bx.smpPlugin.economy;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Locale;
 import java.util.OptionalLong;
 
 /**
- * Money arithmetic in whole cents.
+ * Money as whole cents. The economy adds, subtracts and compares {@code long} cents, so balances never drift;
+ * {@code double} only appears at the edges (Vault, config files, placeholders and the {@code money} column).
  *
- * <p>Balances are stored as decimal numbers (the database column predates 4.0), but every change
- * is worked out here in {@code long} cents: the amount and the balance are rounded to the cent
- * once, added or subtracted exactly with overflow checks, and turned back into a decimal. A
- * {@code double} holds every whole number of cents exactly up to 2^53, so balances stay exact up
- * to {@link #PRECISION_LIMIT_CENTS} (90 trillion); larger balances are refused.
+ * <p>A balance holds up to {@link #MAX_CENTS} ({@code Long.MAX_VALUE} cents, about 92 quadrillion) and is stored
+ * exactly in {@code players.money_cents}. A double carries every cent only up to {@link #DOUBLE_EXACT_CENTS}
+ * (2^45 units, about 35 trillion): above that neighbouring doubles are more than a cent apart, so an amount passed
+ * as a double is the nearest one the double can still tell apart.</p>
  */
 public final class Money {
 
-    /** 90,000,000,000,000.00: below 2^53 cents, the largest balance a double stores exactly. */
-    public static final long PRECISION_LIMIT_CENTS = 9_000_000_000_000_000L;
+    public static final long CENTS_PER_UNIT = 100L;
+
+    /** The largest balance there is: 92,233,720,368,547,758.07. */
+    public static final long MAX_CENTS = Long.MAX_VALUE;
+
+    /** 2^45 units (about 35 trillion) in cents: up to here a double carries every cent exactly. */
+    public static final long DOUBLE_EXACT_CENTS = (1L << 45) * CENTS_PER_UNIT;
+
+    /** Every amount from here on is beyond {@link #MAX_CENTS}; checked first so it never becomes a huge decimal. */
+    private static final double BEYOND_MAX_UNITS = 1e17D;
+    private static final BigDecimal MAX_DECIMAL = BigDecimal.valueOf(MAX_CENTS);
 
     private Money() {
     }
 
     /**
-     * An amount in cents, rounded half-up. Empty for NaN, infinity, negative numbers and anything
-     * past {@link #PRECISION_LIMIT_CENTS}.
+     * Converts an amount to cents, rounding half up to the nearest cent. Empty for NaN, infinity and amounts
+     * beyond {@link #MAX_CENTS} either way.
      */
     public static OptionalLong toCents(double amount) {
-        if (!Double.isFinite(amount) || amount < 0D) {
+        if (!Double.isFinite(amount) || Math.abs(amount) >= BEYOND_MAX_UNITS) {
             return OptionalLong.empty();
         }
-        BigDecimal cents = BigDecimal.valueOf(amount).movePointRight(2).setScale(0, RoundingMode.HALF_UP);
-        if (cents.compareTo(BigDecimal.valueOf(PRECISION_LIMIT_CENTS)) > 0) {
-            return OptionalLong.empty();
-        }
-        return OptionalLong.of(cents.longValueExact());
-    }
-
-    /** A stored balance in cents. A corrupt stored value (NaN, negative) counts as zero. */
-    public static long balanceCents(double storedBalance) {
-        if (!Double.isFinite(storedBalance) || storedBalance <= 0D) {
-            return 0L;
-        }
-        if (storedBalance >= PRECISION_LIMIT_CENTS / 100D) {
-            return PRECISION_LIMIT_CENTS;
-        }
-        return toCents(storedBalance).orElse(0L);
-    }
-
-    public static double toDouble(long cents) {
-        return cents / 100D;
+        BigDecimal cents = BigDecimal.valueOf(amount).setScale(2, RoundingMode.HALF_UP).movePointRight(2);
+        return cents.abs().compareTo(MAX_DECIMAL) > 0 ? OptionalLong.empty() : OptionalLong.of(cents.longValueExact());
     }
 
     /**
-     * The balance after adding, or empty when it would pass {@code maxCents} (or overflow).
-     * {@code maxCents <= 0} means the precision limit.
+     * The amount for whole cents. Up to {@link #DOUBLE_EXACT_CENTS} it reads back as exactly these cents; above
+     * that it is the nearest double that does not read back as more, so a balance shown or handed to another
+     * plugin as a double is never overstated (and withdrawing all of it still succeeds).
      */
-    public static OptionalLong add(long balanceCents, long amountCents, long maxCents) {
-        long limit = effectiveLimit(maxCents);
-        if (amountCents < 0L || balanceCents < 0L) {
-            return OptionalLong.empty();
+    public static double toUnits(long cents) {
+        double units = cents / (double) CENTS_PER_UNIT;
+        if (cents >= -DOUBLE_EXACT_CENTS && cents <= DOUBLE_EXACT_CENTS) {
+            return units;
         }
-        long result;
-        try {
-            result = Math.addExact(balanceCents, amountCents);
-        } catch (ArithmeticException overflow) {
-            return OptionalLong.empty();
+        while (overstates(units, cents)) {
+            units = cents > 0L ? Math.nextDown(units) : Math.nextUp(units);
         }
-        return result > limit ? OptionalLong.empty() : OptionalLong.of(result);
+        return units;
     }
 
-    /** The balance after taking the amount away, or empty when the balance is too small. */
-    public static OptionalLong subtract(long balanceCents, long amountCents) {
-        if (amountCents < 0L || balanceCents < amountCents) {
-            return OptionalLong.empty();
+    private static boolean overstates(double units, long cents) {
+        OptionalLong back = toCents(units);
+        return back.isEmpty() || (cents > 0L ? back.getAsLong() > cents : back.getAsLong() < cents);
+    }
+
+    /**
+     * Reads a stored balance as cents. Rows written by older versions can carry float noise
+     * (e.g. {@code 10.000000001}), which is rounded to the nearest cent; negative and NaN values read as 0 and
+     * values beyond the largest balance as {@link #MAX_CENTS}.
+     */
+    public static long storedToCents(double stored) {
+        if (Double.isNaN(stored) || stored <= 0D) {
+            return 0L;
         }
-        return OptionalLong.of(balanceCents - amountCents);
+        return toCents(stored).orElse(MAX_CENTS);
     }
 
-    public static long effectiveLimit(long maxCents) {
-        return maxCents <= 0L || maxCents > PRECISION_LIMIT_CENTS ? PRECISION_LIMIT_CENTS : maxCents;
-    }
-
-    /** The fee on a payment, {@code percent} of it rounded down to the cent, never the whole payment. */
-    public static long fee(long amountCents, double percent) {
-        if (!Double.isFinite(percent) || percent <= 0D || amountCents <= 0L) {
+    /**
+     * {@code percent}% of {@code cents}, rounded half up to a cent. {@code percent} is clamped to 0..100.
+     */
+    public static long percentOf(long cents, double percent) {
+        if (cents <= 0L || !Double.isFinite(percent) || percent <= 0D) {
             return 0L;
         }
         double clamped = Math.min(100D, percent);
-        long fee = BigDecimal.valueOf(amountCents).multiply(BigDecimal.valueOf(clamped))
-                .divide(BigDecimal.valueOf(100L), 0, RoundingMode.DOWN).longValue();
-        return Math.min(fee, amountCents);
+        return BigDecimal.valueOf(cents).multiply(BigDecimal.valueOf(clamped))
+                .divide(BigDecimal.valueOf(100L), 0, RoundingMode.HALF_UP).longValueExact();
     }
 
-    /**
-     * Reads an amount a player typed: digits with an optional decimal point and an optional
-     * K/M/B/T/Q suffix ("1.5k", "250", "2m"). Commas and underscores between digits are ignored.
-     * Empty for anything else, including NaN, "Infinity", hex, exponents, negative or zero amounts,
-     * and amounts that round to less than a cent.
-     */
-    public static OptionalLong parsePositive(String input) {
-        if (input == null) {
-            return OptionalLong.empty();
-        }
-        String clean = input.trim().replace(",", "").replace("_", "").toLowerCase(Locale.ROOT);
-        if (clean.startsWith("$")) {
-            clean = clean.substring(1);
-        }
-        if (clean.isEmpty() || clean.length() > 32) {
-            return OptionalLong.empty();
-        }
-        int exponent = 0;
-        char last = clean.charAt(clean.length() - 1);
-        switch (last) {
-            case 'k' -> exponent = 3;
-            case 'm' -> exponent = 6;
-            case 'b' -> exponent = 9;
-            case 't' -> exponent = 12;
-            case 'q' -> exponent = 15;
-            default -> {
-            }
-        }
-        if (exponent > 0) {
-            clean = clean.substring(0, clean.length() - 1);
-        }
-        if (!clean.matches("\\d+(\\.\\d+)?|\\.\\d+")) {
-            return OptionalLong.empty();
-        }
-        BigDecimal cents;
+    /** {@code a + b}, or empty when the result would pass {@link #MAX_CENTS} either way. */
+    public static OptionalLong add(long a, long b) {
         try {
-            cents = new BigDecimal(clean).movePointRight(exponent + 2).setScale(0, RoundingMode.HALF_UP);
-        } catch (NumberFormatException | ArithmeticException exception) {
+            long sum = Math.addExact(a, b);
+            return sum == Long.MIN_VALUE ? OptionalLong.empty() : OptionalLong.of(sum);
+        } catch (ArithmeticException overflow) {
             return OptionalLong.empty();
         }
-        if (cents.signum() <= 0 || cents.compareTo(BigDecimal.valueOf(PRECISION_LIMIT_CENTS)) > 0) {
-            return OptionalLong.empty();
-        }
-        return OptionalLong.of(cents.longValueExact());
-    }
-
-    /** Plain "1234.50" text for a log or the ledger. */
-    public static String plain(long cents) {
-        return BigDecimal.valueOf(cents, 2).toPlainString();
     }
 }

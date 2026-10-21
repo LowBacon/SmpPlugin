@@ -121,7 +121,7 @@ public final class SmpPlugin extends JavaPlugin {
     private ServerNotificationManager serverNotificationManager;
     private PlayerSettingToggles playerSettingToggles;
     private com.bx.smpPlugin.core.V3Module v3Module;
-    private com.bx.smpPlugin.core.V4Module v4Module;
+    private NametagManager nametagManager;
     private DialogGateway dialogManager;
     private PortalManager portalManager;
     private AmethystToolsManager amethystToolsManager;
@@ -140,6 +140,7 @@ public final class SmpPlugin extends JavaPlugin {
     private SpawnerManager spawnerManager;
     private AntiEspManager antiEspManager;
     private AntiCheatManager antiCheatManager;
+    private com.bx.smpPlugin.coinflip.bukkit.CoinFlipModule coinFlipModule;
     private SpawnStashManager spawnStashManager;
     private FakePlayerManager fakePlayerManager;
     private HideManager hideManager;
@@ -170,6 +171,8 @@ public final class SmpPlugin extends JavaPlugin {
 
         instance = this;
 
+        printStartupBanner();
+
         checkPlaceholderApi();
 
         SpigotScheduler = new SpigotScheduler(this);
@@ -179,8 +182,6 @@ public final class SmpPlugin extends JavaPlugin {
 
         configManager = new ConfigManager(this);
         configManager.loadAll();
-        com.bx.smpPlugin.core.Branding.load(configManager.getConfig());
-        printStartupBanner();
         List<ConfigValidator.Problem> configProblems = ConfigValidator.validateDirectory(getDataFolder());
         if (!configProblems.isEmpty()) {
             getLogger().severe("====================================================");
@@ -199,6 +200,16 @@ public final class SmpPlugin extends JavaPlugin {
 
         databaseManager = new DatabaseManager(this);
         databaseManager.initialize();
+        if (!databaseManager.isReady()) {
+            // Without storage every balance, home, item and stat change would vanish at the next restart, and
+            // Vault would hand other plugins an economy that saves nothing. Refuse to run instead.
+            getLogger().severe("====================================================");
+            getLogger().severe("The database could not be started (see the error above), so SmpPlugin is disabling");
+            getLogger().severe("itself. Nothing was changed. Fix database.yml (or the database server) and restart.");
+            getLogger().severe("====================================================");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
         playerLogsManager = new PlayerLogsManager(this);
         serverWipeManager = new ServerWipeManager(this);
         serverWipeManager.recoverOrRecreatePendingWorlds();
@@ -275,6 +286,7 @@ public final class SmpPlugin extends JavaPlugin {
         billfordManager = new BillfordManager(this);
         billfordManager.load();
         leaderboardManager = new LeaderboardManager(this);
+        leaderboardManager.warmUp();
         enderChestManager = new EnderChestManager(this);
         freezeManager = new FreezeManager(this);
         godModeManager = new GodModeManager();
@@ -298,6 +310,13 @@ public final class SmpPlugin extends JavaPlugin {
             antiCheatManager = null;
             getLogger().log(Level.SEVERE, "Could not start the anti-cheat; it is off for this session.", error);
         }
+        try {
+            coinFlipModule = new com.bx.smpPlugin.coinflip.bukkit.CoinFlipModule(this);
+            coinFlipModule.start();
+        } catch (RuntimeException | LinkageError error) {
+            coinFlipModule = null;
+            getLogger().log(Level.SEVERE, "Could not start CoinFlip; it is off for this session. No currency was moved.", error);
+        }
         spawnStashManager = new SpawnStashManager(this);
         fakePlayerManager = new FakePlayerManager(this);
         redisManager = new RedisManager(this);
@@ -317,6 +336,8 @@ public final class SmpPlugin extends JavaPlugin {
         tablistManager = new TablistManager(this);
         hideManager = new HideManager(this);
         hideManager.loadAll();
+        nametagManager = new NametagManager(this);
+        nametagManager.start(getServer().getOnlinePlayers());
         teleportManager = new TeleportManager(this);
         rtpManager = new RTPManager(this);
         rtpZoneManager = new RTPZoneManager(this);
@@ -330,9 +351,6 @@ public final class SmpPlugin extends JavaPlugin {
         initializeLuckPermsTablistRefreshBridge();
         initializeSkinsRestorerTablistRefreshBridge();
 
-        // The plugin's own placeholders work in every message, with or without PlaceholderAPI.
-        com.bx.smpPlugin.core.InternalPlaceholders.install(new com.bx.smpPlugin.api.PlaceholderResolver(this));
-
         // 5. Listeners
         registerListeners();
 
@@ -342,6 +360,8 @@ public final class SmpPlugin extends JavaPlugin {
         // 7. Background tasks
         ScoreboardTask.start(this);
         TablistTask.start(this);
+        getSpigotScheduler().runGlobalTimer(() -> nametagManager.refreshAll(getServer().getOnlinePlayers()),
+                nametagManager.updateTicks(), nametagManager.updateTicks());
         ShardTask.start(this); // passive "everywhere" shards (per minute)
         ShardCuboidTask.start(this); // spawn cuboid countdown + reward (per second)
         RTPZoneTask.start(this);
@@ -364,7 +384,6 @@ public final class SmpPlugin extends JavaPlugin {
         // 8. PlaceholderAPI expansion
         if (getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) {
             new EconomyExpansion(this).register();
-            new com.bx.smpPlugin.api.SmpExpansion(this).register();
             new SmpPluginExpansion(this).register();
             new CustomSmpExpansion(this).register();
             new FinnishSmpExpansion(this).register();  // Legacy alias for compatibility
@@ -388,10 +407,6 @@ public final class SmpPlugin extends JavaPlugin {
         // 9. Everything added in 3.0 (calendar, daily rewards, events, extra commands).
         v3Module = new com.bx.smpPlugin.core.V3Module(this);
         v3Module.enable();
-
-        // 10. Everything added in 4.0 (ledger, ranked PvP, seasonal events, survival rules, diagnostics).
-        v4Module = new com.bx.smpPlugin.core.V4Module(this);
-        v4Module.enable();
 
         syncCommands();
         verifyPermissionRegistration();
@@ -438,8 +453,9 @@ public final class SmpPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if (v4Module != null) {
-            v4Module.disable();
+        if (nametagManager != null) {
+            // The main scoreboard is saved with the world; the name tag teams must not be.
+            nametagManager.shutdown();
         }
         if (v3Module != null) {
             v3Module.disable();
@@ -480,6 +496,9 @@ public final class SmpPlugin extends JavaPlugin {
         }
         if (antiCheatManager != null) {
             antiCheatManager.shutdown();
+        }
+        if (coinFlipModule != null) {
+            coinFlipModule.shutdown();
         }
         if (spawnStashManager != null) {
             spawnStashManager.shutdown();
@@ -562,7 +581,6 @@ public final class SmpPlugin extends JavaPlugin {
             databaseManager.close();
         }
         getServer().getServicesManager().unregisterAll(this);
-        com.bx.smpPlugin.core.InternalPlaceholders.uninstall();
         getLogger().info("SmpPlugin disabled.");
     }
 
@@ -571,9 +589,8 @@ public final class SmpPlugin extends JavaPlugin {
     private void printStartupBanner() {
         var console = getServer().getConsoleSender();
         console.sendMessage("");
-        console.sendMessage("§b§lSmpPlugin §7v" + getDescription().getVersion()
-                + " §8| §7server name: §f" + com.bx.smpPlugin.core.Branding.name());
-        console.sendMessage("§7Starting up...");
+        console.sendMessage("§b§lSmpPlugin §7v" + getDescription().getVersion());
+        console.sendMessage("§aPlugin enabled successfully.");
         console.sendMessage("");
     }
 
@@ -640,6 +657,9 @@ public final class SmpPlugin extends JavaPlugin {
             registerListener("AntiCheatListener", () -> new AntiCheatListener(antiCheatManager));
             registerListener("AntiCheatPlayerListener", () -> new AntiCheatPlayerListener(this, antiCheatManager));
             antiCheatManager.start();
+        }
+        if (coinFlipModule != null) {
+            registerListener("CoinFlipListener", () -> new com.bx.smpPlugin.coinflip.bukkit.CoinFlipListener(coinFlipModule));
         }
     }
 
@@ -722,6 +742,15 @@ public final class SmpPlugin extends JavaPlugin {
         BalanceCommand balCmd = new BalanceCommand(this);
         setExecutor("balance", balCmd);
         setExecutor("pay", new PayCommand(this));
+        BaltopCommand baltopCommand = new BaltopCommand(this);
+        setExecutor("baltop", baltopCommand, FeatureManager.Feature.LEADERBOARDS);
+        setTabCompleter("baltop", baltopCommand);
+        TransactionsCommand transactionsCommand = new TransactionsCommand(this);
+        setExecutor("transactions", transactionsCommand);
+        setTabCompleter("transactions", transactionsCommand);
+        EcoCommand ecoCommand = new EcoCommand(this);
+        setExecutor("eco", ecoCommand);
+        setTabCompleter("eco", ecoCommand);
         setExecutor("addmoney", new AddMoneyCommand(this));
         setExecutor("removemoney", new RemoveMoneyCommand(this));
         setExecutor("setmoney", new SetMoneyCommand(this));
@@ -940,6 +969,12 @@ public final class SmpPlugin extends JavaPlugin {
         if (antiCheatManager != null) {
             setExecutor("anticheat", new AntiCheatCommand(this, antiCheatManager), FeatureManager.Feature.ANTICHEAT);
         }
+        if (coinFlipModule != null) {
+            setExecutor("coinflip", new com.bx.smpPlugin.coinflip.bukkit.CoinFlipCommand(coinFlipModule), FeatureManager.Feature.COINFLIP);
+            com.bx.smpPlugin.coinflip.bukkit.CoinFlipAdminCommand coinFlipAdmin = new com.bx.smpPlugin.coinflip.bukkit.CoinFlipAdminCommand(coinFlipModule);
+            setExecutor("coinflipadmin", coinFlipAdmin);
+            setTabCompleter("coinflipadmin", coinFlipAdmin);
+        }
     }
 
     private void setExecutor(String commandName, CommandExecutor executor, FeatureManager.Feature... requiredFeatures) {
@@ -950,8 +985,7 @@ public final class SmpPlugin extends JavaPlugin {
         }
 
         if (requiredFeatures == null || requiredFeatures.length == 0) {
-            // Still wrapped, so /smp diagnostics can time it; with no features it never blocks.
-            command.setExecutor(new FeatureCommandExecutor(this, executor));
+            command.setExecutor(executor);
             return;
         }
 
@@ -1152,7 +1186,6 @@ public final class SmpPlugin extends JavaPlugin {
             teleportManager.restoreAllRtpChunkThrottles();
         }
         configManager.reload();
-        com.bx.smpPlugin.core.Branding.load(configManager.getConfig());
         languageManager.reload();
         crashProtectionManager.reload();
         currencyManager.reload();
@@ -1204,14 +1237,14 @@ public final class SmpPlugin extends JavaPlugin {
             antiCheatManager.reload().ifPresent(problem ->
                     getLogger().warning("anticheat.yml was not reloaded: " + problem));
         }
+        if (coinFlipModule != null) {
+            coinFlipModule.reload().ifPresent(problem ->
+                    getLogger().warning("CoinFlip configuration was not reloaded: " + problem));
+        }
         if (v3Module != null) {
             v3Module.reload();
         }
-        if (v4Module != null) {
-            v4Module.reload();
-        }
         if (scoreboardManager != null) {
-            scoreboardManager.recheckOtherPlugins();
             scoreboardManager.markDirty();
         }
         if (playerDataManager != null) {
@@ -1236,8 +1269,8 @@ public final class SmpPlugin extends JavaPlugin {
         }
         leaderboardManager.invalidateAll();
         scoreboardManager.updateAll();
-        tablistManager.recheckOtherPlugins();
         tablistManager.updateAll();
+        nametagManager.reload(getServer().getOnlinePlayers());
         if (lunarRichPresenceManager != null) {
             lunarRichPresenceManager.reload();
         } else {
@@ -1363,10 +1396,6 @@ public final class SmpPlugin extends JavaPlugin {
     }
 
     /** The 3.0 features; null until the plugin has finished enabling. */
-    public com.bx.smpPlugin.core.V4Module getV4Module() {
-        return v4Module;
-    }
-
     public com.bx.smpPlugin.core.V3Module getV3Module() {
         return v3Module;
     }
@@ -1465,6 +1494,10 @@ public final class SmpPlugin extends JavaPlugin {
 
     public LeaderboardManager getLeaderboardManager() {
         return leaderboardManager;
+    }
+
+    public NametagManager getNametagManager() {
+        return nametagManager;
     }
 
     public ScoreboardManager getScoreboardManager() {
@@ -1601,6 +1634,9 @@ public final class SmpPlugin extends JavaPlugin {
     }
 
     /** Null when the anti-cheat failed to start. */
+    public com.bx.smpPlugin.coinflip.bukkit.CoinFlipModule getCoinFlipModule() {
+        return coinFlipModule;
+    }
 
     public AntiCheatManager getAntiCheatManager() {
         return antiCheatManager;

@@ -44,14 +44,16 @@ public final class LobbyManager {
     // The lobby area. It is kept with a movement clamp; /border lobby can also show it as a real
     // Minecraft border (world.BorderManager), which sets this area to the same square.
     //
-    // Internally a rectangle (minX/maxX/minZ/maxZ): a 200 x 200 square around the lobby when it is
-    // first set, or the square chosen with /border lobby set <size>. Older versions could also store
-    // an exact rectangle; it keeps working.
+    // Internally always a rectangle (minX/maxX/minZ/maxZ), settable two ways:
+    //  - /lobby border <radius>: a square centered on the lobby location
+    //  - /lobby border pos1 + /lobby border pos2: an exact rectangle from two in-world corners
     private volatile boolean borderEnabled;
     private volatile double borderMinX;
     private volatile double borderMaxX;
     private volatile double borderMinZ;
     private volatile double borderMaxZ;
+
+    private final Map<UUID, double[]> pendingBorderCorner1 = new ConcurrentHashMap<>();
 
     private final Map<UUID, PlayerLocation> lastSmpLocations = new ConcurrentHashMap<>();
     private final Map<UUID, SavedInventory> savedInventories = new ConcurrentHashMap<>();
@@ -103,32 +105,6 @@ public final class LobbyManager {
 
     public boolean hasLobbyLocation() {
         return lobbyLocation != null;
-    }
-
-    /**
-     * Removes the lobby: players stop being sent there on join, /lobby says it is not set up, and the
-     * lobby protection, scoreboard and area no longer apply anywhere. Anyone standing in the lobby is
-     * sent back to the SMP first, so their saved survival inventory is given back. The lobby's area
-     * is forgotten too, so a later /setlobby starts with a fresh one.
-     */
-    public boolean deleteLobby() {
-        if (lobbyLocation == null) {
-            return false;
-        }
-        for (Player online : org.bukkit.Bukkit.getOnlinePlayers()) {
-            if (isInLobby(online)) {
-                sendToSurvival(online);
-            }
-        }
-        FileConfiguration lobby = config();
-        lobby.set("LOCATIONS.LOBBY-LOCATION", "");
-        lobby.set("BORDER.MIN-X", null);
-        lobby.set("BORDER.MAX-X", null);
-        lobby.set("BORDER.MIN-Z", null);
-        lobby.set("BORDER.MAX-Z", null);
-        boolean saved = plugin.getConfigManager().saveLobby();
-        lobbyLocation = null;
-        return saved;
     }
 
     public boolean setLobbyLocation(Location location) {
@@ -354,6 +330,12 @@ public final class LobbyManager {
         return String.format(Locale.ROOT, "%.0f x %.0f", borderMaxX - borderMinX, borderMaxZ - borderMinZ);
     }
 
+    /** Sets a square border of the given half-width, centered on the lobby location. */
+    public void setBorderRadius(double radius) {
+        applyRadius(Math.max(1.0, radius));
+        persistBorder();
+    }
+
     /**
      * Sets the lobby area to a square of the given half-width around a point. Used by /border lobby,
      * so the lobby area and the visible Minecraft border are the same square.
@@ -379,6 +361,37 @@ public final class LobbyManager {
         borderMaxX = centerX + radius;
         borderMinZ = centerZ - radius;
         borderMaxZ = centerZ + radius;
+    }
+
+    /**
+     * First step of setting an exact rectangular border: remembers this corner for the player.
+     * Nothing is persisted until {@link #setBorderCorner2(Player, Location)} is also called.
+     */
+    public void setBorderCorner1(Player player, Location location) {
+        pendingBorderCorner1.put(player.getUniqueId(), new double[]{location.getX(), location.getZ()});
+    }
+
+    /**
+     * Completes a two-corner border definition started with {@link #setBorderCorner1}. Returns
+     * false if the player hasn't set a first corner yet this session.
+     */
+    public boolean setBorderCorner2(Player player, Location location) {
+        double[] corner1 = pendingBorderCorner1.remove(player.getUniqueId());
+        if (corner1 == null) {
+            return false;
+        }
+        double x2 = location.getX();
+        double z2 = location.getZ();
+        borderMinX = Math.min(corner1[0], x2);
+        borderMaxX = Math.max(corner1[0], x2);
+        borderMinZ = Math.min(corner1[1], z2);
+        borderMaxZ = Math.max(corner1[1], z2);
+        persistBorder();
+        return true;
+    }
+
+    public boolean hasPendingBorderCorner1(Player player) {
+        return pendingBorderCorner1.containsKey(player.getUniqueId());
     }
 
     private void persistBorder() {

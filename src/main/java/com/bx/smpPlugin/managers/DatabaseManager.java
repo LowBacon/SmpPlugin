@@ -1,6 +1,8 @@
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
+import com.bx.smpPlugin.economy.EconomyStore;
+import com.bx.smpPlugin.economy.Money;
 import com.bx.smpPlugin.utils.ItemSerializationUtils;
 import com.bx.smpPlugin.utils.LazyLocation;
 import com.bx.smpPlugin.models.PlayerWipeArchive;
@@ -111,22 +113,16 @@ public class DatabaseManager {
     private final SmpPlugin plugin;
     private Connection rawConnection;
     private Connection connection;
-    /** Writes queued at once before callers start running their own writes (backpressure). */
-    static final int WRITE_QUEUE_LIMIT = 50_000;
     // One writer thread keeps background writes (sell history, shop logs) in order and off the
-    // main thread. The connection proxy already serialises access with the other callers. The
-    // queue is bounded: past WRITE_QUEUE_LIMIT the caller runs its write itself, which slows the
-    // caller down instead of letting memory grow or dropping a write.
-    private final java.util.concurrent.ThreadPoolExecutor asyncExecutor = new java.util.concurrent.ThreadPoolExecutor(
-            1, 1, 0L, java.util.concurrent.TimeUnit.MILLISECONDS,
-            new java.util.concurrent.LinkedBlockingQueue<>(WRITE_QUEUE_LIMIT),
-            runnable -> {
-                Thread thread = new Thread(runnable, "SmpPlugin-DB-Writer");
-                thread.setDaemon(true);
-                return thread;
-            },
-            new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy());
+    // main thread. The connection proxy already serialises access with the other callers.
+    private final java.util.concurrent.ExecutorService asyncExecutor = java.util.concurrent.Executors.newSingleThreadExecutor(runnable -> {
+        Thread thread = new Thread(runnable, "SmpPlugin-DB-Writer");
+        thread.setDaemon(true);
+        return thread;
+    });
     private DatabaseType databaseType = DatabaseType.SQLITE;
+    /** True once the schema is in place; false before, after a failed start and after close. */
+    private volatile boolean ready;
     private MongoClient mongoClient;
     private MongoDatabase mongoDatabase;
     private boolean mongoBridgeActive;
@@ -152,15 +148,47 @@ public class DatabaseManager {
             ensureStaffModeColumns();
             ensureHomeColumns();
             ensureSpawnerColumns();
+            EconomyStore.createSchema(connection, this::executeSchema);
 
             if (mongoBridgeActive) {
                 importMongoSnapshotIntoSqlite();
             }
 
+            ready = true;
             plugin.getLogger().info("Database connected successfully using " + databaseType.name() + ".");
         } catch (Exception e) {
-            plugin.getLogger().log(Level.SEVERE, "Failed to initialize database", e);
+            ready = false;
+            // Driver errors can repeat the connection string, which may hold a user name and password.
+            plugin.getLogger().log(Level.SEVERE, "Failed to initialize database", redacted(e, 0));
         }
+    }
+
+    /** Hides credentials in connection strings: {@code scheme://user:secret@host} and {@code password=...}. */
+    static String redact(String text) {
+        if (text == null) {
+            return null;
+        }
+        return text.replaceAll("(?i)([a-z][a-z0-9+.-]*://)[^\\s/@]+@", "$1***@")
+                .replaceAll("(?i)(password|pwd)=[^&;\\s]*", "$1=***");
+    }
+
+    /** A copy of an exception chain with every message passed through {@link #redact}, keeping the stack traces. */
+    static Throwable redacted(Throwable original, int depth) {
+        if (original == null || depth > 8) {
+            return null;
+        }
+        Throwable copy = new Exception(original.getClass().getName() + ": " + redact(original.getMessage()),
+                redacted(original.getCause(), depth + 1));
+        copy.setStackTrace(original.getStackTrace());
+        return copy;
+    }
+
+    /**
+     * True when the database started and has not been closed. A cheap flag (no connection call), so the economy can
+     * check it before every change without waiting on the connection lock.
+     */
+    public boolean isReady() {
+        return ready && connection != null;
     }
 
     private void initializeSqliteConnection(File dbFile) throws Exception {
@@ -716,6 +744,9 @@ public class DatabaseManager {
         ensureColumnExists("players", "follow_alerts_enabled", "INTEGER DEFAULT 1");
         ensureColumnExists("players", "explosion_sounds_enabled", "INTEGER DEFAULT 1");
         ensureColumnExists("players", "display_donutplus_enabled", "INTEGER DEFAULT 1");
+        ensureColumnExists("players", "money_version", "BIGINT DEFAULT 0");
+        // The exact balance; NULL on rows from before 4.1.0 until they are next saved (see EconomyStore.resolveCents).
+        ensureColumnExists("players", "money_cents", "BIGINT");
     }
 
     private void ensurePortalColumns() throws SQLException {
@@ -949,7 +980,7 @@ public class DatabaseManager {
                 UUID.fromString(rs.getString("uuid")),
                 rs.getString("username")
         );
-        data.setMoney(rs.getDouble("money"));
+        data.setMoneyCents(EconomyStore.resolveCents(rs.getDouble("money"), optionalNullableLong(rs, "money_cents")));
         data.setShards(rs.getLong("shards"));
         data.setKills(rs.getInt("kills"));
         data.setDeaths(rs.getInt("deaths"));
@@ -1013,8 +1044,28 @@ public class DatabaseManager {
         data.setFollowAlertsEnabled(rs.getInt("follow_alerts_enabled") != 0);
         data.setExplosionSoundsEnabled(rs.getInt("explosion_sounds_enabled") != 0);
         data.setDisplayDonutPlusEnabled(rs.getInt("display_donutplus_enabled") != 0);
+        // After setMoneyCents, which moves the in-memory version on.
+        data.setMoneyVersion(optionalLong(rs, "money_version"));
         data.setDirty(false);
         return data;
+    }
+
+    /** A long column that older tables (or test schemas) may not have yet; 0 when it is missing. */
+    private static long optionalLong(ResultSet rs, String column) throws SQLException {
+        Long value = optionalNullableLong(rs, column);
+        return value == null ? 0L : value;
+    }
+
+    /** A long column that may be missing or NULL; null in both cases. */
+    private static Long optionalNullableLong(ResultSet rs, String column) throws SQLException {
+        ResultSetMetaData meta = rs.getMetaData();
+        for (int i = 1; i <= meta.getColumnCount(); i++) {
+            if (column.equalsIgnoreCase(meta.getColumnLabel(i))) {
+                long value = rs.getLong(i);
+                return rs.wasNull() ? null : value;
+            }
+        }
+        return null;
     }
 
     public UUID findPlayerUuidByUsername(String username) {
@@ -1422,30 +1473,71 @@ public class DatabaseManager {
         }
     }
 
+    /** Every column {@link #savePlayer} writes, in parameter order. */
+    private static final List<String> PLAYER_SAVE_COLUMNS = List.of(
+            "uuid", "username", "money", "shards", "kills", "deaths", "playtime_seconds", "blocks_placed",
+            "blocks_broken", "mobs_killed", "kill_streak", "highest_kill_streak", "money_spent", "money_made",
+            "tpauto", "phantom_enabled", "payments_enabled", "scoreboard_visible", "pay_alerts_enabled",
+            "hotbar_messages_enabled", "worth_display_enabled", "clear_entities_messages_enabled",
+            "bounty_alerts_enabled", "tpa_confirm_menu_enabled", "chainmail_on_respawn_enabled",
+            "lunar_teammates_enabled", "tpa_requests_enabled", "auto_tpahere_enabled", "tpahere_requests_enabled",
+            "team_invites_enabled", "mob_spawn_enabled", "pay_confirm_menu_enabled", "totem_particles_enabled",
+            "fast_crystals_enabled", "amethyst_break_messages_enabled", "private_messages_enabled",
+            "keyall_notifications_enabled", "duel_requests_enabled", "public_chat_enabled",
+            "server_broadcasts_enabled", "auction_notifications_enabled", "explosion_particles_enabled",
+            "hide_all_players_enabled", "notification_sounds_enabled", "rtp_coordinates_enabled",
+            "order_notifications_enabled", "team_chat_visible", "duel_music_enabled", "quiet_spawn_enabled",
+            "night_vision_enabled", "keyall_remaining_seconds", "shard_booster_expiry", "mob_spawn_disabled_until",
+            "phantom_disabled_until", "destroy_pearl_on_death", "randomized_coords", "death_messages_choice",
+            "advancement_messages_choice", "join_leave_messages_choice", "teleport_alerts_enabled",
+            "follow_alerts_enabled", "explosion_sounds_enabled", "display_donutplus_enabled",
+            "combat_timer_enabled", "sell_shulkers_enabled", "private_transactions_enabled", "money_cents",
+            "money_version");
+    /** Columns a save only overwrites when it carries a balance version at least as new as the stored one. */
+    private static final Set<String> VERSIONED_MONEY_COLUMNS =
+            Set.of("money", "money_cents", "money_spent", "money_made");
+    private static final String SQLITE_PLAYER_UPSERT = playerUpsertSql(false);
+    private static final String MYSQL_PLAYER_UPSERT = playerUpsertSql(true);
+
+    /**
+     * Insert-or-update of a player row. Unlike REPLACE it leaves columns it does not list alone, and it keeps a
+     * stored balance whose version is newer than the one being saved (written meanwhile by the economy).
+     */
+    static String playerUpsertSql(boolean mySql) {
+        StringBuilder sql = new StringBuilder("INSERT INTO players (")
+                .append(String.join(", ", PLAYER_SAVE_COLUMNS))
+                .append(") VALUES (")
+                .append(String.join(",", Collections.nCopies(PLAYER_SAVE_COLUMNS.size(), "?")))
+                .append(mySql ? ") ON DUPLICATE KEY UPDATE " : ") ON CONFLICT(uuid) DO UPDATE SET ");
+        List<String> updates = new ArrayList<>();
+        for (String column : PLAYER_SAVE_COLUMNS) {
+            if (column.equals("uuid") || column.equals("money_version")) {
+                continue;
+            }
+            if (VERSIONED_MONEY_COLUMNS.contains(column)) {
+                updates.add(mySql
+                        ? column + " = IF(VALUES(money_version) >= money_version, VALUES(" + column + "), " + column + ")"
+                        : column + " = CASE WHEN excluded.money_version >= players.money_version THEN excluded."
+                                + column + " ELSE players." + column + " END");
+            } else {
+                updates.add(mySql ? column + " = VALUES(" + column + ")" : column + " = excluded." + column);
+            }
+        }
+        // Last: MySQL applies assignments in order, so the money columns above still compare with the old version.
+        updates.add(mySql
+                ? "money_version = GREATEST(money_version, VALUES(money_version))"
+                : "money_version = MAX(players.money_version, excluded.money_version)");
+        return sql.append(String.join(", ", updates)).toString();
+    }
+
     public void savePlayer(PlayerData data) {
-        try (PreparedStatement ps = connection.prepareStatement("""
-                REPLACE INTO players
-                (uuid, username, money, shards, kills, deaths, playtime_seconds, blocks_placed, blocks_broken, mobs_killed,
-                 kill_streak, highest_kill_streak, money_spent, money_made, tpauto, phantom_enabled, payments_enabled,
-                 scoreboard_visible, pay_alerts_enabled, hotbar_messages_enabled, worth_display_enabled,
-                 clear_entities_messages_enabled, bounty_alerts_enabled, tpa_confirm_menu_enabled,
-                 chainmail_on_respawn_enabled, lunar_teammates_enabled, tpa_requests_enabled, auto_tpahere_enabled,
-                 tpahere_requests_enabled, team_invites_enabled, mob_spawn_enabled, pay_confirm_menu_enabled,
-                 totem_particles_enabled, fast_crystals_enabled, amethyst_break_messages_enabled,
-                 private_messages_enabled, keyall_notifications_enabled, duel_requests_enabled,
-                 public_chat_enabled, server_broadcasts_enabled, auction_notifications_enabled,
-                 explosion_particles_enabled, hide_all_players_enabled, notification_sounds_enabled,
-                 rtp_coordinates_enabled, order_notifications_enabled, team_chat_visible,
-                    duel_music_enabled, quiet_spawn_enabled, night_vision_enabled, keyall_remaining_seconds,
-                    shard_booster_expiry, mob_spawn_disabled_until, phantom_disabled_until, destroy_pearl_on_death, randomized_coords, death_messages_choice,
-                    advancement_messages_choice, join_leave_messages_choice, teleport_alerts_enabled,
-                    follow_alerts_enabled, explosion_sounds_enabled, display_donutplus_enabled,
-                    combat_timer_enabled, sell_shulkers_enabled, private_transactions_enabled)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-                """)) {
+        // Cleared before reading: a change made while this save runs marks the row dirty again for the next save.
+        data.setDirty(false);
+        PlayerData.MoneyState money = data.moneyState();
+        try (PreparedStatement ps = connection.prepareStatement(isMySql() ? MYSQL_PLAYER_UPSERT : SQLITE_PLAYER_UPSERT)) {
             ps.setString(1, data.getUuid().toString());
             ps.setString(2, data.getUsername());
-            ps.setDouble(3, data.getMoney());
+            ps.setDouble(3, money.money());
             ps.setLong(4, data.getShards());
             ps.setInt(5, data.getKills());
             ps.setInt(6, data.getDeaths());
@@ -1455,8 +1547,8 @@ public class DatabaseManager {
             ps.setLong(10, data.getMobsKilled());
             ps.setInt(11, data.getKillStreak());
             ps.setInt(12, data.getHighestKillStreak());
-            ps.setDouble(13, data.getMoneySpent());
-            ps.setDouble(14, data.getMoneyMade());
+            ps.setDouble(13, money.moneySpent());
+            ps.setDouble(14, money.moneyMade());
             ps.setInt(15, data.isTpauto() ? 1 : 0);
             ps.setInt(16, data.isPhantomEnabled() ? 1 : 0);
             ps.setInt(17, data.getPaymentsChoice().ordinal());
@@ -1509,9 +1601,11 @@ public class DatabaseManager {
             ps.setInt(64, data.isCombatTimerEnabled() ? 1 : 0);
             ps.setInt(65, data.isSellShulkersEnabled() ? 1 : 0);
             ps.setInt(66, data.isPrivateTransactionsEnabled() ? 1 : 0);
+            ps.setLong(67, money.cents());
+            ps.setLong(68, money.version());
             ps.executeUpdate();
-            data.setDirty(false);
         } catch (SQLException e) {
+            data.setDirty(true);
             plugin.getLogger().log(Level.WARNING, "Failed to save player " + data.getUuid(), e);
         }
     }
@@ -1551,8 +1645,15 @@ public class DatabaseManager {
     }
 
     public int resetAllPlayerMoney(double defaultMoney) {
-        String sql = "UPDATE players SET money = " + defaultMoney;
-        return executeUpdate(sql);
+        long cents = Money.storedToCents(defaultMoney);
+        try (PreparedStatement ps = connection.prepareStatement("UPDATE players SET money = ?, money_cents = ?")) {
+            ps.setDouble(1, Money.toUnits(cents));
+            ps.setLong(2, cents);
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.WARNING, "Failed to reset every balance", e);
+        }
+        return 0;
     }
 
     public int resetAllPlayerShards() {
@@ -3645,12 +3746,13 @@ public class DatabaseManager {
      * The player columns a wipe resets, each beside the value it goes back to. Both wipes read this
      * one map, and so do the backup and restore behind {@code /playerunwipe}, so a column added here
      * cannot be reset by one wipe and missed by the other, or drop out of a backup and leave a
-     * restored player short. {@code money} is the exception: it is overwritten with the configured
-     * starting balance rather than the placeholder below.
+     * restored player short. {@code money} and {@code money_cents} are the exception: they are
+     * overwritten with the configured starting balance rather than the placeholders below.
      */
     private static Map<String, Object> wipeStatResets() {
         Map<String, Object> resets = new LinkedHashMap<>();
         resets.put("money", 0D);
+        resets.put("money_cents", 0L);
         resets.put("shards", 0);
         resets.put("kills", 0);
         resets.put("deaths", 0);
@@ -4008,16 +4110,19 @@ public class DatabaseManager {
     }
 
     /**
-     * Binds every stat column back to the value a wipe resets it to, with {@code money} taking the
-     * configured starting balance. Returns the next free parameter index, which a player wipe uses
-     * for the {@code WHERE uuid = ?} a server wipe does not have.
+     * Binds every stat column back to the value a wipe resets it to, with {@code money} and
+     * {@code money_cents} taking the configured starting balance. Returns the next free parameter
+     * index, which a player wipe uses for the {@code WHERE uuid = ?} a server wipe does not have.
      */
     private int bindWipeStatResets(PreparedStatement statement, double startingMoney) throws SQLException {
+        long startingCents = Money.storedToCents(startingMoney);
         int index = 1;
         for (Map.Entry<String, Object> reset : WIPE_STAT_RESETS.entrySet()) {
-            statement.setObject(index++, "money".equals(reset.getKey())
-                    ? Math.max(0D, startingMoney)
-                    : reset.getValue());
+            statement.setObject(index++, switch (reset.getKey()) {
+                case "money" -> Money.toUnits(startingCents);
+                case "money_cents" -> startingCents;
+                default -> reset.getValue();
+            });
         }
         return index;
     }
@@ -4654,6 +4759,7 @@ public class DatabaseManager {
                 try (PreparedStatement statement = connection.prepareStatement("""
                         UPDATE players SET
                             money = ?,
+                            money_cents = ?,
                             shards = 0,
                             kills = 0,
                             deaths = 0,
@@ -4670,7 +4776,9 @@ public class DatabaseManager {
                             mob_spawn_disabled_until = 0,
                             phantom_disabled_until = 0
                         """)) {
-                    statement.setDouble(1, Math.max(0D, startingMoney));
+                    long startingCents = Money.storedToCents(startingMoney);
+                    statement.setDouble(1, Money.toUnits(startingCents));
+                    statement.setLong(2, startingCents);
                     affected.put("players", statement.executeUpdate());
                 }
             }
@@ -5163,32 +5271,6 @@ public class DatabaseManager {
     }
 
 
-    /** Database tasks waiting for the writer thread, for /smp diagnostics. */
-    public int getPendingWriteCount() {
-        return asyncExecutor.getQueue().size();
-    }
-
-    /** Database tasks the writer thread has finished since start-up. */
-    public long getCompletedWriteCount() {
-        return asyncExecutor.getCompletedTaskCount();
-    }
-
-    /**
-     * Runs a read or write on the database thread, after everything already queued, and hands the
-     * result back as a future. Use it for reads that must see earlier queued writes.
-     */
-    public <T> java.util.concurrent.CompletableFuture<T> supplyAsync(java.util.function.Supplier<T> task) {
-        java.util.concurrent.CompletableFuture<T> future = new java.util.concurrent.CompletableFuture<>();
-        executeAsync(() -> {
-            try {
-                future.complete(task.get());
-            } catch (Throwable throwable) {
-                future.completeExceptionally(throwable);
-            }
-        });
-        return future;
-    }
-
     /** Runs a database task on the background writer thread, after any tasks already queued. */
     public void executeAsync(Runnable task) {
         if (asyncExecutor.isShutdown()) {
@@ -5214,6 +5296,7 @@ public class DatabaseManager {
             Thread.currentThread().interrupt();
         }
         flush();
+        ready = false;
         try {
             if (connection != null && !connection.isClosed()) {
                 connection.close();
@@ -5431,6 +5514,9 @@ public class DatabaseManager {
                     }
                 }
 
+                // The thread that switches auto-commit off owns the connection until it switches it back on (or
+                // closes it). commit() and rollback() keep ownership: auto-commit is still off afterwards, so another
+                // thread's statements would otherwise run inside the owner's next transaction.
                 if (methodName.equals("setAutoCommit") && args.length == 1 && args[0] instanceof Boolean) {
                     boolean autoCommit = (Boolean) args[0];
                     if (!autoCommit) {
@@ -5439,7 +5525,7 @@ public class DatabaseManager {
                         transactionOwner = null;
                         lock.notifyAll();
                     }
-                } else if (methodName.equals("commit") || methodName.equals("rollback") || methodName.equals("close")) {
+                } else if (methodName.equals("close")) {
                     transactionOwner = null;
                     lock.notifyAll();
                 }

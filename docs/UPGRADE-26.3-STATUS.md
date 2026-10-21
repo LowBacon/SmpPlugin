@@ -93,7 +93,7 @@ These are facts about the 1.5 code that the later stages must fix. Line numbers 
 | §6 Crates rework | Not started | Depends on §8. |
 | §5 GUI system and animations | Not started | |
 | §9 Anti-cheat | **Partial** | 23 server-side checks including timer, no-fall (with damage), step, water walk, boat fly, anti-knockback, criticals, scaffold, through-wall interaction, inventory, auto totem and cheat-client signatures; violation levels with decay; alerts with evidence IDs and files; kick and ban levels; staff-reviewed ban queue and optional ban waves; multi-check escalation; server-lag guard; exemptions; exact-node bypasses; Bedrock handling ([anticheat.md](anticheat.md)). Not done: full movement prediction, live-server tuning, security dashboard GUI, bridge to an external anti-cheat. |
-| CoinFlip Nexus (separate specification) | **Replaced in 3.2** | Replaced by the simpler `/cf` head-spin coin flip; money it still held is refunded once at start-up. |
+| CoinFlip Nexus (separate specification) | **Implemented, not boot-tested** | Journaled money flow, recovery, 16 menus, animation, statistics, leaderboards, achievements, admin tools ([coinflip.md](coinflip.md)). Its own journal works around findings A1–A3 for CoinFlip only; the general economy ledger (§8) is still not started. |
 | §10 Subsystem improvements | **Partial** | alpha.4 replaced settings, Auction House, selling and RTP with the newer UltimateDonutSMP-V2 versions (dialogs, Quick Buy, sell statistics, RTP cache and queue); see CHANGELOG. Their money paths still use the `double` economy (findings A1–A3). |
 | §11 New modules (trade, mailbox, quests, claims, seasons, …) | Not started | |
 | §12 Config migration and profiles | Partial | Only the reload validation above. |

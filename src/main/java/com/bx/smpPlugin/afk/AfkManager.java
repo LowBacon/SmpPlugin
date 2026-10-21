@@ -459,7 +459,7 @@ public class AfkManager {
         long multiplier = config().getBoolean("REWARD.USE-SHARD-BOOSTER", true) && plugin.getShardManager() != null
                 ? Math.max(1, plugin.getShardManager().getMultiplier(player.getUniqueId())) : 1L;
         long shards = zone.rewardAmount() * multiplier;
-        plugin.getShardManager().giveShards(player, shards, false, com.bx.smpPlugin.models.EconomyReason.SHARD_AFK);
+        plugin.getShardManager().giveShards(player, shards, false);
         state.earned += shards;
 
         PlayerData data = plugin.getPlayerDataManager().get(player);

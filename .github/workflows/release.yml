@@ -1,0 +1,128 @@
+# Builds the Paper and Spigot jars from the official repositories and runs the tests for both, on every push.
+#
+# It also publishes a GitHub release, with both jars and their checksums, when:
+#   - a tag such as v4.0.0 is pushed,
+#   - it is run by hand (Actions > Build and release > Run workflow) with the tag to create, or
+#   - a pushed commit message contains [release] (the tag is then v<version from pom.xml>).
+# The tag must match <version> in pom.xml, and .github/release-notes/<tag>.md holds the release text.
+name: Build and release
+
+on:
+  push:
+    branches:
+      - '**'
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to publish, for example v4.0.0 (created on the chosen branch if it does not exist yet)'
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    name: Decide what to publish
+    runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.plan.outputs.release }}
+      tag: ${{ steps.plan.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: plan
+        env:
+          EVENT: ${{ github.event_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+          MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          VERSION=$(sed -n 's:^    <version>\(.*\)</version>$:\1:p' pom.xml | head -n 1)
+          RELEASE=false
+          TAG="v$VERSION"
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            RELEASE=true
+            TAG="$INPUT_TAG"
+          elif [ "$REF_TYPE" = "tag" ]; then
+            RELEASE=true
+            TAG="$REF_NAME"
+          elif printf '%s' "$MESSAGE" | grep -qF '[release]'; then
+            RELEASE=true
+          fi
+          echo "pom.xml version: $VERSION, tag: $TAG, publish: $RELEASE"
+          if [ "$RELEASE" = "true" ]; then
+            if [ "$TAG" != "v$VERSION" ]; then
+              echo "::error::The tag $TAG does not match the pom.xml version $VERSION"
+              exit 1
+            fi
+            test -f ".github/release-notes/$TAG.md" || { echo "::error::.github/release-notes/$TAG.md is missing"; exit 1; }
+          fi
+          echo "release=$RELEASE" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build the ${{ matrix.flavor }} jar
+    needs: plan
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        flavor: [paper, spigot]
+    steps:
+      - uses: actions/checkout@v4
+
+      # JDK 25 to build, as the README says: some provided APIs (SkinsRestorer 15.12) are Java 25 class files.
+      # pom.xml compiles with --release 21, so the jars stay Java 21 bytecode for 1.21.11 servers.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Build and test
+        run: mvn -B -P${{ matrix.flavor }} clean package
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SmpPlugin-${{ matrix.flavor }}
+          path: target/SmpPlugin-*-${{ matrix.flavor }}.jar
+          if-no-files-found: error
+
+  release:
+    name: Publish the release
+    needs: [plan, build]
+    if: needs.plan.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Checksums
+        run: |
+          cd dist
+          ls -la
+          sha256sum *.jar > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.plan.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: SmpPlugin ${{ needs.plan.outputs.tag }}
+          body_path: .github/release-notes/${{ needs.plan.outputs.tag }}.md
+          files: |
+            dist/*.jar
+            dist/SHA256SUMS.txt
+          fail_on_unmatched_files: true
+          make_latest: true

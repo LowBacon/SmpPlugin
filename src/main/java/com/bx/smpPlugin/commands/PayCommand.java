@@ -4,6 +4,7 @@ import com.bx.smpPlugin.SmpPlugin;
 import com.bx.smpPlugin.menus.PayConfirmMenu;
 import com.bx.smpPlugin.models.PlayerData;
 import com.bx.smpPlugin.utils.ColorUtils;
+import com.bx.smpPlugin.utils.NumberUtils;
 import com.bx.smpPlugin.utils.PaymentUtils;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -28,16 +29,17 @@ public class PayCommand implements CommandExecutor {
             return true;
         }
 
-        // Strict: digits with an optional k/m/b suffix. NaN, "Infinity", exponents and amounts under
-        // a cent are refused here instead of failing later as a vague transaction error.
-        java.util.OptionalLong cents = com.bx.smpPlugin.economy.Money.parsePositive(args[1]);
-        if (cents.isEmpty()) {
-            String key = args[1].trim().startsWith("-") || args[1].trim().equals("0")
-                    ? "BALANCE.PAY.MUST-BE-POSITIVE" : "BALANCE.PAY.INVALID-AMOUNT";
-            player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage(key)));
+        double amount;
+        try {
+            amount = NumberUtils.parse(args[1]);
+        } catch (NumberFormatException e) {
+            player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage("BALANCE.PAY.INVALID-AMOUNT")));
             return true;
         }
-        double amount = com.bx.smpPlugin.economy.Money.toDouble(cents.getAsLong());
+        if (amount <= 0) {
+            player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage("BALANCE.PAY.MUST-BE-POSITIVE")));
+            return true;
+        }
 
         PlayerData senderData = plugin.getPlayerDataManager().get(player);
         if (senderData != null && senderData.isPayConfirmMenuEnabled()) {

@@ -1,12 +1,16 @@
 package com.bx.smpPlugin.models;
 
+import com.bx.smpPlugin.economy.Money;
+
+import java.util.OptionalLong;
 import java.util.UUID;
 
 public class PlayerData {
 
     private final UUID uuid;
     private String username;
-    private double money;
+    /** The balance in whole cents; see {@link Money}. */
+    private long moneyCents;
     private long shards;
     private int kills;
     private int deaths;
@@ -62,6 +66,16 @@ public class PlayerData {
     private long keyAllRemainingSeconds;
     private long keyAllAnchorPlaytimeSeconds;
     private boolean dirty;
+    /** Grows with every balance change; stored as players.money_version so an older balance never overwrites a newer one. */
+    private long moneyVersion;
+
+    /** The money columns read together, so a save never mixes two different changes. */
+    public record MoneyState(long cents, double moneySpent, double moneyMade, long version) {
+        /** The balance as the double the {@code money} column holds next to the exact {@code money_cents}. */
+        public double money() {
+            return Money.toUnits(cents);
+        }
+    }
 
     // New Settings
     private boolean destroyPearlOnDeath;
@@ -79,7 +93,7 @@ public class PlayerData {
     public PlayerData(UUID uuid, String username) {
         this.uuid = uuid;
         this.username = username;
-        this.money = 0;
+        this.moneyCents = 0L;
         this.shards = 0;
         this.kills = 0;
         this.deaths = 0;
@@ -163,29 +177,75 @@ public class PlayerData {
         dirty = true;
     }
 
-    public double getMoney() {
-        return money;
+    // Money is read by the database writer while the server thread changes it, so these methods share one lock.
+
+    public synchronized long getMoneyCents() {
+        return moneyCents;
     }
 
-    public void setMoney(double money) {
-        this.money = Math.max(0, money);
+    /** Sets the balance in whole cents and moves the balance version on. */
+    public synchronized void setMoneyCents(long cents) {
+        this.moneyCents = Math.max(0L, cents);
+        moneyVersion++;
         dirty = true;
     }
 
-    public void addMoney(double amount) {
-        setMoney(this.money + amount);
+    /** The balance as a double for display, placeholders and Vault; never more than the cents ({@link Money#toUnits}). */
+    public synchronized double getMoney() {
+        return Money.toUnits(moneyCents);
     }
 
-    public boolean removeMoney(double amount) {
-        if (this.money < amount) {
+    /** Sets the balance from an amount, rounded to the nearest cent, and moves the balance version on. */
+    public synchronized void setMoney(double money) {
+        setMoneyCents(Money.storedToCents(money));
+    }
+
+    /**
+     * Adds to the balance outside the economy service. New code should use
+     * {@link com.bx.smpPlugin.managers.EconomyManager#deposit} so the change is logged and saved at once.
+     */
+    public synchronized void addMoney(double amount) {
+        setMoneyCents(Money.add(moneyCents, Money.toCents(amount).orElse(0L)).orElse(Money.MAX_CENTS));
+    }
+
+    public synchronized boolean removeMoney(double amount) {
+        OptionalLong cents = Money.toCents(amount);
+        if (cents.isEmpty() || cents.getAsLong() < 0L || moneyCents < cents.getAsLong()) {
             return false;
         }
-        setMoney(this.money - amount);
+        setMoneyCents(moneyCents - cents.getAsLong());
         return true;
     }
 
-    public boolean hasMoney(double amount) {
-        return this.money >= amount;
+    public synchronized boolean hasMoney(double amount) {
+        OptionalLong cents = Money.toCents(amount);
+        return cents.isPresent() && moneyCents >= cents.getAsLong();
+    }
+
+    public synchronized long getMoneyVersion() {
+        return moneyVersion;
+    }
+
+    /** Only for loading a stored row. */
+    public synchronized void setMoneyVersion(long moneyVersion) {
+        this.moneyVersion = Math.max(0L, moneyVersion);
+    }
+
+    /** The balance, totals and balance version as one consistent reading. */
+    public synchronized MoneyState moneyState() {
+        return new MoneyState(moneyCents, moneySpent, moneyMade, moneyVersion);
+    }
+
+    /**
+     * Moves the balance version past {@code storedVersion} when something else wrote a newer one, so this copy's
+     * next save is not ignored. Returns the state to write.
+     */
+    public synchronized MoneyState ensureMoneyVersionAbove(long storedVersion) {
+        if (moneyVersion <= storedVersion) {
+            moneyVersion = storedVersion + 1L;
+            dirty = true;
+        }
+        return moneyState();
     }
 
     public long getShards() {
@@ -339,29 +399,29 @@ public class PlayerData {
         dirty = true;
     }
 
-    public double getMoneySpent() {
+    public synchronized double getMoneySpent() {
         return moneySpent;
     }
 
-    public void setMoneySpent(double moneySpent) {
+    public synchronized void setMoneySpent(double moneySpent) {
         this.moneySpent = Math.max(0, moneySpent);
         dirty = true;
     }
 
-    public void addMoneySpent(double amount) {
+    public synchronized void addMoneySpent(double amount) {
         setMoneySpent(this.moneySpent + amount);
     }
 
-    public double getMoneyMade() {
+    public synchronized double getMoneyMade() {
         return moneyMade;
     }
 
-    public void setMoneyMade(double moneyMade) {
+    public synchronized void setMoneyMade(double moneyMade) {
         this.moneyMade = Math.max(0, moneyMade);
         dirty = true;
     }
 
-    public void addMoneyMade(double amount) {
+    public synchronized void addMoneyMade(double amount) {
         setMoneyMade(this.moneyMade + amount);
     }
 

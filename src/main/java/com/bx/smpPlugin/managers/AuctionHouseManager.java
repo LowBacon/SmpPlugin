@@ -854,12 +854,7 @@ public final class AuctionHouseManager {
     }
 
     public int getMaxActiveListings(Player player) {
-        int configuredDefault = config().getInt("SETTINGS.MAX_ACTIVE_LISTINGS_DEFAULT", -1);
-        if (configuredDefault < 0) {
-            // A negative default means no limit for anyone.
-            return Integer.MAX_VALUE;
-        }
-        int defaultValue = Math.max(1, configuredDefault);
+        int defaultValue = Math.max(1, config().getInt("SETTINGS.MAX_ACTIVE_LISTINGS_DEFAULT", 5));
         if (player == null) {
             return defaultValue;
         }
@@ -1276,16 +1271,8 @@ public final class AuctionHouseManager {
         return Math.max(0.01D, config().getDouble("PRICING.MIN_PRICE", 100D));
     }
 
-    /** Highest price anything can be listed for. 0 or less in auction-house.yml means no maximum. */
-    static final double NO_MAX_PRICE = 1_000_000_000_000_000D;
-
     private double getMaxPrice() {
-        double configured = config().getDouble("PRICING.MAX_PRICE", 0D);
-        if (configured <= 0D || !Double.isFinite(configured)) {
-            // Still finite, so prices stay exact in the economy's doubles.
-            return NO_MAX_PRICE;
-        }
-        return Math.max(getMinPrice(), configured);
+        return Math.max(getMinPrice(), config().getDouble("PRICING.MAX_PRICE", 100_000_000D));
     }
 
     private double getListingFee() {

@@ -68,7 +68,7 @@ public class PlayerDeathListener implements Listener {
                 killerData.addKillStreak();
                 if (plugin.getFeatureManager().isEnabled(FeatureManager.Feature.SHARDS)) {
                     long shardsPerKill = plugin.getShardManager().rollKillReward();
-                    plugin.getShardManager().giveShards(killer, shardsPerKill, true, com.bx.smpPlugin.models.EconomyReason.SHARD_KILL);
+                    plugin.getShardManager().giveShards(killer, shardsPerKill, true);
                 }
             }
 

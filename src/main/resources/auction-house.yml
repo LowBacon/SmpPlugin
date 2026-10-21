@@ -8,8 +8,8 @@ SETTINGS:
   ENABLED: true
   # Duration in hours before an unpurchased auction listing expires
   LISTING_DURATION_HOURS: 48
-  # Default maximum active listings a player can post simultaneously. -1 = no limit.
-  MAX_ACTIVE_LISTINGS_DEFAULT: -1
+  # Default maximum active listings a player can post simultaneously
+  MAX_ACTIVE_LISTINGS_DEFAULT: 5
   # Explicit mapping from permission node to a maximum active listing count
   # Players can also be given smpplugin.auctionhouse.limit.<1-100> directly, for example
   # smpplugin.auctionhouse.limit.25 for 25 active listings, without adding it below
@@ -28,8 +28,8 @@ SETTINGS:
 PRICING:
   # Minimum allowed listing price for an item
   MIN_PRICE: 100
-  # Maximum allowed listing price for an item. 0 = no maximum.
-  MAX_PRICE: 0
+  # Maximum allowed listing price for an item
+  MAX_PRICE: 100000000
   # Flat fee charged upfront to create an auction listing
   LISTING_FEE: 0
   # Percentage tax deducted from the final sale price upon purchase (%)

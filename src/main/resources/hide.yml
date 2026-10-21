@@ -31,6 +31,11 @@ ALIASES:
     NAME: Dream
     # The text or value for Skin. Available options: Any valid string text
     SKIN: dream
+  # Configuration section for Drdonutt.
+  drdonutt:
+    NAME: DrDonutt
+    # The text or value for Skin. Available options: Any valid string text
+    SKIN: drdonutt
 # Configuration section for Skins.
 SKINS:
   # Configuration section for Mrbeast.
@@ -48,6 +53,11 @@ SKINS:
     DISPLAY-NAME: Dream
     # The text or value for Username. Available options: Any valid string text
     USERNAME: Dream
+  # Configuration section for Drdonutt.
+  drdonutt:
+    DISPLAY-NAME: DrDonutt
+    # The text or value for Username. Available options: Any valid string text
+    USERNAME: DrDonutt
 # Configuration section for Gui.
 GUI:
   # Configuration section for Main.
@@ -110,14 +120,19 @@ MESSAGES:
   # The text or value for Check. Available options: Any valid string text
   CHECK: '&bʜɪᴅᴇ ᴄʜᴇᴄᴋ
 
-    &7ʀᴇᴀʟ
+    # The text or value for # The Text Or Mode For &7Ʀᴇᴀʟ ɴᴀᴍᴇ. Available Options. Available options: Any valid string text
+    # The text or mode for &7Ʀᴇᴀʟ ɴᴀᴍᴇ. Available options: Any string text &7ʀᴇᴀʟ
+    # The text or value for ɴᴀᴍᴇ. Available options: Any valid string text
     ɴᴀᴍᴇ: &f{real}
 
-    &7ᴀʟɪᴀѕ: &f{alias}
+    # The text or value for # The Text Or Mode For &7ᴀʟɪᴀѕ. Available Options. Available options: Any valid string text
+    # The text or mode for &7ᴀʟɪᴀѕ. Available options: Any string text &7ᴀʟɪᴀѕ: &f{alias}
 
-    &7ᴍᴏᴅᴇ: &f{mode}
+    # The text or value for # The Text Or Mode For &7ᴍᴏᴅᴇ. Available Options. Available options: Any valid string text
+    # The text or mode for &7ᴍᴏᴅᴇ. Available options: Any string text &7ᴍᴏᴅᴇ: &f{mode}
 
-    &7ѕᴋɪɴ: &f{skin}'
+    # The text or value for # The Text Or Mode For &7Ѕᴋɪɴ. Available Options. Available options: Any valid string text
+    # The text or mode for &7Ѕᴋɪɴ. Available options: Any string text &7ѕᴋɪɴ: &f{skin}'
   # The text or value for Permission Removed. Available options: Any valid string text
   PERMISSION-REMOVED: '&cʏᴏᴜʀ ʜɪᴅᴇ ѕᴛᴀᴛᴇ ᴡᴀѕ ʀᴇᴍᴏᴠᴇᴅ ʙᴇᴄᴀᴜѕᴇ ɪᴛѕ ᴘᴇʀᴍɪѕѕɪᴏɴ ɪѕ ɴᴏ
     ʟᴏɴɢᴇʀ ᴀᴠᴀɪʟᴀʙʟᴇ.'

@@ -19,11 +19,58 @@ Instead of running a small army of plugins just to make an SMP function, SmpPlug
 
 ## 🆕 New in 4.1
 
+
 | | |
 |---|---|
 | 🏷️ **Ranks above heads** | The name tag above a player shows their rank prefix from LuckPerms or Vault, the same one chat uses, on every scoreboard. `NAMETAGS` in `config.yml` sets the format and the name colour. It steps aside for TAB and NametagEdit, and for other plugins' teams unless you tell it not to. |
 | ♾️ **No balance limit** | `ECONOMY.MAX-BALANCE` is `0` (no limit) by default, and every balance is exact to the cent up to 92,233,720,368,547,758.07 (a new `money_cents` column). A config still on the 4.0 default of 10 trillion is moved to no limit; a limit you set yourself is kept. |
 
+## 🆕 New in 4.0
+
+| | |
+|---|---|
+| 💵 **Exact, saved money** | Balances are whole cents. Every change is written at once (no more waiting for the autosave) and recorded in a ledger, in the same database transaction. Offline payments can no longer be undone by a stale login copy. |
+| 📒 **`/transactions`, `/baltop`, `/eco`** | Your own balance history; the richest players; staff `give`, `take`, `set`, `reset`, `history <player>` and `stats` (money supply and flows), each with its own permission and the staff member's name in the ledger. |
+| 💸 **Pay rules** | `ECONOMY.PAY` in `config.yml`: minimum and maximum, a tax and a cooldown. An optional balance limit (`ECONOMY.MAX-BALANCE`; none by default since 4.1). |
+| 🎰 **Bets held safely** | Dice and roulette bets are held in the database in the same transaction that takes the money, and given back on the next start after a crash. |
+| 🗓️ **`/events`** | One menu for the seasonal events: running, starts in…, over, or switched off. Staff switch an event on, off or back to its dates; the switch survives restarts and never changes the dates or anyone's progress. |
+| ❄️ **Advent Calendar** | `/advent`: a door a day from 1 to 24 December, streak bonuses, a prize for opening every door, and gifts chosen in game. |
+| 🎃 **Halloween hub** | `/halloween`: the Spooky Calendar, Trick or Treat, a daily treat bag, season quests, a candy shop, candy milestones and a candy leaderboard. |
+| 🚪 **Trick or Treat** | Decided and paid at the knock, with checked weights (`/trickortreat odds`), a daily limit, and houses (spots or FancyNpcs NPCs) for going door to door. |
+| ⭐ **Rank perks** | `perks.yml`: VIP, VIP+ or any ranks you define, by permission and priority. Bigger event rewards and shorter event waits, each capped; never odds, prices or moderation. `/perks` shows them. |
+| 🧪 **Test without giving** | `/advent test 2026-12-13` (or `/halloween test …`) shows the calendar as on that day to you only; nothing is given or saved. |
+| 📦 **Reward vault** | Reward items that do not fit go to `/claimitems` instead of the ground. |
+| 🛠️ **Fixes** | Prizes are handed over when you click, not when an animation ends; a failed database start stops the plugin instead of running without storage; leaderboards reload in the background; connection strings with passwords stay out of the log. |
+
+## 🆕 New in 3.1
+
+| | |
+|---|---|
+| 🎲 **Dice** | `/dice <bet> [high\|low\|1-6]` against the house. Shows the chance, payout and average return with a **[ROLL]** button before any money moves. Fair dice rolled by the server; payouts in `extras.yml` can never be set above the fair odds. `/dice roll` is still a free roll. |
+| 🎰 **Head roulette** | `/roulette`: everyone's bet goes in one pot, the players' heads spin and the one that stops in the middle wins. Chance = your bet ÷ the pot, shown for everyone. |
+| 🪙 **Simpler CoinFlip** | `/cf` is one screen: open flips as heads (click twice to join), quick stake buttons and a side picker. `/cf <amount> [heads\|tails]` creates a flip straight from chat. A new toss animation. |
+| 📖 **`/guide`** | A getting-started guide from `guide.yml`, page by page, with clickable commands. It only shows commands that exist, are turned on and the reader may use. |
+| 📋 **Scoreboard text** | Edit the sidebar in game with `/sidebar lines\|add\|set\|insert\|remove\|title`. Only changed lines are sent, at a configurable `LINE-UPDATE-TICKS`. |
+| 🧾 **Cleaner tab list** | The default footer no longer shows money, stats, ping or TPS; servers still on the old default footer are updated (with a backup). |
+| 🧱 **Spawn and lobby borders** | `/border spawn set 200`: a real Minecraft border. In PLAYER mode only players inside are held, so it is safe in a survival world; WORLD mode uses the world's own border. |
+| 🎁 **Giveaways for senior staff** | Only ops and the Manager, Developer, Co-Owner and Owner ranks (or `smpplugin.giveaway.manage`) can start or cancel giveaways. |
+| 🧹 **Removed** | `/hug`, `/8ball`, `/hat`, `/trash` and `/notes`. |
+
+## 🆕 New in 3.0
+
+| | |
+|---|---|
+| 🎃 **Spooky Calendar** | `/halloween`: a door for every day of October with a spinning reveal. Choose the prizes in game with `/halloween edit`. Trick or Treat, candy drops and pumpkin-headed mobs during the season. |
+| 🎁 **Daily rewards** | `/daily`: a 7-day streak with a big day-7 reward and weekly bonuses. |
+| 🎯 **Daily challenges** | `/challenges`: three goals a day for everyone, paid out automatically. |
+| 🎉 **Live events** | `/poll`, `/giveaway`, automatic chat games, `/countdown`, a rotating announcer and `/mail`. |
+| 😄 **Fun** | `/slap` `/highfive` `/poke` `/wave` `/cheer` `/dice` `/rps` `/rate` `/firework` `/sit` |
+| 🧰 **Utilities** | `/craft` `/anvil` `/grindstone` `/stonecutter` `/loom` `/smithing` `/cartography` `/back` `/near` `/seen` `/coords` `/ptime` `/pweather` `/repair` `/skull` `/lore` `/glow` `/online` `/uptime` `/calc` `/suicide` |
+| 🛡️ **Staff** | Roles `smpplugin.role.helper` / `moderator` / `admin` / `manager` / `developer` / `coowner` / `owner`, `/perms`, `/whois`, `/socialspy`, `/commandspy`, `/broadcast`, `/day` `/night` `/sun` `/rain` `/thunder`, `/smite`, `/butcher`, `/spawnmob`, `/more`, `/speed`, `/performance`, `/spook` |
+| 📊 **Simpler /stats** | Your own stats in three lines, with Search Player and Leaderboards buttons. |
+
+The Auction House is now only `/ah` (`/auctionhouse` was removed). Everything new is configured in
+`halloween.yml` and `extras.yml`, and each part can be switched off as a feature.
 
 ## ✨ Features
 

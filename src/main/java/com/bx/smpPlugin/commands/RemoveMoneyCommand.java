@@ -1,26 +1,23 @@
 package com.bx.smpPlugin.commands;
 
-import com.bx.smpPlugin.utils.PermissionUtils;
-
 import com.bx.smpPlugin.SmpPlugin;
-import com.bx.smpPlugin.managers.CurrencyManager;
-import com.bx.smpPlugin.models.EconomyReason;
 import com.bx.smpPlugin.utils.ColorUtils;
-import com.bx.smpPlugin.utils.NumberUtils;
-import org.bukkit.Bukkit;
+import com.bx.smpPlugin.utils.PermissionUtils;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 
+import java.util.Arrays;
+
+/** /removemoney: kept for existing staff habits; the same change as /eco take. */
 public class RemoveMoneyCommand implements CommandExecutor {
 
     private static final String PERMISSION = "smpplugin.admin.removemoney";
 
-    private final SmpPlugin plugin;
+    private final EconomyAdmin admin;
 
     public RemoveMoneyCommand(SmpPlugin plugin) {
-        this.plugin = plugin;
+        this.admin = new EconomyAdmin(plugin);
     }
 
     @Override
@@ -29,95 +26,12 @@ public class RemoveMoneyCommand implements CommandExecutor {
             sender.sendMessage(ColorUtils.toComponent("&cɴᴏ ᴘᴇʀᴍɪѕѕɪᴏɴ."));
             return true;
         }
-
         if (args.length < 2) {
-            sender.sendMessage(ColorUtils.toComponent("&cᴜѕᴀɢᴇ: /removemoney <player> <amount>"));
+            sender.sendMessage(ColorUtils.toComponent("&cᴜѕᴀɢᴇ: /removemoney <player> <amount> [note]"));
             return true;
         }
-
-        double amount;
-        try {
-            amount = NumberUtils.parse(args[1]);
-        } catch (NumberFormatException e) {
-            sender.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage("BALANCE.ADMIN.INVALID-AMOUNT")));
-            return true;
-        }
-
-        if (amount <= 0D) {
-            sender.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage("BALANCE.ADMIN.MUST-BE-POSITIVE")));
-            return true;
-        }
-
-        var account = plugin.getEconomyManager().resolveAccount(args[0]);
-        if (account == null) {
-            sender.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage("BALANCE.ADMIN.PLAYER-NOT-FOUND")));
-            return true;
-        }
-
-        // The admin and any reason they typed after the amount go into the economy ledger.
-        String note = args.length > 2 ? String.join(" ", java.util.Arrays.copyOfRange(args, 2, args.length)) : null;
-        var result = com.bx.smpPlugin.economy.EconomyLedger.asActor(sender, note,
-                () -> plugin.getEconomyManager().withdraw(account, amount, EconomyReason.ADMIN_REMOVE));
-        if (!result.success() && !result.insufficientFunds() && !result.playerNotFound() && !result.noPlayerData()) {
-            sender.sendMessage(ColorUtils.toComponent(com.bx.smpPlugin.economy.EconomyMessages.failure(plugin, result.failureReason())));
-            return true;
-        }
-        if (!result.success()) {
-            String key = result.insufficientFunds()
-                    ? "BALANCE.ADMIN.TARGET-NOT-ENOUGH-MONEY"
-                    : "BALANCE.ADMIN.PLAYER-NOT-FOUND";
-            sender.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage(
-                    key,
-                    "{player}", result.displayName(),
-                    "{balance}", compactAmount(result.beforeBalance()),
-                    "{balance_full}", fullAmount(result.beforeBalance()),
-                    "{balance_money}", plugin.getCurrencyManager().formatMoneyCompact(result.beforeBalance()),
-                    "{balance_money_full}", fullMoney(result.beforeBalance())
-            )));
-            return true;
-        }
-
-        sender.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage(
-                "BALANCE.ADMIN.REMOVE-MONEY-SUCCESS",
-                "{player}", result.displayName(),
-                "{amount}", compactAmount(result.amount()),
-                "{amount_full}", fullAmount(result.amount()),
-                "{money}", plugin.getCurrencyManager().formatMoneyCompact(result.amount()),
-                "{money_full}", fullMoney(result.amount()),
-                "{balance}", compactAmount(result.afterBalance()),
-                "{balance_full}", fullAmount(result.afterBalance()),
-                "{balance_money}", plugin.getCurrencyManager().formatMoneyCompact(result.afterBalance()),
-                "{balance_money_full}", fullMoney(result.afterBalance())
-        )));
-
-        Player targetPlayer = Bukkit.getPlayer(result.targetUuid());
-        if (targetPlayer != null && !targetPlayer.equals(sender)) {
-            targetPlayer.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage(
-                    "BALANCE.ADMIN.REMOVE-MONEY-RECEIVED",
-                    "{admin}", sender.getName(),
-                    "{amount}", compactAmount(result.amount()),
-                    "{amount_full}", fullAmount(result.amount()),
-                    "{money}", plugin.getCurrencyManager().formatMoneyCompact(result.amount()),
-                    "{money_full}", fullMoney(result.amount()),
-                    "{balance}", compactAmount(result.afterBalance()),
-                    "{balance_full}", fullAmount(result.afterBalance()),
-                    "{balance_money}", plugin.getCurrencyManager().formatMoneyCompact(result.afterBalance()),
-                    "{balance_money_full}", fullMoney(result.afterBalance())
-            )));
-        }
-
+        String note = args.length > 2 ? String.join(" ", Arrays.copyOfRange(args, 2, args.length)) : null;
+        admin.run(sender, EconomyAdmin.Action.TAKE, args[0], args[1], note);
         return true;
-    }
-
-    private String compactAmount(double amount) {
-        return plugin.getCurrencyManager().formatCompactAmount(CurrencyManager.CurrencyType.MONEY, amount);
-    }
-
-    private String fullAmount(double amount) {
-        return plugin.getCurrencyManager().formatAmount(CurrencyManager.CurrencyType.MONEY, amount);
-    }
-
-    private String fullMoney(double amount) {
-        return plugin.getCurrencyManager().format(CurrencyManager.CurrencyType.MONEY, amount, false);
     }
 }

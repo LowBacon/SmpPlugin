@@ -1,0 +1,15 @@
+<!--
+  Maven settings for build environments that can reach only Maven Central (see tools/local-api-bootstrap.sh).
+  Every repository in pom.xml is redirected to Central, so artifacts that exist only in the Paper, Spigot or
+  plugin repositories must already be in ~/.m2 (installed by the bootstrap script).
+  Usage: mvn -s tools/central-only-settings.xml clean package
+-->
+<settings>
+  <mirrors>
+    <mirror>
+      <id>central-only</id>
+      <mirrorOf>*,!central</mirrorOf>
+      <url>https://repo.maven.apache.org/maven2</url>
+    </mirror>
+  </mirrors>
+</settings>

@@ -4,8 +4,10 @@
 challenges, a Halloween calendar, events, spawners, crates, duels, staff tools and more. Everything
 is set up from config files and built to stay light on the server.
 
-> **3.2** rebuilds 🪙 `/cf`: start or join a flip and the two heads spin at once, no maximum bet.
-> **3.1** added 🎲 `/dice`, `/guide`, an in-game
+> **4.0** makes every balance change exact and saved at once, with `/transactions`, `/baltop` and `/eco`, and adds
+> seasonal events you switch live with `/events`: a ❄️ Advent Calendar, a 🎃 Halloween hub with candy, quests and a
+> candy shop, a reworked Trick or Treat, and rank perks for VIP and VIP+.
+> **3.1** added 🎲 `/dice` and the 🎰 `/roulette` head jackpot, a one-screen CoinFlip, `/guide`, an in-game
 > scoreboard editor, a cleaner tab list and real Minecraft borders for the spawn and the lobby.
 > **3.0** added the 🎃 Spooky Calendar, daily rewards and challenges, polls, giveaways, chat games and staff roles.
 >
@@ -16,7 +18,7 @@ is set up from config files and built to stay light on the server.
 
 ## ✨ Highlights
 
-- **All-in-one:** 210+ commands replace a stack of separate plugins, set up the same way throughout.
+- **All-in-one:** 220 commands replace a stack of separate plugins, set up the same way throughout.
 - **Menus that move:**
   - 110+ chest menus with animated reveals
   - pop-up dialog screens on Paper 1.21.6+
@@ -27,7 +29,7 @@ is set up from config files and built to stay light on the server.
   - saving happens in the background
   - animations only run while a menu is open
   - busy tasks slow down by themselves when TPS drops
-- **Works on its own:** SQLite out of the box, with MySQL, MongoDB and optional Redis for networks.
+- **Works on its own:** SQLite out of the box, or MySQL; MongoDB as an off-site mirror of the local file; optional Redis for networks.
 - **8 languages** included.
 
 ---
@@ -64,8 +66,8 @@ is set up from config files and built to stay light on the server.
 - **Chat games:** unscramble, quick maths, fast typer and trivia. The first right answer wins.
 - **`/countdown`, a rotating announcer, and `/mail`** for offline players.
 - **Emotes:** `/slap` `/highfive` `/poke` `/wave` `/cheer`.
-- **Games and toys:** `/cf` coin flips (start or join, the heads spin at once), `/dice` (bet against the
-  house, odds shown first), `/rps` `/rate` `/firework` `/sit`.
+- **Games and toys:** `/dice` (bet against the house, odds shown first), `/roulette` (a head jackpot),
+  `/coinflip`, `/rps` `/rate` `/firework` `/sit`.
 
 ## 🏠 Homes & Teleporting
 
@@ -150,8 +152,8 @@ Everything below is optional. If one is missing, only the features that need it 
 ## 📥 Installation
 
 1. Download the jar that matches your server:
-   - **Paper / Purpur:** `SmpPlugin-3.2.0-paper.jar`
-   - **Spigot / CraftBukkit:** `SmpPlugin-3.2.0-spigot.jar`
+   - **Paper / Purpur:** `SmpPlugin-4.1.0-paper.jar`
+   - **Spigot / CraftBukkit:** `SmpPlugin-4.1.0-spigot.jar`
 2. Drop it in `plugins/` and start the server once.
 3. Run `/smpplugin setup` to see what still needs setting.
 4. Give your staff ranks a role, for example `smpplugin.role.moderator`.

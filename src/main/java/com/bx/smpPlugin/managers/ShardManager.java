@@ -154,19 +154,12 @@ public class ShardManager {
     }
 
     public void giveShards(Player player, long amount, boolean showMessage) {
-        giveShards(player, amount, showMessage, com.bx.smpPlugin.models.EconomyReason.SHARD_PASSIVE);
-    }
-
-    /** Gives shards through the economy (so the change is checked and recorded) and shows the action bar. */
-    public void giveShards(Player player, long amount, boolean showMessage, com.bx.smpPlugin.models.EconomyReason reason) {
         PlayerData data = plugin.getPlayerDataManager().get(player);
-        if (data == null || amount <= 0L) {
+        if (data == null) {
             return;
         }
 
-        if (!plugin.getEconomyManager().depositShards(player.getUniqueId(), player.getName(), amount, reason).success()) {
-            return;
-        }
+        data.addShards(amount);
         if (showMessage) {
             String msg = plugin.getConfigManager().getConfig()
                     .getString("SETTINGS.SHARDS-KILL-MESSAGE", "+{amount_formatted}")

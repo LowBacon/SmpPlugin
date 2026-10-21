@@ -5,16 +5,13 @@
 # and placeholders all work. Add, remove or reorder lines freely (15 at most). An empty
 # line ('') is a spacer.
 #
-# The server's name comes from BRANDING in config.yml (CustomSMP by default):
-#   {server_title}  the name in a bold gradient (the default title)
-#   {server_name}   the name as plain text
-#
 # Placeholders that always work, even without PlaceholderAPI:
-#   %smp_player_name% %smp_rank% %smp_balance% %smp_shards% %smp_kills% %smp_deaths%
-#   %smp_kdr% %smp_playtime% %smp_team% %smp_online% %smp_max_players% %smp_elo%
-#   every %economy_...% placeholder, {player} {money} {shards} {kills} {deaths} {playtime}
-# With PlaceholderAPI installed, other plugins' placeholders work too (%luckperms_prefix%...).
-# A placeholder nothing can fill is left out (HIDE-UNRESOLVED-PLACEHOLDERS below).
+#   {player} {money} {shards} {kills} {deaths} {playtime}
+#   %player_name% %server_online% %server_max_players% %economy_nicestMoney% %economy_shards%
+# With PlaceholderAPI installed, every other placeholder works too: all of CustomSmp's own
+# (%economy_kills%, %economy_ping%, %economy_team%, %economy_keyall_countdown%...) and other
+# plugins' (%luckperms_prefix%...). A placeholder nothing knows is shown as written, so a typo
+# is easy to spot.
 #
 # Special lines: {team}, {shard_booster} and {shard_cuboid} show the matching line
 # below, and are left out when they do not apply to the player.
@@ -31,40 +28,25 @@ SCOREBOARD:
   # Ticks between refreshing the lines (20 ticks = 1 second). Only lines whose text changed
   # are sent to the player, so a lower value costs very little.
   LINE-UPDATE-TICKS: 10
-  # The {team} line.
-  TEAM: '&#00A4FC🪓 &fTeam &#00A4FC%smp_team%'
-  # The {shard_booster} line, shown while a shard booster runs.
+  # The text or value for Team. Available options: Any valid string text
+  TEAM: '&#00A4FC🪓 &fTeam &#00A4FC%economy_team%     '
+  # The text or value for Shard Booster. Available options: Any valid string text
   SHARD-BOOSTER: '&#A303F9⚡ &fBooster &#A303F9%economy_booster_countdown%     '
-  # The {shard_cuboid} line, shown inside a shard area.
+  # The text or value for Shard Cuboid. Available options: Any valid string text
   SHARD-CUBOID: '&#A303F9⌛ &fShards &#A303F9%economy_shard_cuboid_display%     '
   TITLE:
-  - '{server_title}'
-  # The lines, top to bottom. Remove a line to hide it, move it to reorder.
+  - '&#0069d6&lC&#0374da&lu&#067fdf&ls&#0a8be3&lt&#0d96e7&lo&#10a1ec&lm&#13acf0&lS&#17b8f4&lM&#1ac3f9&lP'
+  # Configuration section for Lines.
   LINES:
   - ''
-  - '&#00A4FC👤 &fPlayer &#00A4FC%smp_player_name%'
-  - '&#FCE300♛ &fRank %smp_rank%'
-  - '&#00FC00&l$ &fBalance &#00FC00$%smp_balance%'
-  - '&#A303F9★ &fShards &#A303F9%smp_shards%'
-  - '&#FC0000🗡 &fKills &#FC0000%smp_kills%'
-  - '&#F97603☠ &fDeaths &#F97603%smp_deaths%'
-  - '&#FC5C7D⚔ &fK/D &#FC5C7D%smp_kdr%'
-  - '&#FCE300⌚ &fPlaytime &#FCE300%smp_playtime%'
+  - '&#00FC00&l$ &fMoney &#00FC00%economy_nicestMoney%     '
+  - '&#A303F9★ &fShards &#A303F9%economy_shards%     '
+  - '&#FC0000🗡 &fKills &#FC0000%economy_kills%      '
+  - '&#F97603☠ &fDeaths &#F97603%economy_deaths%   '
+  - '&#00A4FC⌛ &fKeyall &#00A4FC%economy_keyall_countdown%'
+  - '&#FCE300⌚ &fPlaytime &#FCE300%economy_playtime%   '
   - '{team}'
-  - '&#00A4FC● &fOnline &#00A4FC%smp_online%&7/&#00A4FC%smp_max_players%'
   - '{shard_cuboid}'
   - '{shard_booster}'
   - ''
-  - '&7Server &#00A4FC{server_name}'
-  # A placeholder nothing can fill (a typo, a plugin that is not installed) is left out
-  # instead of being shown as code. false shows it as written, handy while editing.
-  HIDE-UNRESOLVED-PLACEHOLDERS: true
-  # When one of these plugins is installed, SmpPlugin leaves the sidebar to it.
-  # Set OVERRIDE-OTHER-PLUGINS: true to show SmpPlugin's sidebar anyway.
-  YIELD-TO:
-  - TAB
-  - FeatherBoard
-  - AnimatedScoreboard
-  - SimpleScore
-  - KiteBoard
-  OVERRIDE-OTHER-PLUGINS: false
+  - '&7NA East &7(&#0069D6%economy_ping%ms&7)'

@@ -360,7 +360,7 @@ public class BillfordMenu extends BaseMenu {
             }
 
             if (liveTrade.shardBonus() > 0) {
-                plugin.getShardManager().giveShards(player, liveTrade.shardBonus(), true, com.bx.smpPlugin.models.EconomyReason.BILLFORD_REWARD);
+                plugin.getShardManager().giveShards(player, liveTrade.shardBonus(), true);
             }
 
             if (liveTrade.moneyBonus() > 0) {

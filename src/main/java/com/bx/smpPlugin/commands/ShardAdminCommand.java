@@ -65,27 +65,31 @@ public class ShardAdminCommand implements CommandExecutor {
             return true;
         }
 
-        String reasonNote = args.length > 2 ? String.join(" ", java.util.Arrays.copyOfRange(args, 2, args.length)) : null;
-        EconomyManager.ShardResult result = com.bx.smpPlugin.economy.EconomyLedger.asActor(sender, reasonNote, () -> switch (mode) {
-            case ADD -> plugin.getEconomyManager().depositShards(account.uuid(), account.displayName(), amount,
-                    com.bx.smpPlugin.models.EconomyReason.ADMIN_ADD);
-            case REMOVE -> plugin.getEconomyManager().withdrawShards(account.uuid(), account.displayName(), amount,
-                    com.bx.smpPlugin.models.EconomyReason.ADMIN_REMOVE);
-            case SET -> plugin.getEconomyManager().setShards(account.uuid(), account.displayName(), amount,
-                    com.bx.smpPlugin.models.EconomyReason.ADMIN_SET);
-        });
-        if (!result.success()) {
-            if (result.failure() == com.bx.smpPlugin.models.EconomyFailureReason.INSUFFICIENT_FUNDS) {
-                sender.sendMessage(ColorUtils.toComponent("&c" + account.displayName()
-                        + " ᴏɴʟʏ ʜᴀѕ " + formatShards(result.before()) + "."));
-            } else {
-                sender.sendMessage(ColorUtils.toComponent("&cᴘʟᴀʏᴇʀ ᴅᴀᴛᴀ ᴄᴏᴜʟᴅ ɴᴏᴛ ʙᴇ ʟᴏᴀᴅᴇᴅ."));
-            }
+        PlayerData data = loadData(account);
+        if (data == null) {
+            sender.sendMessage(ColorUtils.toComponent("&cᴘʟᴀʏᴇʀ ᴅᴀᴛᴀ ᴄᴏᴜʟᴅ ɴᴏᴛ ʙᴇ ʟᴏᴀᴅᴇᴅ."));
             return true;
         }
-        long before = result.before();
 
-        long after = result.after();
+        long before = data.getShards();
+        if (mode == Mode.REMOVE && before < amount) {
+            sender.sendMessage(ColorUtils.toComponent("&c" + account.displayName()
+                    + " ᴏɴʟʏ ʜᴀѕ " + formatShards(before) + "."));
+            return true;
+        }
+
+        switch (mode) {
+            case ADD -> data.addShards(amount);
+            case REMOVE -> data.removeShards(amount);
+            case SET -> data.setShards(amount);
+        }
+
+        plugin.getDatabaseManager().savePlayer(data);
+        if (plugin.getLeaderboardManager() != null) {
+            plugin.getLeaderboardManager().invalidate(LeaderboardManager.LeaderboardType.SHARDS);
+        }
+
+        long after = data.getShards();
         sender.sendMessage(ColorUtils.toComponent("&a" + mode.pastTense() + " ѕʜᴀʀᴅѕ ꜰᴏʀ &f"
                 + account.displayName() + "&a. &7ʙᴇꜰᴏʀᴇ: &f" + formatShards(before)
                 + " &7ᴀꜰᴛᴇʀ: &f" + formatShards(after)));
@@ -97,6 +101,14 @@ public class ShardAdminCommand implements CommandExecutor {
         }
 
         return true;
+    }
+
+    private PlayerData loadData(EconomyManager.AccountReference account) {
+        if (account.onlinePlayer() != null) {
+            PlayerData data = plugin.getPlayerDataManager().get(account.onlinePlayer());
+            return data == null ? plugin.getPlayerDataManager().loadOrCreate(account.onlinePlayer()) : data;
+        }
+        return plugin.getDatabaseManager().loadPlayer(account.uuid());
     }
 
     private String formatShards(long amount) {

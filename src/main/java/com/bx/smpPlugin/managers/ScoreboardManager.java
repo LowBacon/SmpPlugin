@@ -84,34 +84,7 @@ public class ScoreboardManager {
 
     public boolean isEnabled() {
         return plugin.getFeatureManager().isEnabled(FeatureManager.Feature.SCOREBOARD)
-                && plugin.getConfigManager().getScoreboard().getBoolean("SCOREBOARD.ENABLED", true)
-                && !yieldsToOtherPlugin();
-    }
-
-    private volatile String yieldingTo;
-    private volatile boolean yieldChecked;
-
-    /**
-     * True while another scoreboard plugin (SCOREBOARD.YIELD-TO) is installed and
-     * SCOREBOARD.OVERRIDE-OTHER-PLUGINS is false: the sidebar is then left to that plugin.
-     */
-    public boolean yieldsToOtherPlugin() {
-        if (!yieldChecked) {
-            yieldChecked = true;
-            var config = plugin.getConfigManager().getScoreboard();
-            yieldingTo = config.getBoolean("SCOREBOARD.OVERRIDE-OTHER-PLUGINS", false) ? null
-                    : com.bx.smpPlugin.core.DisplayOwnership.firstInstalled(config.getStringList("SCOREBOARD.YIELD-TO"));
-            if (yieldingTo != null) {
-                plugin.getLogger().info(yieldingTo + " is installed, so SmpPlugin's sidebar is off and " + yieldingTo
-                        + " shows its own. Set SCOREBOARD.OVERRIDE-OTHER-PLUGINS: true in scoreboard.yml to use SmpPlugin's.");
-            }
-        }
-        return yieldingTo != null;
-    }
-
-    /** Checks SCOREBOARD.YIELD-TO again after scoreboard.yml was reloaded. */
-    public void recheckOtherPlugins() {
-        yieldChecked = false;
+                && plugin.getConfigManager().getScoreboard().getBoolean("SCOREBOARD.ENABLED", true);
     }
 
     public boolean isRuntimeSupported() {
@@ -147,6 +120,11 @@ public class ScoreboardManager {
     }
 
     /** Called once on player join. */
+    /** The private sidebar boards this manager gave players, for the name tags (NametagManager). */
+    public java.util.List<Scoreboard> ownedBoards() {
+        return java.util.List.copyOf(playerBoards.values());
+    }
+
     public void setupPlayer(Player player) {
         if (folia) {
             setupPlayerFolia(player);
@@ -311,6 +289,10 @@ public class ScoreboardManager {
 
         playerBoards.put(player.getUniqueId(), board);
         boardCache.remove(player.getUniqueId());
+        // A private board shows only its own teams, so it needs everyone's name tag before the player sees it.
+        if (plugin.getNametagManager() != null) {
+            plugin.getNametagManager().applyAllTo(board);
+        }
         player.setScoreboard(board);
         updateTextSpigot(player, board, obj, true);
     }
@@ -534,8 +516,6 @@ public class ScoreboardManager {
                 .replace("%economy_shards_short%", shardsShort)
                 .replace("%economy_shards_amount_short%", shardsShort)
                 .replace("%economy_shards%", shardsShort)
-                .replace("%smp_shards%", shardsShort)
-                .replace("%smp_balance%", moneyShort)
                 .replace("{player}", player.getName())
                 .replace("%player_name%", player.getName())
                 .replace("%server_online%", String.valueOf(Bukkit.getOnlinePlayers().size()))
@@ -726,10 +706,9 @@ public class ScoreboardManager {
         }
         List<String> titles = plugin.getConfigManager().getScoreboard().getStringList("SCOREBOARD.TITLE");
         if (titles.isEmpty()) {
-            return ColorUtils.colorize(com.bx.smpPlugin.core.Branding.title(), player);
+            return ColorUtils.toTitleCaseSmart(ColorUtils.colorize("SmpPlugin", player));
         }
-        // The title is shown exactly as written: title-casing turned a per-letter gradient into capitals.
-        return hideUnresolved(ColorUtils.colorize(titles.get(titleIndex % titles.size()), player));
+        return ColorUtils.toTitleCaseSmart(ColorUtils.colorize(titles.get(titleIndex % titles.size()), player));
     }
 
     private List<String> getRenderedLines(Player player) {
@@ -740,21 +719,10 @@ public class ScoreboardManager {
                 break;
             }
             String text = ColorUtils.colorize(line, player);
-            text = hideUnresolved(ColorUtils.toTitleCaseSmart(text));
+            text = ColorUtils.toTitleCaseSmart(text);
             rendered.add(alignSidebarIconColumn(text));
         }
         return rendered;
-    }
-
-    /**
-     * Leaves out a placeholder nothing could fill (a typo, or a plugin that is not installed)
-     * instead of showing it to players as code. SCOREBOARD.HIDE-UNRESOLVED-PLACEHOLDERS: false
-     * shows it as written, which helps while editing the lines.
-     */
-    private String hideUnresolved(String text) {
-        return plugin.getConfigManager().getScoreboard().getBoolean("SCOREBOARD.HIDE-UNRESOLVED-PLACEHOLDERS", true)
-                ? com.bx.smpPlugin.core.InternalPlaceholders.stripUnresolved(text)
-                : text;
     }
 
     private boolean isVisibleFor(Player player) {

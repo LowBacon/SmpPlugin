@@ -1,6 +1,7 @@
 package com.bx.smpPlugin.gambling;
 
 import com.bx.smpPlugin.SmpPlugin;
+import com.bx.smpPlugin.coinflip.StakeMath;
 import com.bx.smpPlugin.core.Text;
 import com.bx.smpPlugin.models.EconomyReason;
 import com.bx.smpPlugin.utils.PermissionUtils;
@@ -259,7 +260,8 @@ public final class DiceGame implements CommandExecutor, TabCompleter, Listener {
             return;
         }
         double multiplier = multiplier(bet);
-        if (!wallet.take(player, stake, "a dice roll")) {
+        String holdId = "dice-" + uuid + "-" + now;
+        if (!wallet.take(player, new GamblingEscrow.Hold(holdId, uuid, player.getName(), stake, "dice roll"))) {
             Text.send(player, "DICE.TOO-POOR", "&cYou only have &f{balance}&c.", "{balance}", wallet.money(wallet.balance(player)));
             return;
         }
@@ -267,8 +269,7 @@ public final class DiceGame implements CommandExecutor, TabCompleter, Listener {
         DiceOdds.Roll roll = DiceOdds.roll(bet, () -> random.nextInt(6) + 1);
         DiceOdds.Result result = DiceOdds.judge(bet, roll, tieRefunds());
         long payout = DiceOdds.payoutCents(stake, result, multiplier);
-        Session session = new Session("dice-" + uuid + "-" + now, player, stake, bet, roll, result, multiplier, payout);
-        escrow.open(new GamblingEscrow.Hold(session.id, uuid, player.getName(), stake, "dice roll"));
+        Session session = new Session(holdId, player, stake, bet, roll, result, multiplier, payout);
         sessions.put(uuid, session);
         lastRoll.put(uuid, now);
         if (lastRoll.size() > 500) {
@@ -335,14 +336,12 @@ public final class DiceGame implements CommandExecutor, TabCompleter, Listener {
             boolean push = session.result == DiceOdds.Result.PUSH;
             boolean paid = wallet.pay(session.player, session.name, session.payout,
                     push ? EconomyReason.GAMBLE_REFUND : EconomyReason.GAMBLE_PAYOUT,
-                    push ? "Dice tie, bet returned:" : "Dice win:");
-            if (paid) {
-                escrow.close(session.id);
-            } else {
-                escrow.update(session.id, session.payout);
+                    push ? "Dice tie, bet returned:" : "Dice win:", session.id);
+            if (!paid) {
+                escrow.keepAsPayout(session.id, session.payout, List.of());
             }
         } else {
-            escrow.close(session.id);
+            escrow.closeWithoutPayment(List.of(session.id));
         }
         Player player = Bukkit.getPlayer(session.player);
         if (!tell || player == null) {

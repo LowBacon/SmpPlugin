@@ -21,22 +21,28 @@ WEBHOOKS:
       # The text or value for Description. Available options: Any valid string text
       DESCRIPTION: ':hammer: **Punishment Type:** Ban
 
-        **Player:**
+        # The text or value for # The Text Or Mode For **Player. Available Options. Available options: Any valid string text
+        # The text or mode for **Player. Available options: Any string text **Player:**
         %player%
 
-        **Staff:**
+        # The text or value for # The Text Or Mode For **Staff. Available Options. Available options: Any valid string text
+        # The text or mode for **Staff. Available options: Any string text **Staff:**
         %staff%
 
-        **Reason:**
+        # The text or value for # The Text Or Mode For **Reason. Available Options. Available options: Any valid string text
+        # The text or mode for **Reason. Available options: Any string text **Reason:**
         ||%reason%||
 
-        **Duration:**
+        # The text or value for # The Text Or Mode For **Duration. Available Options. Available options: Any valid string text
+        # The text or mode for **Duration. Available options: Any string text **Duration:**
         %duration%
 
-        **Date:**
+        # The text or value for # The Text Or Mode For **Date. Available Options. Available options: Any valid string text
+        # The text or mode for **Date. Available options: Any string text **Date:**
         %date%
 
-        **ID:** `%id%`
+        # The text or value for # The Text Or Mode For **Id. Available Options. Available options: Any valid string text
+        # The text or mode for **Id. Available options: Any string text **ID:** `%id%`
 
         '
       # The text or value for Thumbnail. Available options: Any valid string text
@@ -55,22 +61,28 @@ WEBHOOKS:
       # The text or value for Description. Available options: Any valid string text
       DESCRIPTION: ':mute: **Punishment Type:** Mute
 
-        **Player:**
+        # The text or value for # The Text Or Mode For **Player. Available Options. Available options: Any valid string text
+        # The text or mode for **Player. Available options: Any string text **Player:**
         %player%
 
-        **Staff:**
+        # The text or value for # The Text Or Mode For **Staff. Available Options. Available options: Any valid string text
+        # The text or mode for **Staff. Available options: Any string text **Staff:**
         %staff%
 
-        **Reason:**
+        # The text or value for # The Text Or Mode For **Reason. Available Options. Available options: Any valid string text
+        # The text or mode for **Reason. Available options: Any string text **Reason:**
         ||%reason%||
 
-        **Duration:**
+        # The text or value for # The Text Or Mode For **Duration. Available Options. Available options: Any valid string text
+        # The text or mode for **Duration. Available options: Any string text **Duration:**
         %duration%
 
-        **Date:**
+        # The text or value for # The Text Or Mode For **Date. Available Options. Available options: Any valid string text
+        # The text or mode for **Date. Available options: Any string text **Date:**
         %date%
 
-        **ID:** `%id%`
+        # The text or value for # The Text Or Mode For **Id. Available Options. Available options: Any valid string text
+        # The text or mode for **Id. Available options: Any string text **ID:** `%id%`
 
         '
       # The text or value for Thumbnail. Available options: Any valid string text
@@ -89,19 +101,24 @@ WEBHOOKS:
       # The text or value for Description. Available options: Any valid string text
       DESCRIPTION: ':warning: **Punishment Type:** Warning
 
-        **Player:**
+        # The text or value for # The Text Or Mode For **Player. Available Options. Available options: Any valid string text
+        # The text or mode for **Player. Available options: Any string text **Player:**
         %player%
 
-        **Staff:**
+        # The text or value for # The Text Or Mode For **Staff. Available Options. Available options: Any valid string text
+        # The text or mode for **Staff. Available options: Any string text **Staff:**
         %staff%
 
-        **Reason:**
+        # The text or value for # The Text Or Mode For **Reason. Available Options. Available options: Any valid string text
+        # The text or mode for **Reason. Available options: Any string text **Reason:**
         ||%reason%||
 
-        **Date:**
+        # The text or value for # The Text Or Mode For **Date. Available Options. Available options: Any valid string text
+        # The text or mode for **Date. Available options: Any string text **Date:**
         %date%
 
-        **ID:** `%id%`
+        # The text or value for # The Text Or Mode For **Id. Available Options. Available options: Any valid string text
+        # The text or mode for **Id. Available options: Any string text **ID:** `%id%`
 
         '
       # The text or value for Thumbnail. Available options: Any valid string text
@@ -120,16 +137,20 @@ WEBHOOKS:
       # The text or value for Description. Available options: Any valid string text
       DESCRIPTION: ':boot: **Punishment Type:** Kick
 
-        **Player:**
+        # The text or value for # The Text Or Mode For **Player. Available Options. Available options: Any valid string text
+        # The text or mode for **Player. Available options: Any string text **Player:**
         %player%
 
-        **Staff:**
+        # The text or value for # The Text Or Mode For **Staff. Available Options. Available options: Any valid string text
+        # The text or mode for **Staff. Available options: Any string text **Staff:**
         %staff%
 
-        **Reason:**
+        # The text or value for # The Text Or Mode For **Reason. Available Options. Available options: Any valid string text
+        # The text or mode for **Reason. Available options: Any string text **Reason:**
         ||%reason%||
 
-        **Date:**
+        # The text or value for # The Text Or Mode For **Date. Available Options. Available options: Any valid string text
+        # The text or mode for **Date. Available options: Any string text **Date:**
         %date%
 
         '
@@ -149,21 +170,27 @@ WEBHOOKS:
       # The text or value for Description. Available options: Any valid string text
       DESCRIPTION: ':no_entry: **PERMANENT NETWORK BAN**
 
-        **Player:**
+        # The text or value for # The Text Or Mode For **Player. Available Options. Available options: Any valid string text
+        # The text or mode for **Player. Available options: Any string text **Player:**
         %player%
 
-        **Staff:**
+        # The text or value for # The Text Or Mode For **Staff. Available Options. Available options: Any valid string text
+        # The text or mode for **Staff. Available options: Any string text **Staff:**
         %staff%
 
-        **Reason:**
+        # The text or value for # The Text Or Mode For **Reason. Available Options. Available options: Any valid string text
+        # The text or mode for **Reason. Available options: Any string text **Reason:**
         ||%reason%||
 
-        **Date:**
+        # The text or value for # The Text Or Mode For **Date. Available Options. Available options: Any valid string text
+        # The text or mode for **Date. Available options: Any string text **Date:**
         %date%
 
-        **ID:** `%id%`
+        # The text or value for # The Text Or Mode For **Id. Available Options. Available options: Any valid string text
+        # The text or mode for **Id. Available options: Any string text **ID:** `%id%`
 
-        :exclamation:
+        # The text or value for # The Text Or Mode For . Available Options. Available options: Any valid string text
+        # The text or mode for . Available options: Any string text :exclamation:
         This is a permanent network-wide ban
 
         '

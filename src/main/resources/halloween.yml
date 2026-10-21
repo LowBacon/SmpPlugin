@@ -1,10 +1,14 @@
 # ==============================================================================
-# CustomSmp - Halloween (Spooky Calendar, Trick or Treat, candy and pumpkins)
+# SmpPlugin - Halloween (hub, Spooky Calendar, Trick or Treat, candy, quests)
 # ==============================================================================
 #
-# /halloween opens the Spooky Calendar: one door for every day of the season.
-# Behind each door is a prize. Players open today's door with a click, watch it
-# spin, and get the prize. The last door is the big Halloween prize.
+# /halloween opens the Halloween hub: the Spooky Calendar, Trick or Treat, the
+# daily treat bag, quests, the candy shop, candy milestones and the candy
+# leaderboard. /halloween calendar opens the calendar itself.
+#
+# The Spooky Calendar has one door for every day of the season. A prize is the
+# player's the moment they click the door; the door then spins and shows it.
+# Items that do not fit go to their reward vault (/claimitems).
 #
 # Choosing prizes:
 #   - In game: /halloween edit. Click a door, drop items into the top area,
@@ -16,8 +20,16 @@
 #     COMMANDS (run by the console, %player% = the player) and DISPLAY (lines
 #     shown instead of the automatic summary). COMMANDS always come from here.
 #
-# Test the calendar outside October with /halloween preview 2026-10-13
-# (pretends it is that day until the next restart), or set PREVIEW-DATE.
+# Staff:
+#   /events halloween on|off|auto    run it now, stop it, or follow the dates
+#   /events trickortreat on|off|auto the same for Trick or Treat alone
+#   /halloween test 2026-10-13       see the calendar as on that day; only you
+#                                    see it, and opening doors gives nothing
+#   /halloween candy <player> <give|take|set> <n>
+#   /trickortreat house add|remove|list, /trickortreat odds
+#
+# Candy belongs to one season: what is left when Halloween ends stays in that
+# year's records but cannot be spent next year.
 # ==============================================================================
 
 ENABLED: true
@@ -42,8 +54,12 @@ CATCH-UP: true
 # Extra days after LAST-DAY when unopened doors can still be claimed.
 GRACE-DAYS: 0
 
-# Pretend it is this date (yyyy-MM-dd), for testing. Leave empty on a live server.
+# Pretend it is this date (yyyy-MM-dd) for EVERYONE, with real prizes. Only for
+# a test server; on a live server use /halloween test instead.
 PREVIEW-DATE: ""
+
+# Write each opened door to the console log (who, which door, what it gave).
+LOG-CLAIMS: true
 
 CALENDAR:
   TITLE: "&8🎃 &6&lSpooky Calendar"
@@ -121,26 +137,45 @@ DOORS:
 
 TRICK-OR-TREAT:
   ENABLED: true
-  # Minutes between knocks for each player.
+  # Trick or Treat's own days of the month (the calendar's season when left out).
+  # FIRST-DAY: 24
+  # LAST-DAY: 31
+  # Minutes between knocks for each player (with houses: at each house).
+  # Ranks can shorten it (TRICK-OR-TREAT-COOLDOWN-CUT-PERCENT in perks.yml).
   COOLDOWN-MINUTES: 60
+  # Knocks a day for each player; 0 for no limit. Ranks can add a few
+  # (TRICK-OR-TREAT-EXTRA-KNOCKS in perks.yml).
+  DAILY-LIMIT: 8
   # Percent chance of a treat; the rest are harmless tricks.
   TREAT-CHANCE: 70
-  # Treats are picked by WEIGHT.
+  # Candy for a trick, so a knock is never wasted.
+  TRICK-CANDY: 1
+  # Houses: spots set in game with /trickortreat house add <id> (stand at the
+  # door), and FancyNpcs NPCs named below. With REQUIRE-HOUSE players have to go
+  # door to door, and the wait counts per house.
+  REQUIRE-HOUSE: false
+  NPCS: []
+  # Treats are picked by WEIGHT (chance = weight / total; see /trickortreat
+  # odds). Each takes MONEY, SHARDS, ITEMS, COMMANDS and CANDY.
   TREATS:
     small:
       WEIGHT: 60
       MONEY: 250
+      CANDY: 3
     candy:
       WEIGHT: 25
       ITEMS:
         - "COOKIE:16"
+      CANDY: 5
     shards:
       WEIGHT: 12
       SHARDS: 10
+      CANDY: 3
     jackpot:
       WEIGHT: 3
       MONEY: 5000
       SHARDS: 25
+      CANDY: 20
       # Told to the whole server.
       ANNOUNCE: true
   # Which tricks can happen. Remove any you do not want.
@@ -151,6 +186,141 @@ TRICK-OR-TREAT:
     - SPIN
     - DARKNESS
     - FAKE_CREEPER
+
+# Candy is the Halloween currency: earned from treats, quests, the daily treat
+# bag and monsters, spent in the candy shop. Ranks can add a share
+# (CANDY-BONUS-PERCENT in perks.yml).
+CANDY:
+  NAME: "Candy"
+  # Chance that a monster killed by a player gives candy, and how much.
+  MONSTER-KILL-CHANCE-PERCENT: 15
+  MONSTER-KILL-AMOUNT: 1
+
+# A free bag every day of the season, opened in the hub.
+DAILY-BAG:
+  ENABLED: true
+  MONEY: 250
+  CANDY: 10
+
+# Given the moment a player has earned this much candy this season (spending
+# does not count against it). NAME is shown; the rest is the prize.
+MILESTONES:
+  50:
+    NAME: "&6Trick-or-Treater"
+    MONEY: 1000
+  150:
+    NAME: "&6Candy Collector"
+    MONEY: 2500
+    SHARDS: 15
+  300:
+    NAME: "&6Sugar Rush"
+    MONEY: 5000
+    SHARDS: 30
+    ITEMS:
+      - "GOLDEN_APPLE:4"
+  600:
+    NAME: "&6&lPumpkin King"
+    MONEY: 10000
+    SHARDS: 60
+    ITEMS:
+      - "JACK_O_LANTERN:1"
+
+# Season quests: finished once each. TYPE is KILL_MONSTERS, KILL_MOB (TARGET:
+# a mob such as ZOMBIE), BREAK_BLOCK (TARGET: a block such as PUMPKIN),
+# TRICK_OR_TREAT, OPEN_DOORS or EAT_CANDY. CANDY and REWARD are given when done.
+QUESTS:
+  monster-hunter:
+    NAME: "&6Monster Hunter"
+    DESCRIPTION:
+      - "Defeat 50 monsters."
+    ICON: IRON_SWORD
+    TYPE: KILL_MONSTERS
+    AMOUNT: 50
+    CANDY: 25
+    REWARD:
+      MONEY: 1500
+  zombie-slayer:
+    NAME: "&6Zombie Slayer"
+    DESCRIPTION:
+      - "Defeat 25 zombies."
+    ICON: ROTTEN_FLESH
+    TYPE: KILL_MOB
+    TARGET: ZOMBIE
+    AMOUNT: 25
+    CANDY: 15
+  pumpkin-picker:
+    NAME: "&6Pumpkin Picker"
+    DESCRIPTION:
+      - "Harvest 32 pumpkins."
+    ICON: PUMPKIN
+    TYPE: BREAK_BLOCK
+    TARGET: PUMPKIN
+    AMOUNT: 32
+    CANDY: 15
+  door-to-door:
+    NAME: "&5Door to Door"
+    DESCRIPTION:
+      - "Knock for Trick or Treat 10 times."
+    ICON: OAK_DOOR
+    TYPE: TRICK_OR_TREAT
+    AMOUNT: 10
+    CANDY: 20
+  calendar-keeper:
+    NAME: "&6Calendar Keeper"
+    DESCRIPTION:
+      - "Open 7 doors of the Spooky Calendar."
+    ICON: CARVED_PUMPKIN
+    TYPE: OPEN_DOORS
+    AMOUNT: 7
+    CANDY: 20
+  sweet-tooth:
+    NAME: "&6Sweet Tooth"
+    DESCRIPTION:
+      - "Eat 5 Halloween Candy."
+    ICON: COOKIE
+    TYPE: EAT_CANDY
+    AMOUNT: 5
+    CANDY: 10
+
+# The candy shop. PRICE is in candy; LIMIT is how many each player can buy per
+# season (0 = no limit). Each takes MONEY, SHARDS, ITEMS, COMMANDS and DISPLAY,
+# so crate keys, titles or cosmetics from other plugins can be sold with a
+# COMMANDS line.
+SHOP:
+  ITEMS:
+    golden-apples:
+      NAME: "&6Golden Apples"
+      ICON: GOLDEN_APPLE
+      PRICE: 40
+      ITEMS:
+        - "GOLDEN_APPLE:3"
+    pumpkin-pie:
+      NAME: "&6Pumpkin Pies"
+      ICON: PUMPKIN_PIE
+      PRICE: 10
+      ITEMS:
+        - "PUMPKIN_PIE:16"
+    rare-key:
+      NAME: "&dRare Crate Key"
+      ICON: TRIPWIRE_HOOK
+      PRICE: 120
+      LIMIT: 3
+      COMMANDS:
+        - "crate key %player% rare 1"
+      DISPLAY:
+        - "&d1x Rare crate key"
+    pumpkin-mask:
+      NAME: "&6Pumpkin Mask"
+      ICON: CARVED_PUMPKIN
+      PRICE: 60
+      LIMIT: 1
+      ITEMS:
+        - "CARVED_PUMPKIN:1"
+    shards:
+      NAME: "&dShard Pouch"
+      ICON: AMETHYST_SHARD
+      PRICE: 80
+      SHARDS: 25
 
 AMBIENCE:
   # Only during the season (and grace days).

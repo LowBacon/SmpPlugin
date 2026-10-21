@@ -1,10 +1,17 @@
 package com.bx.smpPlugin.utils;
 
 import com.bx.smpPlugin.SmpPlugin;
+import com.bx.smpPlugin.core.Text;
+import com.bx.smpPlugin.economy.EconomyContext;
+import com.bx.smpPlugin.economy.Money;
 import com.bx.smpPlugin.managers.CurrencyManager;
+import com.bx.smpPlugin.managers.EconomyManager;
+import com.bx.smpPlugin.models.EconomyFailureReason;
 import com.bx.smpPlugin.models.EconomyReason;
 import com.bx.smpPlugin.models.PlayerData;
 import org.bukkit.entity.Player;
+
+import java.util.OptionalLong;
 
 public final class PaymentUtils {
 
@@ -56,44 +63,52 @@ public final class PaymentUtils {
             sender.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage("BALANCE.PAY.NOT-ENOUGH-MONEY")));
             return false;
         }
-        PayRules rules = PayRules.read(plugin);
-        String ruleProblem = rules.check(sender, amount);
-        if (ruleProblem != null) {
-            sender.sendMessage(ColorUtils.toComponent(ruleProblem));
+        EconomyManager economy = plugin.getEconomyManager();
+        OptionalLong requested = Money.toCents(amount);
+        if (requested.isEmpty() || requested.getAsLong() <= 0L) {
+            sender.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage("BALANCE.PAY.INVALID-AMOUNT")));
             return false;
         }
-        if (!plugin.getEconomyManager().has(sender, amount)) {
+        long cents = requested.getAsLong();
+        EconomyManager.PayRules rules = economy.payRules();
+        if (cents < rules.minCents()) {
+            Text.send(sender, "ECONOMY.PAY-MINIMUM", "&cThe smallest payment is &f{amount}&c.",
+                    "{amount}", plugin.getCurrencyManager().formatMoney(Money.toUnits(rules.minCents())));
+            return false;
+        }
+        if (rules.maxCents() > 0L && cents > rules.maxCents()) {
+            Text.send(sender, "ECONOMY.PAY-MAXIMUM", "&cYou can send at most &f{amount}&c in one payment.",
+                    "{amount}", plugin.getCurrencyManager().formatMoney(Money.toUnits(rules.maxCents())));
+            return false;
+        }
+        long wait = economy.payCooldownRemaining(sender.getUniqueId());
+        if (wait > 0L) {
+            Text.send(sender, "ECONOMY.PAY-COOLDOWN", "&cWait &f{seconds}s &cbefore sending another payment.",
+                    "{seconds}", Long.toString((wait + 999L) / 1000L));
+            return false;
+        }
+        if (!economy.has(sender, amount)) {
             sender.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage("BALANCE.PAY.NOT-ENOUGH-MONEY")));
             return false;
         }
 
-        long amountCents = com.bx.smpPlugin.economy.Money.toCents(amount).orElse(0L);
-        long feeCents = com.bx.smpPlugin.economy.Money.fee(amountCents, rules.feePercent());
-        double fee = com.bx.smpPlugin.economy.Money.toDouble(feeCents);
-        if (feeCents > 0L && !plugin.getEconomyManager().withdraw(sender, fee, EconomyReason.PAY_FEE).success()) {
-            sender.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage("BALANCE.PAY.NOT-ENOUGH-MONEY")));
-            return false;
-        }
-        double sent = com.bx.smpPlugin.economy.Money.toDouble(amountCents - feeCents);
-        var transferResult = sent <= 0D ? null
-                : plugin.getEconomyManager().transfer(sender, target, sent, EconomyReason.PLAYER_PAY);
-        if (transferResult == null || !transferResult.success()) {
-            if (feeCents > 0L) {
-                plugin.getEconomyManager().deposit(sender, fee, EconomyReason.PAY_FEE);
+        long tax = rules.taxFor(cents);
+        var transferResult = economy.transfer(sender.getUniqueId(), sender.getName(), target.getUniqueId(),
+                target.getName(), Money.toUnits(cents), tax, EconomyReason.PLAYER_PAY, EconomyContext.NONE);
+        if (!transferResult.success()) {
+            if (transferResult.failureReason() == EconomyFailureReason.BALANCE_LIMIT) {
+                Text.send(sender, "ECONOMY.PAY-RECIPIENT-FULL", "&c{player}'s balance cannot hold that much more.",
+                        "{player}", plugin.getHideManager().publicName(target));
+            } else if (transferResult.failureReason() == EconomyFailureReason.INSUFFICIENT_FUNDS) {
+                sender.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage("BALANCE.PAY.NOT-ENOUGH-MONEY")));
+            } else {
+                sender.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage("BALANCE.PAY.TRANSACTION-ERROR")));
             }
-            sender.sendMessage(ColorUtils.toComponent(transferResult == null
-                    ? plugin.getConfigManager().getMessage("BALANCE.PAY.TRANSACTION-ERROR")
-                    : com.bx.smpPlugin.economy.EconomyMessages.failure(plugin, transferResult.failureReason())));
             return false;
         }
-        rules.markPaid(sender);
-        if (feeCents > 0L) {
-            sender.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessageOrDefault(
-                    "ECONOMY.PAY-FEE", "&7A fee of &f{fee} &7was taken; {player} received &f{received}&7.",
-                    "{fee}", plugin.getCurrencyManager().formatMoney(fee),
-                    "{received}", plugin.getCurrencyManager().formatMoney(sent),
-                    "{player}", plugin.getHideManager().publicName(target))));
-        }
+        economy.markPayment(sender.getUniqueId());
+        amount = transferResult.amount();
+        double received = Money.toUnits(cents - tax);
 
         sender.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage(
                 "BALANCE.PAY.SUCCESS-SENDER",
@@ -102,14 +117,20 @@ public final class PaymentUtils {
                 "{amount_full}", fullMoneyAmount(plugin, amount),
                 "{money}", plugin.getCurrencyManager().formatMoneyCompact(amount),
                 "{money_full}", fullMoney(plugin, amount))));
+        if (tax > 0L) {
+            Text.send(sender, "ECONOMY.PAY-TAX", "&7Payment tax: &f{tax}&7. {player} received &f{received}&7.",
+                    "{tax}", plugin.getCurrencyManager().formatMoney(Money.toUnits(tax)),
+                    "{player}", plugin.getHideManager().publicName(target),
+                    "{received}", plugin.getCurrencyManager().formatMoney(received));
+        }
         if (targetData.isPayAlertsEnabled()) {
             target.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage(
                     "BALANCE.PAY.SUCCESS-RECEIVER",
                     "{player}", plugin.getHideManager().publicName(sender),
-                    "{amount}", compactMoneyAmount(plugin, sent),
-                    "{amount_full}", fullMoneyAmount(plugin, sent),
-                    "{money}", plugin.getCurrencyManager().formatMoneyCompact(sent),
-                    "{money_full}", fullMoney(plugin, sent))));
+                    "{amount}", compactMoneyAmount(plugin, received),
+                    "{amount_full}", fullMoneyAmount(plugin, received),
+                    "{money}", plugin.getCurrencyManager().formatMoneyCompact(received),
+                    "{money_full}", fullMoney(plugin, received))));
         }
         return true;
     }
@@ -160,12 +181,8 @@ public final class PaymentUtils {
             return false;
         }
 
-        var shardTransfer = plugin.getEconomyManager().transferShards(sender.getUniqueId(), sender.getName(),
-                target.getUniqueId(), target.getName(), amount, com.bx.smpPlugin.models.EconomyReason.SHARD_PAY);
-        if (!shardTransfer.success()) {
-            sender.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage("SHARD_PAY.NOT-ENOUGH-SHARDS")));
-            return false;
-        }
+        senderData.removeShards(amount);
+        targetData.addShards(amount);
 
         sender.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage(
                 "SHARD_PAY.SUCCESS-SENDER",
@@ -192,50 +209,5 @@ public final class PaymentUtils {
 
     private static String fullMoney(SmpPlugin plugin, double amount) {
         return plugin.getCurrencyManager().format(CurrencyManager.CurrencyType.MONEY, amount, false);
-    }
-
-    /** ECONOMY.PAY in config.yml: smallest and largest payment, wait between payments, fee. */
-    record PayRules(double min, double max, long cooldownMillis, double feePercent) {
-
-        private static final java.util.Map<java.util.UUID, Long> LAST_PAYMENT = new java.util.concurrent.ConcurrentHashMap<>();
-
-        static PayRules read(SmpPlugin plugin) {
-            var config = plugin.getConfigManager().getConfig();
-            return new PayRules(
-                    Math.max(0D, config.getDouble("ECONOMY.PAY.MIN-AMOUNT", 0.01D)),
-                    Math.max(0D, config.getDouble("ECONOMY.PAY.MAX-AMOUNT", 0D)),
-                    Math.max(0L, config.getLong("ECONOMY.PAY.COOLDOWN-SECONDS", 0L)) * 1000L,
-                    Math.max(0D, Math.min(100D, config.getDouble("ECONOMY.PAY.FEE-PERCENT", 0D))));
-        }
-
-        /** The message to show when this payment is not allowed, or null when it is. */
-        String check(Player sender, double amount) {
-            if (min > 0D && amount + 1e-9 < min) {
-                return "&cThe smallest payment is " + com.bx.smpPlugin.SmpPlugin.getInstance().getCurrencyManager().formatMoney(min) + ".";
-            }
-            if (max > 0D && amount > max + 1e-9 && !PermissionUtils.has(sender, "smpplugin.bypass.paylimit")) {
-                return "&cThe largest payment is " + com.bx.smpPlugin.SmpPlugin.getInstance().getCurrencyManager().formatMoney(max) + ".";
-            }
-            if (cooldownMillis > 0L && !PermissionUtils.has(sender, "smpplugin.bypass.paycooldown")) {
-                Long last = LAST_PAYMENT.get(sender.getUniqueId());
-                long waited = last == null ? Long.MAX_VALUE : System.currentTimeMillis() - last;
-                if (waited < cooldownMillis) {
-                    long seconds = Math.max(1L, (cooldownMillis - waited + 999L) / 1000L);
-                    return "&cWait " + seconds + "s before paying again.";
-                }
-            }
-            return null;
-        }
-
-        void markPaid(Player sender) {
-            if (cooldownMillis <= 0L) {
-                return;
-            }
-            long now = System.currentTimeMillis();
-            LAST_PAYMENT.put(sender.getUniqueId(), now);
-            if (LAST_PAYMENT.size() > 512) {
-                LAST_PAYMENT.values().removeIf(time -> now - time > cooldownMillis);
-            }
-        }
     }
 }

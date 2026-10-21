@@ -1,6 +1,12 @@
 # Configuration section for Database.
 DATABASE:
+  # Where player data is stored. Available options: SQLITE, MYSQL, MONGODB
+  # MONGODB keeps a local SQLite file (MONGODB.CACHE-FILE) as the live store and uploads a copy of it to
+  # MongoDB (see MONGODB.SYNC-INTERVAL-SECONDS). It is a backup mirror, not a shared MongoDB database.
   TYPE: SQLITE
+  # How often changed player rows (shards, stats, settings) are saved, in seconds. Balance changes do not wait
+  # for this: they are written to the database as they happen. Available options: 10 to 3600
+  AUTOSAVE-SECONDS: 60
   # Configuration section for Sqlite.
   SQLITE:
     # The text or value for File. Available options: Any valid string text
@@ -29,8 +35,10 @@ DATABASE:
     DATABASE: finnishsmp
     # The text or value for Cache File. Available options: Any valid string text
     CACHE-FILE: data/mongodb-cache.db
-    # Determines whether Sync On Autosave is enabled or disabled. Available options: true, false
+    # Determines whether the local copy is uploaded to MongoDB on a schedule. Available options: true, false
     SYNC-ON-AUTOSAVE: true
+    # How often the local copy is uploaded to MongoDB, in seconds. Available options: 60 to 86400
+    SYNC-INTERVAL-SECONDS: 300
 # Configuration section for Redis.
 REDIS:
   # Determines whether Enabled is enabled or disabled. Available options: true, false

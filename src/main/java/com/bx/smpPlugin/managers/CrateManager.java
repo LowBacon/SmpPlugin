@@ -3,6 +3,7 @@ package com.bx.smpPlugin.managers;
 import com.bx.smpPlugin.utils.PermissionUtils;
 
 import com.bx.smpPlugin.SmpPlugin;
+import com.bx.smpPlugin.models.EconomyReason;
 import com.bx.smpPlugin.models.PlayerData;
 import com.bx.smpPlugin.utils.ColorUtils;
 import com.bx.smpPlugin.utils.ItemSerializationUtils;
@@ -869,19 +870,19 @@ public class CrateManager {
     }
 
     private boolean grantMoneyReward(Player player, GrantDefinition grant) {
-        if (plugin.getPlayerDataManager().get(player) == null) {
-            return false;
+        if (grant.moneyAmount() <= 0D) {
+            return true;
         }
-        return plugin.getEconomyManager().deposit(player, grant.moneyAmount(),
-                com.bx.smpPlugin.models.EconomyReason.CRATE_REWARD).success();
+        return plugin.getEconomyManager().deposit(player, grant.moneyAmount(), EconomyReason.CRATE_REWARD).success();
     }
 
     private boolean grantShardReward(Player player, GrantDefinition grant) {
-        if (plugin.getPlayerDataManager().get(player) == null) {
+        PlayerData data = plugin.getPlayerDataManager().get(player);
+        if (data == null) {
             return false;
         }
-        return plugin.getEconomyManager().depositShards(player.getUniqueId(), player.getName(), grant.shardAmount(),
-                com.bx.smpPlugin.models.EconomyReason.CRATE_REWARD).success();
+        data.addShards(grant.shardAmount());
+        return true;
     }
 
     private boolean grantCommandReward(Player player, CrateDefinition crate, CrateReward reward, GrantDefinition grant) {

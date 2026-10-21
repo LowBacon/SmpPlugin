@@ -121,13 +121,13 @@ public class VaultEconomyHook extends AbstractEconomy {
             return failureResponse(amount, 0D, "Player account not found.");
         }
 
-        var result = plugin.getEconomyManager().withdraw(account, amount, EconomyReason.AUCTION_PURCHASE);
+        var result = plugin.getEconomyManager().withdraw(account, amount, EconomyReason.VAULT_WITHDRAW);
         return toResponse(result);
     }
 
     @Override
     public EconomyResponse withdrawPlayer(OfflinePlayer player, double amount) {
-        return toResponse(plugin.getEconomyManager().withdraw(player, amount, EconomyReason.AUCTION_PURCHASE));
+        return toResponse(plugin.getEconomyManager().withdraw(player, amount, EconomyReason.VAULT_WITHDRAW));
     }
 
     @Override
@@ -147,13 +147,13 @@ public class VaultEconomyHook extends AbstractEconomy {
             return failureResponse(amount, 0D, "Player account not found.");
         }
 
-        var result = plugin.getEconomyManager().deposit(account, amount, EconomyReason.SELL_PAYOUT);
+        var result = plugin.getEconomyManager().deposit(account, amount, EconomyReason.VAULT_DEPOSIT);
         return toResponse(result);
     }
 
     @Override
     public EconomyResponse depositPlayer(OfflinePlayer player, double amount) {
-        return toResponse(plugin.getEconomyManager().deposit(player, amount, EconomyReason.SELL_PAYOUT));
+        return toResponse(plugin.getEconomyManager().deposit(player, amount, EconomyReason.VAULT_DEPOSIT));
     }
 
     @Override

@@ -36,6 +36,7 @@ class DatabaseManagerPlayerWipeTest {
             assertEquals(preview.total(), result.total());
 
             assertEquals(1000D, money(connection, TARGET), 0.001D);
+            assertEquals(100_000L, cents(connection, TARGET), "the exact balance is reset too");
             assertEquals(0, queryInt(connection, "SELECT kills FROM players WHERE uuid = '" + TARGET + "'"));
             assertEquals(0, queryInt(connection, "SELECT shards FROM players WHERE uuid = '" + TARGET + "'"));
             assertEquals(-1, queryInt(connection,
@@ -56,6 +57,7 @@ class DatabaseManagerPlayerWipeTest {
 
             // The bystander keeps every one of their own rows.
             assertEquals(500D, money(connection, BYSTANDER), 0.001D);
+            assertEquals(50_000L, cents(connection, BYSTANDER));
             assertEquals(9, queryInt(connection, "SELECT kills FROM players WHERE uuid = '" + BYSTANDER + "'"));
             assertEquals(1, countWhere(connection, "homes", "player_uuid = '" + BYSTANDER + "'"));
             assertEquals(1, countWhere(connection, "shop_favorites", "player_uuid = '" + BYSTANDER + "'"));
@@ -80,6 +82,7 @@ class DatabaseManagerPlayerWipeTest {
             );
 
             assertEquals(250D, money(connection, TARGET), 0.001D);
+            assertEquals(25_000L, cents(connection, TARGET));
             assertEquals(7, queryInt(connection, "SELECT kills FROM players WHERE uuid = '" + TARGET + "'"));
             assertEquals(1, countWhere(connection, "shop_favorites", "player_uuid = '" + TARGET + "'"));
         }
@@ -115,7 +118,8 @@ class DatabaseManagerPlayerWipeTest {
                         keyall_remaining_seconds INTEGER,
                         shard_booster_expiry INTEGER,
                         mob_spawn_disabled_until BIGINT,
-                        phantom_disabled_until BIGINT
+                        phantom_disabled_until BIGINT,
+                        money_cents BIGINT
                     )
                     """);
             statement.execute("CREATE TABLE homes (player_uuid TEXT, home_name TEXT)");
@@ -185,11 +189,18 @@ class DatabaseManagerPlayerWipeTest {
 
     private String playerRow(UUID uuid, String username, int money, int shards, int kills) {
         return "INSERT INTO players VALUES ('" + uuid + "', '" + username + "', " + money + ", " + shards + ", "
-                + kills + ", 3, 900, 12, 13, 14, 4, 8, 200, 300, 1, 60, 12345, 0, 0)";
+                + kills + ", 3, 900, 12, 13, 14, 4, 8, 200, 300, 1, 60, 12345, 0, 0, " + money * 100L + ")";
     }
 
     private double money(Connection connection, UUID uuid) throws Exception {
         return queryDouble(connection, "SELECT money FROM players WHERE uuid = '" + uuid + "'");
+    }
+
+    private long cents(Connection connection, UUID uuid) throws Exception {
+        try (Statement statement = connection.createStatement();
+             ResultSet result = statement.executeQuery("SELECT money_cents FROM players WHERE uuid = '" + uuid + "'")) {
+            return result.next() ? result.getLong(1) : -1L;
+        }
     }
 
     private int count(Connection connection, String table) throws Exception {

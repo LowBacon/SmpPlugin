@@ -145,25 +145,39 @@ public record Reward(double money, long shards, List<ItemStack> items, List<Stri
     }
 
     /**
-     * Hands the reward to an online player. Items that do not fit drop at their feet. Must run
+     * Hands the reward to an online player. Items that do not fit go to their reward vault (/claimitems). Must run
      * on the player's thread.
      */
     public void give(SmpPlugin plugin, Player player) {
+        give(plugin, player, EconomyReason.REWARD, com.bx.smpPlugin.economy.EconomyContext.NONE);
+    }
+
+    /** Like {@link #give(SmpPlugin, Player)}, recording the money under a reason and a note in the ledger. */
+    public void give(SmpPlugin plugin, Player player, EconomyReason reason, com.bx.smpPlugin.economy.EconomyContext context) {
         if (player == null || !player.isOnline()) {
             return;
         }
         if (money > 0D && plugin.getEconomyManager() != null) {
-            plugin.getEconomyManager().deposit(player, money, EconomyReason.REWARD);
+            com.bx.smpPlugin.models.EconomyTransactionResult result = plugin.getEconomyManager().deposit(player, money, reason, context);
+            if (!result.success()) {
+                plugin.getLogger().warning("Could not pay the " + money + " reward to " + player.getName() + ": "
+                        + result.failureReason());
+                Text.send(player, "REWARD.MONEY-FAILED", result.failureReason() == com.bx.smpPlugin.models.EconomyFailureReason.BALANCE_LIMIT
+                                ? "&cThe money part of this reward could not be paid: your balance is at the limit."
+                                : "&cThe money part of this reward could not be paid right now. Staff can see why in the console.");
+            }
         }
-        if (shards > 0L && plugin.getEconomyManager() != null) {
-            plugin.getEconomyManager().depositShards(player.getUniqueId(), player.getName(), shards, EconomyReason.REWARD);
+        if (shards > 0L) {
+            PlayerData data = plugin.getPlayerDataManager().get(player);
+            if (data != null) {
+                data.addShards(shards);
+                if (plugin.getLeaderboardManager() != null) {
+                    plugin.getLeaderboardManager().invalidate(LeaderboardManager.LeaderboardType.SHARDS);
+                }
+            }
         }
         if (!items.isEmpty()) {
-            Map<Integer, ItemStack> leftover = player.getInventory().addItem(
-                    items.stream().map(ItemStack::clone).toArray(ItemStack[]::new));
-            for (ItemStack rest : leftover.values()) {
-                player.getWorld().dropItemNaturally(player.getLocation(), rest);
-            }
+            com.bx.smpPlugin.engagement.PendingItems.giveOrKeep(plugin, player, items);
         }
         for (String command : commands) {
             String filled = command.replace("%player%", player.getName())

@@ -64,6 +64,11 @@ public class FeatureToggleMenu extends BaseMenu {
 
     @Override
     public void handleClick(int slot, Player player, ClickType clickType) {
+        // Checked again on every click: the menu stays open while permissions can change.
+        if (!com.bx.smpPlugin.utils.PermissionUtils.has(player, "smpplugin.admin.features")) {
+            player.closeInventory();
+            return;
+        }
         SoundUtils.play(player, plugin.getConfigManager().getSound("MENUS.BUTTON-CLICK"));
 
         int previousSlot = menus().getInt(MENU_PATH + ".BUTTONS.PREVIOUS.SLOT", inventory.getSize() - 9);

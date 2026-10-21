@@ -92,12 +92,12 @@ class GamblingMathTest {
     @Test
     void everyCentIsOneTicket() {
         long[] stakes = {300L, 700L};
-        assertEquals(0, SpinMath.pick(stakes, 0L));
-        assertEquals(0, SpinMath.pick(stakes, 299L));
-        assertEquals(1, SpinMath.pick(stakes, 300L));
-        assertEquals(1, SpinMath.pick(stakes, 999L));
-        assertThrows(IllegalArgumentException.class, () -> SpinMath.pick(stakes, 1_000L));
-        assertThrows(IllegalArgumentException.class, () -> SpinMath.pick(stakes, -1L));
+        assertEquals(0, RouletteMath.pick(stakes, 0L));
+        assertEquals(0, RouletteMath.pick(stakes, 299L));
+        assertEquals(1, RouletteMath.pick(stakes, 300L));
+        assertEquals(1, RouletteMath.pick(stakes, 999L));
+        assertThrows(IllegalArgumentException.class, () -> RouletteMath.pick(stakes, 1_000L));
+        assertThrows(IllegalArgumentException.class, () -> RouletteMath.pick(stakes, -1L));
     }
 
     @Test
@@ -107,7 +107,7 @@ class GamblingMathTest {
         Random random = new Random(42L);
         int draws = 200_000;
         for (int i = 0; i < draws; i++) {
-            wins[SpinMath.pick(stakes, random.nextLong(1_000L))]++;
+            wins[RouletteMath.pick(stakes, random.nextLong(1_000L))]++;
         }
         assertEquals(0.1, wins[0] / (double) draws, 0.005);
         assertEquals(0.3, wins[1] / (double) draws, 0.005);
@@ -116,12 +116,12 @@ class GamblingMathTest {
 
     @Test
     void feeRoundsDownAndPayoutAddsUp() {
-        assertEquals(0L, SpinMath.fee(12_345L, 0));
-        assertEquals(617L, SpinMath.fee(12_345L, 500));
-        assertEquals(12_345L - 617L, SpinMath.payout(12_345L, 500));
-        assertEquals(6_172L, SpinMath.fee(12_345L, 99_999));
-        assertEquals("2.5%", SpinMath.percent(250));
-        assertEquals("33.3%", SpinMath.chance(1L, 3L));
+        assertEquals(0L, RouletteMath.fee(12_345L, 0));
+        assertEquals(617L, RouletteMath.fee(12_345L, 500));
+        assertEquals(12_345L - 617L, RouletteMath.payout(12_345L, 500));
+        assertEquals(6_172L, RouletteMath.fee(12_345L, 99_999));
+        assertEquals("2.5%", RouletteMath.percent(250));
+        assertEquals("33.3%", RouletteMath.chance(1L, 3L));
     }
 
     @Test
@@ -131,7 +131,7 @@ class GamblingMathTest {
         for (int round = 0; round < 500; round++) {
             int winner = round % 3;
             int steps = 48 + random.nextInt(12);
-            int[] reel = SpinMath.reel(stakes, winner, steps + 9, 9, steps, random::nextLong);
+            int[] reel = RouletteMath.reel(stakes, winner, steps + 9, 9, steps, random::nextLong);
             assertEquals(steps + 9, reel.length);
             assertEquals(winner, reel[steps + 4]);
             assertFalse(reel[steps + 3] == winner || reel[steps + 5] == winner, "winner beside the middle");
@@ -139,24 +139,8 @@ class GamblingMathTest {
     }
 
     @Test
-    void coinFlipReelStopsOnTheDrawnPlayerAndAlternatesHeads() {
-        Random random = new Random(11L);
-        int creatorWins = 0;
-        for (int round = 0; round < 2_000; round++) {
-            int winner = random.nextBoolean() ? 0 : 1;
-            creatorWins += winner == 0 ? 1 : 0;
-            int steps = 30 + random.nextInt(8);
-            int[] reel = SpinMath.reel(new long[]{1L, 1L}, winner, steps + 9, 9, steps, random::nextLong);
-            assertEquals(winner, reel[steps + 4]);
-            assertEquals(1 - winner, reel[steps + 3], "the other head sits right beside the winner");
-            assertEquals(1 - winner, reel[steps + 5]);
-        }
-        assertEquals(0.5, creatorWins / 2_000D, 0.04, "a fair coin");
-    }
-
-    @Test
     void reelDelaysSlowDown() {
-        List<Integer> delays = SpinMath.delays(50, 1, 7);
+        List<Integer> delays = RouletteMath.delays(50, 1, 7);
         assertEquals(50, delays.size());
         assertEquals(1, delays.getFirst());
         assertEquals(7, delays.getLast());

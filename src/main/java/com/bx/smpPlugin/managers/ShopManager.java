@@ -1209,8 +1209,7 @@ public class ShopManager {
 
         long shardCost = preview.currency() == Currency.SHARD ? Math.round(preview.totalPrice()) : 0L;
         if (preview.currency() == Currency.SHARD) {
-            if (!plugin.getEconomyManager().withdrawShards(player.getUniqueId(), player.getName(), shardCost,
-                    EconomyReason.SHARD_SHOP_PURCHASE).success()) {
+            if (!data.removeShards(shardCost)) {
                 return failPurchase(item, amount, preview.totalPrice(), PurchaseFailureReason.NO_SHARDS);
             }
         } else {
@@ -1378,8 +1377,7 @@ public class ShopManager {
 
     private void refundPurchase(Player player, PlayerData data, PurchaseResult purchase, long shardCost) {
         if (purchase.currency() == Currency.SHARD) {
-            plugin.getEconomyManager().depositShards(player.getUniqueId(), player.getName(), shardCost,
-                    EconomyReason.SHARD_SHOP_REFUND);
+            data.addShards(shardCost);
             return;
         }
 

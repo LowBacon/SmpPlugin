@@ -364,37 +364,6 @@ public final class BorderManager implements Listener {
         }
     }
 
-    /**
-     * A teleport (a command, /tp, another plugin) that would put a player outside the destination
-     * world's own border lands just inside it instead. Outside a world border a player takes 0.2
-     * damage per block past the 5-block buffer every second, which kills them at once far away,
-     * before they can even see the border. This covers borders set with the vanilla /worldborder too.
-     */
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onTeleportOutsideWorldBorder(PlayerTeleportEvent event) {
-        Location to = event.getTo();
-        Player player = event.getPlayer();
-        if (to == null || to.getWorld() == null || exempt(player)) {
-            return;
-        }
-        WorldBorder border = to.getWorld().getWorldBorder();
-        if (border.isInside(to)) {
-            return;
-        }
-        double half = Math.max(0.5D, border.getSize() / 2D - 1.5D);
-        Location center = border.getCenter();
-        double x = Math.max(center.getX() - half, Math.min(center.getX() + half, to.getX()));
-        double z = Math.max(center.getZ() - half, Math.min(center.getZ() + half, to.getZ()));
-        Location safe = to.clone();
-        safe.setX(x);
-        safe.setZ(z);
-        if (to.getWorld().getEnvironment() == World.Environment.NORMAL) {
-            safe.setY(to.getWorld().getHighestBlockYAt((int) Math.floor(x), (int) Math.floor(z)) + 1D);
-        }
-        event.setTo(safe);
-        Text.send(player, "BORDER.MOVED-INSIDE", "&7That spot is outside the world border, so you were moved just inside it.");
-    }
-
     /** Ender pearls and chorus fruit cannot carry a player out; teleport commands can. */
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onTeleport(PlayerTeleportEvent event) {

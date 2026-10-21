@@ -88,8 +88,12 @@ public final class PermissionRegistry {
         player("smpplugin.helpop", "Ask online staff for help with /helpop.", "");
         player("smpplugin.report", "Report a player to staff with /report.", "");
         player("smpplugin.enderchest", "Open your own custom Ender Chest with /enderchest.", "");
-        player("smpplugin.coinflip.use", "Play /cf: start coin flips and join other players' flips.",
-                "New in 2.0. Since 3.2 it is the only node /cf needs.");
+        player("smpplugin.coinflip.use", "Open /coinflip: browse matches, view statistics, history, leaderboards, achievements and settings.",
+                "New in 2.0.");
+        player("smpplugin.coinflip.create", "Create public CoinFlip matches with in-game currency.", "New in 2.0.");
+        player("smpplugin.coinflip.join", "Join CoinFlip matches and accept challenges.", "New in 2.0.");
+        player("smpplugin.coinflip.challenge", "Send private CoinFlip challenges and rematches.", "New in 2.0.");
+        player("smpplugin.coinflip.practice", "Flip practice coins (no currency).", "New in 2.0.");
         node("smpplugin.chat.color", "Keep colour codes typed into /msg and staff chat.", PermissionCategory.PERK,
                 List.of(), "New in 2.0.0-alpha.5. Without it the codes are removed.");
         player("smpplugin.afk.away", "Mark yourself AFK where you stand with /away.", "New in 2.0.0-alpha.5.");
@@ -121,11 +125,11 @@ public final class PermissionRegistry {
                 "Declared in 2.0; previously undeclared (op-only unless granted).");
         perk("smpplugin.auctionhouse.fastsell", "Allow the quick-sell setting for Auction House listings.",
                 "Declared in 2.0; previously undeclared (op-only unless granted).");
-        perk("smpplugin.donutplus", "Show the server's + badge (player setting).",
+        perk("smpplugin.donutplus", "Show the CustomSmp+ badge (player setting).",
                 "Declared in 2.0; previously undeclared (op-only unless granted).");
-        perk("smpplugin.donutplusplus", "++ rank: unlocks the second page of Auction House listing slots.",
+        perk("smpplugin.donutplusplus", "CustomSmp++ rank: unlocks the second page of Auction House listing slots.",
                 "New in 2.0 with the merged Auction House.");
-        perk("smpplugin.donutplusplusplus", "+++ rank: same Auction House slots as the ++ rank.",
+        perk("smpplugin.donutplusplusplus", "CustomSmp+++ rank: same Auction House slots as CustomSmp++.",
                 "New in 2.0 with the merged Auction House.");
         // Example rank nodes named in the default rtp.yml (PRIORITY-QUEUE and RANK-COOLDOWNS).
         perk("smpplugin.rtp.priority.vip++", "RTP waiting-queue priority 30 (rtp.yml PRIORITY-QUEUE).", "New in 2.0 with the merged RTP.");
@@ -208,6 +212,9 @@ public final class PermissionRegistry {
         staff("smpplugin.staff.spawnstash.alert", "Receive alerts when a bait stash is found.", "Declared in 2.0; previously undeclared.");
         staff("smpplugin.security.alerts", "Receive anti-cheat alerts and toggle them with /anticheat alerts.", "New in 2.0.");
         staff("smpplugin.security.inspect", "View anti-cheat status, check settings, flag history and evidence.", "New in 2.0.");
+        staff("smpplugin.coinflip.alerts", "Receive CoinFlip storage and settlement alerts.", "New in 2.0.");
+        staff("smpplugin.coinflip.inspect", "/coinflipadmin status, inspect, audit, reconcile report, debug and any player's statistics.",
+                "New in 2.0.");
 
         // ── Administration (default false, in smpplugin.admin) ─────────────────────
         admin("smpplugin.admin.status", "View /smpplugin status (platform, storage, integrations, anti-Xray).", "New in 2.0.");
@@ -254,6 +261,7 @@ public final class PermissionRegistry {
         admin("smpplugin.admin.adddeaths", "Add deaths to a player.", "");
         admin("smpplugin.admin.addplaytime", "Add playtime to a player.", "");
         admin("smpplugin.admin.lobby.setlobby", "Set the lobby location with /setlobby.", "");
+        admin("smpplugin.admin.lobby.border", "View or change the lobby border.", "");
         admin("smpplugin.admin.lobby.reload", "Reload lobby.yml.", "");
         admin("smpplugin.admin.lobby.debug", "Toggle lobby debug output.", "");
         admin("smpplugin.admin.logs", "View a player's activity log with /logs.", "Declared in 2.0; previously undeclared.");
@@ -267,6 +275,11 @@ public final class PermissionRegistry {
         admin("smpplugin.hide.admin", "Manage other players' hide and disguise state.", "Declared in 2.0; previously undeclared.");
         admin("smpplugin.security.manage", "Grant temporary anti-cheat exemptions, reset violation levels and reload anticheat.yml.",
                 "New in 2.0.");
+        admin("smpplugin.coinflip.admin.cancel", "Cancel and refund a waiting CoinFlip match (a reason is required and audited).",
+                "New in 2.0.");
+        admin("smpplugin.coinflip.admin.recover", "Retry stuck CoinFlip payouts and reconcile held matches from the journal.", "New in 2.0.");
+        admin("smpplugin.coinflip.admin.reload", "Reload coinflip.yml and coinflip-messages.yml and refresh leaderboards.", "New in 2.0.");
+        admin("smpplugin.coinflip.admin.toggle", "Pause or resume CoinFlip wagering for everyone.", "New in 2.0.");
 
         // ── Operational bypasses (default false, in smpplugin.admin) ───────────────
         operationalBypass("smpplugin.bypass.lobby", "Ignore lobby protection and the lobby border (needed to build the lobby).", "");
@@ -319,6 +332,10 @@ public final class PermissionRegistry {
                 "New in 2.0. Must be granted as the exact node.");
 
         // ── Destructive or overwriting actions (default false, never bundled) ──────
+        destructive("smpplugin.coinflip.admin.resolve",
+                "Decide unknown CoinFlip transactions (applied or not); can create claims, so it is never bundled.", "New in 2.0.");
+        destructive("smpplugin.coinflip.admin.resetstats", "Reset a player's CoinFlip statistics (a reason is required and audited).",
+                "New in 2.0.");
         admin("smpplugin.admin.playerwipe", "Wipe one player's stats, homes, items and progress with /playerwipe (backed up first).",
                 "New in 2.0.0-alpha.5.");
         admin("smpplugin.admin.playerunwipe", "Restore a wiped player from their backup with /playerunwipe.",
@@ -401,11 +418,12 @@ public final class PermissionRegistry {
 
         // ── 3.1: gambling, the guide, the sidebar editor and world borders ───────────
         player("smpplugin.dice", "Bet money on a dice roll against the house with /dice.", "New in 3.1.");
+        player("smpplugin.roulette", "Put money into the head roulette with /roulette.", "New in 3.1.");
         player("smpplugin.guide", "Read the getting-started guide with /guide.", "New in 3.1.");
         player("smpplugin.sidebar", "Show or hide your own scoreboard with /sidebar.", "New in 3.1.");
         perk("smpplugin.gambling.bypasscooldown", "No cooldown between /dice rolls.", "New in 3.1.");
         staff("smpplugin.staff.spawn.others", "Send another player to spawn with /spawn <player>.", "New in 3.1.");
-        admin("smpplugin.admin.coinflip", "Cancel every open coin flip and refund it with /cf cancelall.", "New in 3.2.");
+        admin("smpplugin.admin.roulette", "Cancel a head-roulette round and refund everyone with /roulette cancel.", "New in 3.1.");
         admin("smpplugin.admin.sidebar", "Edit the scoreboard title and lines in game with /sidebar.", "New in 3.1.");
         admin("smpplugin.admin.border", "Set up the spawn and lobby world borders with /border.", "New in 3.1.");
         operationalBypass("smpplugin.bypass.border", "Walk through the spawn and lobby borders (staff building or moderating).", "New in 3.1.");
@@ -414,24 +432,22 @@ public final class PermissionRegistry {
                 "New in 3.1. Replaces smpplugin.staff.giveaway and smpplugin.admin.giveaway.money. Only the manager,"
                         + " developer, co-owner and owner roles include it.");
 
-        // ── 4.0: economy ledger, ranked PvP, seasonal events and survival rules ─────
-        player("smpplugin.balance.history", "See your own money and shard history with /balance history.", "New in 4.0.");
-        player("smpplugin.ranked", "Play ranked PvP with /ranked: the queue, stats, the leaderboard and history.", "New in 4.0.");
-        player("smpplugin.events", "Use /event and /easter: see the seasonal events and take part in them.", "New in 4.0.");
-        player("smpplugin.advent", "Open the Advent Calendar with /advent.", "New in 4.0.");
-        perk("smpplugin.bypass.paylimit", "Pay more than ECONOMY.PAY.MAX-AMOUNT in one /pay.", "New in 4.0.");
-        perk("smpplugin.bypass.paycooldown", "No wait between payments (ECONOMY.PAY.COOLDOWN-SECONDS).", "New in 4.0.");
-        admin("smpplugin.admin.economy", "Give and take money, see the economy totals and anyone's history with /economy.",
-                "New in 4.0. Every change is written to the economy ledger with the admin's name.");
-        admin("smpplugin.admin.economy.history", "Read any player's money and shard history with /economy history <player>.",
+        // ── 4.0: the economy ledger, events and rank perks ──────────────────────────
+        player("smpplugin.baltop", "See the richest players with /baltop.", "New in 4.0.");
+        player("smpplugin.transactions", "See your own balance history with /transactions.", "New in 4.0.");
+        admin("smpplugin.admin.economy.history", "See any player's balance history with /eco history.", "New in 4.0.");
+        admin("smpplugin.admin.economy.stats", "See the money supply and money flows with /eco stats.", "New in 4.0.");
+        player("smpplugin.events", "See which seasonal events run with /events.", "New in 4.0.");
+        player("smpplugin.advent", "Open the Advent Calendar with /advent and open its doors.", "New in 4.0.");
+        admin("smpplugin.admin.advent", "Edit Advent Calendar gifts and use /advent give, reset, test and stats.",
                 "New in 4.0.");
-        destructive("smpplugin.admin.economy.set", "Overwrite or reset a balance with /economy set and /economy reset.",
-                "New in 4.0. Destructive like smpplugin.admin.setmoney.");
-        admin("smpplugin.admin.ranked", "Set or reset ranked ratings with /ranked setrating and /ranked reset.", "New in 4.0.");
-        admin("smpplugin.admin.events", "Switch seasonal events on and off, reload them, and hide Easter eggs with /easter addegg.",
+        player("smpplugin.perks", "See the ranks and their perks with /perks.", "New in 4.0.");
+        admin("smpplugin.admin.perks", "See which rank an online player gets with /perks check.", "New in 4.0.");
+        perk("smpplugin.rank.vip", "The VIP rank of perks.yml (rank permissions can be renamed there).", "New in 4.0.");
+        perk("smpplugin.rank.vipplus", "The VIP+ rank of perks.yml (rank permissions can be renamed there).", "New in 4.0.");
+        player("smpplugin.claimitems", "Collect reward items that did not fit in your inventory with /claimitems.",
                 "New in 4.0.");
-        admin("smpplugin.admin.advent", "Edit Advent Calendar gifts, preview dates and reset doors with /advent.", "New in 4.0.");
-        operationalBypass("smpplugin.bypass.itemban", "Use, place, craft and pick up items banned in survival-rules.yml.",
+        admin("smpplugin.admin.events", "Switch seasonal events on, off or back to their dates with /events.",
                 "New in 4.0.");
 
         // ── Legacy bundles kept so 1.5 grants behave the same ───────────────────────
@@ -469,7 +485,6 @@ public final class PermissionRegistry {
         legacy("safety.add", "smpplugin.admin.safety.give");
         legacy("smpplugin.updatechecker", "smpplugin.admin.updatenotify");
         legacy("donutfriends.admin", "smpplugin.admin.friends");
-        legacy("smpplugin.admin.lobby.border", "smpplugin.admin.border");
         for (String action : AUCTION_ACTIONS) {
             legacy("donutauction." + action, "smpplugin.auctionhouse." + action);
         }

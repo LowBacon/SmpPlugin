@@ -25,32 +25,20 @@ public enum EconomyReason {
     COINFLIP_REFUND,
     /** Daily rewards, the Halloween calendar, challenges, chat games and other 3.0 prizes. */
     REWARD,
-    /** A /dice or /cf bet taken from the player. */
+    /** A /dice or /roulette bet taken from the player. */
     GAMBLE_STAKE,
-    /** /dice or /cf winnings. */
+    /** /dice or /roulette winnings. */
     GAMBLE_PAYOUT,
-    /** A /dice or /cf bet given back (tie, cancelled game, recovery after a crash). */
+    /** A /dice or /roulette bet given back (tie, cancelled round, recovery after a crash). */
     GAMBLE_REFUND,
-    /** Money or shards from a crate reward. */
+    /** Money a crate gave. */
     CRATE_REWARD,
-    /** The fee taken from a /pay when ECONOMY.PAY.FEE-PERCENT is set. */
-    PAY_FEE,
-    /** Shards earned for being online ("everywhere" shards). Not written to the ledger by default. */
-    SHARD_PASSIVE,
-    /** Shards for a player kill. */
-    SHARD_KILL,
-    /** Shards from an AFK zone. */
-    SHARD_AFK,
-    /** Shards from a shard area (cuboid). */
-    SHARD_CUBOID,
-    /** Shards spent in the shard shop. */
-    SHARD_SHOP_PURCHASE,
-    /** Shards given back when a shard shop purchase could not be delivered. */
-    SHARD_SHOP_REFUND,
-    /** /shardpay between players. */
-    SHARD_PAY,
-    /** Rewards from seasonal events (4.0). */
-    EVENT_REWARD,
-    /** Rewards for ranked PvP wins (4.0). */
-    RANKED_REWARD
+    /** Another plugin paid the player through Vault. */
+    VAULT_DEPOSIT,
+    /** Another plugin charged the player through Vault. */
+    VAULT_WITHDRAW,
+    /** /eco reset: the balance was put back to the starting amount. */
+    ADMIN_RESET,
+    /** A seasonal event (calendar, Trick or Treat, event milestones). */
+    EVENT_REWARD
 }

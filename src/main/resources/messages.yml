@@ -489,7 +489,8 @@ BILLFORD:
     trade.'
   # The text or value for Trade Completed. Available options: Any valid string text
   TRADE-COMPLETED: '&aTrade complete! You received &f{reward}&a. &7Shards: &#A303F9{shard_bonus}&7,
-    Money: &a${money_bonus}&7.
+    # The text or value for # The Text Or Mode For Money. Available Options. Available options: Any valid string text
+    # The text or mode for Money. Available options: Any string text Money: &a${money_bonus}&7.
     &8Next refresh in &f{next_rotation}&8.'
   # The text or value for Limit Reached. Available options: Any valid string text
   LIMIT-REACHED: '&cYou''ve reached the trade limit for this rotation. Come back after
@@ -539,7 +540,8 @@ BALANCE:
       &f${balance}&a.'
     # The text or value for Remove Money Received. Available options: Any valid string text
     REMOVE-MONEY-RECEIVED: '&c{admin} removed &f${amount} &cfrom your balance. New
-      balance:
+      # The text or value for # The Text Or Mode For Balance. Available Options. Available options: Any valid string text
+      # The text or mode for Balance. Available options: Any string text balance:
       &f${balance}&c.'
     # The text or value for Set Money Success. Available options: Any valid string text
     SET-MONEY-SUCCESS: '&aSet &b{player}&a''s balance to &f${amount}&a. Previous balance:
@@ -685,33 +687,42 @@ PUNISHMENTS:
   # The text or value for Ban Kick. Available options: Any valid string text
   BAN-KICK: '&cYou are banned from this server.
 
-    &7Reason:
+    # The text or value for # The Text Or Mode For &7Reason. Available Options. Available options: Any valid string text
+    # The text or mode for &7Reason. Available options: Any string text &7Reason:
     &f{reason}
 
-    &7Expires:
+    # The text or value for # The Text Or Mode For &7Expires. Available Options. Available options: Any valid string text
+    # The text or mode for &7Expires. Available options: Any string text &7Expires:
     &f{expires}'
   # The text or value for Blacklist Kick. Available options: Any valid string text
   BLACKLIST-KICK: '&cYou are blacklisted from this server.
 
-    &7Reason:
+    # The text or value for # The Text Or Mode For &7Reason. Available Options. Available options: Any valid string text
+    # The text or mode for &7Reason. Available options: Any string text &7Reason:
     &f{reason}'
   # The text or value for Ban. Available options: Any valid string text
   BAN: '&c&lYou have been banned!
 
     &8&m----------------------------
 
-    &7Reason:
+    # The text or value for # The Text Or Mode For &7Reason. Available Options. Available options: Any valid string text
+    # The text or mode for &7Reason. Available options: Any string text &7Reason:
     &f%reason%
 
-    &7Expires:
+    # The text or value for # The Text Or Mode For &7Expires. Available Options. Available options: Any valid string text
+    # The text or mode for &7Expires. Available options: Any string text &7Expires:
     &f%nicest_expiration%
 
-    &7Banned
+    # The text or value for # The Text Or Mode For &7Banned By. Available Options. Available options: Any valid string text
+    # The text or mode for &7Banned By. Available options: Any string text &7Banned
+    # The text or value for By. Available options: Any valid string text
     by: &f%issuer%
 
     &8&m----------------------------
 
-    &7Appeal
+    # The text or value for # The Text Or Mode For &7Appeal At. Available Options. Available options: Any valid string text
+    # The text or mode for &7Appeal At. Available options: Any string text &7Appeal
+    # The text or value for At. Available options: Any valid string text
     at: &fdiscord.example.space
 
     '
@@ -720,10 +731,13 @@ PUNISHMENTS:
 
     &8&m----------------------------
 
-    &7Reason:
+    # The text or value for # The Text Or Mode For &7Reason. Available Options. Available options: Any valid string text
+    # The text or mode for &7Reason. Available options: Any string text &7Reason:
     &f%reason%
 
-    &7Kicked
+    # The text or value for # The Text Or Mode For &7Kicked By. Available Options. Available options: Any valid string text
+    # The text or mode for &7Kicked By. Available options: Any string text &7Kicked
+    # The text or value for By. Available options: Any valid string text
     by: &f%issuer%
 
     &8&m----------------------------
@@ -736,13 +750,17 @@ PUNISHMENTS:
 
     &8&m----------------------------
 
-    &7Reason:
+    # The text or value for # The Text Or Mode For &7Reason. Available Options. Available options: Any valid string text
+    # The text or mode for &7Reason. Available options: Any string text &7Reason:
     &f%reason%
 
-    &7Expires:
+    # The text or value for # The Text Or Mode For &7Expires. Available Options. Available options: Any valid string text
+    # The text or mode for &7Expires. Available options: Any string text &7Expires:
     &f%nicest_expiration%
 
-    &7Muted
+    # The text or value for # The Text Or Mode For &7Muted By. Available Options. Available options: Any valid string text
+    # The text or mode for &7Muted By. Available options: Any string text &7Muted
+    # The text or value for By. Available options: Any valid string text
     by: &f%issuer%
 
     &8&m----------------------------
@@ -755,10 +773,13 @@ PUNISHMENTS:
 
     &8&m----------------------------
 
-    &7Reason:
+    # The text or value for # The Text Or Mode For &7Reason. Available Options. Available options: Any valid string text
+    # The text or mode for &7Reason. Available options: Any string text &7Reason:
     &f%reason%
 
-    &7Blacklisted
+    # The text or value for # The Text Or Mode For &7Blacklisted By. Available Options. Available options: Any valid string text
+    # The text or mode for &7Blacklisted By. Available options: Any string text &7Blacklisted
+    # The text or value for By. Available options: Any valid string text
     by: &f%issuer%
 
     &8&m----------------------------
@@ -822,7 +843,8 @@ AUCTION_HOUSE:
   MAX_LISTINGS_REACHED: '&cYou have reached your active listing limit.'
   # The text or value for Listing Created. Available options: Any valid string text
   LISTING_CREATED: '&aListing created! &7#{listing_id} &f{item} &7for &a${price}&7.
-    Fee: &a${fee}&7.
+    # The text or value for # The Text Or Mode For Fee. Available Options. Available options: Any valid string text
+    # The text or mode for Fee. Available options: Any string text Fee: &a${fee}&7.
     Expires in &f{expires}&7.'
   # The text or value for Listing Cancelled. Available options: Any valid string text
   LISTING_CANCELLED: '&eListing #{listing_id} &f({item}) &ehas been moved to your
@@ -843,7 +865,9 @@ AUCTION_HOUSE:
   PURCHASE_SUCCESS: '&aPurchased &f{item} &afor &a${price} &afrom &f{seller}&a.'
   # The text or value for Item Sold. Available options: Any valid string text
   ITEM_SOLD: '&aYour listing sold! &f{buyer} &abought &f{item} &afor &a${price}&a.
-    Claimable
+    # The text or value for # The Text Or Mode For Claimable Payout. Available Options. Available options: Any valid string text
+    # The text or mode for Claimable Payout. Available options: Any string text Claimable
+    # The text or value for Payout. Available options: Any valid string text
     payout: &a${payout}&a.'
   # The text or value for Claim Not Found. Available options: Any valid string text
   CLAIM_NOT_FOUND: '&cThat claim no longer exists.'
@@ -907,6 +931,9 @@ ORDERS:
   MAX_ACTIVE_REACHED: '&cYou have reached your active order limit.'
   # The text or value for Created. Available options: Any valid string text
   CREATED: '&aOrder created! &7#{order_id} &ffor &e{quantity} {item}&7 at &a${price_each}
+    # The text or value for # The Text Or Mode For &7Each. Budget Locked. Available Options. Available options: Any valid string text
+    # The text or mode for &7Each. Budget Locked. Available options: Any string text
+    # The text or value for &7Each. Budget Locked. Available options: Any valid string text
     &7each. Budget locked: &a${budget}&7.'
   # The text or value for Order Not Found. Available options: Any valid string text
   ORDER_NOT_FOUND: '&cThat order no longer exists.'

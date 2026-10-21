@@ -664,11 +664,11 @@ SETTINGS-MENU:
       - '&7Notify when players follow you'
       - '&fCurrently: {status}'
     DISPLAY_DONUT_PLUS:
-      DISPLAY-NAME: '&#6BF18DDisplay {server_name}+'
+      DISPLAY-NAME: '&#6BF18DDisplay CustomSmp+'
       MATERIAL: END_CRYSTAL
       SLOT: 18
       LORE:
-      - '&7Display your premium {server_name}+ status'
+      - '&7Display your premium CustomSmp+ status'
       - '&fCurrently: {status}'
     CHAINMAIL_ON_RESPAWN:
       DISPLAY-NAME: '&#6BF18DChainmail on Respawn'
@@ -1443,7 +1443,7 @@ SERVER-INFO-MENU:
     SERVER:
       MATERIAL: LANTERN
       SLOT: 10
-      NAME: '&#00A4FC{server_name}'
+      NAME: '&#00A4FCCustomSmp'
       LORE:
       - '&fBuild a base, fight players,'
       - '&fand become the richest.'
@@ -1523,7 +1523,7 @@ SERVER-INFO-MENU:
         SERVER:
           MATERIAL: LANTERN
           SLOT: 10
-          NAME: '&#00A4FC{server_name}'
+          NAME: '&#00A4FCCustomSmp'
           LORE:
           - '&fBuild a base, fight players,'
           - '&fand become the richest.'

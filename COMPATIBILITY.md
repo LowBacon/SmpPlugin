@@ -1,12 +1,17 @@
 # Compatibility
 
-SmpPlugin **3.2.0** is one jar per server family that runs on every Minecraft version from
+SmpPlugin **4.1.0** is one jar per server family that runs on every Minecraft version from
 **1.21.11** to **26.3**.
+
+> 4.1.0 compiles and passes its automated tests against the Paper 1.21.11 and Spigot APIs on every push. The
+> features new in 4.0 and 4.1 (the economy ledger, `/events`, the Advent Calendar, the Halloween hub, rank perks,
+> rank name tags, unlimited balances) have not been run on a live server yet; the server results in the table below
+> are from 3.1.0.
 
 | Jar | Servers |
 |---|---|
-| `SmpPlugin-3.2.0-paper.jar` | Paper, Purpur (and other Paper forks) |
-| `SmpPlugin-3.2.0-spigot.jar` | Spigot, CraftBukkit |
+| `SmpPlugin-4.1.0-paper.jar` | Paper, Purpur (and other Paper forks) |
+| `SmpPlugin-4.1.0-spigot.jar` | Spigot, CraftBukkit |
 
 Use the jar that matches your server. Paper and Spigot are not binary compatible, so the wrong jar
 can fail at runtime.

@@ -1,109 +1,168 @@
 # ==============================================================================
-# The Advent Calendar (new in 4.0)
+# SmpPlugin - Advent Calendar
 # ==============================================================================
 #
 # /advent opens the Advent Calendar: one door for every day from FIRST-DAY to
-# LAST-DAY of December. Behind each door is a gift; the last door is the big
-# Christmas Eve gift. It works like the Spooky Calendar in halloween.yml.
+# LAST-DAY of MONTH. Behind each door is a gift. Players open today's door with
+# a click; the gift is theirs the moment they click, and the door then spins
+# and shows it. Items that do not fit go to their reward vault (/claimitems).
 #
-# /advent only works while the ADVENT event runs (events.yml EVENTS.ADVENT,
-# 1 to 26 December by default, or /event enable advent).
+# Staff:
+#   /events advent on|off|auto   run it now, stop it, or follow the dates below
+#   /advent edit                 choose the gifts in game (kept in
+#                                data/advent-prizes.yml, wins over DOORS below)
+#   /advent test 2026-12-13      see the calendar as on that day; only you see
+#                                it, and opening doors gives and saves nothing
+#   /advent give|reset|stats|reload
 #
-# Choosing gifts:
-#   - In game: /advent edit. Click a door, drop items into the top area, click
-#     the gold and amethyst buttons to set money and shards, then Save. Gifts
-#     made there are kept in data/advent-prizes.yml and win over this file.
-#   - In this file: DOORS.<day> (or DOORS.DEFAULT for every door without its
-#     own gift). Each door takes MONEY, SHARDS, ITEMS ("MATERIAL:amount"),
-#     COMMANDS (run by the console, %player% = the player) and DISPLAY.
+# Each door takes MONEY, SHARDS, ITEMS ("MATERIAL:amount"), COMMANDS (run by the
+# console, %player% = the player), DISPLAY (lines shown instead of the automatic
+# summary) and NAME. DOORS.DEFAULT is used by every door without its own gift.
 #
-# Test it outside December with /advent preview 2026-12-05 (until the next
-# restart), or set PREVIEW-DATE.
+# Ranks from perks.yml add their CALENDAR-BONUS-PERCENT to the money and shards
+# of every door (never to items or commands), and CALENDAR-STREAK-GRACE-DAYS
+# lets a streak survive missed days.
 # ==============================================================================
 
 ENABLED: true
 
-# Empty uses the server's own time zone.
+# Time zone used to decide what day it is, e.g. "Europe/Helsinki" or
+# "America/New_York". Empty uses the server's own time zone.
 TIME-ZONE: ""
 
+# The season: doors FIRST-DAY to LAST-DAY of MONTH (12 = December).
 MONTH: 12
 FIRST-DAY: 1
 LAST-DAY: 24
 
-# DAILY: door 5 opens on the 5th. ALL-ON-LAST-DAY: every door opens on the last day.
+# DAILY: door 13 opens on the 13th. ALL-ON-LAST-DAY: every door opens on the
+# last day.
 MODE: DAILY
 
-# true: players can still open doors from earlier days they missed.
+# true: doors from earlier days can still be opened until the season ends.
+# false: a missed door turns to ice.
 CATCH-UP: true
 
-# Extra days after LAST-DAY when unopened doors can still be claimed.
-GRACE-DAYS: 2
+# Extra days after LAST-DAY when unopened doors can still be opened. They may
+# run into the next year (for example 10 grace days end on 3 January).
+GRACE-DAYS: 0
 
-# Pretend it is this date (yyyy-MM-dd), for testing. Leave empty on a live server.
+# Pretend it is this date (yyyy-MM-dd) for EVERYONE, with real gifts. Only for a
+# test server; on a live server use /advent test instead.
 PREVIEW-DATE: ""
 
+# A clickable reminder on join while doors are waiting.
+JOIN-REMINDER: true
+
+# Write each opened door to the console log (who, which door, what it gave).
+LOG-CLAIMS: true
+
+# Open a door on days in a row to build a streak. Each bonus is given once per
+# season, when the streak first reaches that many days.
+STREAK:
+  ENABLED: true
+  BONUSES:
+    3:
+      NAME: "&b3-day streak"
+      MONEY: 1000
+    7:
+      NAME: "&b7-day streak"
+      MONEY: 3000
+      SHARDS: 15
+    14:
+      NAME: "&b14-day streak"
+      MONEY: 7500
+      SHARDS: 30
+      ITEMS:
+        - "DIAMOND:3"
+    24:
+      NAME: "&b&lPerfect streak"
+      MONEY: 15000
+      SHARDS: 60
+      ITEMS:
+        - "NETHERITE_SCRAP:1"
+
+# Given once, when a player has opened every door of the season.
+COMPLETION:
+  NAME: "&6&lEvery door opened"
+  MONEY: 10000
+  SHARDS: 50
+  ITEMS:
+    - "TOTEM_OF_UNDYING:1"
+
 CALENDAR:
-  TITLE: "&8🎄 &c&lAdvent Calendar"
+  TITLE: "&8❄ &b&lAdvent Calendar"
+  NAME: "Advent Calendar"
+  ACCENT: "&b"
+  COUNTDOWN-LABEL: "Christmas Eve in"
+  LAST-DAY-GREETING: "&b&lMerry Christmas!"
+  LAST-DOOR-NAME: "&b&l★ CHRISTMAS EVE ★"
   OPEN-ANIMATION: true
   BORDER-ANIMATION: true
   BORDER-COLOURS:
-    - RED_STAINED_GLASS_PANE
+    - LIGHT_BLUE_STAINED_GLASS_PANE
     - WHITE_STAINED_GLASS_PANE
-    - GREEN_STAINED_GLASS_PANE
+    - CYAN_STAINED_GLASS_PANE
     - WHITE_STAINED_GLASS_PANE
   # Show what is behind a door before it is opened. false keeps it a surprise.
   SHOW-PRIZES: false
   SPIN-STEPS: 18
+  # On Paper and Purpur, finish the reveal in an animated pop-up dialog.
   DIALOG-REVEAL: true
   ICONS:
-    OPEN: CHEST
-    LOCKED: SPRUCE_DOOR
-    CLAIMED: RED_CANDLE
-    MISSED: POWDER_SNOW_BUCKET
-    LAST-DOOR: ENDER_CHEST
+    OPEN: RED_SHULKER_BOX
+    LOCKED: SNOW_BLOCK
+    CLAIMED: WHITE_CANDLE
+    MISSED: PACKED_ICE
+    LAST-DOOR: GREEN_SHULKER_BOX
   SPIN-ITEMS:
     - SNOWBALL
     - COOKIE
-    - SWEET_BERRIES
     - CAKE
-    - PUMPKIN_PIE
+    - SWEET_BERRIES
     - GLOW_BERRIES
+    - PUMPKIN_PIE
+  REVEAL-SOUND: BLOCK_NOTE_BLOCK_CHIME
+  REVEAL-PARTICLE: SNOWFLAKE
+  REVEAL-SYMBOL: "❄"
+  # Tell everyone when someone opens the last door.
   ANNOUNCE-LAST-DOOR: true
 
 DOORS:
   DEFAULT:
-    MONEY: 1000
+    MONEY: 750
     SHARDS: 3
     ITEMS:
       - "COOKIE:8"
   1:
-    NAME: "&cFirst Snow"
-    MONEY: 750
+    NAME: "&bFirst Snow"
+    MONEY: 500
     ITEMS:
       - "SNOWBALL:16"
+      - "COOKIE:8"
   6:
-    NAME: "&cSaint Nicholas"
-    MONEY: 2000
+    NAME: "&bSaint Nicholas"
+    MONEY: 1500
     SHARDS: 10
     ITEMS:
       - "GOLDEN_APPLE:2"
   12:
-    NAME: "&cHalfway There"
-    MONEY: 3000
+    NAME: "&bHalfway There"
+    MONEY: 2500
     SHARDS: 12
     ITEMS:
       - "EXPERIENCE_BOTTLE:16"
   18:
-    NAME: "&cWinter Wonderland"
-    MONEY: 4000
+    NAME: "&bWinter Solstice"
+    MONEY: 3000
     SHARDS: 15
     ITEMS:
-      - "DIAMOND:3"
+      - "DIAMOND:2"
   24:
-    NAME: "&c&l★ CHRISTMAS EVE ★"
-    MONEY: 30000
+    NAME: "&b&l★ CHRISTMAS EVE ★"
+    MONEY: 25000
     SHARDS: 100
     ITEMS:
       - "ENCHANTED_GOLDEN_APPLE:1"
-      - "TOTEM_OF_UNDYING:1"
+      - "NETHER_STAR:1"
     COMMANDS: []

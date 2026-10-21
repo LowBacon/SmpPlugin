@@ -97,6 +97,25 @@ public final class DailyRewards implements CommandExecutor, Listener {
         return bonus > 0 ? reward.withMoney(reward.money() + bonus) : reward;
     }
 
+    /** The extra money and shards the player's rank adds (DAILY-BONUS-PERCENT in perks.yml). */
+    private Reward rankBonus(Player player, Reward base) {
+        com.bx.smpPlugin.perks.Perks perks = plugin.getV3Module() == null ? null : plugin.getV3Module().perks();
+        int percent = perks == null ? 0
+                : perks.value(node -> PermissionUtils.has(player, node), com.bx.smpPlugin.perks.Perk.DAILY_BONUS_PERCENT);
+        if (percent <= 0) {
+            return Reward.NONE;
+        }
+        double money = com.bx.smpPlugin.perks.Perks.withPercent(base.money(), percent) - base.money();
+        long shards = com.bx.smpPlugin.perks.Perks.withPercent(base.shards(), percent) - base.shards();
+        return new Reward(Math.max(0D, Math.round(money * 100D) / 100D), Math.max(0L, shards), List.of(), List.of(), List.of());
+    }
+
+    private String rankName(Player player) {
+        com.bx.smpPlugin.perks.Perks perks = plugin.getV3Module() == null ? null : plugin.getV3Module().perks();
+        return perks == null ? "" : perks.rankOf(node -> PermissionUtils.has(player, node))
+                .map(com.bx.smpPlugin.perks.Rank::display).orElse("");
+    }
+
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
@@ -210,6 +229,12 @@ public final class DailyRewards implements CommandExecutor, Listener {
                 return;
             }
             UUID uuid = player.getUniqueId();
+            // Checked again on every click: the feature, the permission or the data may have changed meanwhile.
+            if (!PermissionUtils.has(player, PERMISSION) || !store.isLoaded(uuid)
+                    || !plugin.getFeatureManager().isEnabled(com.bx.smpPlugin.managers.FeatureManager.Feature.DAILY_REWARDS)) {
+                player.closeInventory();
+                return;
+            }
             DailyStreak state = streak(uuid);
             long today = today();
             if (!state.canClaim(today)) {
@@ -222,10 +247,15 @@ public final class DailyRewards implements CommandExecutor, Listener {
             if (slot - 9 != nextDay) {
                 return;
             }
-            String before = store.get(uuid, SECTION);
             DailyStreak claimed = state.claim(today, graceDays());
+            Reward base = rewardFor(claimed.streak());
+            Reward bonus = rankBonus(player, base);
+            Reward reward = base.plus(bonus);
+            // Claim and pay in one step, before the spin: leaving or a crash mid-spin can never pay twice. The store
+            // write is queued ahead of the money.
             store.set(uuid, SECTION, claimed.serialize());
-            Reward reward = rewardFor(claimed.streak());
+            reward.give(plugin, player, com.bx.smpPlugin.models.EconomyReason.REWARD,
+                    com.bx.smpPlugin.economy.EconomyContext.of("daily", "daily reward, streak " + claimed.streak()));
             busy = true;
             List<ItemStack> frames = new ArrayList<>();
             for (Material material : List.of(Material.GOLD_NUGGET, Material.GOLD_INGOT, Material.EMERALD,
@@ -235,12 +265,13 @@ public final class DailyRewards implements CommandExecutor, Listener {
             MenuFx.spin(plugin, player, this, inventory, slot, frames, 14, () -> {
                 busy = false;
                 if (!player.isOnline()) {
-                    // They left during the spin: undo the claim so today's reward is still there.
-                    store.set(uuid, SECTION, before);
                     return;
                 }
-                reward.give(plugin, player);
-                List<String> lines = reward.describe(plugin);
+                List<String> lines = new ArrayList<>(base.describe(plugin));
+                if (!bonus.isEmpty()) {
+                    lines.add(Text.get("DAILY.RANK-BONUS", "{rank} &7bonus: {bonus}", "{rank}", rankName(player),
+                            "{bonus}", String.join("&7, ", bonus.describe(plugin))));
+                }
                 MenuFx.sound(player, Sound.ENTITY_PLAYER_LEVELUP, 0.8F, 1.3F);
                 player.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, player.getLocation().add(0, 1, 0), 25, 0.5, 0.6, 0.5, 0);
                 Text.title(player, Text.get("DAILY.CLAIMED-TITLE", "&a&lDay {day} claimed!", "{day}", Integer.toString(nextDay)),

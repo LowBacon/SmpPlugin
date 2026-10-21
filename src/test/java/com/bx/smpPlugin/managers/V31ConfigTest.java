@@ -46,24 +46,16 @@ class V31ConfigTest {
         assertSame(reordered, ConfigManager.migrateFooterLines(reordered));
     }
 
-    /**
-     * 3.1 cleaned the tab list of ping, TPS and statistics. 4.0 brings back one personal line, the
-     * balance and rank in the footer (the CustomSMP layout), and nothing else.
-     */
     @Test
-    void bundledTablistShowsNoPingTpsOrStats() throws Exception {
+    void bundledTablistShowsNoMoneyPingTpsOrStats() throws Exception {
         YamlConfiguration config = bundled("config.yml");
         for (String path : List.of("TABLIST.HEADER", "TABLIST.FOOTER")) {
             for (String line : config.getStringList(path)) {
-                for (String hidden : List.of("%ping", "%tps", "%kills%", "%shards%", "%playtime%", "%deaths%")) {
+                for (String hidden : List.of("%money%", "%ping", "%tps", "%kills%", "%shards%", "%playtime%", "%deaths%")) {
                     assertFalse(line.contains(hidden), path + " still shows " + hidden + ": " + line);
                 }
             }
         }
-        long moneyLines = config.getStringList("TABLIST.FOOTER").stream().filter(line -> line.contains("%money%")).count();
-        assertEquals(1L, moneyLines, "the footer shows the balance once");
-        assertFalse(config.getStringList("TABLIST.HEADER").stream().anyMatch(line -> line.contains("%money%")),
-                "the header has no money");
     }
 
     @Test
@@ -106,9 +98,7 @@ class V31ConfigTest {
         assertEquals("PLAYER", borders.getString("LOBBY.MODE"));
         YamlConfiguration extras = bundled("extras.yml");
         assertEquals(1.9, extras.getDouble("DICE.PAYOUTS.HIGH-LOW"), 1e-9);
-        assertEquals(5, extras.getList("COINFLIP.QUICK-BETS").size());
-        assertEquals(0D, extras.getDouble("COINFLIP.MAX-BET"), 1e-9, "no maximum by default");
-        assertFalse(extras.contains("ROULETTE"));
+        assertEquals(4, extras.getList("ROULETTE.QUICK-BETS").size());
         assertEquals(List.of("manager", "developer", "coowner", "owner"), extras.getStringList("GIVEAWAYS.MANAGER-GROUPS"));
         assertFalse(extras.contains("EMOTES.LIST.hug"));
         YamlConfiguration scoreboard = bundled("scoreboard.yml");

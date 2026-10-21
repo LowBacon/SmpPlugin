@@ -13,6 +13,8 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.PluginDescriptionFile;
+import org.bukkit.plugin.PluginLogger;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -51,7 +53,6 @@ public final class EconomyHarness implements AutoCloseable {
 
     public EconomyHarness() throws Exception {
         plugin = newPlugin();
-        set(JavaPlugin.class, plugin, "logger", Logger.getLogger("EconomyHarness"));
         ConfigManager configManager = new ConfigManager(plugin);
         set(ConfigManager.class, configManager, "config", config);
         set(ConfigManager.class, configManager, "database", new YamlConfiguration());
@@ -61,6 +62,7 @@ public final class EconomyHarness implements AutoCloseable {
         dataFolder = Files.createTempDirectory("smpplugin-harness").toFile();
         set(JavaPlugin.class, plugin, "dataFolder", dataFolder);
         installServer();
+        installLogger();
 
         raw = DriverManager.getConnection("jdbc:sqlite::memory:");
         database = new DatabaseManager(plugin);
@@ -163,6 +165,21 @@ public final class EconomyHarness implements AutoCloseable {
         java.lang.reflect.Constructor<?> constructor =
                 factory.newConstructorForSerialization(SmpPlugin.class, objectConstructor);
         return (SmpPlugin) constructor.newInstance();
+    }
+
+    /**
+     * The Paper API declares {@code JavaPlugin.logger} as a plain {@link Logger}; the Spigot API declares it as a
+     * {@link PluginLogger}, which can only be made from a plugin with a description and a server.
+     */
+    private void installLogger() throws Exception {
+        Logger logger = Logger.getLogger("EconomyHarness");
+        if (!JavaPlugin.class.getDeclaredField("logger").getType().isInstance(logger)) {
+            set(JavaPlugin.class, plugin, "description",
+                    new PluginDescriptionFile("SmpPlugin", "test", SmpPlugin.class.getName()));
+            set(JavaPlugin.class, plugin, "server", Bukkit.getServer());
+            logger = new PluginLogger(plugin);
+        }
+        set(JavaPlugin.class, plugin, "logger", logger);
     }
 
     private void installServer() throws Exception {

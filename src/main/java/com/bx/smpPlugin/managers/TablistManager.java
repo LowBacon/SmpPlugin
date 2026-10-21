@@ -92,7 +92,33 @@ public class TablistManager {
 
     public boolean isEnabled() {
         return plugin.getFeatureManager().isEnabled(FeatureManager.Feature.TABLIST)
-                && config().getBoolean("TABLIST.ENABLED", true);
+                && config().getBoolean("TABLIST.ENABLED", true)
+                && !yieldsToOtherPlugin();
+    }
+
+    private volatile String yieldingTo;
+    private volatile boolean yieldChecked;
+
+    /**
+     * True while another tab list plugin (TABLIST.YIELD-TO) is installed and
+     * TABLIST.OVERRIDE-OTHER-PLUGINS is false: the tab list is then left to that plugin.
+     */
+    public boolean yieldsToOtherPlugin() {
+        if (!yieldChecked) {
+            yieldChecked = true;
+            yieldingTo = config().getBoolean("TABLIST.OVERRIDE-OTHER-PLUGINS", false) ? null
+                    : com.bx.smpPlugin.core.DisplayOwnership.firstInstalled(config().getStringList("TABLIST.YIELD-TO"));
+            if (yieldingTo != null) {
+                plugin.getLogger().info(yieldingTo + " is installed, so SmpPlugin's tab list is off and " + yieldingTo
+                        + " shows its own. Set TABLIST.OVERRIDE-OTHER-PLUGINS: true in config.yml to use SmpPlugin's.");
+            }
+        }
+        return yieldingTo != null;
+    }
+
+    /** Checks TABLIST.YIELD-TO again after config.yml was reloaded. */
+    public void recheckOtherPlugins() {
+        yieldChecked = false;
     }
 
     public void update(Player player) {
@@ -276,7 +302,8 @@ public class TablistManager {
         }
         int base = TablistEffects.parseRgb(config().getString("TABLIST.ANIMATION.COLOR", "#00ADFC"), 0x00ADFC);
         int shine = TablistEffects.parseRgb(config().getString("TABLIST.ANIMATION.SHINE", "#FFFFFF"), 0xFFFFFF);
-        renderedTitle = TablistEffects.shimmer(config().getString("TABLIST.ANIMATION.TEXT", "CustomSmp"),
+        renderedTitle = TablistEffects.shimmer(
+                com.bx.smpPlugin.core.Branding.apply(config().getString("TABLIST.ANIMATION.TEXT", "{server_name}")),
                 base, shine, frame, config().getBoolean("TABLIST.ANIMATION.BOLD", true));
         int lineFrom = TablistEffects.parseRgb(config().getString("TABLIST.ANIMATION.LINE-FROM", "#0B3D91"), 0x0B3D91);
         int lineTo = TablistEffects.parseRgb(config().getString("TABLIST.ANIMATION.LINE-TO", "#00ADFC"), 0x00ADFC);
@@ -1334,7 +1361,12 @@ public class TablistManager {
         }
 
         resolved = applyInternalPlaceholders(resolved, player);
-        return ColorUtils.colorize(stripUnsupportedHeadTags(resolved));
+        String rendered = ColorUtils.colorize(stripUnsupportedHeadTags(resolved), player);
+        // A placeholder nothing could fill (a typo, a plugin that is not installed) is left out
+        // instead of being shown to players as code.
+        return config().getBoolean("TABLIST.HIDE-UNRESOLVED-PLACEHOLDERS", true)
+                ? com.bx.smpPlugin.core.InternalPlaceholders.stripUnresolved(rendered)
+                : rendered;
     }
 
     private Component parseTabComponent(String text, Player player) {

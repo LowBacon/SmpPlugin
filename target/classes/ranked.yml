@@ -1,0 +1,79 @@
+# ==============================================================================
+# Ranked PvP (new in 4.0)
+# ==============================================================================
+# /ranked opens the ranked menu: join the queue, see your rating and the top
+# players. Ranked matches are played on the duel arenas (/arena) that allow
+# queue matches, with the duel rules from duels.yml. Winning raises your Elo
+# rating and losing lowers it; beating a stronger player is worth more.
+#
+#   /ranked              the menu
+#   /ranked join|leave   the ranked queue
+#   /ranked stats [player]
+#   /ranked top [page]
+#   /ranked history [player]
+#   /ranked setrating <player> <rating>   (smpplugin.admin.ranked)
+#   /ranked reset <player>                (smpplugin.admin.ranked)
+#
+# Placeholders: %smp_elo% %smp_ranked_wins% %smp_ranked_losses% %smp_ranked_games%
+#               %smp_ranked_tier% %smp_ranked_position%
+# ==============================================================================
+
+ENABLED: true
+
+RATING:
+  # Rating every new player starts at.
+  START: 1000
+  # Ratings never drop below this.
+  FLOOR: 100
+  # How far one match can move a rating. A player's first PROVISIONAL-GAMES
+  # matches use K-PROVISIONAL so new players find their level quickly; players
+  # at or above HIGH-RATING use K-HIGH so the top stays stable.
+  K-FACTOR: 24
+  K-PROVISIONAL: 40
+  PROVISIONAL-GAMES: 10
+  K-HIGH: 16
+  HIGH-RATING: 2000
+
+MATCHMAKING:
+  # Two players are matched when their ratings are at most this far apart...
+  BASE-TOLERANCE: 100
+  # ...plus this much for every 10 seconds the waiting players have waited,
+  GROWTH-PER-10-SECONDS: 25
+  # ...up to this limit.
+  MAX-TOLERANCE: 600
+  # Seconds between matchmaking passes.
+  INTERVAL-SECONDS: 2
+
+ANTI-BOOST:
+  # Two players are not matched again after this many ranked games against each
+  # other within PAIR-WINDOW-HOURS. 0 turns the limit off.
+  MAX-GAMES-PER-PAIR: 3
+  PAIR-WINDOW-HOURS: 24
+  # Players joining from the same IP address are never matched.
+  BLOCK-SAME-IP: true
+  # A match that ends sooner than this does not change ratings (quick forfeits).
+  MIN-MATCH-SECONDS: 15
+
+# Paid through the economy to the winner of a rated match. 0 turns a reward off.
+REWARDS:
+  WIN-MONEY: 0
+  WIN-SHARDS: 0
+
+LEADERBOARD:
+  # How many players /ranked top and the menu show.
+  SIZE: 100
+  # Seconds between refreshes of the leaderboard from the database.
+  REFRESH-SECONDS: 60
+
+# Names shown next to a rating, highest first.
+TIERS:
+  - MIN: 2000
+    NAME: '&b&lDiamond'
+  - MIN: 1600
+    NAME: '&e&lGold'
+  - MIN: 1300
+    NAME: '&7&lSilver'
+  - MIN: 1000
+    NAME: '&6Bronze'
+  - MIN: 0
+    NAME: '&8Iron'

@@ -883,7 +883,7 @@ QUICK-BUY:
       LORE-NORMAL: '&o&7Click to edit'
       LORE-EDITING: '&o&7Click to save changes'
 
-  # Default pinned items for Quick Buy (leave commented out for an empty grid like default DonutSMP)
+  # Default pinned items for Quick Buy (leave commented out for an empty grid)
   # DEFAULT-ENTRIES:
   #   # Example configuration for default pinned quick buy items:
   #   0:
@@ -938,12 +938,12 @@ YOUR-ITEMS:
     MATERIAL: RED_STAINED_GLASS_PANE
     NAME: '&cLocked'
     LORE:
-    - '&fBuy Donut&b+&f for more auction slots'
+    - '&fBuy {server_name}&b+&f for more auction slots'
   LOCKED-PLUS-SLOT:
     MATERIAL: RED_STAINED_GLASS_PANE
     NAME: '&cLocked'
     LORE:
-    - '&fBuy Donut&b++&f for even more auction slots'
+    - '&fBuy {server_name}&b++&f for even more auction slots'
   ACTIVE-ITEM:
     PRICE-FORMAT: '&7Price: &a${price}'
     EXPIRES-FORMAT: '&7Expires in: &e{time}'

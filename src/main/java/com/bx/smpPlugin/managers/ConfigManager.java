@@ -65,7 +65,11 @@ public class ConfigManager {
             "halloween.yml",
             "extras.yml",
             "guide.yml",
-            "borders.yml"
+            "borders.yml",
+            "ranked.yml",
+            "events.yml",
+            "advent.yml",
+            "survival-rules.yml"
     );
 
     private static final DateTimeFormatter BACKUP_TIMESTAMP_FORMAT =
@@ -112,6 +116,10 @@ public class ConfigManager {
     private FileConfiguration extras;
     private FileConfiguration guide;
     private FileConfiguration borders;
+    private FileConfiguration ranked;
+    private FileConfiguration events;
+    private FileConfiguration advent;
+    private FileConfiguration survivalRules;
 
     public ConfigManager(SmpPlugin plugin) {
         this.plugin = plugin;
@@ -142,6 +150,10 @@ public class ConfigManager {
         extras       = load("extras.yml", extras);
         guide        = load("guide.yml", guide);
         borders      = load("borders.yml", borders);
+        ranked       = load("ranked.yml", ranked);
+        events       = load("events.yml", events);
+        advent       = load("advent.yml", advent);
+        survivalRules = load("survival-rules.yml", survivalRules);
         lobby        = load("lobby.yml", lobby);
         worth        = load("worth.yml", worth);
         amethystTools = load("amethyst-tools.yml", amethystTools);
@@ -173,6 +185,8 @@ public class ConfigManager {
                 LocalDateTime.now().format(BACKUP_TIMESTAMP_FORMAT)
         );
 
+        repairLeakedComments(backupDirectory);
+
         int created = 0;
         int updated = 0;
         int skipped = 0;
@@ -192,10 +206,163 @@ public class ConfigManager {
 
         plugin.getLogger().info("Configuration sync complete: "
                 + created + " created, "
-                + updated + " updated, "
+                + updated + " updated"
                 + (skipped > 0 ? ", " + skipped + " skipped" : "")
                 + ".");
         migrateTablistFooter(backupDirectory);
+        migrateBranding("config.yml", backupDirectory);
+        migrateBranding("scoreboard.yml", backupDirectory);
+    }
+
+    private static final java.util.regex.Pattern LEAKED_LABEL = java.util.regex.Pattern.compile(
+            "^(\\s*)# The text or mode for .*?Available options: Any string text ?(.*)$");
+    private static final java.util.regex.Pattern LEAKED_COMMENT = java.util.regex.Pattern.compile(
+            "^\\s*# (The text or value for|The text or mode for|The numerical value for|The decimal value for"
+                    + "|Determines whether|Configuration section for)\\b.*");
+    private static final java.util.regex.Pattern QUOTED_VALUE_START = java.util.regex.Pattern.compile(
+            "^\\s*(?:-\\s+)?(?:[^#'\"\\s][^:]*:\\s+)?'(.*)$");
+
+    /**
+     * Older copies of messages.yml, config.yml, discord.yml and hide.yml were run through a comment
+     * generator that mistook lines inside multi-line messages (such as {@code &7Reason: &f{reason}} in
+     * the ban screen) for settings. It wrote comment lines into the middle of those messages, which
+     * players then saw, and moved labels like "&7Reason:" into the comments. This puts each label back
+     * and removes the stray lines, after a backup. Lines outside a quoted message are never touched.
+     */
+    private void repairLeakedComments(File backupDirectory) {
+        for (String name : CONFIGURATION_RESOURCES) {
+            File file = new File(plugin.getDataFolder(), name);
+            if (!file.isFile()) {
+                continue;
+            }
+            try {
+                String raw = Files.readString(file.toPath(), StandardCharsets.UTF_8);
+                if (!raw.contains("# The text or")) {
+                    continue;
+                }
+                String newline = raw.contains("\r\n") ? "\r\n" : "\n";
+                List<String> lines = new ArrayList<>(Arrays.asList(raw.split("\r?\n", -1)));
+                List<String> repaired = repairLeakedCommentLines(lines);
+                if (repaired.equals(lines)) {
+                    continue;
+                }
+                if (!backupExistingFile(file, backupDirectory)) {
+                    plugin.getLogger().warning("Did not repair " + name + " because it could not be backed up first.");
+                    continue;
+                }
+                Files.writeString(file.toPath(), String.join(newline, repaired), StandardCharsets.UTF_8);
+                plugin.getLogger().info("Repaired " + name + ": removed config comments that had ended up inside messages"
+                        + " (for example the ban and mute screens). The old file is in config-backups.");
+            } catch (IOException exception) {
+                plugin.getLogger().log(Level.WARNING, "Could not check " + name + " for comments inside messages", exception);
+            }
+        }
+    }
+
+    /** Pure part of {@link #repairLeakedComments}. */
+    static List<String> repairLeakedCommentLines(List<String> lines) {
+        List<String> out = new ArrayList<>(lines.size());
+        boolean inside = false;
+        boolean stripText = false;
+        for (String line : lines) {
+            String stripped = line.stripLeading();
+            if (inside) {
+                if (stripped.startsWith("#") && LEAKED_COMMENT.matcher(line).matches()) {
+                    java.util.regex.Matcher label = LEAKED_LABEL.matcher(line);
+                    if (label.matches() && !label.group(2).isBlank()) {
+                        String tail = label.group(2).stripTrailing();
+                        out.add(label.group(1) + tail);
+                        if (unescapedQuotes(tail) % 2 == 1) {
+                            inside = false;
+                        }
+                    } else if (line.stripTrailing().endsWith("Any string")) {
+                        // The generator wrapped this comment: its "text <label>" landed on the next line.
+                        stripText = true;
+                    }
+                    continue;
+                }
+                if (stripText && stripped.startsWith("text ")) {
+                    line = line.substring(0, line.length() - stripped.length()) + stripped.substring("text ".length());
+                    stripText = false;
+                }
+                out.add(line);
+                if (unescapedQuotes(line) % 2 == 1) {
+                    inside = false;
+                }
+                continue;
+            }
+            out.add(line);
+            if (stripped.startsWith("#")) {
+                continue;
+            }
+            java.util.regex.Matcher start = QUOTED_VALUE_START.matcher(line);
+            if (start.matches() && (line.contains(":") || stripped.startsWith("- '"))
+                    && unescapedQuotes(start.group(1)) % 2 == 0) {
+                inside = true;
+            }
+        }
+        return out;
+    }
+
+    private static int unescapedQuotes(String text) {
+        String body = text.replace("''", "");
+        int count = 0;
+        for (int i = 0; i < body.length(); i++) {
+            if (body.charAt(i) == '\'') {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /** The tab list title and scoreboard title before 4.0, which spelled the name out by hand. */
+    static final String OLD_TABLIST_TITLE_LINE = "    TEXT: CustomSmp";
+    static final String NEW_TABLIST_TITLE_LINE = "    TEXT: '{server_name}'";
+    static final String OLD_SCOREBOARD_TITLE_LINE =
+            "  - '&#0069d6&lC&#0374da&lu&#067fdf&ls&#0a8be3&lt&#0d96e7&lo&#10a1ec&lm&#13acf0&lS&#17b8f4&lM&#1ac3f9&lP'";
+    static final String NEW_SCOREBOARD_TITLE_LINE = "  - '{server_title}'";
+
+    /**
+     * 4.0 takes the server's name from BRANDING.SERVER-NAME. A tab list or scoreboard title that is
+     * still exactly the old default is switched to the branding token (after a backup), so it shows
+     * "CustomSMP" and follows the setting; a title anyone changed is left alone.
+     */
+    private void migrateBranding(String name, File backupDirectory) {
+        File file = new File(plugin.getDataFolder(), name);
+        if (!file.isFile() || invalidConfigurations.contains(name)) {
+            return;
+        }
+        try {
+            List<String> lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+            List<String> updated = migrateBrandingLines(lines);
+            if (updated.equals(lines)) {
+                return;
+            }
+            if (!backupExistingFile(file, backupDirectory)) {
+                plugin.getLogger().warning("Kept the old title in " + name + " because it could not be backed up first.");
+                return;
+            }
+            Files.write(file.toPath(), updated, StandardCharsets.UTF_8);
+            plugin.getLogger().info("The title in " + name + " now uses BRANDING.SERVER-NAME from config.yml."
+                    + " The old file is in config-backups.");
+        } catch (IOException exception) {
+            plugin.getLogger().log(Level.WARNING, "Could not update the title in " + name, exception);
+        }
+    }
+
+    /** Pure part of {@link #migrateBranding}: only the exact old default lines change. */
+    static List<String> migrateBrandingLines(List<String> lines) {
+        List<String> updated = new ArrayList<>(lines.size());
+        for (String line : lines) {
+            if (line.equals(OLD_TABLIST_TITLE_LINE)) {
+                updated.add(NEW_TABLIST_TITLE_LINE);
+            } else if (line.equals(OLD_SCOREBOARD_TITLE_LINE)) {
+                updated.add(NEW_SCOREBOARD_TITLE_LINE);
+            } else {
+                updated.add(line);
+            }
+        }
+        return updated;
     }
 
     /** The two footer lines 3.0 shipped with: personal stats, then online count, ping, TPS and world. */
@@ -2110,6 +2277,14 @@ public class ConfigManager {
     public FileConfiguration getExtras()        { return extras; }
     public FileConfiguration getGuide()         { return guide; }
     public FileConfiguration getBorders()       { return borders; }
+    /** Ranked PvP: Elo, matchmaking, anti-boosting and rewards (4.0). */
+    public FileConfiguration getRanked()        { return ranked; }
+    /** Seasonal events: Advent, Christmas, Easter, Summer and custom events (4.0). */
+    public FileConfiguration getEvents()        { return events; }
+    /** The Advent Calendar: the same settings as halloween.yml, for December (4.0). */
+    public FileConfiguration getAdvent()        { return advent; }
+    /** Banned items and disabled recipes (4.0). */
+    public FileConfiguration getSurvivalRules() { return survivalRules; }
 
     public FileConfiguration getLegacyMessages() { return messages; }
     public FileConfiguration getLegacyDeathMessages() { return deathMessages; }

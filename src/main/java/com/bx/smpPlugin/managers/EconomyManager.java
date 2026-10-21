@@ -1,6 +1,8 @@
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
+import com.bx.smpPlugin.economy.EconomyLedger;
+import com.bx.smpPlugin.economy.Money;
 import com.bx.smpPlugin.models.EconomyFailureReason;
 import com.bx.smpPlugin.models.EconomyReason;
 import com.bx.smpPlugin.models.EconomyTransactionResult;
@@ -14,8 +16,6 @@ import org.bukkit.entity.Player;
 import java.util.UUID;
 
 public class EconomyManager {
-
-    private static final double EPSILON = 0.0000001D;
 
     public record AccountReference(UUID uuid, String displayName, Player onlinePlayer) {
         public boolean isOnline() {
@@ -116,7 +116,7 @@ public class EconomyManager {
 
     public double getBalance(UUID uuid) {
         LoadedAccount loadedAccount = loadAccount(uuid, null, false);
-        return loadedAccount == null ? 0D : roundCurrency(loadedAccount.data().getMoney());
+        return loadedAccount == null ? 0D : Money.toDouble(Money.balanceCents(loadedAccount.data().getMoney()));
     }
 
     public boolean has(Player player, double amount) {
@@ -128,14 +128,15 @@ public class EconomyManager {
     }
 
     public boolean has(UUID uuid, double amount) {
-        if (!Double.isFinite(amount)) {
+        java.util.OptionalLong cents = Money.toCents(amount);
+        if (cents.isEmpty()) {
             return false;
         }
-        if (amount <= 0D) {
+        if (cents.getAsLong() == 0L) {
             return true;
         }
-
-        return getBalance(uuid) + EPSILON >= roundCurrency(amount);
+        LoadedAccount loadedAccount = loadAccount(uuid, null, false);
+        return loadedAccount != null && Money.balanceCents(loadedAccount.data().getMoney()) >= cents.getAsLong();
     }
 
     public EconomyTransactionResult deposit(Player player, double amount, EconomyReason reason) {
@@ -224,79 +225,60 @@ public class EconomyManager {
             double amount,
             EconomyReason reason
     ) {
-        if (!isValidPositiveAmount(amount)) {
-            return transferFailure(
-                    EconomyFailureReason.INVALID_AMOUNT,
-                    reason,
-                    senderUuid,
-                    senderName,
-                    recipientUuid,
-                    recipientName,
-                    amount
-            );
+        java.util.OptionalLong parsedAmount = positiveCents(amount);
+        if (parsedAmount.isEmpty()) {
+            return transferFailure(EconomyFailureReason.INVALID_AMOUNT, reason,
+                    senderUuid, senderName, recipientUuid, recipientName, amount);
         }
-
         if (senderUuid == null || recipientUuid == null) {
-            return transferFailure(
-                    EconomyFailureReason.PLAYER_NOT_FOUND,
-                    reason,
-                    senderUuid,
-                    senderName,
-                    recipientUuid,
-                    recipientName,
-                    amount
-            );
+            return transferFailure(EconomyFailureReason.PLAYER_NOT_FOUND, reason,
+                    senderUuid, senderName, recipientUuid, recipientName, amount);
         }
-
         if (senderUuid.equals(recipientUuid)) {
-            return transferFailure(
-                    EconomyFailureReason.SAME_ACCOUNT,
-                    reason,
-                    senderUuid,
-                    senderName,
-                    recipientUuid,
-                    recipientName,
-                    amount
-            );
+            return transferFailure(EconomyFailureReason.SAME_ACCOUNT, reason,
+                    senderUuid, senderName, recipientUuid, recipientName, amount);
         }
 
         LoadedAccount sender = loadAccount(senderUuid, senderName, false);
         LoadedAccount recipient = loadAccount(recipientUuid, recipientName, false);
         if (sender == null || recipient == null) {
-            return transferFailure(
-                    EconomyFailureReason.NO_PLAYER_DATA,
-                    reason,
-                    senderUuid,
-                    senderName,
-                    recipientUuid,
-                    recipientName,
-                    amount
-            );
+            return transferFailure(EconomyFailureReason.NO_PLAYER_DATA, reason,
+                    senderUuid, senderName, recipientUuid, recipientName, amount);
         }
 
-        double normalizedAmount = roundCurrency(amount);
-        double senderBefore = roundCurrency(sender.data().getMoney());
-        if (senderBefore + EPSILON < normalizedAmount) {
-            return transferFailure(
-                    EconomyFailureReason.INSUFFICIENT_FUNDS,
-                    reason,
-                    sender.reference().uuid(),
-                    sender.reference().displayName(),
-                    recipient.reference().uuid(),
-                    recipient.reference().displayName(),
-                    normalizedAmount
-            );
+        long amountCents = parsedAmount.getAsLong();
+        long senderBefore = Money.balanceCents(sender.data().getMoney());
+        long recipientBefore = Money.balanceCents(recipient.data().getMoney());
+        java.util.OptionalLong senderAfter = Money.subtract(senderBefore, amountCents);
+        if (senderAfter.isEmpty()) {
+            return transferFailure(EconomyFailureReason.INSUFFICIENT_FUNDS, reason,
+                    sender.reference().uuid(), sender.reference().displayName(),
+                    recipient.reference().uuid(), recipient.reference().displayName(), Money.toDouble(amountCents));
+        }
+        java.util.OptionalLong recipientAfter = Money.add(recipientBefore, amountCents, maxBalanceCents());
+        if (recipientAfter.isEmpty()) {
+            return transferFailure(EconomyFailureReason.BALANCE_LIMIT, reason,
+                    sender.reference().uuid(), sender.reference().displayName(),
+                    recipient.reference().uuid(), recipient.reference().displayName(), Money.toDouble(amountCents));
         }
 
-        double recipientBefore = roundCurrency(recipient.data().getMoney());
-        sender.data().setMoney(roundCurrency(senderBefore - normalizedAmount));
-        recipient.data().setMoney(roundCurrency(recipientBefore + normalizedAmount));
-
+        // Both balances change together, in the same tick, before anything else can read them.
+        sender.data().setMoney(Money.toDouble(senderAfter.getAsLong()));
+        recipient.data().setMoney(Money.toDouble(recipientAfter.getAsLong()));
         saveLoadedAccount(sender);
         saveLoadedAccount(recipient);
 
         String sName = senderName != null ? senderName : sender.reference().displayName();
         String rName = recipientName != null ? recipientName : recipient.reference().displayName();
+        String transactionId = EconomyLedger.newTransactionId();
+        EconomyLedger ledger = EconomyLedger.active();
+        if (ledger != null) {
+            ledger.record(transactionId, EconomyLedger.Currency.MONEY, EconomyLedger.Kind.TRANSFER_OUT, reason,
+                    senderUuid, sName, recipientUuid, rName, amountCents, senderBefore, senderAfter.getAsLong());
+            ledger.record(transactionId, EconomyLedger.Currency.MONEY, EconomyLedger.Kind.TRANSFER_IN, reason,
+                    recipientUuid, rName, senderUuid, sName, amountCents, recipientBefore, recipientAfter.getAsLong());
+        }
+        double normalizedAmount = Money.toDouble(amountCents);
         plugin.getPlayerLogsManager().log(
                 senderUuid,
                 sName,
@@ -321,10 +303,10 @@ public class EconomyManager {
                 recipient.reference().uuid(),
                 recipient.reference().displayName(),
                 normalizedAmount,
-                senderBefore,
-                roundCurrency(sender.data().getMoney()),
-                recipientBefore,
-                roundCurrency(recipient.data().getMoney())
+                Money.toDouble(senderBefore),
+                Money.toDouble(senderAfter.getAsLong()),
+                Money.toDouble(recipientBefore),
+                Money.toDouble(recipientAfter.getAsLong())
         );
     }
 
@@ -335,7 +317,8 @@ public class EconomyManager {
             EconomyReason reason,
             boolean createIfMissing
     ) {
-        if (!isValidPositiveAmount(amount)) {
+        java.util.OptionalLong parsedAmount = positiveCents(amount);
+        if (parsedAmount.isEmpty()) {
             return failure(EconomyFailureReason.INVALID_AMOUNT, reason, uuid, displayNameHint, amount, 0D, 0D);
         }
 
@@ -344,18 +327,27 @@ public class EconomyManager {
             return failure(EconomyFailureReason.NO_PLAYER_DATA, reason, uuid, displayNameHint, amount, 0D, 0D);
         }
 
-        double normalizedAmount = roundCurrency(amount);
-        double beforeBalance = roundCurrency(loadedAccount.data().getMoney());
-        loadedAccount.data().setMoney(roundCurrency(beforeBalance + normalizedAmount));
+        long amountCents = parsedAmount.getAsLong();
+        long beforeCents = Money.balanceCents(loadedAccount.data().getMoney());
+        java.util.OptionalLong afterCents = Money.add(beforeCents, amountCents, maxBalanceCents());
+        if (afterCents.isEmpty()) {
+            return failure(EconomyFailureReason.BALANCE_LIMIT, reason, loadedAccount.reference().uuid(),
+                    loadedAccount.reference().displayName(), Money.toDouble(amountCents),
+                    Money.toDouble(beforeCents), Money.toDouble(beforeCents));
+        }
+        loadedAccount.data().setMoney(Money.toDouble(afterCents.getAsLong()));
         saveLoadedAccount(loadedAccount);
+        recordLedger(EconomyLedger.Kind.DEPOSIT, reason, loadedAccount, amountCents, beforeCents, afterCents.getAsLong());
 
+        double normalizedAmount = Money.toDouble(amountCents);
         if (reason == EconomyReason.ADMIN_ADD) {
             plugin.getPlayerLogsManager().log(
                     uuid,
                     loadedAccount.reference().displayName(),
                     "Economy",
                     "ECONOMY_ADD",
-                    "Admin added " + plugin.getCurrencyManager().formatMoney(normalizedAmount) + " to balance (New Balance: " + plugin.getCurrencyManager().formatMoney(beforeBalance + normalizedAmount) + ")"
+                    "Admin added " + plugin.getCurrencyManager().formatMoney(normalizedAmount) + " to balance (New Balance: "
+                            + plugin.getCurrencyManager().formatMoney(Money.toDouble(afterCents.getAsLong())) + ")"
             );
         }
 
@@ -366,8 +358,8 @@ public class EconomyManager {
                 loadedAccount.reference().uuid(),
                 loadedAccount.reference().displayName(),
                 normalizedAmount,
-                beforeBalance,
-                roundCurrency(loadedAccount.data().getMoney())
+                Money.toDouble(beforeCents),
+                Money.toDouble(afterCents.getAsLong())
         );
     }
 
@@ -377,7 +369,8 @@ public class EconomyManager {
             double amount,
             EconomyReason reason
     ) {
-        if (!isValidPositiveAmount(amount)) {
+        java.util.OptionalLong parsedAmount = positiveCents(amount);
+        if (parsedAmount.isEmpty()) {
             return failure(EconomyFailureReason.INVALID_AMOUNT, reason, uuid, displayNameHint, amount, 0D, 0D);
         }
 
@@ -386,30 +379,34 @@ public class EconomyManager {
             return failure(EconomyFailureReason.NO_PLAYER_DATA, reason, uuid, displayNameHint, amount, 0D, 0D);
         }
 
-        double normalizedAmount = roundCurrency(amount);
-        double beforeBalance = roundCurrency(loadedAccount.data().getMoney());
-        if (beforeBalance + EPSILON < normalizedAmount) {
+        long amountCents = parsedAmount.getAsLong();
+        long beforeCents = Money.balanceCents(loadedAccount.data().getMoney());
+        java.util.OptionalLong afterCents = Money.subtract(beforeCents, amountCents);
+        if (afterCents.isEmpty()) {
             return failure(
                     EconomyFailureReason.INSUFFICIENT_FUNDS,
                     reason,
                     loadedAccount.reference().uuid(),
                     loadedAccount.reference().displayName(),
-                    normalizedAmount,
-                    beforeBalance,
-                    beforeBalance
+                    Money.toDouble(amountCents),
+                    Money.toDouble(beforeCents),
+                    Money.toDouble(beforeCents)
             );
         }
 
-        loadedAccount.data().setMoney(roundCurrency(beforeBalance - normalizedAmount));
+        loadedAccount.data().setMoney(Money.toDouble(afterCents.getAsLong()));
         saveLoadedAccount(loadedAccount);
+        recordLedger(EconomyLedger.Kind.WITHDRAW, reason, loadedAccount, amountCents, beforeCents, afterCents.getAsLong());
 
+        double normalizedAmount = Money.toDouble(amountCents);
         if (reason == EconomyReason.ADMIN_REMOVE) {
             plugin.getPlayerLogsManager().log(
                     uuid,
                     loadedAccount.reference().displayName(),
                     "Economy",
                     "ECONOMY_REMOVE",
-                    "Admin removed " + plugin.getCurrencyManager().formatMoney(normalizedAmount) + " from balance (New Balance: " + plugin.getCurrencyManager().formatMoney(beforeBalance - normalizedAmount) + ")"
+                    "Admin removed " + plugin.getCurrencyManager().formatMoney(normalizedAmount) + " from balance (New Balance: "
+                            + plugin.getCurrencyManager().formatMoney(Money.toDouble(afterCents.getAsLong())) + ")"
             );
         }
 
@@ -420,8 +417,8 @@ public class EconomyManager {
                 loadedAccount.reference().uuid(),
                 loadedAccount.reference().displayName(),
                 normalizedAmount,
-                beforeBalance,
-                roundCurrency(loadedAccount.data().getMoney())
+                Money.toDouble(beforeCents),
+                Money.toDouble(afterCents.getAsLong())
         );
     }
 
@@ -431,8 +428,12 @@ public class EconomyManager {
             double amount,
             EconomyReason reason
     ) {
-        if (!isValidNonNegativeAmount(amount)) {
+        java.util.OptionalLong parsedAmount = Money.toCents(amount);
+        if (parsedAmount.isEmpty()) {
             return failure(EconomyFailureReason.INVALID_AMOUNT, reason, uuid, displayNameHint, amount, 0D, 0D);
+        }
+        if (parsedAmount.getAsLong() > Money.effectiveLimit(maxBalanceCents())) {
+            return failure(EconomyFailureReason.BALANCE_LIMIT, reason, uuid, displayNameHint, amount, 0D, 0D);
         }
 
         LoadedAccount loadedAccount = loadAccount(uuid, displayNameHint, false);
@@ -440,18 +441,21 @@ public class EconomyManager {
             return failure(EconomyFailureReason.NO_PLAYER_DATA, reason, uuid, displayNameHint, amount, 0D, 0D);
         }
 
-        double normalizedAmount = roundCurrency(amount);
-        double beforeBalance = roundCurrency(loadedAccount.data().getMoney());
-        loadedAccount.data().setMoney(normalizedAmount);
+        long newCents = parsedAmount.getAsLong();
+        long beforeCents = Money.balanceCents(loadedAccount.data().getMoney());
+        loadedAccount.data().setMoney(Money.toDouble(newCents));
         saveLoadedAccount(loadedAccount);
+        recordLedger(EconomyLedger.Kind.SET, reason, loadedAccount, Math.abs(newCents - beforeCents), beforeCents, newCents);
 
+        double normalizedAmount = Money.toDouble(newCents);
         if (reason == EconomyReason.ADMIN_SET) {
             plugin.getPlayerLogsManager().log(
                     uuid,
                     loadedAccount.reference().displayName(),
                     "Economy",
                     "ECONOMY_SET",
-                    "Admin set balance to " + plugin.getCurrencyManager().formatMoney(normalizedAmount) + " (Previous Balance: " + plugin.getCurrencyManager().formatMoney(beforeBalance) + ")"
+                    "Admin set balance to " + plugin.getCurrencyManager().formatMoney(normalizedAmount) + " (Previous Balance: "
+                            + plugin.getCurrencyManager().formatMoney(Money.toDouble(beforeCents)) + ")"
             );
         }
 
@@ -462,8 +466,8 @@ public class EconomyManager {
                 loadedAccount.reference().uuid(),
                 loadedAccount.reference().displayName(),
                 normalizedAmount,
-                beforeBalance,
-                roundCurrency(loadedAccount.data().getMoney())
+                Money.toDouble(beforeCents),
+                normalizedAmount
         );
     }
 
@@ -485,7 +489,9 @@ public class EconomyManager {
             );
         }
 
-        PlayerData offlineData = plugin.getDatabaseManager().loadPlayer(uuid);
+        // The one shared copy of an offline player's row: a second change right after the first
+        // builds on it instead of on a row the first change has not been written to yet.
+        PlayerData offlineData = plugin.getPlayerDataManager().getOrLoadOffline(uuid);
         if (offlineData != null) {
             return new LoadedAccount(
                     new AccountReference(uuid, resolveDisplayName(uuid, displayNameHint), null),
@@ -502,8 +508,8 @@ public class EconomyManager {
         PlayerSettingDefaults.applyDefaults(plugin, created);
         double startMoney = plugin.getConfigManager().getConfig()
                 .getDouble("SETTINGS.MONEY-PER-DEFAULT", 1000.0D);
-        created.setMoney(roundCurrency(startMoney));
-        plugin.getDatabaseManager().savePlayer(created);
+        created.setMoney(Money.toDouble(Money.toCents(startMoney).orElse(0L)));
+        plugin.getPlayerDataManager().saveOffline(created, null);
 
         return new LoadedAccount(
                 new AccountReference(uuid, username, null),
@@ -518,13 +524,154 @@ public class EconomyManager {
             }
         } else {
             // Invalidate after the row is written, or the next read would cache the old balance.
-            plugin.getDatabaseManager().executeAsync(() -> {
-                plugin.getDatabaseManager().savePlayer(loadedAccount.data());
+            plugin.getPlayerDataManager().saveOffline(loadedAccount.data(), () -> {
                 if (plugin.getLeaderboardManager() != null) {
                     plugin.getLeaderboardManager().invalidate(LeaderboardManager.LeaderboardType.MONEY);
                 }
             });
         }
+    }
+
+    private void recordLedger(EconomyLedger.Kind kind, EconomyReason reason, LoadedAccount account,
+                              long amountCents, long beforeCents, long afterCents) {
+        EconomyLedger ledger = EconomyLedger.active();
+        if (ledger != null) {
+            ledger.record(null, EconomyLedger.Currency.MONEY, kind, reason, account.reference().uuid(),
+                    account.reference().displayName(), null, null, amountCents, beforeCents, afterCents);
+        }
+    }
+
+    /** ECONOMY.MAX-BALANCE in cents; 0 means the 90 trillion precision limit. */
+    public long maxBalanceCents() {
+        double configured = plugin.getConfigManager().getConfig().getDouble("ECONOMY.MAX-BALANCE", 0D);
+        if (!Double.isFinite(configured) || configured <= 0D) {
+            return Money.PRECISION_LIMIT_CENTS;
+        }
+        return Money.toCents(configured).orElse(Money.PRECISION_LIMIT_CENTS);
+    }
+
+    /** A positive amount in whole cents; empty for NaN, infinity, zero and amounts under half a cent. */
+    private static java.util.OptionalLong positiveCents(double amount) {
+        java.util.OptionalLong cents = Money.toCents(amount);
+        return cents.isPresent() && cents.getAsLong() > 0L ? cents : java.util.OptionalLong.empty();
+    }
+
+    // ── Shards ────────────────────────────────────────────────────────────────
+
+    /** The result of a shard change: whether it happened, and the balance before and after. */
+    public record ShardResult(boolean success, EconomyFailureReason failure, long before, long after) {
+    }
+
+    /**
+     * Adds shards to a player, online or offline, through the same audited path as money. Every
+     * shard reward, refund and admin change calls this.
+     */
+    public ShardResult depositShards(UUID uuid, String nameHint, long amount, EconomyReason reason) {
+        return changeShards(uuid, nameHint, amount, reason, EconomyLedger.Kind.DEPOSIT);
+    }
+
+    /** Takes shards away; fails without changing anything when the player has too few. */
+    public ShardResult withdrawShards(UUID uuid, String nameHint, long amount, EconomyReason reason) {
+        return changeShards(uuid, nameHint, amount, reason, EconomyLedger.Kind.WITHDRAW);
+    }
+
+    /** Sets a shard balance (admin use). */
+    public ShardResult setShards(UUID uuid, String nameHint, long amount, EconomyReason reason) {
+        return changeShards(uuid, nameHint, amount, reason, EconomyLedger.Kind.SET);
+    }
+
+    /** Moves shards between two players at once. */
+    public ShardResult transferShards(UUID from, String fromName, UUID to, String toName, long amount, EconomyReason reason) {
+        if (amount <= 0L || from == null || to == null) {
+            return new ShardResult(false, EconomyFailureReason.INVALID_AMOUNT, 0L, 0L);
+        }
+        if (from.equals(to)) {
+            return new ShardResult(false, EconomyFailureReason.SAME_ACCOUNT, 0L, 0L);
+        }
+        LoadedAccount sender = loadAccount(from, fromName, false);
+        LoadedAccount recipient = loadAccount(to, toName, false);
+        if (sender == null || recipient == null) {
+            return new ShardResult(false, EconomyFailureReason.NO_PLAYER_DATA, 0L, 0L);
+        }
+        long senderBefore = sender.data().getShards();
+        long recipientBefore = recipient.data().getShards();
+        if (senderBefore < amount) {
+            return new ShardResult(false, EconomyFailureReason.INSUFFICIENT_FUNDS, senderBefore, senderBefore);
+        }
+        long recipientAfter;
+        try {
+            recipientAfter = Math.addExact(recipientBefore, amount);
+        } catch (ArithmeticException overflow) {
+            return new ShardResult(false, EconomyFailureReason.BALANCE_LIMIT, senderBefore, senderBefore);
+        }
+        sender.data().setShards(senderBefore - amount);
+        recipient.data().setShards(recipientAfter);
+        saveShardAccount(sender);
+        saveShardAccount(recipient);
+        EconomyLedger ledger = EconomyLedger.active();
+        if (ledger != null) {
+            String transactionId = EconomyLedger.newTransactionId();
+            ledger.record(transactionId, EconomyLedger.Currency.SHARDS, EconomyLedger.Kind.TRANSFER_OUT, reason,
+                    from, sender.reference().displayName(), to, recipient.reference().displayName(),
+                    amount, senderBefore, senderBefore - amount);
+            ledger.record(transactionId, EconomyLedger.Currency.SHARDS, EconomyLedger.Kind.TRANSFER_IN, reason,
+                    to, recipient.reference().displayName(), from, sender.reference().displayName(),
+                    amount, recipientBefore, recipientAfter);
+        }
+        return new ShardResult(true, EconomyFailureReason.NONE, senderBefore, senderBefore - amount);
+    }
+
+    private ShardResult changeShards(UUID uuid, String nameHint, long amount, EconomyReason reason, EconomyLedger.Kind kind) {
+        if (uuid == null) {
+            return new ShardResult(false, EconomyFailureReason.PLAYER_NOT_FOUND, 0L, 0L);
+        }
+        if (amount < 0L || (amount == 0L && kind != EconomyLedger.Kind.SET)) {
+            return new ShardResult(false, EconomyFailureReason.INVALID_AMOUNT, 0L, 0L);
+        }
+        LoadedAccount account = loadAccount(uuid, nameHint, false);
+        if (account == null) {
+            return new ShardResult(false, EconomyFailureReason.NO_PLAYER_DATA, 0L, 0L);
+        }
+        long before = account.data().getShards();
+        long after;
+        switch (kind) {
+            case DEPOSIT -> {
+                try {
+                    after = Math.addExact(before, amount);
+                } catch (ArithmeticException overflow) {
+                    return new ShardResult(false, EconomyFailureReason.BALANCE_LIMIT, before, before);
+                }
+            }
+            case WITHDRAW -> {
+                if (before < amount) {
+                    return new ShardResult(false, EconomyFailureReason.INSUFFICIENT_FUNDS, before, before);
+                }
+                after = before - amount;
+            }
+            default -> after = amount;
+        }
+        account.data().setShards(after);
+        saveShardAccount(account);
+        EconomyLedger ledger = EconomyLedger.active();
+        if (ledger != null) {
+            ledger.record(null, EconomyLedger.Currency.SHARDS, kind, reason, uuid, account.reference().displayName(),
+                    null, null, kind == EconomyLedger.Kind.SET ? Math.abs(after - before) : amount, before, after);
+        }
+        return new ShardResult(true, EconomyFailureReason.NONE, before, after);
+    }
+
+    private void saveShardAccount(LoadedAccount account) {
+        if (account.reference().isOnline()) {
+            if (plugin.getLeaderboardManager() != null) {
+                plugin.getLeaderboardManager().invalidateLive(LeaderboardManager.LeaderboardType.SHARDS);
+            }
+            return;
+        }
+        plugin.getPlayerDataManager().saveOffline(account.data(), () -> {
+            if (plugin.getLeaderboardManager() != null) {
+                plugin.getLeaderboardManager().invalidate(LeaderboardManager.LeaderboardType.SHARDS);
+            }
+        });
     }
 
     private String resolveDisplayName(UUID uuid, String fallbackName) {
@@ -554,16 +701,8 @@ public class EconomyManager {
         return uuid.toString();
     }
 
-    private boolean isValidPositiveAmount(double amount) {
-        return Double.isFinite(amount) && amount > 0D;
-    }
-
-    private boolean isValidNonNegativeAmount(double amount) {
-        return Double.isFinite(amount) && amount >= 0D;
-    }
-
     private double roundCurrency(double amount) {
-        return Math.round(amount * 100D) / 100D;
+        return Money.toDouble(Money.toCents(Math.max(0D, amount)).orElse(0L));
     }
 
     private EconomyTransactionResult failure(

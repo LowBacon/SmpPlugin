@@ -869,21 +869,19 @@ public class CrateManager {
     }
 
     private boolean grantMoneyReward(Player player, GrantDefinition grant) {
-        PlayerData data = plugin.getPlayerDataManager().get(player);
-        if (data == null) {
+        if (plugin.getPlayerDataManager().get(player) == null) {
             return false;
         }
-        data.addMoney(grant.moneyAmount());
-        return true;
+        return plugin.getEconomyManager().deposit(player, grant.moneyAmount(),
+                com.bx.smpPlugin.models.EconomyReason.CRATE_REWARD).success();
     }
 
     private boolean grantShardReward(Player player, GrantDefinition grant) {
-        PlayerData data = plugin.getPlayerDataManager().get(player);
-        if (data == null) {
+        if (plugin.getPlayerDataManager().get(player) == null) {
             return false;
         }
-        data.addShards(grant.shardAmount());
-        return true;
+        return plugin.getEconomyManager().depositShards(player.getUniqueId(), player.getName(), grant.shardAmount(),
+                com.bx.smpPlugin.models.EconomyReason.CRATE_REWARD).success();
     }
 
     private boolean grantCommandReward(Player player, CrateDefinition crate, CrateReward reward, GrantDefinition grant) {

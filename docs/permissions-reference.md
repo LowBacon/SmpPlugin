@@ -21,11 +21,7 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.helpop` | Ask online staff for help with /helpop. | everyone |  |
 | `smpplugin.report` | Report a player to staff with /report. | everyone |  |
 | `smpplugin.enderchest` | Open your own custom Ender Chest with /enderchest. | everyone |  |
-| `smpplugin.coinflip.use` | Open /coinflip: browse matches, view statistics, history, leaderboards, achievements and settings. | everyone | New in 2.0. |
-| `smpplugin.coinflip.create` | Create public CoinFlip matches with in-game currency. | everyone | New in 2.0. |
-| `smpplugin.coinflip.join` | Join CoinFlip matches and accept challenges. | everyone | New in 2.0. |
-| `smpplugin.coinflip.challenge` | Send private CoinFlip challenges and rematches. | everyone | New in 2.0. |
-| `smpplugin.coinflip.practice` | Flip practice coins (no currency). | everyone | New in 2.0. |
+| `smpplugin.coinflip.use` | Play /cf: start coin flips and join other players' flips. | everyone | New in 2.0. Since 3.2 it is the only node /cf needs. |
 | `smpplugin.afk.away` | Mark yourself AFK where you stand with /away. | everyone | New in 2.0.0-alpha.5. |
 | `smpplugin.findplayer` | See which dimension and biome another online player is in with /findplayer. | everyone | New in 2.0. /findplayer had no permission check in 1.5; default true keeps that behaviour. |
 | `smpplugin.friends` | Use /friends to add, remove and follow friends. | everyone | Declared in 2.0 with default true. It was undeclared in 1.5, which made it op-only unless granted. |
@@ -56,9 +52,12 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.uptime` | See how long the server has been up, and its TPS, with /uptime. | everyone | New in 3.0. |
 | `smpplugin.calc` | Do sums with /calc. | everyone | New in 3.0. |
 | `smpplugin.dice` | Bet money on a dice roll against the house with /dice. | everyone | New in 3.1. |
-| `smpplugin.roulette` | Put money into the head roulette with /roulette. | everyone | New in 3.1. |
 | `smpplugin.guide` | Read the getting-started guide with /guide. | everyone | New in 3.1. |
 | `smpplugin.sidebar` | Show or hide your own scoreboard with /sidebar. | everyone | New in 3.1. |
+| `smpplugin.balance.history` | See your own money and shard history with /balance history. | everyone | New in 4.0. |
+| `smpplugin.ranked` | Play ranked PvP with /ranked: the queue, stats, the leaderboard and history. | everyone | New in 4.0. |
+| `smpplugin.events` | Use /event and /easter: see the seasonal events and take part in them. | everyone | New in 4.0. |
+| `smpplugin.advent` | Open the Advent Calendar with /advent. | everyone | New in 4.0. |
 
 ## Rank perks (default: nobody)
 
@@ -67,9 +66,9 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.chat.color` | Keep colour codes typed into /msg and staff chat. | nobody | New in 2.0.0-alpha.5. Without it the codes are removed. |
 | `smpplugin.auctionhouse.fastbuy` | Allow the quick-purchase setting that skips the Auction House buy confirmation. | nobody | Declared in 2.0; previously undeclared (op-only unless granted). |
 | `smpplugin.auctionhouse.fastsell` | Allow the quick-sell setting for Auction House listings. | nobody | Declared in 2.0; previously undeclared (op-only unless granted). |
-| `smpplugin.donutplus` | Show the CustomSmp+ badge (player setting). | nobody | Declared in 2.0; previously undeclared (op-only unless granted). |
-| `smpplugin.donutplusplus` | CustomSmp++ rank: unlocks the second page of Auction House listing slots. | nobody | New in 2.0 with the merged Auction House. |
-| `smpplugin.donutplusplusplus` | CustomSmp+++ rank: same Auction House slots as CustomSmp++. | nobody | New in 2.0 with the merged Auction House. |
+| `smpplugin.donutplus` | Show the server's + badge (player setting). | nobody | Declared in 2.0; previously undeclared (op-only unless granted). |
+| `smpplugin.donutplusplus` | ++ rank: unlocks the second page of Auction House listing slots. | nobody | New in 2.0 with the merged Auction House. |
+| `smpplugin.donutplusplusplus` | +++ rank: same Auction House slots as the ++ rank. | nobody | New in 2.0 with the merged Auction House. |
 | `smpplugin.rtp.priority.vip++` | RTP waiting-queue priority 30 (rtp.yml PRIORITY-QUEUE). | nobody | New in 2.0 with the merged RTP. |
 | `smpplugin.rtp.priority.vip+` | RTP waiting-queue priority 20 (rtp.yml PRIORITY-QUEUE). | nobody | New in 2.0 with the merged RTP. |
 | `smpplugin.rtp.priority.vip` | RTP waiting-queue priority 10 (rtp.yml PRIORITY-QUEUE). | nobody | New in 2.0 with the merged RTP. |
@@ -103,6 +102,8 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.lore` | Edit the lore of the item in your hand with /lore. | nobody | New in 3.0. |
 | `smpplugin.glow` | Toggle a glowing outline with /glow. | nobody | New in 3.0. |
 | `smpplugin.gambling.bypasscooldown` | No cooldown between /dice rolls. | nobody | New in 3.1. |
+| `smpplugin.bypass.paylimit` | Pay more than ECONOMY.PAY.MAX-AMOUNT in one /pay. | nobody | New in 4.0. |
+| `smpplugin.bypass.paycooldown` | No wait between payments (ECONOMY.PAY.COOLDOWN-SECONDS). | nobody | New in 4.0. |
 
 ## Staff tools (default: nobody; ops via smpplugin.admin)
 
@@ -158,8 +159,6 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.staff.spawnstash.alert` | Receive alerts when a bait stash is found. | nobody | Declared in 2.0; previously undeclared. |
 | `smpplugin.security.alerts` | Receive anti-cheat alerts and toggle them with /anticheat alerts. | nobody | New in 2.0. |
 | `smpplugin.security.inspect` | View anti-cheat status, check settings, flag history and evidence. | nobody | New in 2.0. |
-| `smpplugin.coinflip.alerts` | Receive CoinFlip storage and settlement alerts. | nobody | New in 2.0. |
-| `smpplugin.coinflip.inspect` | /coinflipadmin status, inspect, audit, reconcile report, debug and any player's statistics. | nobody | New in 2.0. |
 | `smpplugin.staff.poll` | Start and end polls with /poll. | nobody | New in 3.0. |
 | `smpplugin.staff.chatgame` | Start and stop chat games with /chatgame. | nobody | New in 3.0. |
 | `smpplugin.staff.countdown` | Show a server-wide countdown with /countdown. | nobody | New in 3.0. |
@@ -213,7 +212,6 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.admin.adddeaths` | Add deaths to a player. | nobody |  |
 | `smpplugin.admin.addplaytime` | Add playtime to a player. | nobody |  |
 | `smpplugin.admin.lobby.setlobby` | Set the lobby location with /setlobby. | nobody |  |
-| `smpplugin.admin.lobby.border` | View or change the lobby border. | nobody |  |
 | `smpplugin.admin.lobby.reload` | Reload lobby.yml. | nobody |  |
 | `smpplugin.admin.lobby.debug` | Toggle lobby debug output. | nobody |  |
 | `smpplugin.admin.logs` | View a player's activity log with /logs. | nobody | Declared in 2.0; previously undeclared. |
@@ -225,10 +223,6 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.admin.friends` | Use administrative /friends subcommands. | nobody | Renamed from donutfriends.admin in 2.0. |
 | `smpplugin.hide.admin` | Manage other players' hide and disguise state. | nobody | Declared in 2.0; previously undeclared. |
 | `smpplugin.security.manage` | Grant temporary anti-cheat exemptions, reset violation levels and reload anticheat.yml. | nobody | New in 2.0. |
-| `smpplugin.coinflip.admin.cancel` | Cancel and refund a waiting CoinFlip match (a reason is required and audited). | nobody | New in 2.0. |
-| `smpplugin.coinflip.admin.recover` | Retry stuck CoinFlip payouts and reconcile held matches from the journal. | nobody | New in 2.0. |
-| `smpplugin.coinflip.admin.reload` | Reload coinflip.yml and coinflip-messages.yml and refresh leaderboards. | nobody | New in 2.0. |
-| `smpplugin.coinflip.admin.toggle` | Pause or resume CoinFlip wagering for everyone. | nobody | New in 2.0. |
 | `smpplugin.admin.playerwipe` | Wipe one player's stats, homes, items and progress with /playerwipe (backed up first). | nobody | New in 2.0.0-alpha.5. |
 | `smpplugin.admin.playerunwipe` | Restore a wiped player from their backup with /playerunwipe. | nobody | New in 2.0.0-alpha.5. |
 | `smpplugin.admin.halloween` | Edit Spooky Calendar prizes and use /halloween give, reset, preview and stats. | nobody | New in 3.0. |
@@ -243,9 +237,14 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.admin.performance` | See TPS, memory, chunks and entities with /performance. | nobody | New in 3.0. |
 | `smpplugin.admin.spook` | Jump-scare a player (or everyone) with /spook. | nobody | New in 3.0. |
 | `smpplugin.admin.perms` | Inspect roles and permissions with /perms. | nobody | New in 3.0. |
-| `smpplugin.admin.roulette` | Cancel a head-roulette round and refund everyone with /roulette cancel. | nobody | New in 3.1. |
+| `smpplugin.admin.coinflip` | Cancel every open coin flip and refund it with /cf cancelall. | nobody | New in 3.2. |
 | `smpplugin.admin.sidebar` | Edit the scoreboard title and lines in game with /sidebar. | nobody | New in 3.1. |
 | `smpplugin.admin.border` | Set up the spawn and lobby world borders with /border. | nobody | New in 3.1. |
+| `smpplugin.admin.economy` | Give and take money, see the economy totals and anyone's history with /economy. | nobody | New in 4.0. Every change is written to the economy ledger with the admin's name. |
+| `smpplugin.admin.economy.history` | Read any player's money and shard history with /economy history <player>. | nobody | New in 4.0. |
+| `smpplugin.admin.ranked` | Set or reset ranked ratings with /ranked setrating and /ranked reset. | nobody | New in 4.0. |
+| `smpplugin.admin.events` | Switch seasonal events on and off, reload them, and hide Easter eggs with /easter addegg. | nobody | New in 4.0. |
+| `smpplugin.admin.advent` | Edit Advent Calendar gifts, preview dates and reset doors with /advent. | nobody | New in 4.0. |
 
 ## Operational bypasses (default: nobody; ops via smpplugin.admin)
 
@@ -256,6 +255,7 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.afk.kickbypass` | Never get kicked for being AFK (afk.yml IDLE-ACTIONS.KICK-SECONDS). | nobody | New in 2.0.0-alpha.5. |
 | `smpplugin.admin.maintenance.bypass` | Join and stay on the server during maintenance. | nobody | Declared in 2.0; previously undeclared. |
 | `smpplugin.bypass.border` | Walk through the spawn and lobby borders (staff building or moderating). | nobody | New in 3.1. |
+| `smpplugin.bypass.itemban` | Use, place, craft and pick up items banned in survival-rules.yml. | nobody | New in 4.0. |
 
 ## Security and privacy bypasses (default: nobody; never bundled)
 
@@ -284,8 +284,6 @@ including destructive actions and bypasses. Only use one when you mean that.
 
 | Node | Allows | Default | Notes |
 |---|---|---|---|
-| `smpplugin.coinflip.admin.resolve` | Decide unknown CoinFlip transactions (applied or not); can create claims, so it is never bundled. | nobody | New in 2.0. |
-| `smpplugin.coinflip.admin.resetstats` | Reset a player's CoinFlip statistics (a reason is required and audited). | nobody | New in 2.0. |
 | `smpplugin.admin.serverwipe` | Run the season wipe workflow (/serverwipe). | nobody | Declared in 2.0 with default false; previously undeclared (op-only). |
 | `smpplugin.admin.statswipe` | Wipe stats with /smpplugin statswipe. | nobody | Removed from smpplugin.admin in 2.0; grant explicitly. |
 | `smpplugin.staff.punishments.delete` | Delete punishment records from history. | nobody | Removed from smpplugin.admin in 2.0; grant explicitly. |
@@ -295,6 +293,7 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.admin.setplaytime` | Overwrite a player's playtime. | nobody | Removed from smpplugin.admin in 2.0; grant explicitly. |
 | `smpplugin.staff.invsee.modify` | Edit another player's inventory through invsee. | nobody | Not part of smpplugin.admin. Upgrade spec name: smpplugin.staff.invsee.modify. |
 | `smpplugin.admin.ecsee.edit` | Edit another player's Ender Chest through /ecsee. | nobody | Declared in 2.0 with default false; previously undeclared (op-only). Upgrade spec name: smpplugin.staff.ecsee.modify. |
+| `smpplugin.admin.economy.set` | Overwrite or reset a balance with /economy set and /economy reset. | nobody | New in 4.0. Destructive like smpplugin.admin.setmoney. |
 
 ## Senior staff (default: nobody, but always allowed for ops; only the manager, developer, co-owner and owner roles)
 
@@ -306,13 +305,13 @@ including destructive actions and bypasses. Only use one when you mean that.
 
 | Node | Allows | Default | Notes |
 |---|---|---|---|
-| `smpplugin.admin` | Default-op administrator bundle: staff tools, administration and operational bypasses. Excludes destructive actions and security bypasses. | ops | In 2.0 this no longer includes destructive actions or security bypasses. Contains 138 nodes: every node in the staff, administration and operational-bypass tables. |
+| `smpplugin.admin` | Default-op administrator bundle: staff tools, administration and operational bypasses. Excludes destructive actions and security bypasses. | ops | In 2.0 this no longer includes destructive actions or security bypasses. Contains 137 nodes: every node in the staff, administration and operational-bypass tables. |
 | `smpplugin.role.helper` | Helper role: staff chat, reports, warn, kick, temp-mute, /whois and events. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 14 nodes: every node in the staff, administration and operational-bypass tables. |
 | `smpplugin.role.moderator` | Moderator role: everything a helper has, plus staff mode, vanish, freeze, bans, mutes, invsee and spy. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 31 nodes: every node in the staff, administration and operational-bypass tables. |
 | `smpplugin.role.admin` | Admin role: everything a moderator has plus every tool in smpplugin.admin (no destructive actions). | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 2 nodes: every node in the staff, administration and operational-bypass tables. |
 | `smpplugin.role.manager` | Manager role: the admin role plus managing giveaways. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 2 nodes: every node in the staff, administration and operational-bypass tables. |
 | `smpplugin.role.developer` | Developer role: the admin role plus managing giveaways. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 2 nodes: every node in the staff, administration and operational-bypass tables. |
-| `smpplugin.role.owner` | Owner role: the admin role plus every destructive action (wipes, set-money) and every rank perk. Security bypasses (anti-cheat, hidden names) are still granted one by one. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 52 nodes: every node in the staff, administration and operational-bypass tables. |
+| `smpplugin.role.owner` | Owner role: the admin role plus every destructive action (wipes, set-money) and every rank perk. Security bypasses (anti-cheat, hidden names) are still granted one by one. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 53 nodes: every node in the staff, administration and operational-bypass tables. |
 | `smpplugin.role.coowner` | Co-owner role: everything the owner role has. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 1 nodes: every node in the staff, administration and operational-bypass tables. |
 
 ## Legacy names and bundles
@@ -328,6 +327,7 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `safety.add` | Legacy name for smpplugin.admin.safety.give. | nobody | Kept so existing grants keep working. Grant smpplugin.admin.safety.give instead. Grants: `smpplugin.admin.safety.give` |
 | `smpplugin.updatechecker` | Legacy name for smpplugin.admin.updatenotify. | nobody | Kept so existing grants keep working. Grant smpplugin.admin.updatenotify instead. Grants: `smpplugin.admin.updatenotify` |
 | `donutfriends.admin` | Legacy name for smpplugin.admin.friends. | nobody | Kept so existing grants keep working. Grant smpplugin.admin.friends instead. Grants: `smpplugin.admin.friends` |
+| `smpplugin.admin.lobby.border` | Legacy name for smpplugin.admin.border. | nobody | Kept so existing grants keep working. Grant smpplugin.admin.border instead. Grants: `smpplugin.admin.border` |
 | `donutauction.use` | Legacy name for smpplugin.auctionhouse.use. | nobody | Kept so existing grants keep working. Grant smpplugin.auctionhouse.use instead. Grants: `smpplugin.auctionhouse.use` |
 | `donutauction.sell` | Legacy name for smpplugin.auctionhouse.sell. | nobody | Kept so existing grants keep working. Grant smpplugin.auctionhouse.sell instead. Grants: `smpplugin.auctionhouse.sell` |
 | `donutauction.buy` | Legacy name for smpplugin.auctionhouse.buy. | nobody | Kept so existing grants keep working. Grant smpplugin.auctionhouse.buy instead. Grants: `smpplugin.auctionhouse.buy` |

@@ -3,7 +3,7 @@
 # ==============================================================================
 #
 # Daily rewards, daily challenges, polls, giveaways, chat games, the announcer,
-# mail, emotes, the utility commands, /dice and /roulette. Each part can be switched off as a
+# mail, emotes, the utility commands, /dice and /cf. Each part can be switched off as a
 # feature (/smpplugin feature) and every message can be changed in messages.yml
 # under V3.
 #
@@ -276,28 +276,29 @@ DICE:
   BROADCAST-WIN-OVER: 50000
 
 # ------------------------------------------------------------------------------
-# /roulette - the head roulette (new in 3.1)
+# /cf (/coinflip) - coin flips between players (new in 3.2)
 # ------------------------------------------------------------------------------
-# Everyone's bet goes in one pot. The players' heads spin and the head that stops in
-# the middle wins the pot. Each player's chance is their bet divided by the pot. The
-# server draws the winner before the spin; the animation only shows it.
-ROULETTE:
-  MIN-BET: 100
-  MAX-BET: 10000000
+# A player starts a game with a bet; anyone can join by betting the same, and the flip starts at
+# once: both heads spin and the one that stops in the middle wins the pot. Equal bets, so it is an
+# exact 50/50, drawn by the server before the spin.
+COINFLIP:
+  MIN-BET: 1
+  # The highest bet. 0 = no maximum.
+  MAX-BET: 0
   # Taken from the pot before it is paid out (0 = no fee).
   FEE-PERCENT: 0
-  MIN-PLAYERS: 2
-  MAX-PLAYERS: 20
-  # The countdown starts when MIN-PLAYERS are in. Bets lock LOCK-SECONDS before the spin.
-  COUNTDOWN-SECONDS: 30
-  LOCK-SECONDS: 3
-  # A round nobody else joins is cancelled (and the bet given back) after this long.
-  WAIT-TIMEOUT-SECONDS: 300
-  # The four quick-bet buttons in /roulette.
+  # Open games one player can have at once.
+  MAX-OPEN-PER-PLAYER: 3
+  # A game nobody joins is cancelled (and the bet given back) after this long.
+  EXPIRE-MINUTES: 30
+  # The five quick-bet buttons in /cf.
   QUICK-BETS:
     - 1000
     - 10000
     - 100000
     - 1000000
-  # Tell everyone when a player joins a round.
-  ANNOUNCE-JOINS: true
+    - 10000000
+  # Tell everyone when a game is started, with a [Flip] button.
+  ANNOUNCE-NEW: true
+  # Tell everyone about flips with a pot at least this big (0 = never).
+  BROADCAST-OVER: 100000

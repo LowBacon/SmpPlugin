@@ -966,6 +966,48 @@ public class DuelManager {
         return true;
     }
 
+    /** How a duel ended, handed to {@link #setMatchFinishListener} listeners (ranked PvP). */
+    public record FinishedMatch(long id, DuelMatch.MatchType type, UUID playerOne, String playerOneName,
+                                UUID playerTwo, String playerTwoName, UUID winner, UUID loser,
+                                String endReason, boolean cancelled, long durationSeconds) {
+    }
+
+    private volatile java.util.function.Consumer<FinishedMatch> matchFinishListener;
+
+    /** Called on the main thread every time a duel finishes. One listener; null removes it. */
+    public void setMatchFinishListener(java.util.function.Consumer<FinishedMatch> listener) {
+        this.matchFinishListener = listener;
+    }
+
+    /** True when a player could be put into a duel right now (not in another duel, queue or FFA). */
+    public boolean canStartDuel(Player player, boolean feedback) {
+        return isEnabled() && canEnterDuel(player, feedback);
+    }
+
+    /** True when at least one arena that allows queue matches is set up and free. */
+    public boolean hasFreeQueueArena() {
+        return isEnabled() && isSelectionAvailable(DuelMapSelection.randomStatic(), true);
+    }
+
+    /**
+     * Starts a ranked duel between two players on a free queue arena. Returns true when the match
+     * started; false (nothing changed) when either player is busy or no arena is free.
+     */
+    public boolean startRankedMatch(Player first, Player second) {
+        if (first == null || second == null || first.equals(second)
+                || !canStartDuel(first, false) || !canStartDuel(second, false)) {
+            return false;
+        }
+        ResolvedArena resolvedArena = resolveArena(DuelMapSelection.randomStatic(), true);
+        if (resolvedArena == null) {
+            return false;
+        }
+        removeRequestsFor(first.getUniqueId(), false);
+        removeRequestsFor(second.getUniqueId(), false);
+        startMatch(first, second, resolvedArena, DuelMatch.MatchType.RANKED, DuelPrivacyMode.INVITE_ONLY, getLocalServerId());
+        return isInDuel(first.getUniqueId()) && isInDuel(second.getUniqueId());
+    }
+
     public boolean joinQueue(Player player) {
         return joinQueue(player, DuelMapSelection.randomStatic());
     }
@@ -1508,6 +1550,18 @@ public class DuelManager {
         }
 
         updateMatchRecord(match, winnerUuid, loserUuid, endReason);
+        java.util.function.Consumer<FinishedMatch> finishListener = matchFinishListener;
+        if (finishListener != null) {
+            long duration = match.getStartedAt() <= 0L ? 0L
+                    : Math.max(0L, (System.currentTimeMillis() - match.getStartedAt()) / 1000L);
+            try {
+                finishListener.accept(new FinishedMatch(match.getId(), match.getType(), match.getPlayerOneUuid(),
+                        match.getPlayerOneName(), match.getPlayerTwoUuid(), match.getPlayerTwoName(), winnerUuid,
+                        loserUuid, endReason, cancelled, duration));
+            } catch (RuntimeException exception) {
+                plugin.getLogger().log(Level.WARNING, "A duel result listener failed for match " + match.getId(), exception);
+            }
+        }
 
         List<ItemStack> claimLoot = loot == null ? List.of() : loot;
         GeneratedInventorySnapshot restoreSnapshot = null;

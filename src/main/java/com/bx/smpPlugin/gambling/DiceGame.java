@@ -1,7 +1,6 @@
 package com.bx.smpPlugin.gambling;
 
 import com.bx.smpPlugin.SmpPlugin;
-import com.bx.smpPlugin.coinflip.StakeMath;
 import com.bx.smpPlugin.core.Text;
 import com.bx.smpPlugin.models.EconomyReason;
 import com.bx.smpPlugin.utils.PermissionUtils;

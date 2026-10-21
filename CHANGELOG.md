@@ -1,5 +1,175 @@
 # Changelog
 
+## 4.0.0 — 21 October 2026
+
+**SmpPlugin 4.0: the server is branded CustomSMP everywhere from one setting, money is counted in
+whole cents with a full audit ledger, and there is ranked PvP with Elo, a seasonal event system
+(Advent, Christmas, Easter, Summer and your own events), item bans, versioned database migrations
+and `/smp diagnostics`.** Runs on the same servers as 3.x (Paper and Purpur 1.21.11 to 26.3; a
+Spigot jar too). 4.0.0 also contains everything from 3.1.1 and 3.2.0 below, which were not released
+on their own. Upgrading is drop-in: see [docs/MIGRATING-TO-4.0.md](docs/MIGRATING-TO-4.0.md).
+
+### Added
+- **CustomSMP branding in one place.** `BRANDING.SERVER-NAME` in `config.yml` (default `CustomSMP`)
+  is the name on the scoreboard, the tab list, menus and messages; `{server_name}`,
+  `{server_title}` (the name in a bold gradient) and `{server_address}` work in any text. Renaming
+  the server never renames the plugin: the jar, `/smp`, permissions and the plugin folder stay
+  `SmpPlugin`. A scoreboard or tab list title still exactly at the old default is switched to the
+  brand automatically (after a backup); a title you changed is left alone.
+- **A new default scoreboard:** Player, Rank, Balance, Shards, Kills, Deaths, K/D, Playtime, Team,
+  Online and Server, titled CustomSMP. New installs get it; existing `scoreboard.yml` files keep
+  their lines. Remove or reorder lines freely.
+- **Placeholders work without PlaceholderAPI.** The plugin's own placeholders (`%smp_...%`,
+  `%economy_...%`) are filled in by the plugin itself, so a server without PlaceholderAPI no longer
+  shows `%economy_kills%` on the scoreboard. New names: `%smp_balance%`, `%smp_rank%`,
+  `%smp_kdr%`, `%smp_online%`, `%smp_max_players%`, `%smp_server_name%`, `%smp_elo%`,
+  `%smp_ranked_*%`, `%smp_events_active%` and more, also as PlaceholderAPI expansion `smp`. A
+  placeholder nothing can fill is left out of the scoreboard and tab list instead of shown as code
+  (`HIDE-UNRESOLVED-PLACEHOLDERS`). See [docs/placeholders.md](docs/placeholders.md).
+- **Economy ledger.** Every change to money and shards writes one row (two for a payment, sharing a
+  transaction id) to the `economy_ledger` table: who, how much, why, who caused it, and the balance
+  before and after. `/balance history` shows your own; `/economy history <player>` anyone's.
+  Old rows are deleted after `ECONOMY.LEDGER.RETENTION-DAYS` (180).
+- **`/economy`** (`/eco`): `give`, `take`, `set`, `reset` (asks for confirmation), `history` and
+  `stats` (money and shards in circulation). Admin changes record the admin and the reason typed
+  after the amount; `/addmoney`, `/removemoney`, `/setmoney` and the shard commands do too.
+- **Payment rules** in `config.yml` `ECONOMY.PAY`: smallest and largest payment, a cooldown and a
+  fee percentage (all off by default), with bypass permissions.
+- **Ranked PvP** (`/ranked`): a ranked queue that matches players by Elo rating (the accepted gap
+  widens the longer they wait), played on the duel arenas with the duel rules. Ratings, tiers,
+  peak rating, W/L/D, match history, a cached leaderboard, win rewards and anti-boosting: the same
+  two players are not matched again after `MAX-GAMES-PER-PAIR` games in a day, players from the
+  same IP are never matched, and very short matches do not count. Settings in `ranked.yml`.
+- **Seasonal events** (`/event`): a menu and commands to see every event, its dates and your
+  progress. Each event runs between its START and END dates in `events.yml`, or when staff switch
+  it on (`/event enable|disable|auto <event>`, saved across restarts). Switching an event off stops
+  everything it does; player progress is kept and rewards are never handed out twice.
+  - **Advent Calendar** (`/advent`): one door a day in December, the Spooky Calendar with a
+    Christmas theme, its own `advent.yml`, in-game gift editor and preview dates.
+  - **Christmas presents:** monsters drop wrapped presents (a daily limit per player); right-click
+    to unwrap a weighted reward.
+  - **Easter egg hunt** (`/easter`): staff hide eggs with `/easter addegg`; players collect each egg
+    once a season, with milestone rewards, sparkles near unfound eggs and a leaderboard.
+  - **Summer Splash** and **custom events:** rewards for every 30 active minutes (daily limit,
+    not while AFK) and lucky fishing catches. Add your own under `CUSTOM-EVENTS`.
+  - Halloween (3.0) appears in `/event` too and is switched with the same commands.
+- **Survival rules** (`survival-rules.yml`): ban items by material from being placed, used, crafted
+  or picked up, and disable recipes, optionally only in some worlds. `smpplugin.bypass.itemban`
+  skips them. The server's recipe list is not changed, so removing a rule restores it at once.
+- **`/smp`** is now the short name of `/smpplugin`, with `help`, `modules` (the module menu),
+  `reload <module>` (branding, scoreboard, tablist, economy, ranked, events, rules, shop, auction,
+  orders, crates, duels, ffa, spawners) and **`diagnostics`**: TPS and tick time, memory, database
+  health (a query timed every minute and how long it waited in the queue), queued database writes,
+  cache sizes, the slowest commands by average and single run, and anything that failed to start.
+- **Versioned database migrations** (`schema_migrations` table). Each step runs once, in order,
+  inside a transaction; a failed step is rolled back and retried on the next start. `/smp status`
+  and `/smp diagnostics` show the schema version.
+- **`/baltop`**, and `/balance <player>` and `/baltop` from the console.
+- **The Maven wrapper** (`mvnw` / `mvnw.cmd`): build with `./mvnw clean package` without
+  installing Maven.
+- The scoreboard and tab list step aside when another scoreboard plugin (TAB, FeatherBoard,
+  AnimatedScoreboard, SimpleScore, KiteBoard) is installed, unless `OVERRIDE-OTHER-PLUGINS: true`.
+- New modules `RANKED`, `SEASONAL_EVENTS` and `SURVIVAL_RULES` in `/smp modules`. Turning one off
+  removes its listeners, tasks and queue at once; turning it back on starts them again.
+- New permissions: `smpplugin.balance.history`, `smpplugin.ranked`, `smpplugin.events`,
+  `smpplugin.advent` (players); `smpplugin.admin.economy`, `smpplugin.admin.economy.history`,
+  `smpplugin.admin.ranked`, `smpplugin.admin.events`, `smpplugin.admin.advent` (admin);
+  `smpplugin.admin.economy.set` (destructive); `smpplugin.bypass.itemban`,
+  `smpplugin.bypass.paylimit`, `smpplugin.bypass.paycooldown`.
+
+### Changed
+- **Money is calculated in whole cents.** Every deposit, withdrawal, payment and balance change is
+  worked out in exact integer cents with overflow checks, so rounding errors cannot creep in.
+  Balances are capped at `ECONOMY.MAX-BALANCE` (default: 90 trillion, the most a balance can hold
+  exactly). NaN, infinite, negative and sub-cent amounts are refused everywhere.
+- **Every shard change goes through the economy** (rewards, kills, AFK zones, shard areas, the shard
+  shop and its refunds, `/shardpay`, crates, admin commands), so it is checked and written to the
+  ledger. Crate money rewards now use the economy as well. Passive "everywhere" shards are left out
+  of the ledger by default (`ECONOMY.LEDGER.RECORD-PASSIVE-SHARDS`).
+- `/pay` reads amounts strictly: `250`, `1.5k`, `2m`, `$19.99` work; `NaN`, `Infinity`, `1e5`,
+  hex and amounts under a cent are refused with a clear message instead of a vague error.
+- The tab list footer shows your balance and rank, and the server address (`{server_address}`,
+  set it in `BRANDING.SERVER-ADDRESS`). The header shows the online count. Existing `config.yml`
+  files keep their header and footer.
+- The console start-up line names the plugin, its version and the server name.
+- The database writer queue is bounded (50,000 writes); past that, the caller writes itself, which
+  slows it down instead of growing memory or dropping a write.
+- `/smp version` shows the server name, and `/smp reload` reports "SmpPlugin configuration
+  reloaded".
+
+### Fixed
+- **Two quick payments to an offline player could lose one.** Each change re-read the stored row,
+  so a second change before the first one's background save read the old balance. Changes to an
+  offline player now share one copy (also for shards and admin stat edits), and a player who joins
+  right after gets that copy instead of an out-of-date row.
+- **A payment to a player who had just logged off could be overwritten** by their own quit save.
+  Offline changes now build on the copy still being saved.
+- Leaderboards no longer read the whole players table on the main thread every 30 seconds; the
+  table is read in the background and the last result is shown meanwhile.
+- `/balance <player>` and `/halloween reset <player>` no longer look the name up on the main thread
+  (an unknown name could make the server wait for Mojang).
+- Every message turned the words "status" and "currently" into "Status" and "Currently", which
+  broke command hints such as `/anticheat status` in chat; and "dont+" into the name of the
+  reference project's rank. Both rewrites are gone.
+- Player-facing text no longer names the reference projects: the "Display +" setting, Auction House
+  slot locks, the friends reload message and a disguise preset now use the server's own name.
+- A dead console banner crediting the reference project was removed from the code.
+- The tab list's animated title now follows the server name (it was spelled out as "CustomSmp").
+- "Configuration sync complete" no longer ends with ", .".
+- One non-English error message in `/leaderboard` is now English.
+
+## 3.2.0 — 21 October 2026
+
+### Changed
+- **CoinFlip is rebuilt and much simpler.** `/cf` (`/coinflip`) shows the open games on a small
+  three-row screen. Click someone's game to bet the same amount and the flip starts at once: both
+  players' heads spin past a marker and the one that stops in the middle wins the pot. Start a game
+  with one of five quick bets, "another amount" or `/cf <amount>`; `/cf join <player>` and
+  `/cf cancel` work from chat. It is an exact 50/50, drawn by the server before the spin.
+- **No maximum CoinFlip bet** by default (`COINFLIP.MAX-BET: 0` in `extras.yml`).
+- **Auction house: no listing limit and no maximum price** by default. In `auction-house.yml`,
+  `MAX_ACTIVE_LISTINGS_DEFAULT: -1` means unlimited listings and `MAX_PRICE: 0` means no maximum
+  (existing files keep their values; change them to lift the limits).
+- **`/border` explains its size:** the size is the whole width, so it now says how far the border
+  reaches from the centre, and `/border <zone> radius <blocks>` sets it by that distance instead.
+
+### Added
+- **Teleports never land outside a world border.** A teleport to a spot outside the destination
+  world's border (including one set with the vanilla `/worldborder`) is moved just inside it, so
+  a player is not killed at once by border damage. Staff with `smpplugin.bypass.border` are not moved.
+- Permission `smpplugin.admin.coinflip` for `/cf cancelall`.
+
+### Removed
+- The old CoinFlip (browser, challenges, practice mode, history, statistics, leaderboards,
+  achievements, `/coinflipadmin`, `coinflip.yml`, `coinflip-messages.yml`) and the head roulette
+  (`/roulette`, `/jackpot`). Their permissions are gone except `smpplugin.coinflip.use`, which
+  `/cf` uses. **Money is safe:** at the first start, every stake still held by an open old match is
+  refunded and every payout an offline player was still owed is paid. Each is recorded first, so
+  nothing is paid twice; anything the old CoinFlip itself did not know the outcome of is listed in
+  the console for staff. The old tables are kept.
+
+## 3.1.1 — 21 October 2026
+
+### Fixed
+- **`/lobby survival`, `/spawn`, `/rtp`, homes and warps no longer get pulled back into the lobby.**
+  The lobby area moved every teleport inside the lobby's world back into the lobby, and every step
+  anywhere in that world, so a lobby that shares its world with the SMP trapped everyone. Now only
+  players standing inside the lobby are held (they cannot walk out), and only ender pearls and
+  chorus fruit are stopped at the edge; teleport commands always go through.
+
+### Added
+- **`/lobby delete`** (or `/dellobby`): removes the lobby after a confirmation. Players in it are
+  sent back to the SMP with their survival inventory, and its border is taken down.
+- **`/setspawn delete`** (or `/delspawn`): removes the spawn set with `/setspawn`, after a
+  confirmation, and takes down the spawn border.
+
+### Changed
+- **Lobby borders are set in one place: `/border lobby`.** `/lobby border` passes on to it
+  (`/lobby border 50` becomes `/border lobby set 100`); the corner-to-corner `pos1` / `pos2` setup
+  was replaced by a square. `smpplugin.admin.lobby.border` still works as an old name for
+  `smpplugin.admin.border`.
+- `/lobby help` only lists the admin commands to staff who can use them.
+
 ## 3.1.0 — 20 October 2026
 
 **CustomSmp 3.1: dice and a head roulette, a one-screen CoinFlip, a getting-started guide, an

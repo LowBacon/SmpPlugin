@@ -155,14 +155,8 @@ public record Reward(double money, long shards, List<ItemStack> items, List<Stri
         if (money > 0D && plugin.getEconomyManager() != null) {
             plugin.getEconomyManager().deposit(player, money, EconomyReason.REWARD);
         }
-        if (shards > 0L) {
-            PlayerData data = plugin.getPlayerDataManager().get(player);
-            if (data != null) {
-                data.addShards(shards);
-                if (plugin.getLeaderboardManager() != null) {
-                    plugin.getLeaderboardManager().invalidate(LeaderboardManager.LeaderboardType.SHARDS);
-                }
-            }
+        if (shards > 0L && plugin.getEconomyManager() != null) {
+            plugin.getEconomyManager().depositShards(player.getUniqueId(), player.getName(), shards, EconomyReason.REWARD);
         }
         if (!items.isEmpty()) {
             Map<Integer, ItemStack> leftover = player.getInventory().addItem(

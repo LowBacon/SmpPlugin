@@ -52,9 +52,12 @@ public class AddMoneyCommand implements CommandExecutor {
             return true;
         }
 
-        var result = plugin.getEconomyManager().deposit(account, amount, com.bx.smpPlugin.models.EconomyReason.ADMIN_ADD);
+        // The admin and any reason they typed after the amount go into the economy ledger.
+        String note = args.length > 2 ? String.join(" ", java.util.Arrays.copyOfRange(args, 2, args.length)) : null;
+        var result = com.bx.smpPlugin.economy.EconomyLedger.asActor(sender, note,
+                () -> plugin.getEconomyManager().deposit(account, amount, com.bx.smpPlugin.models.EconomyReason.ADMIN_ADD));
         if (!result.success()) {
-            sender.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage("BALANCE.ADMIN.PLAYER-NOT-FOUND")));
+            sender.sendMessage(ColorUtils.toComponent(com.bx.smpPlugin.economy.EconomyMessages.failure(plugin, result.failureReason())));
             return true;
         }
 

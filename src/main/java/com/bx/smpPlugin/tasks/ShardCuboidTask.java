@@ -111,7 +111,7 @@ public class ShardCuboidTask implements Runnable {
 
         long multiplier = shardManager.getMultiplier(uuid);
         long amount = current.amountPerInterval() * multiplier;
-        shardManager.giveShards(player, amount, false);
+        shardManager.giveShards(player, amount, false, com.bx.smpPlugin.models.EconomyReason.SHARD_CUBOID);
         shardManager.sendCuboidRewardFeedback(player, current, amount, multiplier);
 
         progress.reset(current.intervalSeconds());

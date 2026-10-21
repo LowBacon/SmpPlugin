@@ -20,8 +20,9 @@ import java.util.Locale;
  * <pre>
  * /border                                  both borders at a glance
  * /border &lt;spawn|lobby&gt;                    one border in detail
- * /border &lt;zone&gt; set &lt;size&gt; [here]         a square of that size; centred on the spawn / lobby point,
- *                                          or where you stand with "here". Turns the border on.
+ * /border &lt;zone&gt; set &lt;size&gt; [here]         a square that wide (size = one whole side); centred on the
+ *                                          spawn / lobby point, or where you stand with "here". Turns it on.
+ * /border &lt;zone&gt; radius &lt;blocks&gt; [here]     the same, giving how far it reaches from the centre instead
  * /border &lt;zone&gt; center                    move the centre to where you stand
  * /border &lt;zone&gt; warning &lt;blocks&gt; [seconds]
  * /border &lt;zone&gt; damage &lt;amount&gt; [buffer]
@@ -66,7 +67,8 @@ public final class BorderCommand implements CommandExecutor, TabCompleter {
         String action = args.length > 1 ? args[1].toLowerCase(Locale.ROOT) : "info";
         switch (action) {
             case "info" -> info(sender, zone);
-            case "set", "size" -> set(sender, zone, args);
+            case "set", "size" -> set(sender, zone, args, false);
+            case "radius" -> set(sender, zone, args, true);
             case "center", "centre" -> center(sender, zone);
             case "warning" -> {
                 Integer distance = integer(args, 2);
@@ -100,10 +102,13 @@ public final class BorderCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
-    private void set(CommandSender sender, BorderZone zone, String[] args) {
-        Double size = decimal(args, 2);
+    private void set(CommandSender sender, BorderZone zone, String[] args, boolean radius) {
+        Double given = decimal(args, 2);
+        Double size = given == null ? null : radius ? given * 2D : given;
         if (size == null || size < BorderZone.MIN_SIZE || size > BorderZone.MAX_SIZE) {
-            Text.send(sender, "BORDER.SIZE-USAGE", "&7/border {zone} set <size> [here] &8(size = one side, {min} to {max} blocks)",
+            Text.send(sender, "BORDER.SIZE-USAGE", radius
+                            ? "&7/border {zone} radius <blocks> [here] &8(how far it reaches from the centre)"
+                            : "&7/border {zone} set <size> [here] &8(size = the whole width, {min} to {max} blocks; /border {zone} radius <blocks> for half of it)",
                     "{zone}", zone.name(), "{min}", "4", "{max}", "59,999,968");
             return;
         }
@@ -128,7 +133,8 @@ public final class BorderCommand implements CommandExecutor, TabCompleter {
         if (!allowedOnMainWorld(sender, base, args, 4)) {
             return;
         }
-        save(sender, base.withEnabled(true), "&aThe " + zone.name() + " border is now &f" + base.describe() + "&a.");
+        save(sender, base.withEnabled(true), "&aThe " + zone.name() + " border is now &f" + base.describe() + "&a: it reaches &f"
+                + String.format(java.util.Locale.ROOT, "%,.0f", base.half()) + " &ablocks from the centre in each direction.");
     }
 
     private void center(CommandSender sender, BorderZone zone) {
@@ -276,17 +282,18 @@ public final class BorderCommand implements CommandExecutor, TabCompleter {
         if (args.length == 1) {
             options.addAll(BorderManager.ZONES);
         } else if (args.length == 2) {
-            options.addAll(List.of("info", "set", "center", "warning", "damage", "mode", "on", "off"));
+            options.addAll(List.of("info", "set", "radius", "center", "warning", "damage", "mode", "on", "off"));
         } else if (args.length == 3) {
             switch (args[1].toLowerCase(Locale.ROOT)) {
                 case "set" -> options.addAll(List.of("50", "100", "200", "500"));
+                case "radius" -> options.addAll(List.of("25", "50", "100", "250"));
                 case "mode" -> options.addAll(List.of("player", "world"));
                 case "warning" -> options.addAll(List.of("5", "10"));
                 case "damage" -> options.addAll(List.of("0.2", "1"));
                 default -> {
                 }
             }
-        } else if (args.length == 4 && args[1].equalsIgnoreCase("set")) {
+        } else if (args.length == 4 && (args[1].equalsIgnoreCase("set") || args[1].equalsIgnoreCase("radius"))) {
             options.add("here");
         }
         String typed = args[args.length - 1].toLowerCase(Locale.ROOT);

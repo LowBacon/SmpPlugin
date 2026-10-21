@@ -10,7 +10,9 @@ public class DuelMatch {
 
     public enum MatchType {
         DIRECT,
-        QUEUE
+        QUEUE,
+        /** Started by the 4.0 ranked queue; the result changes both players' Elo ratings. */
+        RANKED
     }
 
     public enum MatchStatus {

@@ -125,12 +125,10 @@ PAGES:
     TITLE: "Games and gambling"
     LINES:
       - "&7Gambling uses in-game money only. Only bet what you can lose!"
-      - COMMAND: "/coinflip"
-        TEXT: "Flip a coin against another player, 50/50"
+      - COMMAND: "/cf"
+        TEXT: "Coin flips: start one or join someone's, 50/50"
       - COMMAND: "/dice"
         TEXT: "Bet on a dice roll against the house; shows the odds first"
-      - COMMAND: "/roulette"
-        TEXT: "Put money in the head roulette; the middle head wins the pot"
       - COMMAND: "/rps"
         TEXT: "Rock, paper, scissors against the server"
         SUGGEST: true

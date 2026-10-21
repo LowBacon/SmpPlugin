@@ -53,7 +53,7 @@ public class ColorUtils {
             return colorize(text, target);
         }
 
-        String result = LanguageManager.translateBuiltInText(text);
+        String result = com.bx.smpPlugin.core.InternalPlaceholders.apply(LanguageManager.translateBuiltInText(text), null);
         if (hasPAPI) {
             try {
                 result = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders((Player) null, result);
@@ -75,7 +75,7 @@ public class ColorUtils {
             return "";
         }
 
-        String result = LanguageManager.translateBuiltInText(text);
+        String result = com.bx.smpPlugin.core.InternalPlaceholders.apply(LanguageManager.translateBuiltInText(text), player);
         if (hasPAPI && player != null) {
             try {
                 result = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(player, result);
@@ -90,7 +90,7 @@ public class ColorUtils {
             return "";
         }
 
-        String result = LanguageManager.translateBuiltInText(text);
+        String result = com.bx.smpPlugin.core.InternalPlaceholders.apply(LanguageManager.translateBuiltInText(text), player);
         if (hasPAPI && player != null) {
             try {
                 result = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(player, result);
@@ -323,14 +323,11 @@ public class ColorUtils {
         String result = decodeUnicodeEscapes(text);
         // Fix known translation/spelling typos from old configs
         result = result.replace("PEARH", "PEARL").replace("pearh", "pearl").replace("Pearh", "Pearl");
-        result = result.replace("DONT+", "DONUT+").replace("dont+", "donut+").replace("Dont+", "Donut+");
         result = result.replace("RANDOMIVED", "RANDOMIZED").replace("randomived", "randomized").replace("Randomived", "Randomized");
         result = result.replace("MDWVST", "MESSAGES").replace("mdwvst", "messages").replace("Mdwvst", "Messages");
         result = result.replace("MWVST", "MESSAGES").replace("mwvst", "messages").replace("Mwvst", "Messages");
-        result = result.replace("CURRENTLY", "Currently").replace("currently", "Currently");
-        result = result.replace("STATUS", "Status").replace("status", "Status");
-        result = result.replace("{Status}", "{status}");
-        result = result.replace("{State}", "{state}");
+        // 4.0: "status" and "currently" are no longer rewritten to "Status" and "Currently" in every
+        // message; that turned command hints such as "/anticheat status" into commands that do not work.
         return result;
     }
 
@@ -627,9 +624,31 @@ public class ColorUtils {
         return Character.isLetterOrDigit(c) || c == '\'' || c == '`';
     }
 
+    /**
+     * Words title-casing must leave exactly as written, lower-cased word to spelling. The server's
+     * brand is one: "CustomSMP" must not become "Customsmp" on the scoreboard.
+     */
+    private static volatile java.util.Map<String, String> preservedWords = java.util.Map.of();
+
+    public static void setPreservedWords(java.util.Collection<String> words) {
+        java.util.Map<String, String> map = new java.util.HashMap<>();
+        if (words != null) {
+            for (String word : words) {
+                if (word != null && !word.isBlank()) {
+                    map.put(word.toLowerCase(java.util.Locale.ROOT), word);
+                }
+            }
+        }
+        preservedWords = java.util.Map.copyOf(map);
+    }
+
     private static String formatWord(String word) {
         if (word.isEmpty()) {
             return word;
+        }
+        String preserved = preservedWords.get(word.toLowerCase(java.util.Locale.ROOT));
+        if (preserved != null) {
+            return preserved;
         }
         char first = word.charAt(0);
         if (Character.isLetter(first)) {

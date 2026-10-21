@@ -54,7 +54,14 @@ public class RemoveMoneyCommand implements CommandExecutor {
             return true;
         }
 
-        var result = plugin.getEconomyManager().withdraw(account, amount, EconomyReason.ADMIN_REMOVE);
+        // The admin and any reason they typed after the amount go into the economy ledger.
+        String note = args.length > 2 ? String.join(" ", java.util.Arrays.copyOfRange(args, 2, args.length)) : null;
+        var result = com.bx.smpPlugin.economy.EconomyLedger.asActor(sender, note,
+                () -> plugin.getEconomyManager().withdraw(account, amount, EconomyReason.ADMIN_REMOVE));
+        if (!result.success() && !result.insufficientFunds() && !result.playerNotFound() && !result.noPlayerData()) {
+            sender.sendMessage(ColorUtils.toComponent(com.bx.smpPlugin.economy.EconomyMessages.failure(plugin, result.failureReason())));
+            return true;
+        }
         if (!result.success()) {
             String key = result.insufficientFunds()
                     ? "BALANCE.ADMIN.TARGET-NOT-ENOUGH-MONEY"

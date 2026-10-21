@@ -4,7 +4,6 @@ import com.bx.smpPlugin.SmpPlugin;
 import com.bx.smpPlugin.core.Text;
 import com.bx.smpPlugin.utils.PermissionUtils;
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -19,7 +18,9 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * /halloween [edit|give|reset|preview|stats|reload]. With no arguments it opens the calendar.
+ * /halloween (and /advent) [edit|give|reset|preview|stats|reload]. With no arguments it opens the
+ * calendar. The same command serves every themed calendar; texts and permissions come from its
+ * {@link CalendarTheme}.
  */
 public final class HalloweenCommand implements CommandExecutor, TabCompleter {
 
@@ -38,7 +39,7 @@ public final class HalloweenCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (args.length == 0 || !PermissionUtils.has(sender, ADMIN_PERMISSION)) {
+        if (args.length == 0 || !PermissionUtils.has(sender, theme().adminPermission())) {
             return openCalendar(sender);
         }
         switch (args[0].toLowerCase(Locale.ROOT)) {
@@ -56,11 +57,11 @@ public final class HalloweenCommand implements CommandExecutor, TabCompleter {
             case "reload" -> {
                 plugin.getConfigManager().reload();
                 halloween.loadOverrides();
-                Text.send(sender, "HALLOWEEN.RELOADED", "&aReloaded halloween.yml and the in-game prizes.");
+                Text.send(sender, theme().messageKey("RELOADED"), "&aReloaded " + theme().configFile() + " and the in-game prizes.");
             }
             default -> {
-                Text.send(sender, "HALLOWEEN.ADMIN-USAGE",
-                        "&7/halloween &8[&fedit&8|&fgive <player> <door>&8|&freset <player> [door]&8|&fpreview <yyyy-MM-dd|off>&8|&fstats&8|&freload&8]");
+                Text.send(sender, theme().messageKey("ADMIN-USAGE"),
+                        "&7/" + theme().command() + " &8[&fedit&8|&fgive <player> <door>&8|&freset <player> [door]&8|&fpreview <yyyy-MM-dd|off>&8|&fstats&8|&freload&8]");
             }
         }
         return true;
@@ -71,12 +72,12 @@ public final class HalloweenCommand implements CommandExecutor, TabCompleter {
             Text.send(sender, "GENERAL.PLAYERS-ONLY", "&cOnly players can do that.");
             return true;
         }
-        if (!PermissionUtils.has(player, USE_PERMISSION)) {
+        if (!PermissionUtils.has(player, theme().usePermission())) {
             Text.send(player, "GENERAL.NO-PERMISSION", "&cYou don't have permission to do that.");
             return true;
         }
         if (!halloween.isEnabled()) {
-            Text.send(player, "HALLOWEEN.DISABLED", "&7The Spooky Calendar is closed on this server.");
+            Text.send(player, theme().messageKey("DISABLED"), theme().closedText());
             return true;
         }
         new CalendarMenu(plugin, halloween).open(player);
@@ -85,57 +86,65 @@ public final class HalloweenCommand implements CommandExecutor, TabCompleter {
 
     private void give(CommandSender sender, String[] args) {
         if (args.length < 3) {
-            Text.send(sender, "HALLOWEEN.GIVE-USAGE", "&7/halloween give <player> <door>");
+            Text.send(sender, theme().messageKey("GIVE-USAGE"), "&7/" + theme().command() + " give <player> <door>");
             return;
         }
         Player target = Bukkit.getPlayerExact(args[1]);
         int door = parseDoor(args[2]);
         if (target == null || door < 0) {
-            Text.send(sender, "HALLOWEEN.GIVE-USAGE", "&7/halloween give <player> <door>");
+            Text.send(sender, theme().messageKey("GIVE-USAGE"), "&7/" + theme().command() + " give <player> <door>");
             return;
         }
         halloween.prize(door).give(plugin, target);
-        Text.send(sender, "HALLOWEEN.GIVEN", "&aGave &f{player} &athe prize of door &6{door}&a.",
+        Text.send(sender, theme().messageKey("GIVEN"), "&aGave &f{player} &athe prize of door &6{door}&a.",
                 "{player}", target.getName(), "{door}", Integer.toString(door));
     }
 
-    @SuppressWarnings("deprecation")
     private void reset(CommandSender sender, String[] args) {
         if (args.length < 2) {
-            Text.send(sender, "HALLOWEEN.RESET-USAGE", "&7/halloween reset <player> [door]");
+            Text.send(sender, theme().messageKey("RESET-USAGE"), "&7/" + theme().command() + " reset <player> [door]");
             return;
         }
-        OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
         int door = args.length >= 3 ? parseDoor(args[2]) : 0;
         if (door < 0) {
-            Text.send(sender, "HALLOWEEN.RESET-USAGE", "&7/halloween reset <player> [door]");
+            Text.send(sender, theme().messageKey("RESET-USAGE"), "&7/" + theme().command() + " reset <player> [door]");
             return;
         }
-        halloween.reset(target.getUniqueId(), door, changed -> Text.send(sender, "HALLOWEEN.RESET-DONE",
-                changed ? "&aClosed {what} &afor &f{player}&a again." : "&7Nothing to reset for &f{player}&7.",
-                "{what}", door <= 0 ? "every door" : "door &6" + door, "{player}", args[1]));
+        // Resolved off the main thread: a name the server has not seen would otherwise ask Mojang.
+        com.bx.smpPlugin.core.Lookup.account(plugin, sender, args[1], account -> {
+            if (account == null) {
+                Text.send(sender, "GENERAL.PLAYER-NOT-FOUND", "&cThat player was not found.");
+                return;
+            }
+            halloween.reset(account.uuid(), door, changed -> Text.send(sender, theme().messageKey("RESET-DONE"),
+                    changed ? "&aClosed {what} &afor &f{player}&a again." : "&7Nothing to reset for &f{player}&7.",
+                    "{what}", door <= 0 ? "every door" : "door &6" + door, "{player}", account.displayName()));
+        });
     }
 
     private void preview(CommandSender sender, String[] args) {
         if (args.length < 2 || args[1].equalsIgnoreCase("off")) {
             halloween.setPreviewDate(null);
-            Text.send(sender, "HALLOWEEN.PREVIEW-OFF", "&7Preview off. The calendar uses today's date again.");
+            Text.send(sender, theme().messageKey("PREVIEW-OFF"), "&7Preview off. The calendar uses today's date again.");
             return;
         }
         LocalDate date = HalloweenManager.parseDate(args[1]);
         if (date == null) {
-            Text.send(sender, "HALLOWEEN.PREVIEW-USAGE", "&7/halloween preview <yyyy-MM-dd|off>, e.g. &f2026-10-13");
+            Text.send(sender, theme().messageKey("PREVIEW-USAGE"), "&7/" + theme().command()
+                    + " preview <yyyy-MM-dd|off>, e.g. &f" + halloween.rules().seasonStart(halloween.seasonYear()));
             return;
         }
         halloween.setPreviewDate(date);
-        Text.send(sender, "HALLOWEEN.PREVIEW-ON",
-                "&dPreview: the calendar now thinks it is &f{date}&d for everyone, until a restart or /halloween preview off.",
+        Text.send(sender, theme().messageKey("PREVIEW-ON"),
+                "&dPreview: the calendar now thinks it is &f{date}&d for everyone, until a restart or /"
+                        + theme().command() + " preview off.",
                 "{date}", date.toString());
     }
 
     private void stats(CommandSender sender) {
         halloween.doorStatistics(counts -> {
-            Text.send(sender, "HALLOWEEN.STATS-HEADER", "&6Spooky Calendar {year}: &7players per door",
+            Text.send(sender, theme().messageKey("STATS-HEADER"), theme().accent() + theme().calendarName()
+                            + " {year}: &7players per door",
                     "{year}", Integer.toString(halloween.seasonYear()));
             if (counts.isEmpty()) {
                 Text.raw(sender, "&8  No doors opened yet.");
@@ -160,7 +169,7 @@ public final class HalloweenCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (!PermissionUtils.has(sender, ADMIN_PERMISSION)) {
+        if (!PermissionUtils.has(sender, theme().adminPermission())) {
             return List.of();
         }
         if (args.length == 1) {
@@ -179,6 +188,10 @@ public final class HalloweenCommand implements CommandExecutor, TabCompleter {
                     LocalDate.of(year, rules.month(), rules.lastDayIn(year)).toString()), args[1]);
         }
         return List.of();
+    }
+
+    private CalendarTheme theme() {
+        return halloween.theme();
     }
 
     static List<String> filter(List<String> options, String typed) {

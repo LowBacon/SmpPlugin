@@ -1,7 +1,6 @@
 package com.bx.smpPlugin.gambling;
 
 import com.bx.smpPlugin.SmpPlugin;
-import com.bx.smpPlugin.coinflip.StakeMath;
 import com.bx.smpPlugin.models.EconomyReason;
 import com.bx.smpPlugin.models.EconomyTransactionResult;
 import org.bukkit.Bukkit;
@@ -11,7 +10,7 @@ import java.util.UUID;
 import java.util.logging.Level;
 
 /**
- * The one place /dice and /roulette touch money. Amounts are whole cents (see {@link StakeMath}), so a
+ * The one place /dice and /cf touch money. Amounts are whole cents (see {@link StakeMath}), so a
  * bet, a payout and a refund always add up exactly. Every movement goes through SmpPlugin's own
  * economy (the balances Vault and /pay use) and is written to the player's /logs.
  */

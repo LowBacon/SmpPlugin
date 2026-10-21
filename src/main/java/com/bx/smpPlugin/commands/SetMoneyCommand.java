@@ -25,7 +25,8 @@ public class SetMoneyCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!PermissionUtils.has(sender, PERMISSION)) {
+        // A destructive node defaults to false even for ops; the console (the server owner) may always.
+        if (!(sender instanceof org.bukkit.command.ConsoleCommandSender) && !PermissionUtils.has(sender, PERMISSION)) {
             sender.sendMessage(ColorUtils.toComponent("&cɴᴏ ᴘᴇʀᴍɪѕѕɪᴏɴ."));
             return true;
         }
@@ -54,7 +55,14 @@ public class SetMoneyCommand implements CommandExecutor {
             return true;
         }
 
-        var result = plugin.getEconomyManager().setBalance(account, amount, EconomyReason.ADMIN_SET);
+        // The admin and any reason they typed after the amount go into the economy ledger.
+        String note = args.length > 2 ? String.join(" ", java.util.Arrays.copyOfRange(args, 2, args.length)) : null;
+        var result = com.bx.smpPlugin.economy.EconomyLedger.asActor(sender, note,
+                () -> plugin.getEconomyManager().setBalance(account, amount, EconomyReason.ADMIN_SET));
+        if (!result.success() && !result.insufficientFunds() && !result.playerNotFound() && !result.noPlayerData()) {
+            sender.sendMessage(ColorUtils.toComponent(com.bx.smpPlugin.economy.EconomyMessages.failure(plugin, result.failureReason())));
+            return true;
+        }
         if (!result.success()) {
             sender.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage("BALANCE.ADMIN.PLAYER-NOT-FOUND")));
             return true;

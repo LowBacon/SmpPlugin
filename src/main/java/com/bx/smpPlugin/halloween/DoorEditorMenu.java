@@ -84,13 +84,13 @@ public final class DoorEditorMenu extends BaseMenu implements InteractiveMenu {
         List<String> commands = halloween.prize(door).commands();
         if (!commands.isEmpty()) {
             info.add("");
-            info.add("&7Also runs (from halloween.yml):");
+            info.add("&7Also runs (from " + halloween.theme().configFile() + "):");
             for (String command : commands) {
                 info.add("&8/ &f" + command);
             }
         }
         inventory.setItem(INFO_SLOT, ItemUtils.createItem(Material.BOOK, "&e" + Text.color(halloween.doorName(door)), info));
-        inventory.setItem(RESET_SLOT, ItemUtils.createItem(Material.LAVA_BUCKET, "&cUse halloween.yml again",
+        inventory.setItem(RESET_SLOT, ItemUtils.createItem(Material.LAVA_BUCKET, "&cUse " + halloween.theme().configFile() + " again",
                 List.of("&7Removes the in-game prize for", "&7this door.", halloween.hasOverride(door) ? "" : "&8(nothing set in game)")));
         inventory.setItem(SAVE_SLOT, ItemUtils.createItem(Material.LIME_DYE, "&a&lSave", List.of("&7Saves this door's prize.")));
     }
@@ -101,7 +101,7 @@ public final class DoorEditorMenu extends BaseMenu implements InteractiveMenu {
             event.setCancelled(true);
             return;
         }
-        if (!PermissionUtils.has(player, HalloweenCommand.ADMIN_PERMISSION)) {
+        if (!PermissionUtils.has(player, halloween.theme().adminPermission())) {
             event.setCancelled(true);
             player.closeInventory();
             return;
@@ -150,7 +150,8 @@ public final class DoorEditorMenu extends BaseMenu implements InteractiveMenu {
                 halloween.clearOverride(door);
                 saved = true;
                 returnItems(player);
-                Text.send(player, "HALLOWEEN.EDIT-RESET", "&7Door &6{door} &7uses the prize from halloween.yml again.",
+                Text.send(player, halloween.theme().messageKey("EDIT-RESET"),
+                        "&7Door &6{door} &7uses the prize from " + halloween.theme().configFile() + " again.",
                         "{door}", Integer.toString(door));
                 plugin.getSpigotScheduler().runEntity(player, () -> new CalendarEditorMenu(plugin, halloween).open(player));
             }
@@ -169,7 +170,7 @@ public final class DoorEditorMenu extends BaseMenu implements InteractiveMenu {
                     inventory.setItem(i, null);
                 }
                 player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.7F, 1.4F);
-                Text.send(player, "HALLOWEEN.EDIT-SAVED", "&aSaved the prize behind door &6{door}&a.",
+                Text.send(player, halloween.theme().messageKey("EDIT-SAVED"), "&aSaved the prize behind door &6{door}&a.",
                         "{door}", Integer.toString(door));
                 plugin.getSpigotScheduler().runEntity(player, () -> new CalendarEditorMenu(plugin, halloween).open(player));
             }

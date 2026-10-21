@@ -27,7 +27,9 @@ loadbefore:
 commands:
   lobby:
     description: Go to the lobby, return to Survival, or manage the lobby
-    usage: /lobby [survival|border [radius]|reload|debug|help]
+    usage: /lobby [survival|delete|reload|debug|help]
+    aliases:
+    - dellobby
   team:
     description: Team management
     usage: /team <create|disband|invite|kick|join|leave|home|sethome|delhome|chat|info|pvp>
@@ -84,9 +86,11 @@ commands:
     description: Teleport to spawn (staff can send another player)
     usage: /spawn [player]
   setspawn:
-    description: Set the primary server spawn at your current location
-    usage: /setspawn
+    description: Set the primary server spawn at your current location, or delete it
+    usage: /setspawn [delete]
     permission: smpplugin.admin.setspawn
+    aliases:
+    - delspawn
   setlobby:
     description: Set the protected lobby location at your current location
     usage: /setlobby
@@ -203,7 +207,7 @@ commands:
     - prices
   balance:
     description: Check balance
-    usage: /balance [player]
+    usage: /balance [player] | /balance history [page]
     aliases:
     - bal
     - money
@@ -212,15 +216,15 @@ commands:
     usage: /pay <player> <amount>
   addmoney:
     description: Add money to a player
-    usage: /addmoney <player> <amount>
+    usage: /addmoney <player> <amount> [reason]
     permission: smpplugin.admin.addmoney
   removemoney:
     description: Remove money from a player
-    usage: /removemoney <player> <amount>
+    usage: /removemoney <player> <amount> [reason]
     permission: smpplugin.admin.removemoney
   setmoney:
     description: Set a player's money balance
-    usage: /setmoney <player> <amount>
+    usage: /setmoney <player> <amount> [reason]
     permission: smpplugin.admin.setmoney
   logs:
     description: View a player's activity log
@@ -258,15 +262,15 @@ commands:
     usage: /shardpay <player> <amount>
   addshards:
     description: Add shards to a player
-    usage: /addshards <player> <amount>
+    usage: /addshards <player> <amount> [reason]
     permission: smpplugin.admin.shards
   removeshards:
     description: Remove shards from a player
-    usage: /removeshards <player> <amount>
+    usage: /removeshards <player> <amount> [reason]
     permission: smpplugin.admin.shards
   setshards:
     description: Set a player's shard balance
-    usage: /setshards <player> <amount>
+    usage: /setshards <player> <amount> [reason]
     permission: smpplugin.admin.shards
   crate:
     description: Manage crates
@@ -486,6 +490,7 @@ commands:
     - lb
     - top
     - leaderboards
+    - baltop
   warp:
     description: Teleport to a warp
     usage: /warp [name]
@@ -595,8 +600,9 @@ commands:
   smpplugin:
     permission: smpplugin.admin.status;smpplugin.admin.reload;smpplugin.admin.statswipe;smpplugin.admin.optimize;smpplugin.admin.setup;smpplugin.admin.features;smpplugin.admin.maintenance
     description: SmpPlugin administration
-    usage: /smpplugin <status|reload|statswipe|optimize|setup|features|maintenance>
+    usage: /smp <help|status|modules|reload [module]|diagnostics|version|statswipe|optimize|setup|maintenance>
     aliases:
+    - smp
     - csmp
     - customsmp
   maintenance:
@@ -628,17 +634,11 @@ commands:
     aliases:
     - ac
   coinflip:
-    description: Open CoinFlip - 1v1 coin flips for in-game currency
-    usage: /coinflip [create|browse|join|cancel|challenge|accept|deny|rematch|history|stats|top|practice|settings|help]
+    description: Coin flips - start one or join someone's; the flip starts at once
+    usage: /cf [<amount>|join <player>|cancel|help]
     permission: smpplugin.coinflip.use
     aliases:
     - cf
-  coinflipadmin:
-    description: CoinFlip staff tools - status, inspect, audit, cancel, recover, reconcile, resolve
-    usage: /coinflipadmin <status|inspect|audit|cancel|recover|reconcile|resolve|stats|resetstats|disable|enable|reload|refresh|debug>
-    permission: smpplugin.coinflip.inspect
-    aliases:
-    - cfadmin
   halloween:
     description: Open the Spooky Calendar and open today's door
     usage: /halloween [edit|give|reset|preview|stats|reload]
@@ -694,12 +694,6 @@ commands:
     usage: /dice <bet> [high|low|1-6] | /dice roll [sides] | /dice odds
     aliases:
     - roll
-  roulette:
-    description: Put money in the head roulette; the head that stops in the middle wins the pot
-    usage: /roulette [join <amount>|leave|info]
-    aliases:
-    - jackpot
-    - headroulette
   guide:
     description: A short guide to getting started on the server
     usage: /guide [page|topic]
@@ -717,6 +711,34 @@ commands:
     permission: smpplugin.admin.border
     aliases:
     - spawnborder
+  economy:
+    description: Manage money (give, take, set, reset) and read the transaction history
+    usage: /economy <give|take|set|reset|history|stats> [player] [amount] [reason]
+    permission: smpplugin.admin.economy;smpplugin.admin.economy.history
+    aliases:
+    - eco
+  ranked:
+    description: Ranked PvP with Elo ratings
+    usage: /ranked [join|leave|stats [player]|top [page]|history [player]]
+    permission: smpplugin.ranked
+  event:
+    description: Seasonal events (Advent, Christmas, Easter, Summer and custom events)
+    usage: /event [status|info <event>|open <event>|enable <event>|disable <event>|auto <event>|reload]
+    permission: smpplugin.events
+    aliases:
+    - events
+  advent:
+    description: Open the Advent Calendar
+    usage: /advent [edit|give|reset|preview|stats|reload]
+    permission: smpplugin.advent
+    aliases:
+    - adventcalendar
+  easter:
+    description: The Easter egg hunt
+    usage: /easter [top|addegg|removeegg [id]|eggs|reset <player>]
+    permission: smpplugin.events
+    aliases:
+    - egghunt
   slap:
     description: Slap a player
     usage: /slap <player>
@@ -1015,8 +1037,6 @@ permissions:
       smpplugin.staff.spawnstash.alert: true
       smpplugin.security.alerts: true
       smpplugin.security.inspect: true
-      smpplugin.coinflip.alerts: true
-      smpplugin.coinflip.inspect: true
       smpplugin.admin.status: true
       smpplugin.admin.reload: true
       smpplugin.admin.optimize: true
@@ -1057,7 +1077,6 @@ permissions:
       smpplugin.admin.adddeaths: true
       smpplugin.admin.addplaytime: true
       smpplugin.admin.lobby.setlobby: true
-      smpplugin.admin.lobby.border: true
       smpplugin.admin.lobby.reload: true
       smpplugin.admin.lobby.debug: true
       smpplugin.admin.logs: true
@@ -1069,10 +1088,6 @@ permissions:
       smpplugin.admin.friends: true
       smpplugin.hide.admin: true
       smpplugin.security.manage: true
-      smpplugin.coinflip.admin.cancel: true
-      smpplugin.coinflip.admin.recover: true
-      smpplugin.coinflip.admin.reload: true
-      smpplugin.coinflip.admin.toggle: true
       smpplugin.bypass.lobby: true
       smpplugin.bypass.lobby.border: true
       smpplugin.afk.kickbypass: true
@@ -1099,10 +1114,16 @@ permissions:
       smpplugin.admin.spook: true
       smpplugin.admin.perms: true
       smpplugin.staff.spawn.others: true
-      smpplugin.admin.roulette: true
+      smpplugin.admin.coinflip: true
       smpplugin.admin.sidebar: true
       smpplugin.admin.border: true
       smpplugin.bypass.border: true
+      smpplugin.admin.economy: true
+      smpplugin.admin.economy.history: true
+      smpplugin.admin.ranked: true
+      smpplugin.admin.events: true
+      smpplugin.admin.advent: true
+      smpplugin.bypass.itemban: true
   smpplugin.message:
     description: 'Send private messages with /msg and reply with /reply.'
     default: true
@@ -1122,19 +1143,7 @@ permissions:
     description: 'Open your own custom Ender Chest with /enderchest.'
     default: true
   smpplugin.coinflip.use:
-    description: 'Open /coinflip: browse matches, view statistics, history, leaderboards, achievements and settings.'
-    default: true
-  smpplugin.coinflip.create:
-    description: 'Create public CoinFlip matches with in-game currency.'
-    default: true
-  smpplugin.coinflip.join:
-    description: 'Join CoinFlip matches and accept challenges.'
-    default: true
-  smpplugin.coinflip.challenge:
-    description: 'Send private CoinFlip challenges and rematches.'
-    default: true
-  smpplugin.coinflip.practice:
-    description: 'Flip practice coins (no currency).'
+    description: 'Play /cf: start coin flips and join other players'' flips.'
     default: true
   smpplugin.chat.color:
     description: 'Keep colour codes typed into /msg and staff chat.'
@@ -1182,13 +1191,13 @@ permissions:
     description: 'Allow the quick-sell setting for Auction House listings.'
     default: false
   smpplugin.donutplus:
-    description: 'Show the CustomSmp+ badge (player setting).'
+    description: 'Show the server''s + badge (player setting).'
     default: false
   smpplugin.donutplusplus:
-    description: 'CustomSmp++ rank: unlocks the second page of Auction House listing slots.'
+    description: '++ rank: unlocks the second page of Auction House listing slots.'
     default: false
   smpplugin.donutplusplusplus:
-    description: 'CustomSmp+++ rank: same Auction House slots as CustomSmp++.'
+    description: '+++ rank: same Auction House slots as the ++ rank.'
     default: false
   smpplugin.rtp.priority.vip++:
     description: 'RTP waiting-queue priority 30 (rtp.yml PRIORITY-QUEUE).'
@@ -1383,12 +1392,6 @@ permissions:
   smpplugin.security.inspect:
     description: 'View anti-cheat status, check settings, flag history and evidence.'
     default: false
-  smpplugin.coinflip.alerts:
-    description: 'Receive CoinFlip storage and settlement alerts.'
-    default: false
-  smpplugin.coinflip.inspect:
-    description: '/coinflipadmin status, inspect, audit, reconcile report, debug and any player''s statistics.'
-    default: false
   smpplugin.admin.status:
     description: 'View /smpplugin status (platform, storage, integrations, anti-Xray).'
     default: false
@@ -1509,9 +1512,6 @@ permissions:
   smpplugin.admin.lobby.setlobby:
     description: 'Set the lobby location with /setlobby.'
     default: false
-  smpplugin.admin.lobby.border:
-    description: 'View or change the lobby border.'
-    default: false
   smpplugin.admin.lobby.reload:
     description: 'Reload lobby.yml.'
     default: false
@@ -1544,18 +1544,6 @@ permissions:
     default: false
   smpplugin.security.manage:
     description: 'Grant temporary anti-cheat exemptions, reset violation levels and reload anticheat.yml.'
-    default: false
-  smpplugin.coinflip.admin.cancel:
-    description: 'Cancel and refund a waiting CoinFlip match (a reason is required and audited).'
-    default: false
-  smpplugin.coinflip.admin.recover:
-    description: 'Retry stuck CoinFlip payouts and reconcile held matches from the journal.'
-    default: false
-  smpplugin.coinflip.admin.reload:
-    description: 'Reload coinflip.yml and coinflip-messages.yml and refresh leaderboards.'
-    default: false
-  smpplugin.coinflip.admin.toggle:
-    description: 'Pause or resume CoinFlip wagering for everyone.'
     default: false
   smpplugin.bypass.lobby:
     description: 'Ignore lobby protection and the lobby border (needed to build the lobby).'
@@ -1625,12 +1613,6 @@ permissions:
     default: false
   smpplugin.bypass.anticheat.player:
     description: 'Skip anti-cheat inventory, auto-totem and cheat-client checks. Use is logged.'
-    default: false
-  smpplugin.coinflip.admin.resolve:
-    description: 'Decide unknown CoinFlip transactions (applied or not); can create claims, so it is never bundled.'
-    default: false
-  smpplugin.coinflip.admin.resetstats:
-    description: 'Reset a player''s CoinFlip statistics (a reason is required and audited).'
     default: false
   smpplugin.admin.playerwipe:
     description: 'Wipe one player''s stats, homes, items and progress with /playerwipe (backed up first).'
@@ -1833,9 +1815,6 @@ permissions:
   smpplugin.dice:
     description: 'Bet money on a dice roll against the house with /dice.'
     default: true
-  smpplugin.roulette:
-    description: 'Put money into the head roulette with /roulette.'
-    default: true
   smpplugin.guide:
     description: 'Read the getting-started guide with /guide.'
     default: true
@@ -1848,8 +1827,8 @@ permissions:
   smpplugin.staff.spawn.others:
     description: 'Send another player to spawn with /spawn <player>.'
     default: false
-  smpplugin.admin.roulette:
-    description: 'Cancel a head-roulette round and refund everyone with /roulette cancel.'
+  smpplugin.admin.coinflip:
+    description: 'Cancel every open coin flip and refund it with /cf cancelall.'
     default: false
   smpplugin.admin.sidebar:
     description: 'Edit the scoreboard title and lines in game with /sidebar.'
@@ -1862,6 +1841,45 @@ permissions:
     default: false
   smpplugin.giveaway.manage:
     description: 'Start, cancel and give away money with /giveaway. Ops are always allowed.'
+    default: false
+  smpplugin.balance.history:
+    description: 'See your own money and shard history with /balance history.'
+    default: true
+  smpplugin.ranked:
+    description: 'Play ranked PvP with /ranked: the queue, stats, the leaderboard and history.'
+    default: true
+  smpplugin.events:
+    description: 'Use /event and /easter: see the seasonal events and take part in them.'
+    default: true
+  smpplugin.advent:
+    description: 'Open the Advent Calendar with /advent.'
+    default: true
+  smpplugin.bypass.paylimit:
+    description: 'Pay more than ECONOMY.PAY.MAX-AMOUNT in one /pay.'
+    default: false
+  smpplugin.bypass.paycooldown:
+    description: 'No wait between payments (ECONOMY.PAY.COOLDOWN-SECONDS).'
+    default: false
+  smpplugin.admin.economy:
+    description: 'Give and take money, see the economy totals and anyone''s history with /economy.'
+    default: false
+  smpplugin.admin.economy.history:
+    description: 'Read any player''s money and shard history with /economy history <player>.'
+    default: false
+  smpplugin.admin.economy.set:
+    description: 'Overwrite or reset a balance with /economy set and /economy reset.'
+    default: false
+  smpplugin.admin.ranked:
+    description: 'Set or reset ranked ratings with /ranked setrating and /ranked reset.'
+    default: false
+  smpplugin.admin.events:
+    description: 'Switch seasonal events on and off, reload them, and hide Easter eggs with /easter addegg.'
+    default: false
+  smpplugin.admin.advent:
+    description: 'Edit Advent Calendar gifts, preview dates and reset doors with /advent.'
+    default: false
+  smpplugin.bypass.itemban:
+    description: 'Use, place, craft and pick up items banned in survival-rules.yml.'
     default: false
   smpplugin.staff.punishments.create:
     description: 'Legacy bundle: every punishment-creating action.'
@@ -1940,6 +1958,11 @@ permissions:
     default: false
     children:
       smpplugin.admin.friends: true
+  smpplugin.admin.lobby.border:
+    description: 'Legacy name for smpplugin.admin.border.'
+    default: false
+    children:
+      smpplugin.admin.border: true
   donutauction.use:
     description: 'Legacy name for smpplugin.auctionhouse.use.'
     default: false
@@ -2081,8 +2104,6 @@ permissions:
       smpplugin.hide.scramble: true
       smpplugin.hide.disguise: true
       smpplugin.afk.statusbypass: true
-      smpplugin.coinflip.admin.resolve: true
-      smpplugin.coinflip.admin.resetstats: true
       smpplugin.admin.serverwipe: true
       smpplugin.admin.statswipe: true
       smpplugin.staff.punishments.delete: true
@@ -2112,6 +2133,9 @@ permissions:
       smpplugin.lore: true
       smpplugin.glow: true
       smpplugin.gambling.bypasscooldown: true
+      smpplugin.bypass.paylimit: true
+      smpplugin.bypass.paycooldown: true
+      smpplugin.admin.economy.set: true
   smpplugin.role.coowner:
     description: 'Co-owner role: everything the owner role has.'
     default: false

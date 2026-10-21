@@ -24,7 +24,7 @@ JOIN:
   RESET-EXPERIENCE: true
   SET-GAMEMODE: true
   GAMEMODE: "ADVENTURE"
-  WELCOME-TITLE: "&6&lSMPPLUGIN"
+  WELCOME-TITLE: "{server_title}"
   WELCOME-SUBTITLE: "&7Welcome, &e%player%&7!"
   WELCOME-TITLE-FADE-IN: 10
   WELCOME-TITLE-STAY: 40
@@ -58,12 +58,12 @@ COOLDOWNS:
 
 BORDER:
   ENABLED: true
-  # These are set automatically the first time you run /setlobby (as a 200x200 square centered
-  # on it) or /lobby border - don't hand-edit unless you know the exact world coordinates you
-  # want. Two ways to set an exact size/position in-game:
-  #   /lobby border <radius>      - a square of that half-width, centered on the lobby location
-  #   /lobby border pos1 (at one corner), then /lobby border pos2 (at the opposite corner)
-  #                                - an exact rectangle from two in-world points
+  # The lobby area. Players inside it cannot walk out (they leave with /lobby survival or any
+  # teleport); players elsewhere in the same world are never affected. It is set automatically
+  # the first time you run /setlobby (a 200x200 square around it). Change it in game with
+  #   /border lobby set <size> [here]   - also shows it as a real Minecraft border
+  #   /border lobby off                 - removes the visible border (the area stays)
+  # /lobby delete (or /dellobby) removes the lobby completely.
   WARNING-DISTANCE: 5
   WARN-MESSAGE-ENABLED: true
   WARN-SOUND-ENABLED: true

@@ -111,13 +111,21 @@ public class DatabaseManager {
     private final SmpPlugin plugin;
     private Connection rawConnection;
     private Connection connection;
+    /** Writes queued at once before callers start running their own writes (backpressure). */
+    static final int WRITE_QUEUE_LIMIT = 50_000;
     // One writer thread keeps background writes (sell history, shop logs) in order and off the
-    // main thread. The connection proxy already serialises access with the other callers.
-    private final java.util.concurrent.ExecutorService asyncExecutor = java.util.concurrent.Executors.newSingleThreadExecutor(runnable -> {
-        Thread thread = new Thread(runnable, "SmpPlugin-DB-Writer");
-        thread.setDaemon(true);
-        return thread;
-    });
+    // main thread. The connection proxy already serialises access with the other callers. The
+    // queue is bounded: past WRITE_QUEUE_LIMIT the caller runs its write itself, which slows the
+    // caller down instead of letting memory grow or dropping a write.
+    private final java.util.concurrent.ThreadPoolExecutor asyncExecutor = new java.util.concurrent.ThreadPoolExecutor(
+            1, 1, 0L, java.util.concurrent.TimeUnit.MILLISECONDS,
+            new java.util.concurrent.LinkedBlockingQueue<>(WRITE_QUEUE_LIMIT),
+            runnable -> {
+                Thread thread = new Thread(runnable, "SmpPlugin-DB-Writer");
+                thread.setDaemon(true);
+                return thread;
+            },
+            new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy());
     private DatabaseType databaseType = DatabaseType.SQLITE;
     private MongoClient mongoClient;
     private MongoDatabase mongoDatabase;
@@ -5154,6 +5162,32 @@ public class DatabaseManager {
         return identifier != null && identifier.matches("[A-Za-z_][A-Za-z0-9_]*");
     }
 
+
+    /** Database tasks waiting for the writer thread, for /smp diagnostics. */
+    public int getPendingWriteCount() {
+        return asyncExecutor.getQueue().size();
+    }
+
+    /** Database tasks the writer thread has finished since start-up. */
+    public long getCompletedWriteCount() {
+        return asyncExecutor.getCompletedTaskCount();
+    }
+
+    /**
+     * Runs a read or write on the database thread, after everything already queued, and hands the
+     * result back as a future. Use it for reads that must see earlier queued writes.
+     */
+    public <T> java.util.concurrent.CompletableFuture<T> supplyAsync(java.util.function.Supplier<T> task) {
+        java.util.concurrent.CompletableFuture<T> future = new java.util.concurrent.CompletableFuture<>();
+        executeAsync(() -> {
+            try {
+                future.complete(task.get());
+            } catch (Throwable throwable) {
+                future.completeExceptionally(throwable);
+            }
+        });
+        return future;
+    }
 
     /** Runs a database task on the background writer thread, after any tasks already queued. */
     public void executeAsync(Runnable task) {

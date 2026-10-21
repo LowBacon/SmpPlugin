@@ -22,7 +22,22 @@ public class LeaderboardCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if (!(sender instanceof Player player)) { sender.sendMessage("ᴘʟᴀʏᴇʀ ᴏɴʟʏ."); return true; }
+        if (!(sender instanceof Player player)) {
+            // The console gets the top ten as text: /baltop, or /leaderboard <type>.
+            var type = args.length > 0 ? plugin.getLeaderboardManager().parseType(args[0]).orElse(null)
+                    : LeaderboardManager.LeaderboardType.MONEY;
+            if (type == null) {
+                sender.sendMessage("Unknown leaderboard. Types: " + plugin.getLeaderboardManager().getTypes().stream()
+                        .map(LeaderboardManager.LeaderboardType::getConfigKey).collect(Collectors.joining(", ")));
+                return true;
+            }
+            sender.sendMessage(ColorUtils.toComponent("&b" + plugin.getLeaderboardManager().getDisplayName(type) + " top 10"));
+            for (var entry : plugin.getLeaderboardManager().getEntries(type, 0, 10)) {
+                sender.sendMessage(ColorUtils.toComponent("&7#" + entry.position() + " &f" + entry.playerData().getUsername()
+                        + " &7- &f" + plugin.getLeaderboardManager().formatValue(type, entry.playerData())));
+            }
+            return true;
+        }
         if (!plugin.getConfigManager().isCommandEnabled("LEADERBOARDS")) {
             player.sendMessage(ColorUtils.toComponent("&cʟᴇᴀᴅᴇʀʙᴏᴀʀᴅѕ ᴀʀᴇ ᴄᴜʀʀᴇɴᴛʟʏ ᴅɪѕᴀʙʟᴇᴅ."));
             return true;
@@ -43,7 +58,7 @@ public class LeaderboardCommand implements CommandExecutor {
             String available = plugin.getLeaderboardManager().getTypes().stream()
                     .map(leaderboardType -> leaderboardType.getConfigKey())
                     .collect(Collectors.joining(", "));
-            player.sendMessage(ColorUtils.toComponent("&cᴛɪᴘᴇ ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴛɪᴅᴀᴋ ᴠᴀʟɪᴅ. &7ᴀᴠᴀɪʟᴀʙʟᴇ: &f" + available));
+            player.sendMessage(ColorUtils.toComponent("&cᴜɴᴋɴᴏᴡɴ ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ. &7ᴀᴠᴀɪʟᴀʙʟᴇ: &f" + available));
             return true;
         }
 

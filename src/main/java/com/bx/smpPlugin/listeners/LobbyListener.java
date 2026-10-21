@@ -111,9 +111,17 @@ public final class LobbyListener implements Listener {
     }
 
     // ------------------------------------------------------------------
-    // Border enforcement: the lobby area is kept with a movement clamp. The visible Minecraft
-    // border on top of it is optional and set up with /border lobby (see world.BorderManager).
+    // Border enforcement: players inside the lobby area cannot walk out of it; they leave with
+    // /lobby survival or any other teleport. The visible Minecraft border on top of it is optional
+    // and set up with /border lobby (see world.BorderManager).
+    //
+    // Only players who are inside are held. Players elsewhere in the same world (when the lobby
+    // shares a world with the SMP) are never pulled into it, and teleports from commands and
+    // plugins (/lobby survival, /spawn, /rtp, homes, warps) always go through.
     // ------------------------------------------------------------------
+
+    /** Teleports a player makes with items, which must not carry them out of the lobby. */
+    private static final java.util.Set<String> ITEM_TELEPORTS = java.util.Set.of("ENDER_PEARL", "CHORUS_FRUIT", "CONSUMABLE_EFFECT");
 
     @EventHandler(ignoreCancelled = true)
     public void onMove(PlayerMoveEvent event) {
@@ -121,13 +129,14 @@ public final class LobbyListener implements Listener {
         if (to == null) {
             return;
         }
-        double dx = event.getFrom().getX() - to.getX();
-        double dz = event.getFrom().getZ() - to.getZ();
+        Location from = event.getFrom();
+        double dx = from.getX() - to.getX();
+        double dz = from.getZ() - to.getZ();
         if (dx == 0 && dz == 0) {
             return; // Pure look-around / vertical-only change - nothing to check.
         }
         Player player = event.getPlayer();
-        if (bypassesBorder(player)) {
+        if (bypassesBorder(player) || !plugin.getLobbyManager().isLocationInLobby(from)) {
             return;
         }
 
@@ -144,14 +153,12 @@ public final class LobbyListener implements Listener {
     public void onTeleport(PlayerTeleportEvent event) {
         Location to = event.getTo();
         Player player = event.getPlayer();
-        if (to == null || bypassesBorder(player)) {
+        if (to == null || bypassesBorder(player) || !ITEM_TELEPORTS.contains(event.getCause().name())) {
             return;
         }
-        if (plugin.getLobbyManager().isInLobby(player) || player.getWorld().equals(to.getWorld())) {
-            Location clamped = plugin.getLobbyManager().clampIfOutside(to);
-            if (clamped != null) {
-                event.setTo(clamped);
-            }
+        if (plugin.getLobbyManager().isLocationInLobby(event.getFrom()) && !plugin.getLobbyManager().isLocationInLobby(to)) {
+            event.setCancelled(true);
+            plugin.getLobbyManager().warnIfNearEdge(player, event.getFrom());
         }
     }
 

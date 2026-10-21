@@ -1,3 +1,43 @@
+# ==============================================================================
+# Branding: the server's name as players see it (new in 4.0)
+# ==============================================================================
+# One place for the name on the scoreboard, the tab list, menus and messages.
+# Changing it never renames the plugin: the jar, /smp, the permissions and the
+# plugin folder stay "SmpPlugin".
+#
+# Use these in any text: {server_name}, {server_title} (the name in a bold
+# gradient), {server_address}, or %smp_server_name% with PlaceholderAPI.
+BRANDING:
+  SERVER-NAME: CustomSMP
+  # Shown in the tab list footer. This default is a placeholder, not a real
+  # address: set your own, or remove {server_address} from the footer.
+  SERVER-ADDRESS: play.customsmp.example
+  # The two colours of {server_title}, left to right.
+  GRADIENT-FROM: '#0069D6'
+  GRADIENT-TO: '#1AC3F9'
+# ==============================================================================
+# Economy safety (new in 4.0)
+# ==============================================================================
+ECONOMY:
+  # Highest balance a player can hold. Money is counted in whole cents, which a
+  # balance stays exact for up to 90 trillion. 0 uses that limit.
+  MAX-BALANCE: 0
+  PAY:
+    # Smallest and largest single /pay. 0 means no limit.
+    MIN-AMOUNT: 0.01
+    MAX-AMOUNT: 0
+    # Seconds a player waits between payments. 0 turns the wait off.
+    COOLDOWN-SECONDS: 0
+    # Percent of each payment that is removed as a fee (the receiver gets the
+    # rest). 0 means no fee.
+    FEE-PERCENT: 0
+  # Every change to money and shards is written to the economy_ledger table with
+  # a transaction id, who did it, why, and the balance before and after.
+  # /economy history <player> and /balance history read it.
+  LEDGER:
+    ENABLED: true
+    # Rows older than this many days are deleted on start-up. 0 keeps them forever.
+    RETENTION-DAYS: 180
 # Configuration section for Locations.
 LOCATIONS:
   # The text or value for Spawn Location. Available options: Any valid string text
@@ -366,8 +406,7 @@ SHARDS:
         REWARD-MESSAGE: '&#A303F9You received %amount% Shard &7(Total: &#A303F9%total%&7)'
         # The text or value for Boosted Reward Message. Available options: Any valid string text
         BOOSTED-REWARD-MESSAGE: '&#A303F9You received %amount% Shards &7(&ax%multiplier%&7)
-          # The text or value for # The Text Or Mode For &7(Total. Available Options. Available options: Any valid string text
-          # The text or mode for &7(Total. Available options: Any string text &7(Total:
+          &7(Total:
           &#A303F9%total%&7)'
         # The text or value for Leave Message. Available options: Any valid string text
         LEAVE-MESSAGE: '&cShard reward cancelled &7(Left %cuboid% zone)'
@@ -404,10 +443,7 @@ SHARDS:
     RECEIVED: '&#A303F9You received %amount% Shard &8[Everywhere] &7(Total: &#A303F9%total%&7)'
     # The text or value for Received Boosted. Available options: Any valid string text
     RECEIVED-BOOSTED: '&#A303F9You received %amount% Shards &7(&ax%multiplier%&7)
-      # The text or value for # The Text Or Mode For &8[Everywhere] &7(Total. Available Options. Available options: Any valid string text
-      # The text or mode for &8[Everywhere] &7(Total. Available options: Any string
-      # The text or value for Text &8[Everywhere] &7(Total. Available options: Any valid string text
-      text &8[Everywhere] &7(Total: &#A303F9%total%&7)'
+      &8[Everywhere] &7(Total: &#A303F9%total%&7)'
     # Configuration section for Excluded Worlds.
     EXCLUDED-WORLDS:
     - duels
@@ -481,28 +517,39 @@ TABLIST:
   NAME-FORMAT: <media_badge>%prefix%&f<nick>%team_suffix%
   # Header and footer lines. Besides PlaceholderAPI placeholders these work:
   #   %animated_title% (the shining title below), %animated_line% (the moving gradient bar below)
-  #   %player%, %rank% (LuckPerms prefix), %world%, %team%
-  #   %money%, %shards%, %kills%, %deaths%, %playtime%
-  #   %online%, %max_players%, %afk_count%, %ping% / %ping_colored%, %tps% / %tps_colored%
+  #   %player%, %rank% (LuckPerms prefix), %world%, %team%, %online%, %max_players%, %afk_count%
   #   %tip% (the rotating TIPS below)
-  # Only what changed is sent to players, so lines that rarely change cost almost nothing.
+  # Personal numbers also work:
+  #   %money%, %shards%, %kills%, %deaths%, %playtime%, %ping% / %ping_colored%, %tps% / %tps_colored%
+  # And the 4.0 names: {server_name}, {server_address}, %smp_balance%, %smp_rank%, %smp_elo%...
+  # Only what changed is sent to players, and a value that no line uses is never worked out.
   HEADER:
   - ''
   - '%animated_title%'
   - '%animated_line%'
-  - '&7Welcome, %rank% &f%player%'
+  - '&7Welcome, &f%player%'
+  - '&7Online &f%online%&8/&7%max_players%'
   - ''
   FOOTER:
   - ''
-  - '&a$ &f%money%  &8•  &d✦ &f%shards%  &8•  &c⚔ &f%kills%  &8•  &e⌚ &f%playtime%'
-  - '&7Online &f%online%&8/&7%max_players%  &8•  &7Ping %ping_colored%  &8•  &7TPS %tps_colored%  &8•  &7%world%'
+  - '&7Balance &a$%money%  &8•  &7Rank %rank%'
   - '%animated_line%'
+  - '&#37BFF9{server_address}'
   - '%tip%'
   - ''
+  # A placeholder nothing can fill (a typo, a plugin that is not installed) is left out
+  # instead of being shown as code. false shows it as written, handy while editing.
+  HIDE-UNRESOLVED-PLACEHOLDERS: true
+  # When one of these plugins is installed, SmpPlugin leaves the tab list to it.
+  # Set OVERRIDE-OTHER-PLUGINS: true to show SmpPlugin's tab list anyway.
+  YIELD-TO:
+  - TAB
+  OVERRIDE-OTHER-PLUGINS: false
   # A band of light that sweeps across the title, used by %animated_title%
   ANIMATION:
     ENABLED: true
-    TEXT: CustomSmp
+    # {server_name} is BRANDING.SERVER-NAME at the top of this file.
+    TEXT: '{server_name}'
     # Base colour of the letters and the colour of the passing shine (hex)
     COLOR: '#00ADFC'
     SHINE: '#FFFFFF'

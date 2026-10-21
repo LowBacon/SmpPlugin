@@ -60,6 +60,9 @@ public class LeaderboardManager {
     private final Map<LeaderboardType, CachedLeaderboard> leaderboardCache = new java.util.concurrent.ConcurrentHashMap<>();
     /** One read of the players table shared by every leaderboard type, instead of one read each. */
     private volatile CachedLeaderboard storedRows;
+    /** Set when an edit made the stored rows out of date; the next read starts a background refresh. */
+    private volatile boolean storedRowsStale;
+    private final java.util.concurrent.atomic.AtomicBoolean refreshing = new java.util.concurrent.atomic.AtomicBoolean();
 
     public LeaderboardManager(SmpPlugin plugin) {
         this.plugin = plugin;
@@ -161,7 +164,7 @@ public class LeaderboardManager {
         if (type != null) {
             leaderboardCache.remove(type);
         }
-        storedRows = null;
+        storedRowsStale = true;
     }
 
     /** After a change to an online player only: their live copy is merged in, so no re-read is needed. */
@@ -173,7 +176,33 @@ public class LeaderboardManager {
 
     public void invalidateAll() {
         leaderboardCache.clear();
-        storedRows = null;
+        storedRowsStale = true;
+    }
+
+    /**
+     * Reads the players table on the database thread and swaps the result in, so a leaderboard
+     * never makes the main thread wait for a full table read. Only one refresh runs at a time.
+     */
+    public void refreshStoredRowsAsync() {
+        if (!refreshing.compareAndSet(false, true)) {
+            return;
+        }
+        storedRowsStale = false;
+        plugin.getDatabaseManager().executeAsync(() -> {
+            try {
+                storedRows = new CachedLeaderboard(System.currentTimeMillis(),
+                        List.copyOf(plugin.getDatabaseManager().loadAllPlayers()));
+                leaderboardCache.clear();
+            } finally {
+                refreshing.set(false);
+            }
+        });
+    }
+
+    /** Players currently in the stored-row cache, for /smp diagnostics. */
+    public int cachedRowCount() {
+        CachedLeaderboard rows = storedRows;
+        return rows == null ? 0 : rows.players().size();
     }
 
     private List<PlayerData> getSortedPlayers(LeaderboardType type) {
@@ -184,9 +213,13 @@ public class LeaderboardManager {
         }
 
         CachedLeaderboard rows = storedRows;
-        if (rows == null || now - rows.cachedAtMillis() >= STORED_ROWS_TTL_MS) {
-            rows = new CachedLeaderboard(now, List.copyOf(plugin.getDatabaseManager().loadAllPlayers()));
-            storedRows = rows;
+        if (rows == null || storedRowsStale || now - rows.cachedAtMillis() >= STORED_ROWS_TTL_MS) {
+            // The old rows (or, before the first read finishes, only online players) are shown
+            // while the table is read in the background.
+            refreshStoredRowsAsync();
+            if (rows == null) {
+                rows = new CachedLeaderboard(0L, List.of());
+            }
         }
         Map<UUID, PlayerData> merged = new LinkedHashMap<>();
         for (PlayerData stored : rows.players()) {

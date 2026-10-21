@@ -53,7 +53,7 @@ public final class CalendarMenu extends BaseMenu {
     private boolean busy;
 
     public CalendarMenu(SmpPlugin plugin, HalloweenManager halloween) {
-        super(plugin, halloween.config().getString("CALENDAR.TITLE", "&8🎃 &6&lSpooky Calendar"), 54);
+        super(plugin, halloween.config().getString("CALENDAR.TITLE", halloween.theme().defaultTitle()), 54);
         this.halloween = halloween;
     }
 
@@ -62,7 +62,7 @@ public final class CalendarMenu extends BaseMenu {
         build(player);
         player.openInventory(inventory);
         MenuFx.sound(player, Sound.BLOCK_CHEST_OPEN, 0.6F, 0.7F);
-        MenuFx.sound(player, Sound.AMBIENT_CAVE, 0.4F, 1.2F);
+        MenuFx.sound(player, halloween.theme().ambientSound(), 0.4F, 1.2F);
         if (halloween.config().getBoolean("CALENDAR.OPEN-ANIMATION", true)) {
             Map<Integer, ItemStack> doors = new LinkedHashMap<>();
             for (int slot : doorBySlot.keySet()) {
@@ -103,11 +103,11 @@ public final class CalendarMenu extends BaseMenu {
             set(slot, doorItem(player, door));
         }
 
-        if (PermissionUtils.has(player, HalloweenCommand.ADMIN_PERMISSION)) {
+        if (PermissionUtils.has(player, halloween.theme().adminPermission())) {
             set(EDIT_SLOT, ItemUtils.createItem(Material.WRITABLE_BOOK, "&e&lEdit prizes",
                     List.of("&7Choose what is behind each door.", "", "&e▶ Click to edit")));
         }
-        if (halloween.config().getBoolean("TRICK-OR-TREAT.ENABLED", true)) {
+        if (trickOrTreat()) {
             set(TRICK_SLOT, ItemUtils.createItem(Material.CAULDRON, "&5&lTrick or Treat!",
                     List.of("&7Knock on a door and hope for", "&7candy... or a trick.", "",
                             "&e▶ Click or use /trickortreat")));
@@ -119,10 +119,14 @@ public final class CalendarMenu extends BaseMenu {
         List<Integer> frame = new ArrayList<>(MenuFx.borderSlots(6));
         frame.removeIf(slot -> slot == INFO_SLOT || slot == TRICK_SLOT || slot == CLOSE_SLOT
                 || slot == 47 || slot == 48 || slot == 49);
-        if (PermissionUtils.has(player, HalloweenCommand.ADMIN_PERMISSION)) {
+        if (PermissionUtils.has(player, halloween.theme().adminPermission())) {
             frame.remove(Integer.valueOf(EDIT_SLOT));
         }
         return frame;
+    }
+
+    private boolean trickOrTreat() {
+        return halloween.theme().trickOrTreatButton() && halloween.config().getBoolean("TRICK-OR-TREAT.ENABLED", true);
     }
 
     private List<Material> borderColours() {
@@ -134,8 +138,7 @@ public final class CalendarMenu extends BaseMenu {
             }
         }
         if (colours.isEmpty()) {
-            colours.add(Material.ORANGE_STAINED_GLASS_PANE);
-            colours.add(Material.BLACK_STAINED_GLASS_PANE);
+            colours.addAll(halloween.theme().defaultBorder());
         }
         return colours;
     }
@@ -145,16 +148,17 @@ public final class CalendarMenu extends BaseMenu {
         ZonedDateTime now = halloween.now();
         int year = halloween.seasonYear();
         List<String> lore = new ArrayList<>();
-        lore.add("&7Open one door every day and");
-        lore.add("&7find a spooky prize behind it.");
+        String accent = halloween.theme().accent();
+        lore.addAll(halloween.theme().intro());
         lore.add("");
-        lore.add("&7Doors opened: &6" + halloween.openedCount(player.getUniqueId()) + "&7/&6" + rules.doorCount(year));
+        lore.add("&7Doors opened: " + accent + halloween.openedCount(player.getUniqueId()) + "&7/" + accent + rules.doorCount(year));
         if (!halloween.inSeason()) {
             long wait = rules.secondsUntilSeason(now);
             lore.add(wait > 0 ? "&7The calendar opens in &f" + Text.duration(wait) : "&7This year's calendar has closed.");
         } else {
-            long untilHalloween = rules.secondsUntilLastDay(now);
-            lore.add(untilHalloween > 0 ? "&7Halloween in &f" + Text.duration(untilHalloween) : "&6&lHappy Halloween!");
+            long untilLastDay = rules.secondsUntilLastDay(now);
+            lore.add(untilLastDay > 0 ? "&7" + halloween.theme().countdownLabel() + " &f" + Text.duration(untilLastDay)
+                    : halloween.theme().lastDayText());
             int ready = halloween.claimableCount(player.getUniqueId());
             lore.add(ready > 0 ? "&a" + ready + " door" + (ready == 1 ? "" : "s") + " ready to open!" : "&7Come back tomorrow for the next door.");
         }
@@ -162,7 +166,8 @@ public final class CalendarMenu extends BaseMenu {
             lore.add("");
             lore.add("&dPreview date: " + halloween.previewDate());
         }
-        ItemStack item = ItemUtils.createItem(Material.PUMPKIN_PIE, "&6&lSpooky Calendar &8" + year, lore);
+        ItemStack item = ItemUtils.createItem(halloween.theme().infoIcon(),
+                accent + "&l" + halloween.theme().calendarName() + " &8" + year, lore);
         return ItemUtils.setGlint(item, true);
     }
 
@@ -175,7 +180,7 @@ public final class CalendarMenu extends BaseMenu {
         switch (state) {
             case OPEN -> {
                 List<String> lore = new ArrayList<>();
-                lore.add(last ? "&7The big Halloween prize!" : "&7Something spooky waits inside...");
+                lore.add(last ? halloween.theme().lastDoorLore() : halloween.theme().doorLore());
                 if (halloween.config().getBoolean("CALENDAR.SHOW-PRIZES", false)) {
                     lore.add("");
                     for (String line : prize.describe(plugin)) {
@@ -184,13 +189,13 @@ public final class CalendarMenu extends BaseMenu {
                 }
                 lore.add("");
                 lore.add("&e&l▶ Click to open!");
-                item = ItemUtils.createItem(halloween.icon(last ? "LAST-DOOR" : "OPEN", Material.JACK_O_LANTERN),
-                        "&6&l" + plainDay(door, last) + " &8- " + name, lore);
+                item = ItemUtils.createItem(halloween.icon(last ? "LAST-DOOR" : "OPEN"),
+                        halloween.theme().accent() + "&l" + plainDay(door, last) + " &8- " + name, lore);
                 ItemUtils.setGlint(item, true);
             }
             case LOCKED -> {
                 long wait = halloween.rules().secondsUntilOpen(door, halloween.now());
-                item = ItemUtils.createItem(halloween.icon("LOCKED", Material.CARVED_PUMPKIN),
+                item = ItemUtils.createItem(halloween.icon("LOCKED"),
                         "&7" + plainDay(door, last), List.of("&8Locked", "&7Opens in &f" + Text.duration(wait)));
             }
             case CLAIMED -> {
@@ -199,10 +204,10 @@ public final class CalendarMenu extends BaseMenu {
                 for (String line : prize.describe(plugin)) {
                     lore.add("&8• " + line);
                 }
-                item = ItemUtils.createItem(halloween.icon("CLAIMED", Material.ORANGE_CANDLE),
+                item = ItemUtils.createItem(halloween.icon("CLAIMED"),
                         "&8" + plainDay(door, last) + " &7- " + name, lore);
             }
-            default -> item = ItemUtils.createItem(halloween.icon("MISSED", Material.COBWEB),
+            default -> item = ItemUtils.createItem(halloween.icon("MISSED"),
                     "&8" + plainDay(door, last), List.of("&8This door was missed."));
         }
         item.setAmount(Math.max(1, Math.min(64, door)));
@@ -222,12 +227,12 @@ public final class CalendarMenu extends BaseMenu {
             player.closeInventory();
             return;
         }
-        if (slot == TRICK_SLOT && halloween.config().getBoolean("TRICK-OR-TREAT.ENABLED", true)) {
+        if (slot == TRICK_SLOT && trickOrTreat()) {
             player.closeInventory();
             plugin.getSpigotScheduler().dispatchPlayerCommand(player, "trickortreat");
             return;
         }
-        if (slot == EDIT_SLOT && PermissionUtils.has(player, HalloweenCommand.ADMIN_PERMISSION)) {
+        if (slot == EDIT_SLOT && PermissionUtils.has(player, halloween.theme().adminPermission())) {
             new CalendarEditorMenu(plugin, halloween).open(player);
             return;
         }
@@ -240,12 +245,13 @@ public final class CalendarMenu extends BaseMenu {
             case OPEN -> openDoor(player, slot, door);
             case LOCKED -> {
                 MenuFx.sound(player, Sound.BLOCK_WOODEN_DOOR_CLOSE, 0.7F, 0.6F);
-                Text.send(player, "HALLOWEEN.LOCKED", "&7Door &6{door} &7is still locked. It opens in &f{time}&7.",
+                Text.send(player, halloween.theme().messageKey("LOCKED"),
+                        "&7Door " + halloween.theme().accent() + "{door} &7is still locked. It opens in &f{time}&7.",
                         "{door}", Integer.toString(door),
                         "{time}", Text.duration(halloween.rules().secondsUntilOpen(door, halloween.now())));
             }
             case CLAIMED -> MenuFx.sound(player, Sound.BLOCK_CANDLE_EXTINGUISH, 0.8F, 1.0F);
-            case MISSED -> MenuFx.sound(player, Sound.ENTITY_SPIDER_AMBIENT, 0.6F, 1.2F);
+            case MISSED -> MenuFx.sound(player, halloween.theme().missedSound(), 0.6F, 1.2F);
         }
     }
 
@@ -260,12 +266,13 @@ public final class CalendarMenu extends BaseMenu {
         for (String raw : halloween.config().getStringList("CALENDAR.SPIN-ITEMS")) {
             Material material = Material.matchMaterial(raw.trim().toUpperCase(Locale.ROOT));
             if (material != null && material.isItem()) {
-                frames.add(ItemUtils.createItem(material, "&6&l? ? ?"));
+                frames.add(ItemUtils.createItem(material, halloween.theme().accent() + "&l? ? ?"));
             }
         }
         if (frames.isEmpty()) {
-            frames.add(ItemUtils.createItem(Material.COOKIE, "&6&l? ? ?"));
-            frames.add(ItemUtils.createItem(Material.PUMPKIN_PIE, "&6&l? ? ?"));
+            for (Material material : halloween.theme().defaultSpin()) {
+                frames.add(ItemUtils.createItem(material, halloween.theme().accent() + "&l? ? ?"));
+            }
         }
         MenuFx.sound(player, Sound.BLOCK_WOODEN_DOOR_OPEN, 0.8F, 0.8F);
         int steps = Math.max(4, Math.min(60, halloween.config().getInt("CALENDAR.SPIN-STEPS", 18)));
@@ -284,19 +291,23 @@ public final class CalendarMenu extends BaseMenu {
         List<String> lines = prize.describe(plugin);
 
         if (MenuFx.isViewing(player, this)) {
-            ItemStack shown = prize.previewItem(plugin, "&6&l" + plainDay(door, last) + " &8- " + halloween.doorName(door), List.of());
+            ItemStack shown = prize.previewItem(plugin, halloween.theme().accent() + "&l" + plainDay(door, last) + " &8- "
+                    + halloween.doorName(door), List.of());
             ItemUtils.setGlint(shown, true);
             inventory.setItem(slot, shown);
         }
         MenuFx.sound(player, Sound.ENTITY_PLAYER_LEVELUP, 0.8F, 1.2F);
-        MenuFx.sound(player, Sound.ENTITY_WITCH_CELEBRATE, 0.9F, 1.0F);
-        player.getWorld().spawnParticle(Particle.WITCH, player.getLocation().add(0, 1.0, 0), 40, 0.5, 0.8, 0.5, 0.05);
-        Text.title(player, "&6&l" + plainDay(door, last), lines.isEmpty() ? "&7Happy Halloween!" : String.join("&7, ", lines), 5, 50, 15);
-        Text.send(player, "HALLOWEEN.OPENED", "&7You opened &6Door {door}&7: {prize}",
+        CalendarTheme theme = halloween.theme();
+        MenuFx.sound(player, theme.revealSound(), 0.9F, 1.0F);
+        player.getWorld().spawnParticle(theme.particle(), player.getLocation().add(0, 1.0, 0), 40, 0.5, 0.8, 0.5, 0.05);
+        Text.title(player, theme.accent() + "&l" + plainDay(door, last),
+                lines.isEmpty() ? theme.lastDayText() : String.join("&7, ", lines), 5, 50, 15);
+        Text.send(player, theme.messageKey("OPENED"), "&7You opened " + theme.accent() + "Door {door}&7: {prize}",
                 "{door}", Integer.toString(door), "{prize}", String.join("&7, ", lines));
         if (last && halloween.config().getBoolean("CALENDAR.ANNOUNCE-LAST-DOOR", true)) {
-            Text.broadcast(Text.prefix() + Text.get("HALLOWEEN.LAST-DOOR-BROADCAST",
-                    "&6{player} &7opened the &6&lHalloween &7door of the Spooky Calendar! &8(/halloween)",
+            Text.broadcast(Text.prefix() + Text.get(theme.messageKey("LAST-DOOR-BROADCAST"),
+                    theme.accent() + "{player} &7opened the last door of the " + theme.calendarName() + "! &8(/"
+                            + theme.command() + ")",
                     "{player}", player.getName()));
         }
 
@@ -319,18 +330,22 @@ public final class CalendarMenu extends BaseMenu {
     }
 
     private List<NoticeSpec> revealFrames(int door, boolean last, List<String> lines) {
-        String title = "&6&l" + plainDay(door, last);
+        CalendarTheme theme = halloween.theme();
+        String accent = theme.accent();
+        String emoji = theme.revealEmoji();
+        String title = accent + "&l" + plainDay(door, last);
         List<NoticeSpec> frames = new ArrayList<>();
-        String[] steps = {"&8🎃  ·  ·  ·", "&6🎃 &8 🎃  ·  ·", "&6🎃  🎃 &8 🎃  ·", "&6🎃  🎃  🎃  🎃"};
+        String[] steps = {"&8" + emoji + "  ·  ·  ·", accent + emoji + " &8 " + emoji + "  ·  ·",
+                accent + emoji + "  " + emoji + " &8 " + emoji + "  ·", accent + emoji + "  " + emoji + "  " + emoji + "  " + emoji};
         for (String step : steps) {
-            frames.add(new NoticeSpec(title, "CARVED_PUMPKIN", List.of(step), List.of()));
+            frames.add(new NoticeSpec(title, theme.revealIcon(), List.of(step), List.of()));
         }
         List<String> body = new ArrayList<>();
-        body.add(last ? "&6&lHappy Halloween!" : "&7Behind the door you found:");
+        body.add(last ? theme.lastDayText() : "&7Behind the door you found:");
         body.add(" ");
-        body.addAll(lines.isEmpty() ? List.of("&7A spooky surprise!") : lines);
-        frames.add(new NoticeSpec(title + " &aopened!", "JACK_O_LANTERN", body, List.of(
-                new NoticeSpec.Button("&6Back to calendar", "halloween"),
+        body.addAll(lines.isEmpty() ? List.of(theme.surpriseText()) : lines);
+        frames.add(new NoticeSpec(title + " &aopened!", theme.revealDoneIcon(), body, List.of(
+                new NoticeSpec.Button(accent + "Back to calendar", theme.command()),
                 new NoticeSpec.Button("&7Close", null))));
         return frames;
     }

@@ -34,7 +34,12 @@ public class FeatureCommandExecutor implements CommandExecutor, TabCompleter {
                 return true;
             }
         }
-        return delegate.onCommand(sender, command, label, args);
+        long started = System.nanoTime();
+        try {
+            return delegate.onCommand(sender, command, label, args);
+        } finally {
+            com.bx.smpPlugin.core.Diagnostics.record("command:/" + command.getName(), System.nanoTime() - started);
+        }
     }
 
     @Override

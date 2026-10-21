@@ -23,7 +23,7 @@ import java.util.logging.Level;
 
 /**
  * Money that has left a player's balance but not been settled yet: a dice roll that is still
- * spinning, or a roulette entry waiting for the draw. Every hold is written to
+ * spinning, or a coin flip waiting for someone to join it. Every hold is written to
  * {@code data/gambling-escrow.yml} (in the background, in order) before the game goes on, and
  * removed once the money has been paid out or given back.
  *

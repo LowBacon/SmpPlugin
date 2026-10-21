@@ -21,6 +21,18 @@ public class PlayerDataManager {
      * copy back instead of reading a row the save has not reached yet.
      */
     private final Map<UUID, PlayerData> savingAfterQuit = new ConcurrentHashMap<>();
+    /**
+     * Offline players whose row was changed in the last few minutes (money or shards paid to them,
+     * an admin edit). Every change to an offline player goes through this one copy, so two changes
+     * close together cannot each read the old row and overwrite the other, and a player who joins
+     * right after gets the copy instead of a row the save has not reached yet.
+     */
+    private final Map<UUID, OfflineCopy> offlineCopies = new ConcurrentHashMap<>();
+    static final long OFFLINE_COPY_TTL_MS = 5L * 60_000L;
+    static final int OFFLINE_COPY_LIMIT = 5_000;
+
+    private record OfflineCopy(PlayerData data, long touchedAt) {
+    }
 
     public PlayerDataManager(SmpPlugin plugin) {
         this.plugin = plugin;
@@ -31,6 +43,12 @@ public class PlayerDataManager {
         PlayerData data = cache.get(uuid);
         if (data == null) {
             data = savingAfterQuit.get(uuid);
+        }
+        if (data == null) {
+            OfflineCopy recent = offlineCopies.remove(uuid);
+            if (recent != null) {
+                data = recent.data();
+            }
         }
         if (data == null) {
             JoinPreloadListener preloader = plugin.getJoinPreloadListener();
@@ -78,11 +96,82 @@ public class PlayerDataManager {
         if (uuid != null) {
             cache.remove(uuid);
             savingAfterQuit.remove(uuid);
+            offlineCopies.remove(uuid);
         }
     }
 
     public boolean isSaving(UUID uuid) {
-        return uuid != null && savingAfterQuit.containsKey(uuid);
+        return uuid != null && (savingAfterQuit.containsKey(uuid) || offlineCopies.containsKey(uuid));
+    }
+
+    /**
+     * The one copy of a player's data to change, online or not: the live copy for an online
+     * player, otherwise the copy still being saved after they quit, a recent offline copy, or the
+     * stored row. Null when the player has no row. Reads the database for a player not seen
+     * recently, so call it for single changes (a payment, an admin edit), not in loops.
+     */
+    public PlayerData getOrLoadOffline(UUID uuid) {
+        if (uuid == null) {
+            return null;
+        }
+        PlayerData live = cache.get(uuid);
+        if (live != null) {
+            return live;
+        }
+        PlayerData saving = savingAfterQuit.get(uuid);
+        if (saving != null) {
+            return saving;
+        }
+        OfflineCopy recent = offlineCopies.get(uuid);
+        if (recent != null) {
+            return recent.data();
+        }
+        return plugin.getDatabaseManager().loadPlayer(uuid);
+    }
+
+    /**
+     * Saves a change made through {@link #getOrLoadOffline}. An online player's copy is saved by the
+     * normal auto-save; an offline one is remembered for a few minutes and written on the database
+     * thread, after which {@code afterWrite} runs there (it may be null).
+     */
+    public void saveOffline(PlayerData data, Runnable afterWrite) {
+        if (data == null) {
+            return;
+        }
+        UUID uuid = data.getUuid();
+        if (cache.get(uuid) == data) {
+            if (afterWrite != null) {
+                afterWrite.run();
+            }
+            return;
+        }
+        long now = System.currentTimeMillis();
+        offlineCopies.put(uuid, new OfflineCopy(data, now));
+        pruneOfflineCopies(now);
+        plugin.getDatabaseManager().executeAsync(() -> {
+            plugin.getDatabaseManager().savePlayer(data);
+            if (afterWrite != null) {
+                afterWrite.run();
+            }
+        });
+    }
+
+    /** Offline copies kept right now, for /smp diagnostics. */
+    public int offlineCopyCount() {
+        return offlineCopies.size();
+    }
+
+    private void pruneOfflineCopies(long now) {
+        offlineCopies.values().removeIf(copy -> now - copy.touchedAt() > OFFLINE_COPY_TTL_MS);
+        if (offlineCopies.size() > OFFLINE_COPY_LIMIT) {
+            // Oldest first; each was already queued for saving, so dropping one loses nothing.
+            offlineCopies.entrySet().stream()
+                    .sorted(java.util.Comparator.comparingLong(entry -> entry.getValue().touchedAt()))
+                    .limit(offlineCopies.size() - OFFLINE_COPY_LIMIT)
+                    .map(Map.Entry::getKey)
+                    .toList()
+                    .forEach(offlineCopies::remove);
+        }
     }
 
     public void saveAll() {
@@ -107,6 +196,7 @@ public class PlayerDataManager {
     public void discardAllForServerWipe() {
         cache.clear();
         savingAfterQuit.clear();
+        offlineCopies.clear();
     }
 
     public boolean isLoaded(UUID uuid) {

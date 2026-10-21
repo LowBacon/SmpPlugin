@@ -28,39 +28,62 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 
 /**
- * The Spooky Calendar: which doors a player has opened, what is behind each door, and what day it is.
+ * A door calendar: which doors a player has opened, what is behind each door, and what day it is.
+ * The Spooky Calendar (/halloween) and, since 4.0, the Advent Calendar (/advent) are both this
+ * class with a different {@link CalendarTheme} and config file.
  *
  * <p>Opened doors are one number per player and year (a bit per door) in the shared player store,
  * so checking a door is a map read. Prizes come from three places, first match wins: the in-game
- * editor ({@code data/halloween-prizes.yml}), {@code halloween.yml} DOORS.&lt;day&gt;, then
- * DOORS.DEFAULT. Console COMMANDS always come from halloween.yml.
+ * editor ({@code data/<id>-prizes.yml}), the config file's DOORS.&lt;day&gt;, then DOORS.DEFAULT.
+ * Console COMMANDS always come from the config file.
  */
-public final class HalloweenManager {
-
-    private static final String PRIZE_FILE = "data/halloween-prizes.yml";
+public class HalloweenManager {
 
     private final SmpPlugin plugin;
     private final PlayerStore store;
+    private final CalendarTheme theme;
+    private final java.util.function.Supplier<FileConfiguration> configSource;
+    private final java.util.function.BooleanSupplier switchedOn;
+    private final String prizeFile;
     private YamlConfiguration overrides = new YamlConfiguration();
     /** Set by /halloween preview; null uses the real date (or PREVIEW-DATE). */
     private volatile LocalDate previewDate;
 
+    /** The Spooky Calendar, on while halloween.yml and the HALLOWEEN feature are on. */
     public HalloweenManager(SmpPlugin plugin, PlayerStore store) {
+        this(plugin, store, CalendarTheme.HALLOWEEN, () -> plugin.getConfigManager().getHalloween(),
+                () -> plugin.getFeatureManager() == null
+                        || plugin.getFeatureManager().isEnabled(com.bx.smpPlugin.managers.FeatureManager.Feature.HALLOWEEN));
+    }
+
+    /**
+     * A calendar with its own theme and config file. {@code switchedOn} is checked together with the
+     * file's ENABLED, so the event system can turn the calendar off without touching the file.
+     */
+    public HalloweenManager(SmpPlugin plugin, PlayerStore store, CalendarTheme theme,
+                            java.util.function.Supplier<FileConfiguration> configSource,
+                            java.util.function.BooleanSupplier switchedOn) {
         this.plugin = plugin;
         this.store = store;
+        this.theme = theme;
+        this.configSource = configSource;
+        this.switchedOn = switchedOn;
+        this.prizeFile = "data/" + theme.id() + "-prizes.yml";
         loadOverrides();
     }
 
+    public CalendarTheme theme() {
+        return theme;
+    }
+
     public FileConfiguration config() {
-        FileConfiguration config = plugin.getConfigManager().getHalloween();
+        FileConfiguration config = configSource.get();
         return config == null ? new YamlConfiguration() : config;
     }
 
-    /** On in halloween.yml and as a feature (/smpplugin feature HALLOWEEN). */
+    /** On in its config file and switched on (the HALLOWEEN feature, or the event system for Advent). */
     public boolean isEnabled() {
-        return config().getBoolean("ENABLED", true)
-                && (plugin.getFeatureManager() == null
-                || plugin.getFeatureManager().isEnabled(com.bx.smpPlugin.managers.FeatureManager.Feature.HALLOWEEN));
+        return config().getBoolean("ENABLED", true) && switchedOn.getAsBoolean();
     }
 
     public CalendarRules rules() {
@@ -118,7 +141,7 @@ public final class HalloweenManager {
     // ------------------------------------------------------------------ doors and claims
 
     private String claimSection(int year) {
-        return "halloween." + year;
+        return theme.id() + "." + year;
     }
 
     public long claimedMask(UUID uuid) {
@@ -216,7 +239,7 @@ public final class HalloweenManager {
         if (name != null && !name.isBlank()) {
             return name;
         }
-        return isLastDoor(door) ? "&6&l★ HALLOWEEN ★" : "&6Door " + door;
+        return isLastDoor(door) ? theme.lastDoorDefaultName() : theme.accent() + "Door " + door;
     }
 
     /** The prize behind a door, with any in-game edits applied. */
@@ -254,6 +277,18 @@ public final class HalloweenManager {
         writeOverrides();
     }
 
+    /** A calendar icon from CALENDAR.ICONS, or the theme's own default. */
+    public Material icon(String key) {
+        Material fallback = switch (key) {
+            case "OPEN" -> theme.openIcon();
+            case "LOCKED" -> theme.lockedIcon();
+            case "CLAIMED" -> theme.claimedIcon();
+            case "MISSED" -> theme.missedIcon();
+            default -> theme.lastDoorIcon();
+        };
+        return icon(key, fallback);
+    }
+
     public Material icon(String key, Material fallback) {
         String raw = config().getString("CALENDAR.ICONS." + key, fallback.name());
         Material material = raw == null ? null : Material.matchMaterial(raw.trim().toUpperCase(Locale.ROOT));
@@ -261,7 +296,7 @@ public final class HalloweenManager {
     }
 
     private File prizeFile() {
-        return new File(plugin.getDataFolder(), PRIZE_FILE);
+        return new File(plugin.getDataFolder(), prizeFile);
     }
 
     public void loadOverrides() {
@@ -271,7 +306,8 @@ public final class HalloweenManager {
             try {
                 loaded.load(file);
             } catch (IOException | InvalidConfigurationException exception) {
-                plugin.getLogger().log(Level.WARNING, "Could not read " + PRIZE_FILE + "; in-game Halloween prizes are ignored until it is fixed.", exception);
+                plugin.getLogger().log(Level.WARNING, "Could not read " + prizeFile + "; in-game " + theme.calendarName()
+                        + " prizes are ignored until it is fixed.", exception);
             }
         }
         overrides = loaded;
@@ -283,10 +319,10 @@ public final class HalloweenManager {
         plugin.getDatabaseManager().executeAsync(() -> {
             try {
                 Files.createDirectories(file.getParentFile().toPath());
-                Files.writeString(file.toPath(), "# Prizes set with /halloween edit. Delete a door here to go back to halloween.yml.\n" + text,
-                        StandardCharsets.UTF_8);
+                Files.writeString(file.toPath(), "# Prizes set with /" + theme.command() + " edit. Delete a door here to go back to "
+                        + theme.configFile() + ".\n" + text, StandardCharsets.UTF_8);
             } catch (IOException exception) {
-                plugin.getLogger().log(Level.WARNING, "Could not save " + PRIZE_FILE, exception);
+                plugin.getLogger().log(Level.WARNING, "Could not save " + prizeFile, exception);
             }
         });
     }

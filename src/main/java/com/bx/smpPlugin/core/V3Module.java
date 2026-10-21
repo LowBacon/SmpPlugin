@@ -62,7 +62,7 @@ public final class V3Module implements Listener {
     /** Commands added in 3.0, for the help menu and the docs. */
     public static final List<String> COMMANDS = List.of(
             "halloween", "trickortreat", "daily", "challenges", "poll", "giveaway", "chatgame", "announcer", "mail",
-            "slap", "highfive", "poke", "wave", "cheer", "dice", "roulette", "rps", "rate", "firework", "sit",
+            "slap", "highfive", "poke", "wave", "cheer", "dice", "coinflip", "rps", "rate", "firework", "sit",
             "craft", "anvil", "grindstone", "stonecutter", "loom", "smithing", "cartography", "back", "near",
             "seen", "coords", "suicide", "ptime", "pweather", "repair", "skull", "lore", "glow", "online", "uptime", "calc",
             "perms", "broadcast", "day", "night", "sun", "rain", "thunder", "smite", "butcher", "spawnmob", "more",
@@ -71,6 +71,18 @@ public final class V3Module implements Listener {
 
     public V3Module(SmpPlugin plugin) {
         this.plugin = plugin;
+    }
+
+    /** The spawn and lobby borders, or null when that part could not start. */
+    public com.bx.smpPlugin.world.BorderManager borders() {
+        return borders;
+    }
+
+    /** Takes down the spawn's or the lobby's border, for when that spawn or lobby is deleted. */
+    public void turnOffBorder(String zone) {
+        if (borders != null && borders.zone(zone) != null && borders.zone(zone).enabled()) {
+            borders.update(borders.zone(zone).withEnabled(false));
+        }
     }
 
     public PlayerStore store() {
@@ -183,7 +195,7 @@ public final class V3Module implements Listener {
             com.bx.smpPlugin.gambling.Gambling gambling = new com.bx.smpPlugin.gambling.Gambling(plugin);
             register("dice", gambling.dice(), gambling.dice(), Feature.GAMBLING);
             listen(gambling.dice());
-            register("roulette", gambling.roulette(), gambling.roulette(), Feature.GAMBLING);
+            register("coinflip", gambling.coinFlip(), gambling.coinFlip(), Feature.COINFLIP);
             onShutdown(gambling::shutdown);
         });
 

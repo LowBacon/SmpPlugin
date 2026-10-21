@@ -121,6 +121,7 @@ public final class SmpPlugin extends JavaPlugin {
     private ServerNotificationManager serverNotificationManager;
     private PlayerSettingToggles playerSettingToggles;
     private com.bx.smpPlugin.core.V3Module v3Module;
+    private com.bx.smpPlugin.core.V4Module v4Module;
     private DialogGateway dialogManager;
     private PortalManager portalManager;
     private AmethystToolsManager amethystToolsManager;
@@ -139,7 +140,6 @@ public final class SmpPlugin extends JavaPlugin {
     private SpawnerManager spawnerManager;
     private AntiEspManager antiEspManager;
     private AntiCheatManager antiCheatManager;
-    private com.bx.smpPlugin.coinflip.bukkit.CoinFlipModule coinFlipModule;
     private SpawnStashManager spawnStashManager;
     private FakePlayerManager fakePlayerManager;
     private HideManager hideManager;
@@ -170,8 +170,6 @@ public final class SmpPlugin extends JavaPlugin {
 
         instance = this;
 
-        printStartupBanner();
-
         checkPlaceholderApi();
 
         SpigotScheduler = new SpigotScheduler(this);
@@ -181,6 +179,8 @@ public final class SmpPlugin extends JavaPlugin {
 
         configManager = new ConfigManager(this);
         configManager.loadAll();
+        com.bx.smpPlugin.core.Branding.load(configManager.getConfig());
+        printStartupBanner();
         List<ConfigValidator.Problem> configProblems = ConfigValidator.validateDirectory(getDataFolder());
         if (!configProblems.isEmpty()) {
             getLogger().severe("====================================================");
@@ -298,13 +298,6 @@ public final class SmpPlugin extends JavaPlugin {
             antiCheatManager = null;
             getLogger().log(Level.SEVERE, "Could not start the anti-cheat; it is off for this session.", error);
         }
-        try {
-            coinFlipModule = new com.bx.smpPlugin.coinflip.bukkit.CoinFlipModule(this);
-            coinFlipModule.start();
-        } catch (RuntimeException | LinkageError error) {
-            coinFlipModule = null;
-            getLogger().log(Level.SEVERE, "Could not start CoinFlip; it is off for this session. No currency was moved.", error);
-        }
         spawnStashManager = new SpawnStashManager(this);
         fakePlayerManager = new FakePlayerManager(this);
         redisManager = new RedisManager(this);
@@ -337,6 +330,9 @@ public final class SmpPlugin extends JavaPlugin {
         initializeLuckPermsTablistRefreshBridge();
         initializeSkinsRestorerTablistRefreshBridge();
 
+        // The plugin's own placeholders work in every message, with or without PlaceholderAPI.
+        com.bx.smpPlugin.core.InternalPlaceholders.install(new com.bx.smpPlugin.api.PlaceholderResolver(this));
+
         // 5. Listeners
         registerListeners();
 
@@ -368,6 +364,7 @@ public final class SmpPlugin extends JavaPlugin {
         // 8. PlaceholderAPI expansion
         if (getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) {
             new EconomyExpansion(this).register();
+            new com.bx.smpPlugin.api.SmpExpansion(this).register();
             new SmpPluginExpansion(this).register();
             new CustomSmpExpansion(this).register();
             new FinnishSmpExpansion(this).register();  // Legacy alias for compatibility
@@ -391,6 +388,10 @@ public final class SmpPlugin extends JavaPlugin {
         // 9. Everything added in 3.0 (calendar, daily rewards, events, extra commands).
         v3Module = new com.bx.smpPlugin.core.V3Module(this);
         v3Module.enable();
+
+        // 10. Everything added in 4.0 (ledger, ranked PvP, seasonal events, survival rules, diagnostics).
+        v4Module = new com.bx.smpPlugin.core.V4Module(this);
+        v4Module.enable();
 
         syncCommands();
         verifyPermissionRegistration();
@@ -437,6 +438,9 @@ public final class SmpPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (v4Module != null) {
+            v4Module.disable();
+        }
         if (v3Module != null) {
             v3Module.disable();
         }
@@ -476,9 +480,6 @@ public final class SmpPlugin extends JavaPlugin {
         }
         if (antiCheatManager != null) {
             antiCheatManager.shutdown();
-        }
-        if (coinFlipModule != null) {
-            coinFlipModule.shutdown();
         }
         if (spawnStashManager != null) {
             spawnStashManager.shutdown();
@@ -561,6 +562,7 @@ public final class SmpPlugin extends JavaPlugin {
             databaseManager.close();
         }
         getServer().getServicesManager().unregisterAll(this);
+        com.bx.smpPlugin.core.InternalPlaceholders.uninstall();
         getLogger().info("SmpPlugin disabled.");
     }
 
@@ -569,47 +571,9 @@ public final class SmpPlugin extends JavaPlugin {
     private void printStartupBanner() {
         var console = getServer().getConsoleSender();
         console.sendMessage("");
-        console.sendMessage("§b§lCustomSmp §7v" + getDescription().getVersion());
-        console.sendMessage("§aPlugin enabled successfully.");
-        console.sendMessage("");
-    }
-
-    @SuppressWarnings("unused")
-    private void printLegacyStartupBanner() {
-        var console = getServer().getConsoleSender();
-        String v = getDescription().getVersion();
-
-        console.sendMessage("");
-        console.sendMessage("§6§l  ██╗   ██╗██╗  ████████╗██╗███╗   ███╗ █████╗ ████████╗███████╗");
-        console.sendMessage("§6§l  ██║   ██║██║  ╚══██╔══╝██║████╗ ████║██╔══██╗╚══██╔══╝██╔════╝");
-        console.sendMessage("§6§l  ██║   ██║██║     ██║   ██║██╔████╔██║███████║   ██║   █████╗  ");
-        console.sendMessage("§6§l  ██║   ██║██║     ██║   ██║██║╚██╔╝██║██╔══██║   ██║   ██╔══╝  ");
-        console.sendMessage("§6§l  ╚██████╔╝███████╗██║   ██║██║ ╚═╝ ██║██║  ██║   ██║   ███████╗");
-        console.sendMessage("§6§l   ╚═════╝ ╚══════╝╚═╝   ╚═╝╚═╝     ╚═╝╚═╝  ╚═╝   ╚═╝   ╚══════╝");
-        console.sendMessage("");
-        console.sendMessage("§e§l  ██████╗  ██████╗ ███╗   ██╗██╗   ██╗████████╗    ███████╗███╗   ███╗██████╗ ");
-        console.sendMessage("§e§l  ██╔══██╗██╔═══██╗████╗  ██║██║   ██║╚══██╔══╝    ██╔════╝████╗ ████║██╔══██╗");
-        console.sendMessage("§e§l  ██║  ██║██║   ██║██╔██╗ ██║██║   ██║   ██║       ███████╗██╔████╔██║██████╔╝");
-        console.sendMessage("§e§l  ██║  ██║██║   ██║██║╚██╗██║██║   ██║   ██║       ╚════██║██║╚██╔╝██║██╔═══╝ ");
-        console.sendMessage("§e§l  ██████╔╝╚██████╔╝██║ ╚████║╚██████╔╝   ██║       ███████║██║ ╚═╝ ██║██║     ");
-        console.sendMessage("§e§l  ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝    ╚═╝       ╚══════╝╚═╝     ╚═╝╚═╝     ");
-        console.sendMessage("");
-        console.sendMessage("§8  ═══════════════════════════════════════════════════════════════════════════════");
-        console.sendMessage("§7                       §fᴍᴀᴅᴇ ʙʏ §b§lʙᴇᴇѕᴛᴏxᴅ §8| §fᴠᴇʀѕɪᴏɴ §a§l" + v);
-        console.sendMessage("§7                   §fᴅɪѕᴄᴏʀᴅ: §9§nhttps://dsc.gg/hellstarr");
-        console.sendMessage("§8  ═══════════════════════════════════════════════════════════════════════════════");
-        console.sendMessage("");
-        console.sendMessage("§8  ╔═══════════════════════════════════════════════════════════════════════════╗");
-        console.sendMessage("§8  ║                                                                         ║");
-        console.sendMessage("§8  ║  §e§l⚠ §6§lɴᴏᴛᴇ                                                              §8║");
-        console.sendMessage("§8  ║                                                                         ║");
-        console.sendMessage("§8  ║  §fɢᴜʏѕ, ᴘʟᴇᴀѕᴇ ᴅᴏɴᴀᴛᴇ ᴛᴏ ᴛʜɪѕ ᴘʀᴏᴊᴇᴄᴛ ᴏʀ ᴛʜɪѕ ᴘʟᴜɢɪɴ ɪꜰ ʏᴏᴜ ʀᴇᴀʟʟʏ      §8║");
-        console.sendMessage("§8  ║  §fʟɪᴋᴇ ᴛʜɪѕ ᴘʟᴜɢɪɴ, ꜰᴏʀ ᴛʜᴇ ᴅᴏɴᴀᴛɪᴏɴ ʟɪɴᴋ ᴊᴜѕᴛ ᴅᴍ ᴍᴇ ᴏɴ ᴅɪѕᴄᴏʀᴅ,        §8║");
-        console.sendMessage("§8  ║  §fᴀɴᴅ ꜰᴏʀ ᴛʜᴏѕᴇ ᴡʜᴏ ʜᴀᴠᴇ ᴅᴏɴᴀᴛᴇᴅ ᴛᴏ ᴍᴇ, ᴍᴀʏ ɢᴏᴅ ʙʟᴇѕѕ ʏᴏᴜ ᴀɴᴅ ᴍᴀʏ       §8║");
-        console.sendMessage("§8  ║  §fʏᴏᴜ ᴀʟᴡᴀʏѕ ʙᴇ ʜᴇᴀʟᴛʜʏ ᴀɴᴅ ɪ ᴀᴍ ᴠᴇʀʏ ɢʀᴀᴛᴇꜰᴜʟ ꜰᴏʀ ᴛʜᴇ ᴅᴏɴᴀᴛɪᴏɴѕ        §8║");
-        console.sendMessage("§8  ║  §fᴛʜᴀᴛ ʜᴀᴠᴇ ʙᴇᴇɴ ɢɪᴠᴇɴ ᴛᴏ ᴍᴇ §e:)                                       §8║");
-        console.sendMessage("§8  ║                                                                         ║");
-        console.sendMessage("§8  ╚═══════════════════════════════════════════════════════════════════════════╝");
+        console.sendMessage("§b§lSmpPlugin §7v" + getDescription().getVersion()
+                + " §8| §7server name: §f" + com.bx.smpPlugin.core.Branding.name());
+        console.sendMessage("§7Starting up...");
         console.sendMessage("");
     }
 
@@ -676,9 +640,6 @@ public final class SmpPlugin extends JavaPlugin {
             registerListener("AntiCheatListener", () -> new AntiCheatListener(antiCheatManager));
             registerListener("AntiCheatPlayerListener", () -> new AntiCheatPlayerListener(this, antiCheatManager));
             antiCheatManager.start();
-        }
-        if (coinFlipModule != null) {
-            registerListener("CoinFlipListener", () -> new com.bx.smpPlugin.coinflip.bukkit.CoinFlipListener(coinFlipModule));
         }
     }
 
@@ -979,12 +940,6 @@ public final class SmpPlugin extends JavaPlugin {
         if (antiCheatManager != null) {
             setExecutor("anticheat", new AntiCheatCommand(this, antiCheatManager), FeatureManager.Feature.ANTICHEAT);
         }
-        if (coinFlipModule != null) {
-            setExecutor("coinflip", new com.bx.smpPlugin.coinflip.bukkit.CoinFlipCommand(coinFlipModule), FeatureManager.Feature.COINFLIP);
-            com.bx.smpPlugin.coinflip.bukkit.CoinFlipAdminCommand coinFlipAdmin = new com.bx.smpPlugin.coinflip.bukkit.CoinFlipAdminCommand(coinFlipModule);
-            setExecutor("coinflipadmin", coinFlipAdmin);
-            setTabCompleter("coinflipadmin", coinFlipAdmin);
-        }
     }
 
     private void setExecutor(String commandName, CommandExecutor executor, FeatureManager.Feature... requiredFeatures) {
@@ -995,7 +950,8 @@ public final class SmpPlugin extends JavaPlugin {
         }
 
         if (requiredFeatures == null || requiredFeatures.length == 0) {
-            command.setExecutor(executor);
+            // Still wrapped, so /smp diagnostics can time it; with no features it never blocks.
+            command.setExecutor(new FeatureCommandExecutor(this, executor));
             return;
         }
 
@@ -1196,6 +1152,7 @@ public final class SmpPlugin extends JavaPlugin {
             teleportManager.restoreAllRtpChunkThrottles();
         }
         configManager.reload();
+        com.bx.smpPlugin.core.Branding.load(configManager.getConfig());
         languageManager.reload();
         crashProtectionManager.reload();
         currencyManager.reload();
@@ -1247,14 +1204,14 @@ public final class SmpPlugin extends JavaPlugin {
             antiCheatManager.reload().ifPresent(problem ->
                     getLogger().warning("anticheat.yml was not reloaded: " + problem));
         }
-        if (coinFlipModule != null) {
-            coinFlipModule.reload().ifPresent(problem ->
-                    getLogger().warning("CoinFlip configuration was not reloaded: " + problem));
-        }
         if (v3Module != null) {
             v3Module.reload();
         }
+        if (v4Module != null) {
+            v4Module.reload();
+        }
         if (scoreboardManager != null) {
+            scoreboardManager.recheckOtherPlugins();
             scoreboardManager.markDirty();
         }
         if (playerDataManager != null) {
@@ -1279,6 +1236,7 @@ public final class SmpPlugin extends JavaPlugin {
         }
         leaderboardManager.invalidateAll();
         scoreboardManager.updateAll();
+        tablistManager.recheckOtherPlugins();
         tablistManager.updateAll();
         if (lunarRichPresenceManager != null) {
             lunarRichPresenceManager.reload();
@@ -1405,6 +1363,10 @@ public final class SmpPlugin extends JavaPlugin {
     }
 
     /** The 3.0 features; null until the plugin has finished enabling. */
+    public com.bx.smpPlugin.core.V4Module getV4Module() {
+        return v4Module;
+    }
+
     public com.bx.smpPlugin.core.V3Module getV3Module() {
         return v3Module;
     }
@@ -1639,9 +1601,6 @@ public final class SmpPlugin extends JavaPlugin {
     }
 
     /** Null when the anti-cheat failed to start. */
-    public com.bx.smpPlugin.coinflip.bukkit.CoinFlipModule getCoinFlipModule() {
-        return coinFlipModule;
-    }
 
     public AntiCheatManager getAntiCheatManager() {
         return antiCheatManager;

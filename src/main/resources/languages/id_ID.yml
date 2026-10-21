@@ -783,9 +783,9 @@ MENUS:
         - '&7Notify when players follow you'
         - '&fCurrently: {status}'
       DISPLAY_DONUT_PLUS:
-        DISPLAY-NAME: '&#6BF18DDisplay CustomSmp+'
+        DISPLAY-NAME: '&#6BF18DDisplay {server_name}+'
         LORE:
-        - '&7Display your premium CustomSmp+ status'
+        - '&7Display your premium {server_name}+ status'
         - '&fCurrently: {status}'
       CHAINMAIL_ON_RESPAWN:
         DISPLAY-NAME: '&#6BF18DChainmail on Respawn'
@@ -2464,7 +2464,7 @@ MESSAGES:
     NO_PERMISSION: '&cyou do not have permission.'
     USAGE: "&cUSAGE: /friends [LIST|FOLLOW|REMOVE|SEARCH|FOLLOWING|FOLLOWERS|FRIENDS]"
     PLAYER_NOT_FOUND: "&cPLAYER NOT FOUND."
-    RELOAD_SUCCESS: "&a[DONUTFRIENDS] CONFIG RELOADED SUCCESSFULLY."
+    RELOAD_SUCCESS: "&a[Friends] Config reloaded."
     PLAYER_ONLY: "PLAYER ONLINE COMMAND."
     USAGE_FOLLOW: "&cUSAGE: /friends FOLLOW <player>"
     USAGE_REMOVE: "&cUSAGE: /friends REMOVE <player>"

@@ -112,6 +112,11 @@ public final class PlayerStore {
         return cache.containsKey(uuid);
     }
 
+    /** Players whose values are in memory, for /smp diagnostics. */
+    public int loadedCount() {
+        return cache.size();
+    }
+
     public void unload(UUID uuid) {
         cache.remove(uuid);
     }

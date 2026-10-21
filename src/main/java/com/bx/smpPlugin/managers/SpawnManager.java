@@ -127,6 +127,26 @@ public class SpawnManager {
         return true;
     }
 
+    /**
+     * Removes the primary spawn point set with /setspawn. Spawn areas from the spawn menu are kept;
+     * when there are some, /spawn and respawning still use them.
+     */
+    public boolean deletePrimarySpawnLocation() {
+        FileConfiguration config = plugin.getConfigManager().getConfig();
+        config.set("LOCATIONS.SPAWN-LOCATION", "");
+        try {
+            if (!plugin.getConfigManager().saveConfig()) {
+                return false;
+            }
+        } catch (RuntimeException exception) {
+            plugin.getLogger().warning("[SpawnManager] failed to delete the primary spawn location: " + exception.getMessage());
+            return false;
+        }
+        spawnLocation = null;
+        load();
+        return true;
+    }
+
     public List<TeleportArea> getSpawnAreas() {
         return getValidAreas(AreaType.SPAWN);
     }

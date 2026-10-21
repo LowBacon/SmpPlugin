@@ -8,12 +8,12 @@ An all-in-one **Minecraft SMP core plugin**. One jar replaces the usual stack of
 
 | | |
 |---|---|
-| **Plugin version** | `3.1.0`; `/smpplugin version` shows the installed build |
+| **Plugin version** | `3.2.0`; `/smpplugin version` shows the installed build |
 | **Minecraft** | `1.21.11`, `26.1`, `26.1.1`, `26.1.2`, `26.2` and `26.3` on Paper, Purpur, Spigot and CraftBukkit |
 | **Folia** | Not supported |
 | **Java** | 21 on 1.21.11, 25 on 26.x (the jars are Java 21 bytecode) |
 | **API** | Compiled against Paper API `1.21.11` (Spigot build: Spigot API `1.21.11`), checked against 26.3; `api-version: 1.21`, `folia-supported: false` |
-| **Build** | `mvn clean package` → `target/SmpPlugin-3.1.0-paper.jar` (Paper/Purpur); `-Pspigot` → `…-spigot.jar` (Spigot/CraftBukkit) |
+| **Build** | `mvn clean package` → `target/SmpPlugin-3.2.0-paper.jar` (Paper/Purpur); `-Pspigot` → `…-spigot.jar` (Spigot/CraftBukkit) |
 | **Size** | ~590 classes, ~152,000 lines of Java, 145 commands, 110+ GUI menus, 36 config files |
 | **Update checker** | Checks GitHub (`LowBacon/SmpPlugin`, `version.txt` on `main`) for a newer version on startup |
 
@@ -281,18 +281,14 @@ The plugin registers itself as a **Vault economy provider**, so other plugins ca
 ### Bounties
 - `/bounty <add|set|info|list> [player] [amount]`: put money on a player's head, with confirm menus
 
-### CoinFlip Nexus (new in 2.0.0-alpha.3)
-- `/coinflip` (`/cf`): 1v1 coin flips for in-game currency. Pick a stake and heads, tails or random; another
-  player stakes the same on the other side; the server flips a fair 50/50 coin; the winner gets the pot minus
-  the fee shown before confirming (0% by default)
-- Public matches with a browser (sort, filter, search, pages), private challenges with clickable accept/decline,
-  rematches, practice mode with no currency
-- Animated reveal with Fast/Subtle/Classic/Cinematic/Reduced/Off presets; closing it never changes the result
-- History, statistics (gross and net), 11 leaderboards, 17 cosmetic achievements, personal settings and a
-  take-a-break option
-- Journaled money flow: intent, balance change and commit together, unique keys against double payouts, offline
-  claims, crash recovery, staff tools (`/coinflipadmin`)
-- Details: [docs/coinflip.md](docs/coinflip.md)
+### CoinFlip (rebuilt in 3.2)
+- `/cf` (`/coinflip`): start a coin flip with a bet, or click someone's game to bet the same; the
+  flip starts at once. Both heads spin past a marker and the one that stops in the middle wins the
+  pot. Equal bets, so an exact 50/50 drawn by the server before the spin.
+- A small three-row screen: open games as heads on top (your own first; click yours to cancel),
+  five quick bets, "another amount", pages. `/cf <amount>`, `/cf join <player>`, `/cf cancel`.
+- No maximum bet by default (`COINFLIP.MAX-BET: 0` in `extras.yml`), optional fee, games expire
+  after `EXPIRE-MINUTES` and are refunded. Bets are held in escrow until paid, so a crash refunds them.
 
 ---
 
@@ -706,7 +702,6 @@ Set in `database.yml`:
 | `ender-chest.yml` | Custom Ender Chest |
 | `server-wipe.yml` | Season reset |
 | `anticheat.yml` | Anti-cheat checks, thresholds, enforcement and ban queue |
-| `coinflip.yml`, `coinflip-messages.yml` | CoinFlip limits, fee, animation, leaderboards and all its messages |
 
 ---
 
@@ -775,21 +770,8 @@ until a Folia 26.3 build exists and the modules are verified there.
 - Limits, cooldown and the big-win broadcast are in `extras.yml` `DICE`. `/dice roll [sides]` is a
   free roll.
 
-### 🎰 /roulette (head jackpot)
-- Everyone's bet goes into one pot. When `MIN-PLAYERS` are in, a `COUNTDOWN-SECONDS` countdown
-  starts; bets lock `LOCK-SECONDS` before the end.
-- The server draws the winner (chance = bet ÷ pot), then a reel of the players' heads spins,
-  slows down and stops on that head in the middle. Everyone watching shares one screen.
-- The winner gets the pot minus `FEE-PERCENT`. A round nobody else joins is refunded after
-  `WAIT-TIMEOUT-SECONDS`; a server stop before the draw refunds everyone, during the spin pays
-  the winner. Staff can cancel a waiting round with `/roulette cancel`.
-
 ### 🪙 CoinFlip
-- `/cf` is one screen: open flips as heads (click to arm, click again to join or to cancel your
-  own), five quick stakes, a heads / tails / random picker and "another amount".
-- `/cf <amount> [heads|tails|random]` creates a flip from chat. Large stakes still get the review screen.
-- The flip animation tosses the coin into the air, flashes the colour of the face showing and
-  lands on the stored result; the winner's head lights up and the loser's becomes a skull.
+- Rebuilt in 3.2; see CoinFlip above.
 
 ### 📖 /guide
 - Pages from `guide.yml`, with clickable commands, Previous / Next and `/guide topics`.
@@ -811,6 +793,10 @@ until a Folia 26.3 build exists and the modules are verified there.
 - `/border lobby` also makes the lobby area the same square.
 - `/spawn <player>` for staff (`smpplugin.staff.spawn.others`), and clearer messages when the spawn is
   not set or its world is not loaded.
+- `/lobby delete` (`/dellobby`) and `/setspawn delete` (`/delspawn`) remove the lobby or the spawn after a
+  confirmation and take down their border.
+- Only players inside the lobby are held in it; teleport commands (`/lobby survival`, `/spawn`, `/rtp`,
+  homes, warps) always take a player out, and players elsewhere in the same world are never affected.
 
 ### 🧹 Removed
 - `/hug`, `/8ball`, `/hat`, `/trash` and `/notes`.

@@ -62,8 +62,11 @@ public class SmpPluginCommand implements CommandExecutor, TabCompleter {
 
     private static Map<String, String> rootCompletions() {
         Map<String, String> completions = new java.util.LinkedHashMap<>();
+        completions.put("help", STATUS_PERMISSION);
         completions.put("version", STATUS_PERMISSION);
         completions.put("status", STATUS_PERMISSION);
+        completions.put("diagnostics", STATUS_PERMISSION);
+        completions.put("modules", FEATURES_PERMISSION);
         completions.put("reload", RELOAD_PERMISSION);
         completions.put("statswipe", STATS_WIPE_PERMISSION);
         completions.put("optimize", OPTIMIZE_PERMISSION);
@@ -94,19 +97,136 @@ public class SmpPluginCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(ColorUtils.toComponent(capability.status().color() + "[" + capability.status() + "] &f"
                     + capability.name() + "&7: " + capability.detail()));
         }
+        if (plugin.getV4Module() != null) {
+            plugin.getV4Module().partStatus().forEach((part, status) -> sender.sendMessage(ColorUtils.toComponent(
+                    ("running".equals(status) ? "&a[RUNNING] &f" : status.startsWith("off:") ? "&c[FAILED] &f" : "&e[OFF] &f")
+                            + part + ("running".equals(status) ? "" : "&7: " + status))));
+        }
+    }
+
+    /** /smp diagnostics: load, database health, caches, slow commands and failed parts. */
+    private void handleDiagnostics(CommandSender sender) {
+        if (!PermissionUtils.has(sender, STATUS_PERMISSION)) {
+            sender.sendMessage(ColorUtils.toComponent("&cYou do not have permission to view diagnostics."));
+            return;
+        }
+        for (String line : com.bx.smpPlugin.core.DiagnosticsReport.build(plugin)) {
+            sender.sendMessage(ColorUtils.toComponent(line));
+        }
+    }
+
+    private void sendHelp(CommandSender sender, String label) {
+        sender.sendMessage(ColorUtils.toComponent("&8&m----------&r &bSmpPlugin &8&m----------"));
+        String[][] rows = {
+                {"status", "platform, integrations and 4.0 parts", STATUS_PERMISSION},
+                {"diagnostics", "load, database health, caches and slow commands", STATUS_PERMISSION},
+                {"version", "installed version and updates", STATUS_PERMISSION},
+                {"modules", "turn modules on and off (menu for players)", FEATURES_PERMISSION},
+                {"reload [module]", "read the config files again; " + String.join(", ", RELOAD_MODULES), RELOAD_PERMISSION},
+                {"setup", "first-time setup helper", SETUP_PERMISSION},
+                {"optimize", "adaptive task skipping while the server lags", OPTIMIZE_PERMISSION},
+                {"maintenance", "maintenance mode", MAINTENANCE_PERMISSION},
+                {"statswipe", "wipe player statistics", STATS_WIPE_PERMISSION}};
+        for (String[] row : rows) {
+            if (PermissionUtils.has(sender, row[2])) {
+                sender.sendMessage(ColorUtils.toComponent("&b/" + label + " " + row[0] + " &7- " + row[1]));
+            }
+        }
+    }
+
+    /** Modules /smp reload &lt;module&gt; can reload on their own. */
+    private static final List<String> RELOAD_MODULES = List.of("branding", "scoreboard", "tablist", "economy",
+            "ranked", "events", "rules", "shop", "auction", "orders", "crates", "duels", "ffa", "spawners");
+
+    private void handleModuleReload(CommandSender sender, String module) {
+        if (!PermissionUtils.has(sender, RELOAD_PERMISSION)) {
+            sender.sendMessage(ColorUtils.toComponent("&cYou do not have permission to reload plugin settings."));
+            return;
+        }
+        String key = module.toLowerCase(Locale.ROOT);
+        if (!RELOAD_MODULES.contains(key)) {
+            sender.sendMessage(ColorUtils.toComponent("&cUnknown module. Reload one of: &f" + String.join(", ", RELOAD_MODULES)
+                    + "&c, or use /smp reload for everything."));
+            return;
+        }
+        List<ConfigValidator.Problem> problems = ConfigValidator.validateDirectory(plugin.getDataFolder());
+        if (!problems.isEmpty()) {
+            sender.sendMessage(ColorUtils.toComponent("&cReload cancelled: " + problems.size()
+                    + " file(s) have YAML errors. The current configuration is still active."));
+            problems.forEach(problem -> sender.sendMessage(ColorUtils.toComponent("&7- &f" + problem.describe())));
+            return;
+        }
+        plugin.getConfigManager().reload();
+        com.bx.smpPlugin.core.V4Module v4 = plugin.getV4Module();
+        switch (key) {
+            case "branding" -> {
+                com.bx.smpPlugin.core.Branding.load(plugin.getConfigManager().getConfig());
+                refreshDisplays();
+            }
+            case "scoreboard", "tablist" -> refreshDisplays();
+            case "economy" -> plugin.getCurrencyManager().reload();
+            case "ranked" -> {
+                if (v4 != null && v4.ranked() != null) {
+                    v4.ranked().reload();
+                }
+            }
+            case "events" -> {
+                if (v4 != null && v4.events() != null && v4.isRunning(FeatureManager.Feature.SEASONAL_EVENTS)) {
+                    v4.events().reload();
+                }
+            }
+            case "rules" -> {
+                if (v4 != null && v4.survivalRules() != null) {
+                    v4.survivalRules().reload();
+                }
+            }
+            case "shop" -> plugin.getShopManager().reload();
+            case "auction" -> plugin.getAuctionHouseManager().reload();
+            case "orders" -> plugin.getOrdersManager().reload();
+            case "crates" -> {
+                plugin.getCrateManager().reload();
+                plugin.getCrateVisualManager().reload();
+            }
+            case "duels" -> plugin.getDuelManager().reload();
+            case "ffa" -> plugin.getFfaManager().reload();
+            case "spawners" -> plugin.getSpawnerManager().reload();
+            default -> {
+            }
+        }
+        sender.sendMessage(ColorUtils.toComponent("&aReloaded &f" + key + "&a."));
+    }
+
+    private void refreshDisplays() {
+        if (plugin.getScoreboardManager() != null) {
+            plugin.getScoreboardManager().markDirty();
+            plugin.getScoreboardManager().updateAll();
+        }
+        if (plugin.getTablistManager() != null) {
+            plugin.getTablistManager().updateAll();
+            plugin.getTablistManager().updateNamesAll();
+        }
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
-            sendUsage(sender, label);
+            sendHelp(sender, label);
             return true;
         }
 
         switch (args[0].toLowerCase(Locale.ROOT)) {
-            case "status", "diagnostics" -> handleStatus(sender);
+            case "help", "?" -> sendHelp(sender, label);
+            case "status" -> handleStatus(sender);
+            case "diagnostics", "diag", "debug" -> handleDiagnostics(sender);
             case "version", "ver", "about" -> handleVersion(sender);
-            case "reload" -> handleReload(sender);
+            case "reload" -> {
+                if (args.length > 1) {
+                    handleModuleReload(sender, args[1]);
+                } else {
+                    handleReload(sender);
+                }
+            }
+            case "modules", "module" -> handleFeatures(sender, label, args);
             case "statswipe" -> handleStatsWipe(sender, label, args);
             case "optimize", "optimization" -> handleOptimize(sender, label, args);
             case "setup" -> handleSetup(sender, label, args);
@@ -136,9 +256,9 @@ public class SmpPluginCommand implements CommandExecutor, TabCompleter {
 
         try {
             plugin.reloadAllPluginConfigurations();
-            sender.sendMessage(ColorUtils.toComponent("&aᴄᴜѕᴛᴏᴍѕᴍᴘ ᴄᴏɴꜰɪɢᴜʀᴀᴛɪᴏɴ ʀᴇʟᴏᴀᴅᴇᴅ."));
+            sender.sendMessage(ColorUtils.toComponent("&aSmpPlugin configuration reloaded."));
         } catch (Exception exception) {
-            plugin.getLogger().log(Level.SEVERE, "failed to reload customsmp configuration.", exception);
+            plugin.getLogger().log(Level.SEVERE, "Failed to reload the SmpPlugin configuration.", exception);
             sender.sendMessage(ColorUtils.toComponent("&cꜰᴀɪʟᴇᴅ ᴛᴏ ʀᴇʟᴏᴀᴅ ᴄᴏɴꜰɪɢᴜʀᴀᴛɪᴏɴ. ᴄʜᴇᴄᴋ ᴄᴏɴѕᴏʟᴇ ꜰᴏʀ ᴅᴇᴛᴀɪʟѕ."));
         }
     }
@@ -529,7 +649,7 @@ public class SmpPluginCommand implements CommandExecutor, TabCompleter {
                     "halloween", "trickortreat", "daily", "challenges", "poll", "giveaway", "chatgame", "mail", "guide"
             );
             case "fun" -> List.of(
-                    "slap", "highfive", "poke", "wave", "cheer", "dice", "roulette", "coinflip", "rps", "rate",
+                    "slap", "highfive", "poke", "wave", "cheer", "dice", "coinflip", "rps", "rate",
                     "firework", "sit"
             );
             case "utility" -> List.of(
@@ -718,14 +838,17 @@ public class SmpPluginCommand implements CommandExecutor, TabCompleter {
     }
 
     private void sendUsage(CommandSender sender, String label) {
-        sender.sendMessage(ColorUtils.toComponent("&cᴜѕᴀɢᴇ: /" + label + " <version|status|reload|statswipe|optimize|setup|features|maintenance>"));
+        sender.sendMessage(ColorUtils.toComponent("&cUsage: /" + label
+                + " <help|status|diagnostics|version|modules|reload [module]|setup|optimize|maintenance|statswipe>"));
     }
 
     /** /smpplugin version: what is installed, what it was built for, and whether a newer one is out. */
     private void handleVersion(CommandSender sender) {
         String version = plugin.getDescription().getVersion();
         com.bx.smpPlugin.platform.BuildInfo build = com.bx.smpPlugin.platform.BuildInfo.load(plugin.getClass().getClassLoader());
-        sender.sendMessage(ColorUtils.toComponent("&8&m----------&r &9&lCustomSmp &8&m----------"));
+        sender.sendMessage(ColorUtils.toComponent("&8&m----------&r &9&lSmpPlugin &8&m----------"));
+        sender.sendMessage(ColorUtils.toComponent("&7Server name: &f" + com.bx.smpPlugin.core.Branding.name()
+                + " &8(BRANDING.SERVER-NAME in config.yml)"));
         sender.sendMessage(ColorUtils.toComponent("&7Version: &f" + version
                 + (version.contains("-") ? " &e(test build)" : " &a(release)")));
         sender.sendMessage(ColorUtils.toComponent("&7Jar: &f" + build.flavor() + " &8(" + build.serverApi() + ")"));
@@ -786,8 +909,12 @@ public class SmpPluginCommand implements CommandExecutor, TabCompleter {
             return args.length == 2 ? partialMatches(args[1], List.of("status", "reload", "reset")) : List.of();
         }
 
-        if (root.equals("features")) {
+        if (root.equals("features") || root.equals("modules")) {
             return completeFeatures(args);
+        }
+
+        if (root.equals("reload")) {
+            return args.length == 2 ? partialMatches(args[1], RELOAD_MODULES) : List.of();
         }
 
         if (root.equals("maintenance")) {

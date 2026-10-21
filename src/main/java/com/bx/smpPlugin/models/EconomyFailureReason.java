@@ -6,5 +6,7 @@ public enum EconomyFailureReason {
     PLAYER_NOT_FOUND,
     NO_PLAYER_DATA,
     INSUFFICIENT_FUNDS,
-    SAME_ACCOUNT
+    SAME_ACCOUNT,
+    /** The change would take the balance past ECONOMY.MAX-BALANCE (or the 90 trillion precision limit). */
+    BALANCE_LIMIT
 }

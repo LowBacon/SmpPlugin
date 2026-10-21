@@ -26,7 +26,7 @@ public final class CalendarEditorMenu extends BaseMenu {
     private final Map<Integer, Integer> doorBySlot = new HashMap<>();
 
     public CalendarEditorMenu(SmpPlugin plugin, HalloweenManager halloween) {
-        super(plugin, "&8✎ &6Edit Halloween prizes", 54);
+        super(plugin, "&8✎ " + halloween.theme().accent() + "Edit " + halloween.theme().calendarName() + " prizes", 54);
         this.halloween = halloween;
     }
 
@@ -51,7 +51,7 @@ public final class CalendarEditorMenu extends BaseMenu {
             doorBySlot.put(slot, door);
             Reward prize = halloween.prize(door);
             List<String> lore = new ArrayList<>();
-            lore.add(halloween.hasOverride(door) ? "&aSet in game" : "&7From halloween.yml");
+            lore.add(halloween.hasOverride(door) ? "&aSet in game" : "&7From " + halloween.theme().configFile());
             lore.add("");
             List<String> lines = prize.describe(plugin);
             if (lines.isEmpty()) {
@@ -79,12 +79,12 @@ public final class CalendarEditorMenu extends BaseMenu {
                 "&8• &7press &aSave",
                 "",
                 "&7Console commands are set in",
-                "&fhalloween.yml &7(DOORS.<day>.COMMANDS).")));
+                "&f" + halloween.theme().configFile() + " &7(DOORS.<day>.COMMANDS).")));
     }
 
     @Override
     public void handleClick(int slot, Player player, ClickType clickType) {
-        if (!PermissionUtils.has(player, HalloweenCommand.ADMIN_PERMISSION)) {
+        if (!PermissionUtils.has(player, halloween.theme().adminPermission())) {
             player.closeInventory();
             return;
         }

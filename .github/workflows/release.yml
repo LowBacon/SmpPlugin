@@ -1,12 +1,16 @@
-# Builds the Paper and Spigot jars from the official repositories, runs the tests for both, and publishes a
-# GitHub release with the jars and their checksums.
+# Builds the Paper and Spigot jars from the official repositories and runs the tests for both, on every push.
 #
-# Runs when a tag such as v4.0.0 is pushed, or by hand (Actions > Release > Run workflow) with the tag to create.
+# It also publishes a GitHub release, with both jars and their checksums, when:
+#   - a tag such as v4.0.0 is pushed,
+#   - it is run by hand (Actions > Build and release > Run workflow) with the tag to create, or
+#   - a pushed commit message contains [release] (the tag is then v<version from pom.xml>).
 # The tag must match <version> in pom.xml, and .github/release-notes/<tag>.md holds the release text.
-name: Release
+name: Build and release
 
 on:
   push:
+    branches:
+      - '**'
     tags:
       - 'v*'
   workflow_dispatch:
@@ -19,15 +23,53 @@ permissions:
   contents: write
 
 concurrency:
-  group: release-${{ github.event.inputs.tag || github.ref_name }}
+  group: build-${{ github.ref }}
   cancel-in-progress: false
 
-env:
-  TAG: ${{ github.event.inputs.tag || github.ref_name }}
-
 jobs:
+  plan:
+    name: Decide what to publish
+    runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.plan.outputs.release }}
+      tag: ${{ steps.plan.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: plan
+        env:
+          EVENT: ${{ github.event_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+          MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          VERSION=$(sed -n 's:^    <version>\(.*\)</version>$:\1:p' pom.xml | head -n 1)
+          RELEASE=false
+          TAG="v$VERSION"
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            RELEASE=true
+            TAG="$INPUT_TAG"
+          elif [ "$REF_TYPE" = "tag" ]; then
+            RELEASE=true
+            TAG="$REF_NAME"
+          elif printf '%s' "$MESSAGE" | grep -qF '[release]'; then
+            RELEASE=true
+          fi
+          echo "pom.xml version: $VERSION, tag: $TAG, publish: $RELEASE"
+          if [ "$RELEASE" = "true" ]; then
+            if [ "$TAG" != "v$VERSION" ]; then
+              echo "::error::The tag $TAG does not match the pom.xml version $VERSION"
+              exit 1
+            fi
+            test -f ".github/release-notes/$TAG.md" || { echo "::error::.github/release-notes/$TAG.md is missing"; exit 1; }
+          fi
+          echo "release=$RELEASE" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
   build:
     name: Build the ${{ matrix.flavor }} jar
+    needs: plan
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
@@ -42,16 +84,6 @@ jobs:
           java-version: '21'
           cache: maven
 
-      - name: Check that the tag matches pom.xml
-        run: |
-          VERSION=$(mvn -B -q help:evaluate -Dexpression=project.version -DforceStdout)
-          echo "pom.xml version: $VERSION, tag: $TAG"
-          if [ "v$VERSION" != "$TAG" ]; then
-            echo "::error::The tag $TAG does not match the pom.xml version $VERSION"
-            exit 1
-          fi
-          test -f ".github/release-notes/$TAG.md" || { echo "::error::.github/release-notes/$TAG.md is missing"; exit 1; }
-
       - name: Build and test
         run: mvn -B -P${{ matrix.flavor }} clean package
 
@@ -63,7 +95,8 @@ jobs:
 
   release:
     name: Publish the release
-    needs: build
+    needs: [plan, build]
+    if: needs.plan.outputs.release == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -82,10 +115,10 @@ jobs:
 
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ env.TAG }}
+          tag_name: ${{ needs.plan.outputs.tag }}
           target_commitish: ${{ github.sha }}
-          name: SmpPlugin ${{ env.TAG }}
-          body_path: .github/release-notes/${{ env.TAG }}.md
+          name: SmpPlugin ${{ needs.plan.outputs.tag }}
+          body_path: .github/release-notes/${{ needs.plan.outputs.tag }}.md
           files: |
             dist/*.jar
             dist/SHA256SUMS.txt

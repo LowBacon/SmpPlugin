@@ -221,9 +221,11 @@ reset, per-subcommand permissions and tab completion). **Commands run.** full su
 
 - Version renamed from 3.2.0 to 4.0.0 (`pom.xml`, `version.txt`, docs, permission notes).
 - `.github/workflows/release.yml` builds the Paper and Spigot jars from the official repositories on GitHub
-  Actions, runs the tests for both, checks that the tag matches `pom.xml`, and publishes the release with
-  `.github/release-notes/<tag>.md`, both jars and `SHA256SUMS.txt`. Release jars come from there, never from the
-  sandbox build (which compiles against locally built APIs).
+  Actions and runs the tests for both on every push. It publishes a release (`.github/release-notes/<tag>.md`,
+  both jars, `SHA256SUMS.txt`) on a pushed `v*` tag, a manual run, or a pushed commit whose message contains
+  `[release]`; the tag must match `pom.xml`. Release jars come from there, never from the sandbox build (which
+  compiles against locally built APIs). This session can push only its own branch (a tag push got HTTP 403), so
+  4.0.0 was published with a `[release]` commit.
 
 ## Risks and limits that remain
 

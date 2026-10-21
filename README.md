@@ -2,8 +2,10 @@
 
 A complete, feature-rich **Minecraft SMP core plugin** for **Minecraft 1.21.11 – 26.3** on **Paper, Purpur, Spigot and CraftBukkit**.
 
-> **4.0.0** makes every balance change exact and saved at once, with a ledger behind `/transactions`, `/baltop`
-> and `/eco`, and adds seasonal events you can switch live with `/events`: an **Advent Calendar**, a **Halloween hub**
+> **4.1.0** shows each player's rank (for example **Owner**) above their head and removes the balance limit:
+> balances stay exact to the cent all the way to 92 quadrillion.
+> **4.0.0** made every balance change exact and saved at once, with a ledger behind `/transactions`, `/baltop`
+> and `/eco`, and added seasonal events you can switch live with `/events`: an **Advent Calendar**, a **Halloween hub**
 > (candy, quests, a candy shop, milestones, a leaderboard) and a reworked **Trick or Treat**, plus rank perks in
 > `perks.yml` and a reward vault so prizes never fall on the ground. It runs on Minecraft **1.21.11, 26.1, 26.1.1,
 > 26.1.2, 26.2 and 26.3** from one jar per server family. Run `/smpplugin version` to see what is installed. See
@@ -15,13 +17,20 @@ SmpPlugin is designed to provide an entire SMP server experience from a single, 
 
 Instead of running a small army of plugins just to make an SMP function, SmpPlugin brings the majority of the core systems together in one optimized and configurable package.
 
+## 🆕 New in 4.1
+
+| | |
+|---|---|
+| 🏷️ **Ranks above heads** | The name tag above a player shows their rank prefix from LuckPerms or Vault, the same one chat uses, on every scoreboard. `NAMETAGS` in `config.yml` sets the format and the name colour. It steps aside for TAB and NametagEdit, and for other plugins' teams unless you tell it not to. |
+| ♾️ **No balance limit** | `ECONOMY.MAX-BALANCE` is `0` (no limit) by default, and every balance is exact to the cent up to 92,233,720,368,547,758.07 (a new `money_cents` column). A config still on the 4.0 default of 10 trillion is moved to no limit; a limit you set yourself is kept. |
+
 ## 🆕 New in 4.0
 
 | | |
 |---|---|
 | 💵 **Exact, saved money** | Balances are whole cents. Every change is written at once (no more waiting for the autosave) and recorded in a ledger, in the same database transaction. Offline payments can no longer be undone by a stale login copy. |
 | 📒 **`/transactions`, `/baltop`, `/eco`** | Your own balance history; the richest players; staff `give`, `take`, `set`, `reset`, `history <player>` and `stats` (money supply and flows), each with its own permission and the staff member's name in the ledger. |
-| 💸 **Pay rules** | `ECONOMY.PAY` in `config.yml`: minimum and maximum, a tax and a cooldown. A balance limit (`ECONOMY.MAX-BALANCE`) keeps every cent exact. |
+| 💸 **Pay rules** | `ECONOMY.PAY` in `config.yml`: minimum and maximum, a tax and a cooldown. An optional balance limit (`ECONOMY.MAX-BALANCE`; none by default since 4.1). |
 | 🎰 **Bets held safely** | Dice and roulette bets are held in the database in the same transaction that takes the money, and given back on the next start after a crash. |
 | 🗓️ **`/events`** | One menu for the seasonal events: running, starts in…, over, or switched off. Staff switch an event on, off or back to its dates; the switch survives restarts and never changes the dates or anyone's progress. |
 | ❄️ **Advent Calendar** | `/advent`: a door a day from 1 to 24 December, streak bonuses, a prize for opening every door, and gifts chosen in game. |
@@ -398,11 +407,11 @@ mvn clean package
 This builds the jar for **Paper and Purpur**:
 
 ```text
-target/SmpPlugin-4.0.0-paper.jar
+target/SmpPlugin-4.1.0-paper.jar
 ```
 
 For **Spigot and CraftBukkit**, build with `mvn clean package -Pspigot`, which produces
-`target/SmpPlugin-4.0.0-spigot.jar`. The two APIs are not binary compatible; use the matching jar.
+`target/SmpPlugin-4.1.0-spigot.jar`. The two APIs are not binary compatible; use the matching jar.
 
 ## 📦 Installation
 

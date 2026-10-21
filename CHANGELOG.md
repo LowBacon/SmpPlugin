@@ -1,5 +1,39 @@
 # Changelog
 
+## 4.1.0 — 21 October 2026
+
+**Ranks above players' heads, and no limit on how much money a player can have.** Runs on the same versions as
+4.0 (Minecraft 1.21.11 to 26.3).
+
+### Added
+- **Rank prefixes in name tags.** The name above a player's head shows their rank prefix (for example `Owner`) from
+  LuckPerms or Vault, the same prefix chat uses, on the main scoreboard and on every sidebar the plugin gives a
+  player. `NAMETAGS` in `config.yml`: on or off, the prefix and suffix (PlaceholderAPI works), the name colour
+  (`AUTO` takes the prefix colour), whether to take over a team another plugin put the player in
+  (`OVERRIDE-OTHER-TEAMS`, off by default) and how often ranks are checked (`UPDATE-TICKS`). It turns itself off
+  when TAB or NametagEdit runs and on Folia, and hidden players get no tag.
+
+### Changed
+- **No balance limit by default.** `ECONOMY.MAX-BALANCE` is now `0`, meaning no limit. A balance can hold up to
+  92,233,720,368,547,758.07 to the cent; a deposit past that is refused. 4.0 stopped at 10 trillion by default and
+  could never go past 35 trillion. A `config.yml` still on the 4.0 default of 10 trillion is moved to `0` at start
+  (after a backup in `config-backups`); a limit you set yourself is kept.
+- Balances are stored as whole cents in the new `players.money_cents` column. The `money` column is still written;
+  when something changes it alone (a wipe, an older version, your own SQL), that value is the one read.
+- Above 35 trillion, an amount that passes through a double (Vault, placeholders, a typed amount with cents) can be
+  a cent off; the balance itself stays exact, and a balance read as a double is never more than the player has.
+
+### Fixed
+- A config sync that changed one file in two steps overwrote the first backup with the half-updated copy; the
+  backup now keeps the file as it was before the sync.
+- A dice or roulette stake limit configured above 92 quadrillion wrapped around to a wrong (possibly negative)
+  value.
+
+### Upgrading
+- The `money_cents` column is added on the first start; nothing is deleted or reset. Rows get their exact value the
+  next time they are saved, and until then the `money` column is read as before.
+- A server with 4.0.0 balances is unaffected: no balance changes when the limit goes away.
+
 ## 4.0.0 — 21 October 2026
 
 **SmpPlugin 4.0: money you can trust, and seasonal events you can switch live.** Every balance change is exact,

@@ -152,8 +152,8 @@ Everything below is optional. If one is missing, only the features that need it 
 ## 📥 Installation
 
 1. Download the jar that matches your server:
-   - **Paper / Purpur:** `SmpPlugin-4.0.0-paper.jar`
-   - **Spigot / CraftBukkit:** `SmpPlugin-4.0.0-spigot.jar`
+   - **Paper / Purpur:** `SmpPlugin-4.1.0-paper.jar`
+   - **Spigot / CraftBukkit:** `SmpPlugin-4.1.0-spigot.jar`
 2. Drop it in `plugins/` and start the server once.
 3. Run `/smpplugin setup` to see what still needs setting.
 4. Give your staff ranks a role, for example `smpplugin.role.moderator`.

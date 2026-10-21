@@ -8,12 +8,12 @@ An all-in-one **Minecraft SMP core plugin**. One jar replaces the usual stack of
 
 | | |
 |---|---|
-| **Plugin version** | `4.0.0`; `/smpplugin version` shows the installed build |
+| **Plugin version** | `4.1.0`; `/smpplugin version` shows the installed build |
 | **Minecraft** | `1.21.11`, `26.1`, `26.1.1`, `26.1.2`, `26.2` and `26.3` on Paper, Purpur, Spigot and CraftBukkit |
 | **Folia** | Not supported |
 | **Java** | 21 on 1.21.11, 25 on 26.x (the jars are Java 21 bytecode) |
 | **API** | Compiled against Paper API `1.21.11` (Spigot build: Spigot API `1.21.11`), checked against 26.3; `api-version: 1.21`, `folia-supported: false` |
-| **Build** | `mvn clean package` → `target/SmpPlugin-4.0.0-paper.jar` (Paper/Purpur); `-Pspigot` → `…-spigot.jar` (Spigot/CraftBukkit) |
+| **Build** | `mvn clean package` → `target/SmpPlugin-4.1.0-paper.jar` (Paper/Purpur); `-Pspigot` → `…-spigot.jar` (Spigot/CraftBukkit) |
 | **Size** | ~700 Java files, ~177,000 lines of Java, 220 commands, 100+ GUI menus, 43 config files and 8 language files |
 | **Update checker** | Checks GitHub (`LowBacon/SmpPlugin`, `version.txt` on `main`) for a newer version on startup |
 
@@ -240,7 +240,9 @@ The plugin registers itself as a **Vault economy provider**, so other plugins ca
 - `/baltop` and `/transactions [page]` (your own balance history)
 - Exact money: whole cents, written at once on every change, each change recorded in a ledger with who did it
   and why (see [docs/economy.md](docs/economy.md))
-- Pay rules in `config.yml` `ECONOMY.PAY`: minimum, maximum, tax and cooldown; a balance limit in `ECONOMY.MAX-BALANCE`
+- Pay rules in `config.yml` `ECONOMY.PAY`: minimum, maximum, tax and cooldown
+- No balance limit by default; balances are exact to the cent up to 92,233,720,368,547,758.07. `ECONOMY.MAX-BALANCE`
+  sets a limit if you want one
 - Tracks **money made** and **money spent** per player
 - Configurable currency name, symbol and colours
 
@@ -552,6 +554,12 @@ Chat · Ignore · Messaging · Bounty · Cuboids · AFK · Shards · Warps · Te
 - Shows money, shards, kills, deaths, key-all countdown, playtime, team, shard booster and shard cuboid
 - Scoreboard numbers are hidden
 
+### Name tags
+- The rank prefix (from LuckPerms or Vault, the same one chat uses) above each player's head, on every scoreboard
+- `NAMETAGS` in `config.yml`: prefix and suffix format (PlaceholderAPI works), name colour (`AUTO` takes the prefix
+  colour), how often ranks are checked, and whether to take over another plugin's team
+- Steps aside on its own when TAB or NametagEdit runs, on Folia, and for hidden players
+
 ### Tablist
 - Custom header and footer, LuckPerms role prefixes, and live refresh when ranks or skins change (LuckPerms and SkinsRestorer bridges)
 - **Sorted by rank** (LuckPerms group weight), AFK players at the bottom with a grey name
@@ -829,11 +837,18 @@ until a Folia 26.3 build exists and the modules are verified there.
 
 ---
 
+## 🆕 New in 4.1
+
+- **Ranks above heads.** The name tag above a player shows their rank prefix, e.g. `Owner` (see Name tags above).
+- **No balance limit.** `ECONOMY.MAX-BALANCE` is `0` (no limit) by default. Balances are stored as whole cents in
+  `players.money_cents`, exact up to 92,233,720,368,547,758.07; a deposit past that is refused, never wrapped around.
+  A config still on the 4.0 default of 10 trillion is moved to no limit; a limit you chose yourself is kept.
+
 ## 🆕 New in 4.0
 
 ### 💵 Economy you can trust
 - **Whole cents.** Amounts are rounded half-up to the cent once, when they come in; nothing is stored as a
-  fraction of a cent. `ECONOMY.MAX-BALANCE` keeps balances in the range a stored value holds exactly.
+  fraction of a cent. (4.0 also capped balances at 10 trillion by default; 4.1 removed the cap.)
 - **Saved at once.** Every balance change is written in the background the moment it happens, in one database
   transaction with its ledger row. A crash loses at most the writes still queued, never a whole autosave interval.
 - **Versioned.** Each balance has a version; an older copy can never overwrite a newer one (an offline payment

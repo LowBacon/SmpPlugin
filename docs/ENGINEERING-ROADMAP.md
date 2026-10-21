@@ -75,10 +75,10 @@ config, docs. **P4** polish.
 
 **Design.** `EconomyManager` is the only place that changes balances. Amounts are whole cents (`economy/Money`)
 with HALF_UP rounding, overflow checks and a configurable `ECONOMY.MAX-BALANCE` (default 10 trillion, hard cap
-2^45 units, the largest amount a `REAL` column stores with exact cents). Every change writes a row to the new
-`economy_ledger` table in the same transaction as the new balance. `players.money_version` grows with every
-change; a balance is only written when its version is newer, so the database writer, CoinFlip's own connection,
-autosaves and quit saves can arrive in any order without an older balance winning.
+2^45 units, the largest amount a `REAL` column stores with exact cents; both removed in 4.1, see M11). Every change
+writes a row to the new `economy_ledger` table in the same transaction as the new balance. `players.money_version`
+grows with every change; a balance is only written when its version is newer, so the database writer, CoinFlip's
+own connection, autosaves and quit saves can arrive in any order without an older balance winning.
 
 - Online players and players whose quit save is still queued: memory changes under the PlayerData lock, then one
   queued transaction (new balance, version, ledger rows, optional extra SQL) on the database writer, normally
@@ -235,10 +235,47 @@ reset, per-subcommand permissions and tab completion). **Commands run.** full su
   https://github.com/LowBacon/SmpPlugin/releases/tag/v4.0.0 (tag on `d557afd`) with both jars and
   `SHA256SUMS.txt`. The downloaded jars match the checksums, say 4.0.0 and are Java 21 bytecode.
 
+### M10: rank name tags (commit 666b365)
+
+- Asked for after 4.0.0: the `Owner` prefix did not show above the player's head. Minecraft shows text before a
+  name there only through a scoreboard team prefix, read from the scoreboard the viewer has, and players with a
+  sidebar get their own scoreboard from `ScoreboardManager`, so a tag set only on the main scoreboard is invisible
+  to them.
+- `NametagManager` puts each player in their own team (`smpnt` + full UUID) on the main scoreboard and on every
+  scoreboard the plugin owns, with the `RolePrefixResolver` prefix (`NAMETAGS` in `config.yml`). A board created
+  later gets every tag before the player sees it. Teams of other plugins are respected unless
+  `OVERRIDE-OTHER-TEAMS`; it is off with TAB, NametagEdit or Folia, and hidden players get no tag. The main
+  scoreboard is saved with the world, so our teams are removed at shutdown and leftovers at start.
+- **Tests.** `managers/NametagManagerTest` (12) on in-memory scoreboards. Full suite 387, 0 failures, 8 skipped.
+
+### M11: no balance limit (commit 7508066)
+
+- Asked for after 4.0.0: "no limit how much money u can have". The 10 trillion default and the 35 trillion hard
+  cap existed only because a balance was stored as a double (`money REAL`), which carries every cent only below
+  2^45 units.
+- Balances are now `long` cents everywhere: `PlayerData`, `EconomyStore`, CoinFlip's `StoredBalance`, and a new
+  `players.money_cents BIGINT` column written by every writer (player save, economy writes, compare-and-set,
+  CoinFlip, the money reset, both wipes, wipe backups). The limit is `Long.MAX_VALUE` cents
+  (92,233,720,368,547,758.07); `ECONOMY.MAX-BALANCE` defaults to 0 = no limit, and a deposit past the top is refused
+  (`Math.addExact`), never wrapped.
+- `money` is still written. `EconomyStore.resolveCents` trusts `money_cents` only while
+  `Money.toUnits(money_cents)` equals `money`, so a wipe, an older version or hand-written SQL that changes `money`
+  alone is read correctly, and NULL rows (from before 4.1.0) read `money`.
+- `Money.toUnits` never returns a double that reads back as more cents than the balance, so Vault's "has / withdraw
+  everything" keeps working above 35 trillion. `StakeMath.fromEconomy` clamps instead of wrapping.
+- `ConfigManager.migrateMaxBalanceLines` moves the exact 4.0 default (10 trillion, with its comment) to 0 and keeps
+  a limit anyone chose; `backupExistingFile` now keeps the first copy of a sync instead of overwriting it.
+- **Tests.** `MoneyTest`, `EconomyStoreTest`, `EconomyManagerTest`, `DatabaseManagerPlayerSaveTest`, the three wipe
+  tests, `CoinFlipModelTest`, `CoinFlipStorageTest` and the new `managers/V41ConfigTest`. Full suite 399,
+  0 failures, 8 skipped.
+
 ## Risks and limits that remain
 
-- **Nothing in 4.0 has been run on a live Minecraft server.** Everything server-facing (menus, sounds, particles,
-  dialogs, FancyNpcs clicks, item rewards) is compiled against the Paper API and reviewed, not played.
+- **Nothing in 4.0 or 4.1 has been run on a live Minecraft server.** Everything server-facing (menus, sounds,
+  particles, dialogs, FancyNpcs clicks, item rewards, name tags) is compiled against the Paper API and reviewed,
+  not played.
+- Above 35 trillion, amounts that pass through a double (Vault, placeholders, typed amounts) can be a cent off; the
+  stored balance is exact.
 - Item-giving paths and `PendingItems` serialisation need a running server (the Paper registry) and are not
   unit-tested; their logic around the store is.
 - The Spigot profile (`-Pspigot`) cannot be built in the sandbox; GitHub Actions builds and tests it on every push.
@@ -251,14 +288,15 @@ reset, per-subcommand permissions and tab completion). **Commands run.** full su
 
 ## Current task
 
-Release 4.0.0 from branch `claude/hopeful-darwin-btvnxm` (tag `v4.0.0`).
+Release 4.1.0 (rank name tags and no balance limit) from branch `claude/hopeful-darwin-btvnxm` (tag `v4.1.0`).
 
 ## Next tasks (suggested)
 
-1. Run 4.0.0 on a Paper 1.21.11 test server: `/events`, a full Advent test with `/advent test`, the Halloween hub
-   pages, Trick or Treat houses with FancyNpcs, `/claimitems` with a full inventory, `/eco stats`.
-2. Run the economy against a real MySQL server (the upsert statements and deadlock retries).
-3. Bring `main` up to date with the release (it is still 3.1.0, so `version.txt` there does not announce 4.0.0 to
+1. Run 4.1.0 on a Paper 1.21.11 test server: name tags with and without a sidebar, with LuckPerms prefixes and with
+   TAB installed; `/events`, a full Advent test with `/advent test`, the Halloween hub pages, Trick or Treat houses
+   with FancyNpcs, `/claimitems` with a full inventory, `/eco stats`; `/eco give` of a few quadrillion.
+2. Run the economy against a real MySQL server (the upsert statements, `money_cents`, deadlock retries).
+3. Bring `main` up to date with the release (it is still 3.1.0, so `version.txt` there does not announce 4.x to
    servers yet, and a manual run of the workflow needs the workflow on `main`).
 
 ## Resuming

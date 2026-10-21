@@ -1,15 +1,21 @@
 # Economy
 
 How SmpPlugin keeps money, what each command does, and what to check after a crash. Everything here applies to
-4.0.0 and later.
+4.1.0 and later (4.0.0 had a balance limit of 10 trillion by default and could not go past 35 trillion).
 
 ## How money is kept
 
 - **Whole cents.** An amount is rounded half-up to the cent once, when it comes in (`/pay 10.005` pays 10.01).
   Everything after that is whole-cent arithmetic.
-- **A balance limit.** `ECONOMY.MAX-BALANCE` in `config.yml` (default 10,000,000,000,000). A stored balance keeps
-  every cent exactly up to about 35,000,000,000,000, so the limit cannot be set higher than that. A balance that is
-  already above the limit is kept, but cannot grow.
+- **No balance limit unless you set one.** `ECONOMY.MAX-BALANCE` in `config.yml` is `0` (no limit) by default. A
+  balance can then hold anything up to 92,233,720,368,547,758.07, the most there is room for, and a deposit past
+  that is refused instead of wrapping around. Set a number to cap balances; a balance already above a cap is kept,
+  but cannot grow.
+- **Exact at any size.** The balance is stored as whole cents in `players.money_cents`, next to the old `money`
+  column. `money` is still written (for older tools and your own SQL); when something changes `money` alone, such as
+  a wipe or a hand-written `UPDATE`, that new value is the one read. Above 35 trillion a double cannot carry every
+  cent, so an amount that arrives as a double (Vault, placeholders, a typed amount with cents) can be a cent off,
+  but the balance itself stays exact, and a balance read as a double is never more than the player has.
 - **Saved at once.** Every change is written in the background the moment it happens. The rest of a player's row
   (stats, settings) is saved every `AUTOSAVE-SECONDS` (`database.yml`, default 60) and when they leave.
 - **One transaction per change.** A payment changes both balances and writes both ledger rows together, or not at
@@ -55,7 +61,7 @@ Every change is one row in the `economy_ledger` table:
 
 ```yaml
 ECONOMY:
-  MAX-BALANCE: 10000000000000
+  MAX-BALANCE: 0          # highest balance; 0 = no limit
   PAY:
     MIN-AMOUNT: 0.01      # smallest payment
     MAX-AMOUNT: 0         # largest payment; 0 = no limit

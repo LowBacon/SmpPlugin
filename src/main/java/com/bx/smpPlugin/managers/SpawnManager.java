@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -28,7 +29,6 @@ public class SpawnManager {
     private static final String LEGACY_MENU_LOCATION_KEY = "location";
     private static final String SETUP_SHARD_REGION_PATH = "SHARDS.CUBOIDS.REGIONS.spawn";
 
-    /** Only spawn areas are left; AFK destinations moved to the AFK zones (com.bx.smpPlugin.afk). */
     public enum AreaType {
         SPAWN
     }
@@ -101,10 +101,6 @@ public class SpawnManager {
         return setSetupLocation(AreaType.SPAWN, loc, "LOCATIONS.SPAWN-LOCATION");
     }
 
-    /**
-     * Saves one primary spawn point without requiring a spawn-menu area.
-     * This is used by /setspawn for straightforward single-spawn servers.
-     */
     public boolean setPrimarySpawnLocation(Location location) {
         if (location == null || location.getWorld() == null) {
             return false;
@@ -396,20 +392,23 @@ public class SpawnManager {
             return areaDestination;
         }
 
-        return resolveBoundCuboidDestination(AreaType.SPAWN);
+        Location cuboidDestination = resolveBoundCuboidDestination(AreaType.SPAWN);
+        if (cuboidDestination != null) {
+            return cuboidDestination;
+        }
+        // Nothing set with /setspawn: the dedicated spawn world (worlds.yml) is the spawn.
+        return plugin.getWorldSystem() == null ? null : plugin.getWorldSystem().spawnLocation("spawn");
     }
 
     public boolean hasSpawn() {
         return getSpawnLocation() != null;
     }
 
-    /** True when the player stands in a spawn area cuboid (or the legacy spawn cuboid). */
     public boolean isInSpawnArea(Player player) {
         Set<String> names = getSpawnCuboidNames();
         return !names.isEmpty() && plugin.getCuboidManager().isInAnyCuboid(player, names.toArray(String[]::new));
     }
 
-    /** Spawn areas can be edited in game without a reload, so the cached names expire. */
     private Set<String> getSpawnCuboidNames() {
         Set<String> cached = cachedSpawnCuboids;
         if (cached != null && System.currentTimeMillis() - cachedSpawnCuboidsAt < 10_000L) {

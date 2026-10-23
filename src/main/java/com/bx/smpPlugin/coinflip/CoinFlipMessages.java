@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip;
 
 import org.bukkit.configuration.ConfigurationSection;
@@ -6,10 +7,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Every player-facing CoinFlip message. Built-in English defaults; coinflip-messages.yml overrides any key.
- * Messages are neutral: they explain results and limits without urging anyone to play again.
- */
 public final class CoinFlipMessages {
 
     static final Map<String, String> DEFAULTS = defaults();
@@ -32,7 +29,6 @@ public final class CoinFlipMessages {
         return new CoinFlipMessages(Collections.unmodifiableMap(merged));
     }
 
-    /** The message with placeholders replaced, without the prefix. */
     public String raw(String key, Map<String, String> placeholders) {
         String text = messages.getOrDefault(key, key);
         for (Map.Entry<String, String> entry : placeholders.entrySet()) {
@@ -41,7 +37,6 @@ public final class CoinFlipMessages {
         return text;
     }
 
-    /** The message with the prefix, ready for chat. */
     public String chat(String key, Map<String, String> placeholders) {
         return messages.get("prefix") + raw(key, placeholders);
     }

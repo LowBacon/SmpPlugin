@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip.bukkit;
 
 import com.bx.smpPlugin.coinflip.CoinFlipService;
@@ -21,10 +22,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 
-/**
- * {@code /coinflip} ({@code /cf}). Every subcommand checks its own permission, and anything that moves currency goes
- * through a review screen or the service, which re-validates everything. Commands are rate-limited per player.
- */
 public final class CoinFlipCommand implements CommandExecutor, TabCompleter {
 
     private static final List<String> SUBCOMMANDS = List.of("create", "browse", "join", "cancel", "challenge", "accept",
@@ -143,10 +140,6 @@ public final class CoinFlipCommand implements CommandExecutor, TabCompleter {
         new ReviewMenu(module, player.getUniqueId(), draft).open(player);
     }
 
-    /**
-     * {@code /cf <amount> [heads|tails|random]}: creates a public flip at once. The terms are shown in chat
-     * with a cancel button; stakes at or above the high-stake limit still go through the review screen.
-     */
     private void quickCreate(Player player, String[] args) {
         if (!require(player, CoinFlipModule.PERM_CREATE)) {
             return;
@@ -242,7 +235,6 @@ public final class CoinFlipCommand implements CommandExecutor, TabCompleter {
         new ReviewMenu(module, player.getUniqueId(), draft).open(player);
     }
 
-    /** Resolves "me", an online player, or a player with CoinFlip statistics, without blocking the server thread. */
     private void lookup(Player player, String[] args, BiConsumer<UUID, String> open) {
         if (args.length < 2 || args[1].equalsIgnoreCase(player.getName())) {
             open.accept(player.getUniqueId(), player.getName());

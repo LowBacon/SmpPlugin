@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.world;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -32,25 +33,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * Real Minecraft world borders around the spawn and the lobby, set up with /border.
- *
- * <p>Each zone (spawn, lobby) is a square with the vanilla border settings, saved in borders.yml and
- * applied again at every start. A zone works in one of two ways:
- * <ul>
- *   <li><b>PLAYER</b> (default): a player standing inside the square is sent their own border with
- *       {@link Player#setWorldBorder}, so they see the real blue wall and their client stops them at
- *       it. The server also stops them walking, riding, flying or pearling out, which a modified
- *       client could otherwise ignore. Teleport commands (/rtp, /home, /warp...) still take them out,
- *       and the border goes away as soon as they are outside. Players elsewhere in the same world are
- *       not affected, so this is safe when the spawn is in the survival world.</li>
- *   <li><b>WORLD</b>: the world's own border is changed, so the whole world ends at the edge for
- *       everyone. Meant for a world that only holds the lobby or spawn. The world's previous border is
- *       remembered and put back when the zone is turned off or switched to PLAYER. Using it on the
- *       server's main world needs an extra "confirm".</li>
- * </ul>
- * Staff with {@code smpplugin.bypass.border}, and players in spectator mode, are never held back.
- */
 public final class BorderManager implements Listener {
 
     public static final String BYPASS_PERMISSION = "smpplugin.bypass.border";
@@ -76,7 +58,6 @@ public final class BorderManager implements Listener {
         return plugin.getConfigManager().getBorders();
     }
 
-    /** Reads borders.yml and applies it to worlds and online players. */
     public void load() {
         zones.clear();
         FileConfiguration config = config();
@@ -112,10 +93,6 @@ public final class BorderManager implements Listener {
         return zones.get(name.toLowerCase(Locale.ROOT));
     }
 
-    /**
-     * Stores a changed zone in borders.yml and applies it. A zone that moves from WORLD to PLAYER mode,
-     * or is turned off, gets its world's old border back first.
-     */
     public boolean update(BorderZone updated) {
         BorderZone previous = zones.get(updated.name());
         if (previous != null && previous.mode() == BorderZone.Mode.WORLD && previous.active()
@@ -145,13 +122,11 @@ public final class BorderManager implements Listener {
         return saved;
     }
 
-    /** True when the zone's world is the server's main world (the first one loaded). */
     public static boolean isMainWorld(String world) {
         List<World> worlds = Bukkit.getWorlds();
         return !worlds.isEmpty() && worlds.getFirst().getName().equals(world);
     }
 
-    /** How many players are held by a zone's border right now. */
     public int playersInside(String zone) {
         int count = 0;
         for (Active entry : active.values()) {
@@ -200,7 +175,6 @@ public final class BorderManager implements Listener {
         }
     }
 
-    /** Saves the world's own border the first time a zone takes it over, so it can be put back. */
     @SuppressWarnings("deprecation")
     private void rememberWorldBorder(BorderZone zone, WorldBorder border) {
         FileConfiguration config = config();
@@ -249,7 +223,6 @@ public final class BorderManager implements Listener {
         return player.getGameMode() == GameMode.SPECTATOR || PermissionUtils.has(player, BYPASS_PERMISSION);
     }
 
-    /** The active zone (either mode) the location is inside, or null. */
     private BorderZone zoneAt(Location location) {
         if (location == null || location.getWorld() == null) {
             return null;
@@ -272,7 +245,6 @@ public final class BorderManager implements Listener {
         return false;
     }
 
-    /** Gives or takes away the player's own border to match where they stand. */
     public void refresh(Player player) {
         if (!player.isOnline()) {
             return;
@@ -306,7 +278,6 @@ public final class BorderManager implements Listener {
         }
     }
 
-    /** Removes every player border. Called while the plugin stops; nothing is scheduled. */
     public void shutdown() {
         for (UUID uuid : List.copyOf(active.keySet())) {
             Player player = Bukkit.getPlayer(uuid);
@@ -330,6 +301,50 @@ public final class BorderManager implements Listener {
     }
 
     // ------------------------------------------------------------------ events
+
+    static Double mistakenVanillaAdd(String message, double currentSize) {
+        if (message == null) {
+            return null;
+        }
+        String[] parts = message.trim().split("\\s+");
+        if (parts.length < 3) {
+            return null;
+        }
+        String label = parts[0].startsWith("/") ? parts[0].substring(1) : parts[0];
+        label = label.toLowerCase(Locale.ROOT);
+        if (!label.equals("worldborder") && !label.equals("minecraft:worldborder")
+                || !parts[1].equalsIgnoreCase("add")) {
+            return null;
+        }
+        double amount;
+        try {
+            amount = Double.parseDouble(parts[2]);
+        } catch (NumberFormatException exception) {
+            return null;
+        }
+        return amount > 0 && currentSize + amount > BorderZone.MAX_SIZE ? amount : null;
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onVanillaWorldBorder(org.bukkit.event.player.PlayerCommandPreprocessEvent event) {
+        Player player = event.getPlayer();
+        Double width = mistakenVanillaAdd(event.getMessage(), player.getWorld().getWorldBorder().getSize());
+        if (width == null) {
+            return;
+        }
+        String size = width == Math.floor(width) ? String.valueOf(width.longValue()) : String.valueOf(width);
+        // After Minecraft's own error message, so the explanation is the last thing in chat.
+        plugin.getSpigotScheduler().runEntityLater(player, () -> {
+            Text.raw(player, "&e/worldborder add &7makes the border that much &owider&7, and this world's border is "
+                    + "already the maximum, so Minecraft refuses it.");
+            Text.line(player, "&7For a border " + size + " blocks wide: ",
+                    Text.suggest("&e[/worldborder set " + size + "]", "/worldborder set " + size,
+                            "&7Minecraft's border, " + size + " x " + size + " around its centre"),
+                    "&7 or ",
+                    Text.suggest("&e[/border spawn set " + size + "]", "/border spawn set " + size,
+                            "&7SmpPlugin's spawn border (or use lobby)"));
+        }, 1L);
+    }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent event) {
@@ -364,7 +379,6 @@ public final class BorderManager implements Listener {
         }
     }
 
-    /** Ender pearls and chorus fruit cannot carry a player out; teleport commands can. */
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onTeleport(PlayerTeleportEvent event) {
         if (!anyActive()) {
@@ -383,7 +397,6 @@ public final class BorderManager implements Listener {
         plugin.getSpigotScheduler().runEntityLater(player, () -> refresh(player), 1L);
     }
 
-    /** Server-side check, so a client that ignores the border still cannot walk, fly or swim out. */
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onMove(PlayerMoveEvent event) {
         Location from = event.getFrom();

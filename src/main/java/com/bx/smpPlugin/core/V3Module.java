@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.core;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -43,13 +44,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 
-/**
- * Everything added in 3.0, started and stopped as one unit: the Halloween calendar, daily
- * rewards, challenges, events, mail, fun, utility and staff commands.
- *
- * <p>Each part is created in its own try block, so one broken part (a bad config, a missing
- * server API) is logged and skipped while the rest of the plugin keeps working.
- */
 public final class V3Module implements Listener {
 
     private final SmpPlugin plugin;
@@ -65,7 +59,6 @@ public final class V3Module implements Listener {
     private Challenges challenges;
     private com.bx.smpPlugin.world.BorderManager borders;
 
-    /** Commands added in 3.0, for the help menu and the docs. */
     public static final List<String> COMMANDS = List.of(
             "halloween", "trickortreat", "advent", "daily", "challenges", "poll", "giveaway", "chatgame", "announcer", "mail",
             "slap", "highfive", "poke", "wave", "cheer", "dice", "roulette", "rps", "rate", "firework", "sit",
@@ -91,22 +84,14 @@ public final class V3Module implements Listener {
         return advent;
     }
 
-    /** Ranks and their perks from perks.yml; null only before {@link #enable()}. */
     public com.bx.smpPlugin.perks.Perks perks() {
         return perks;
     }
 
-    /** The seasonal events and their /events switches; null only before {@link #enable()}. */
     public SeasonalEvents events() {
         return events;
     }
 
-    /**
-     * PlaceholderAPI values for the 3.0 features (null when the name is not one of them):
-     * daily_streak, daily_ready, halloween_opened, halloween_ready, halloween_countdown,
-     * advent_opened, advent_ready, advent_streak, advent_countdown, challenges_done, challenges_total, and events_&lt;advent|halloween|trickortreat&gt; (active, scheduled,
-     * disabled or completed).
-     */
     public String placeholder(org.bukkit.OfflinePlayer offline, String params) {
         if (params != null && params.startsWith("events_")) {
             return EventId.parse(params.substring("events_".length()))
@@ -321,14 +306,16 @@ public final class V3Module implements Listener {
             // The login read failed (or the plugin started late): try once more in the background.
             store.loadAsync(player.getUniqueId());
         }
-        plugin.getSpigotScheduler().runEntityLater(player, () -> {
-            if (player.isOnline() && store.isLoaded(player.getUniqueId())) {
-                PendingItems.deliver(plugin, store, player, true);
-            }
-        }, 40L);
+        // Items go into the survival inventory, so they wait until the player is in the SMP: the
+        // lobby swaps that inventory back on the way out and would overwrite anything given there.
+        plugin.getSpigotScheduler().runEntityLater(player, () -> com.bx.smpPlugin.worlds.SmpArrival.run(plugin, player,
+                "reward-vault", () -> {
+                    if (player.isOnline() && store.isLoaded(player.getUniqueId())) {
+                        PendingItems.deliver(plugin, store, player, true);
+                    }
+                }), 40L);
     }
 
-    /** Called by /smpplugin reload after the config files were read again. */
     public void reload() {
         if (perks != null) {
             perks.reload();
@@ -358,7 +345,6 @@ public final class V3Module implements Listener {
 
     // ------------------------------------------------------------------ wiring helpers
 
-    /** Runs one part's setup, logging instead of failing the whole plugin. */
     void part(String name, Runnable setup) {
         try {
             setup.run();
@@ -382,7 +368,6 @@ public final class V3Module implements Listener {
         shutdownHooks.add(hook);
     }
 
-    /** Binds a plugin.yml command, wrapped so a feature turned off in config answers politely. */
     void register(String name, CommandExecutor executor, TabCompleter completer, Feature... features) {
         PluginCommand command = plugin.getCommand(name);
         if (command == null) {

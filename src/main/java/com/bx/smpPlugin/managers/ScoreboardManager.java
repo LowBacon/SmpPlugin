@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -51,13 +52,8 @@ public class ScoreboardManager {
     private final Map<UUID, Scoreboard> playerBoards;
 
     private int titleIndex = 0;
-    /** Ticks counted by {@link #updateAll()}, which runs every 2 ticks. */
     private long ticks;
 
-    /**
-     * What each player's sidebar shows right now, so an update only sends the lines that changed.
-     * Without this every line was re-sent to every player ten times a second.
-     */
     private final Map<UUID, BoardCache> boardCache = new HashMap<>();
 
     private static final class BoardCache {
@@ -119,8 +115,6 @@ public class ScoreboardManager {
         }
     }
 
-    /** Called once on player join. */
-    /** The private sidebar boards this manager gave players, for the name tags (NametagManager). */
     public java.util.List<Scoreboard> ownedBoards() {
         return java.util.List.copyOf(playerBoards.values());
     }
@@ -200,7 +194,6 @@ public class ScoreboardManager {
         }
     }
 
-    /** Forces every line to be re-sent on the next update, e.g. after /sidebar changed the text. */
     public void markDirty() {
         if (!folia) {
             boardCache.clear();
@@ -726,6 +719,11 @@ public class ScoreboardManager {
     }
 
     private boolean isVisibleFor(Player player) {
+        // A world can turn the sidebar off (worlds.yml SIDEBAR, off in the lobby world): the player
+        // then gets the server's own scoreboard back, with no sidebar at all rather than a blank one.
+        if (plugin.getWorldSystem() != null && !plugin.getWorldSystem().sidebarAllowed(player.getWorld())) {
+            return false;
+        }
         PlayerData data = plugin.getPlayerDataManager().get(player);
         return data == null || data.isScoreboardVisible();
     }

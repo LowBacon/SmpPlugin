@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -23,10 +24,6 @@ import java.util.logging.Level;
 
 public final class LuckPermsTablistRefreshBridge {
 
-    /**
-     * LuckPerms commands/events can arrive before Spigot's permission cache and
-     * PlaceholderAPI output settle. Use one delayed refresh, not a recurring poll.
-     */
     private static final long REFRESH_DELAY_TICKS = 10L;
 
     private final SmpPlugin plugin;
@@ -263,6 +260,10 @@ public final class LuckPermsTablistRefreshBridge {
             plugin.getTablistManager().invalidateLuckPermsCachedData(player);
         }
         player.recalculatePermissions();
+        if (plugin.getWorldSystem() != null) {
+            // smpplugin.world.seeall may have been granted or taken away.
+            plugin.getWorldSystem().refreshVisibility(player);
+        }
         if (plugin.getHideManager() != null) {
             plugin.getHideManager().enforcePermission(
                     player,

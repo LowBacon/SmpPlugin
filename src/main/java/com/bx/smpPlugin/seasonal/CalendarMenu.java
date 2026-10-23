@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.seasonal;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -27,16 +28,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * A season calendar: one door per day; today's door spins and reveals its prize. The prize is already handed over
- * when the spin starts, so the spin only shows it.
- *
- * <pre>
- *  row 0   frame ........ [info] ........ frame
- *  rows 1-4  doors, seven per row
- *  row 5   [x] [edit] [door] [door] [last door] [x] [x] [x] [close]      x = slots the event may use
- * </pre>
- */
 public final class CalendarMenu extends BaseMenu {
 
     static final int[] DOOR_SLOTS = {
@@ -68,7 +59,6 @@ public final class CalendarMenu extends BaseMenu {
         this.theme = theme;
     }
 
-    /** Where each door sits: in order through rows 1-4, the last door always in the middle of the bottom row. */
     static Map<Integer, Integer> layout(CalendarRules rules, int year) {
         Map<Integer, Integer> slots = new LinkedHashMap<>();
         int lastDoor = rules.lastDayIn(year);

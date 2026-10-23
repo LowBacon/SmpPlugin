@@ -20,6 +20,7 @@ softdepend:
 - FancyNpcs
 - SkinsRestorer
 - voicechat
+- TitanGuard
 loadbefore:
 - EconomyShopGUI
 - EconomyShopGUI-Premium
@@ -610,10 +611,11 @@ commands:
     usage: /amethysttool give <player> <type> [duration] | /amethysttool reload
     permission: smpplugin.admin.amethysttool
   smpplugin:
-    permission: smpplugin.admin.status;smpplugin.admin.reload;smpplugin.admin.statswipe;smpplugin.admin.optimize;smpplugin.admin.setup;smpplugin.admin.features;smpplugin.admin.maintenance
+    permission: smpplugin.admin.status;smpplugin.admin.reload;smpplugin.admin.statswipe;smpplugin.admin.optimize;smpplugin.admin.setup;smpplugin.admin.features;smpplugin.admin.maintenance;smpplugin.admin.world
     description: SmpPlugin administration
-    usage: /smpplugin <status|reload|statswipe|optimize|setup|features|maintenance>
+    usage: /smp <status|reload|statswipe|optimize|setup|features|maintenance|world>
     aliases:
+    - smp
     - csmp
     - customsmp
   maintenance:
@@ -638,12 +640,6 @@ commands:
     description: Manage anvil moderation banned words
     usage: /amod <add|reload> [word]
     permission: smpplugin.admin.anvilmod
-  anticheat:
-    permission: smpplugin.security.alerts;smpplugin.security.inspect;smpplugin.security.manage
-    description: Anti-cheat alerts, evidence, profiles, ban queue, exemptions and status
-    usage: /anticheat <alerts|status|checks|history|evidence|profile|bans|exempt|reset|reload>
-    aliases:
-    - ac
   coinflip:
     description: Open CoinFlip - 1v1 coin flips for in-game currency
     usage: /coinflip [create|browse|join|cancel|challenge|accept|deny|rematch|history|stats|top|practice|settings|help]
@@ -1151,6 +1147,9 @@ permissions:
       smpplugin.admin.advent: true
       smpplugin.admin.perks: true
       smpplugin.admin.events: true
+      smpplugin.admin.world: true
+      smpplugin.world.bypass.commands: true
+      smpplugin.world.bypass.build: true
   smpplugin.message:
     description: 'Send private messages with /msg and reply with /reply.'
     default: true
@@ -1426,11 +1425,15 @@ permissions:
     description: 'Receive alerts when a bait stash is found.'
     default: false
   smpplugin.security.alerts:
-    description: 'Receive anti-cheat alerts and toggle them with /anticheat alerts.'
+    description: 'Receive TitanGuard anti-cheat alerts (grants titanguard.alerts; /tg alerts toggles them).'
     default: false
+    children:
+      titanguard.alerts: true
   smpplugin.security.inspect:
-    description: 'View anti-cheat status, check settings, flag history and evidence.'
+    description: 'View TitanGuard violation levels and evidence (grants titanguard.evidence).'
     default: false
+    children:
+      titanguard.evidence: true
   smpplugin.coinflip.alerts:
     description: 'Receive CoinFlip storage and settlement alerts.'
     default: false
@@ -1591,8 +1594,10 @@ permissions:
     description: 'Manage other players'' hide and disguise state.'
     default: false
   smpplugin.security.manage:
-    description: 'Grant temporary anti-cheat exemptions, reset violation levels and reload anticheat.yml.'
+    description: 'Manage TitanGuard: exemptions, resets, reviews and reload (grants titanguard.admin).'
     default: false
+    children:
+      titanguard.admin: true
   smpplugin.coinflip.admin.cancel:
     description: 'Cancel and refund a waiting CoinFlip match (a reason is required and audited).'
     default: false
@@ -1663,17 +1668,21 @@ permissions:
     description: 'Do not trigger bait-stash alerts.'
     default: false
   smpplugin.bypass.anticheat.movement:
-    description: 'Skip anti-cheat movement checks (fly, speed, timer, no-fall, step, water walk, boat fly). Use is logged once per session.'
+    description: 'Skip TitanGuard movement checks (grants titanguard.bypass.movement).'
     default: false
+    children:
+      titanguard.bypass.movement: true
   smpplugin.bypass.anticheat.combat:
-    description: 'Skip anti-cheat combat checks (reach, wall hit, kill aura, autoclicker, anti-knockback, criticals). Use is logged.'
+    description: 'Skip TitanGuard combat checks (grants titanguard.bypass.combat).'
     default: false
+    children:
+      titanguard.bypass.combat: true
   smpplugin.bypass.anticheat.world:
-    description: 'Skip anti-cheat block checks (fast break, nuker, fast place, block reach, scaffold, through-wall, x-ray). Use is logged.'
+    description: 'Skip TitanGuard block reach, nuker and x-ray checks (grants titanguard.bypass.world and .xray).'
     default: false
-  smpplugin.bypass.anticheat.player:
-    description: 'Skip anti-cheat inventory, auto-totem and cheat-client checks. Use is logged.'
-    default: false
+    children:
+      titanguard.bypass.world: true
+      titanguard.bypass.xray: true
   smpplugin.coinflip.admin.resolve:
     description: 'Decide unknown CoinFlip transactions (applied or not); can create claims, so it is never bundled.'
     default: false
@@ -1949,6 +1958,18 @@ permissions:
     default: true
   smpplugin.admin.events:
     description: 'Switch seasonal events on, off or back to their dates with /events.'
+    default: false
+  smpplugin.admin.world:
+    description: 'Manage the lobby, spawn and FFA worlds with /smp world (status, info, setspawn, tp, reload).'
+    default: false
+  smpplugin.world.bypass.commands:
+    description: 'Run any command in a world with a command allowlist (the lobby).'
+    default: false
+  smpplugin.world.bypass.build:
+    description: 'Build, open containers and leave by pearl or portal in the protected parts of the lobby, spawn and FFA worlds.'
+    default: false
+  smpplugin.world.seeall:
+    description: 'See players in every world, including the lobby, whatever the world''s visibility rules.'
     default: false
   smpplugin.staff.punishments.create:
     description: 'Legacy bundle: every punishment-creating action.'

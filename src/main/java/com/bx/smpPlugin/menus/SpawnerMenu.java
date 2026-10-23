@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.menus;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -15,10 +16,6 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * What a right-click on a spawner opens: one small screen with the spawner's info and four buttons,
- * storage, sell all, collect XP and the stack. The info refreshes every second so the next-drop timer counts down.
- */
 public class SpawnerMenu extends BaseMenu {
 
     private static final int SLOT_INFO = 4;
@@ -187,7 +184,6 @@ public class SpawnerMenu extends BaseMenu {
         return ItemUtils.hideMenuNoise(item, true);
     }
 
-    /** Levels a player would gain from {@code xp} points, starting from where they are now. */
     static long levelsGained(Player player, long xp) {
         int level = player.getLevel();
         double target = totalXpAtLevel(level) + player.getExp() * xpToNextLevel(level) + xp;

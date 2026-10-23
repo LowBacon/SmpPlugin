@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.api;
 
 import com.bx.smpPlugin.SmpPlugin;

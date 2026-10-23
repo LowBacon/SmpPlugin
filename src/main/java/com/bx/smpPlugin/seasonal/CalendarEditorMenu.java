@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.seasonal;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -16,7 +17,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** /&lt;calendar&gt; edit: every door with its prize; click one to change what is behind it. */
 public final class CalendarEditorMenu extends BaseMenu {
 
     private static final int BACK_SLOT = 45;

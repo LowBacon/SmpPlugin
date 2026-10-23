@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip.bukkit;
 
 import com.bx.smpPlugin.coinflip.CoinFlipConfig;
@@ -17,13 +18,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-/**
- * Base for every CoinFlip menu. A menu belongs to one viewer: clicks from anyone else are ignored. Each clickable
- * slot is bound to an action while the menu is drawn, so a click never reads item names or lore to decide what to
- * do, and every action re-checks permissions and asks the service, which re-validates the live match state.
- * Clicks closer together than the configured cooldown are dropped, and an action that is waiting for storage
- * marks the menu busy so a second click cannot submit twice.
- */
 public abstract class CoinFlipMenu extends BaseMenu {
 
     protected final CoinFlipModule module;
@@ -38,10 +32,8 @@ public abstract class CoinFlipMenu extends BaseMenu {
         this.viewer = viewer;
     }
 
-    /** Draws the menu content. Called on open and on every refresh. */
     protected abstract void render(Player player);
 
-    /** Live menus are redrawn when matches change. */
     public boolean live() {
         return false;
     }
@@ -55,7 +47,6 @@ public abstract class CoinFlipMenu extends BaseMenu {
         render(player);
     }
 
-    /** Redraws in place, without closing or reopening the inventory. */
     public void refresh() {
         Player player = Bukkit.getPlayer(viewer);
         if (player != null && player.getOpenInventory().getTopInventory().getHolder() == this) {
@@ -95,15 +86,10 @@ public abstract class CoinFlipMenu extends BaseMenu {
         button(slot, item, click -> action.run());
     }
 
-    /** Standard back button in the bottom-left corner. */
     protected void back(Runnable action) {
         button(inventory.getSize() - 9, Gui.item(Material.ARROW, Gui.INFO + "Back", Gui.MUTED + "Return to the previous menu."), action);
     }
 
-    /**
-     * A control that is shown greyed out, with the reason, when it cannot be used. Clicking a greyed control explains
-     * why; the real action still re-checks everything on the server when it runs.
-     */
     protected void gated(int slot, boolean available, boolean permitted, String reasonKey, ItemStack item, Runnable action) {
         if (available && permitted) {
             button(slot, item, action);
@@ -138,7 +124,6 @@ public abstract class CoinFlipMenu extends BaseMenu {
         return player != null && PermissionUtils.has(player, permission);
     }
 
-    /** Tells the viewer about an outcome in chat, with an error sound when it failed. */
     protected void report(CoinFlipService.Outcome outcome) {
         module.presenter().sendOutcome(viewer, outcome);
     }

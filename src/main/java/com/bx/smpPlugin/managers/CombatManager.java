@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -16,7 +17,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class CombatManager {
 
     private final SmpPlugin plugin;
-    /** UUID → expiry time in millis */
     private final Map<UUID, Long> combatMap = new ConcurrentHashMap<>();
     private final Map<UUID, BukkitTask> tasks = new ConcurrentHashMap<>();
 
@@ -147,14 +147,40 @@ public class CombatManager {
     }
 
     public boolean isBlockedCommand(String command) {
+        // "/smpplugin:spawn" and an alias of a blocked command count as that command.
+        String label = commandLabel(command);
+        if (label.isEmpty()) {
+            return false;
+        }
+        org.bukkit.command.PluginCommand resolved = org.bukkit.Bukkit.getPluginCommand(label);
+        String real = resolved == null ? label : resolved.getName().toLowerCase(java.util.Locale.ROOT);
         for (String blocked : plugin.getConfigManager().getConfig()
                 .getStringList("COMBAT-MANAGER.BLOCK-COMMANDS")) {
-            if (blocked.equalsIgnoreCase(command) ||
-                command.toLowerCase().startsWith(blocked.toLowerCase() + " ")) {
+            String entry = commandLabel(blocked);
+            if (!entry.isEmpty() && (entry.equals(label) || entry.equals(real))) {
                 return true;
             }
         }
         return false;
+    }
+
+    static String commandLabel(String command) {
+        if (command == null) {
+            return "";
+        }
+        String label = command.trim();
+        if (label.startsWith("/")) {
+            label = label.substring(1);
+        }
+        int space = label.indexOf(' ');
+        if (space >= 0) {
+            label = label.substring(0, space);
+        }
+        int colon = label.indexOf(':');
+        if (colon >= 0) {
+            label = label.substring(colon + 1);
+        }
+        return label.toLowerCase(java.util.Locale.ROOT);
     }
 
     public boolean isExcludedWorld(String worldName) {

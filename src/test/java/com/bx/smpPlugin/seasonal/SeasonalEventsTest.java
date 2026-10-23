@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.seasonal;
 
 import com.bx.smpPlugin.halloween.CalendarRules;
@@ -23,7 +24,6 @@ class SeasonalEventsTest {
 
     private static final ZoneId HELSINKI = ZoneId.of("Europe/Helsinki");
     private static final CalendarRules OCTOBER = CalendarRules.of(10, 1, 31, "DAILY", true, 0);
-    /** Advent with ten grace days, so the season runs into January. */
     private static final CalendarRules ADVENT = CalendarRules.of(12, 1, 24, "DAILY", false, 10);
     private static final Logger LOG = Logger.getLogger("SeasonalEventsTest");
 

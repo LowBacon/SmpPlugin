@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.seasonal;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -40,24 +41,8 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 
-/**
- * A calendar with one door per day of a season, shared by the Advent Calendar and the Spooky Calendar.
- *
- * <p>Opened doors are one number per player and season (a bit per door) in the player store, so checking a door is
- * a map read. A door is marked opened and its prize handed over in the same step, before any animation: leaving
- * mid-spin or a crash can never give a prize twice or open a door without its prize. Items that do not fit go to
- * the reward vault.
- *
- * <p>Prizes come from three places, first match wins: the in-game editor ({@code data/<key>-prizes.yml}), the
- * event file's DOORS.&lt;day&gt;, then DOORS.DEFAULT. Console COMMANDS always come from the event file. A rank from
- * perks.yml adds its CALENDAR-BONUS-PERCENT to the money and shards (never to items or commands). STREAK.BONUSES and
- * COMPLETION add one-off prizes for opening doors on days in a row and for opening every door.
- *
- * <p>Staff test the calendar with a test date: only for themselves, and nothing is given or saved while testing.
- */
 public class SeasonCalendar {
 
-    /** What one opened door gave (or, in test mode, would have given). */
     public record Granted(int door, Reward prize, Reward rankBonus, String rankDisplay, List<Reward> extras,
                           List<String> extraNames, int streak, boolean test) {
 
@@ -74,7 +59,6 @@ public class SeasonCalendar {
         }
     }
 
-    /** A button the event adds to its calendar's bottom row. */
     public record MenuButton(ItemStack item, Consumer<Player> onClick) {
     }
 
@@ -140,10 +124,6 @@ public class SeasonCalendar {
         });
     }
 
-    /**
-     * What is wrong in the event file, in plain words. Nothing here stops the calendar: bad values are clamped or
-     * skipped, and this list says which.
-     */
     public List<String> validate() {
         List<String> problems = new ArrayList<>();
         FileConfiguration c = config();
@@ -206,7 +186,6 @@ public class SeasonCalendar {
         return id;
     }
 
-    /** The store and file prefix, and the player command: "halloween" or "advent". */
     public String key() {
         return id.key();
     }
@@ -215,7 +194,6 @@ public class SeasonCalendar {
         return id.key();
     }
 
-    /** The event's config file name, for messages ("advent.yml"). */
     public String fileName() {
         return fileName;
     }
@@ -241,7 +219,6 @@ public class SeasonCalendar {
         return plugin.getFeatureManager() == null || plugin.getFeatureManager().isEnabled(feature);
     }
 
-    /** STREAK.ENABLED, with the event's own default. */
     public boolean streaksEnabled() {
         return config().getBoolean("STREAK.ENABLED", streaksByDefault());
     }
@@ -265,19 +242,16 @@ public class SeasonCalendar {
         return CalendarRules.zone(config().getString("TIME-ZONE", ""));
     }
 
-    /** Can the calendar be opened at all: on in its file, as a feature, and not switched off with /events. */
     public boolean isEnabled() {
         return events.status(id) != EventStatus.DISABLED;
     }
 
-    /** The event is running: on its dates, or forced on with /events. */
     public boolean inSeason() {
         return events.isActive(id);
     }
 
     // ------------------------------------------------------------------ time and test dates
 
-    /** Now for the server: the real time, or PREVIEW-DATE from the file (a test-server setting). */
     public ZonedDateTime now() {
         ZoneId zone = zone();
         ZonedDateTime real = ZonedDateTime.now(zone);
@@ -285,7 +259,6 @@ public class SeasonCalendar {
         return preview == null ? real : preview.atTime(LocalTime.from(real)).atZone(zone);
     }
 
-    /** Now as one player sees it: their test date when they set one. */
     public ZonedDateTime now(UUID viewer) {
         LocalDate test = viewer == null ? null : testDates.get(viewer);
         if (test == null) {
@@ -307,7 +280,6 @@ public class SeasonCalendar {
         return rules().seasonYear(today(viewer));
     }
 
-    /** True while this player tests the calendar: they see their test date and nothing is given or saved. */
     public boolean isTesting(UUID viewer) {
         return viewer != null && testDates.containsKey(viewer);
     }
@@ -316,7 +288,6 @@ public class SeasonCalendar {
         return viewer == null ? null : testDates.get(viewer);
     }
 
-    /** Starts (or moves) test mode for one staff member, or ends it with {@code null}. */
     public void setTestDate(UUID viewer, LocalDate date) {
         if (date == null) {
             testDates.remove(viewer);
@@ -362,7 +333,6 @@ public class SeasonCalendar {
         return ClaimStreak.parse(store.get(uuid, streakSection(seasonYear(uuid))));
     }
 
-    /** The streak as it stands for the player today (0 once broken). */
     public int currentStreak(Player player) {
         return streak(player.getUniqueId()).current(today(player.getUniqueId()).toEpochDay(), streakGrace(player));
     }
@@ -375,7 +345,6 @@ public class SeasonCalendar {
         return Long.bitCount(claimedMask(uuid));
     }
 
-    /** Doors the player could open right now. */
     public int claimableCount(UUID uuid) {
         if (!inSeason() && !isTesting(uuid)) {
             return 0;
@@ -393,11 +362,6 @@ public class SeasonCalendar {
         return count;
     }
 
-    /**
-     * Opens a door and hands over its prize, both at once. Empty when the door cannot be opened now (already
-     * opened, locked, missed, the event is off, or the player's data is still loading). In test mode the door only
-     * opens for this player's test and nothing is given.
-     */
     public Optional<Granted> claim(Player player, int door) {
         UUID uuid = player.getUniqueId();
         boolean test = isTesting(uuid);
@@ -487,7 +451,6 @@ public class SeasonCalendar {
         return true;
     }
 
-    /** STREAK.BONUSES.&lt;days&gt; sections, shortest first. */
     static Map<Integer, ConfigurationSection> streakBonuses(FileConfiguration config) {
         Map<Integer, ConfigurationSection> out = new TreeMap<>();
         ConfigurationSection bonuses = config.getConfigurationSection("STREAK.BONUSES");
@@ -508,7 +471,6 @@ public class SeasonCalendar {
         return out;
     }
 
-    /** The extra money and shards a rank's percent adds to a prize (never items or commands). */
     static Reward rankBonus(Reward prize, int percent) {
         if (percent <= 0) {
             return Reward.NONE;
@@ -528,7 +490,6 @@ public class SeasonCalendar {
         return rankOf(player).map(rank -> rank.value(Perk.CALENDAR_STREAK_GRACE_DAYS)).orElse(0);
     }
 
-    /** Re-closes one door (or every door and the streak when {@code door <= 0}) for a player, online or not. */
     public void reset(UUID uuid, int door, Consumer<Boolean> done) {
         int year = seasonYear();
         String section = claimSection(year);
@@ -543,7 +504,6 @@ public class SeasonCalendar {
         });
     }
 
-    /** How many players opened each door this season. Answers on the main thread. */
     public void doorStatistics(Consumer<Map<Integer, Integer>> callback) {
         String section = claimSection(seasonYear());
         plugin.getDatabaseManager().executeAsync(() -> {
@@ -561,21 +521,17 @@ public class SeasonCalendar {
         });
     }
 
-    /** Extra buttons for the calendar's bottom row (slots 45, 50, 51 and 52). */
     public Map<Integer, MenuButton> extraButtons(Player viewer) {
         return Map.of();
     }
 
-    /** The command that opens the calendar itself (not a hub around it). */
     public String calendarCommand() {
         return command();
     }
 
-    /** Called after a real (not test) door was opened and paid, on the player's thread. */
     protected void onDoorOpened(Player player, Granted granted) {
     }
 
-    /** Opens what the player command opens. The calendar itself by default. */
     public void open(Player player) {
         new CalendarMenu(plugin, this).open(player);
     }
@@ -600,7 +556,6 @@ public class SeasonCalendar {
         return isLastDoor(door) ? theme().lastDoorName() : theme().accent() + "Door " + door;
     }
 
-    /** The prize behind a door, with any in-game edits applied (without rank bonuses). */
     public Reward prize(int door) {
         ConfigurationSection configured = doorSection(door);
         if (configured == null) {
@@ -617,7 +572,6 @@ public class SeasonCalendar {
         return new Reward(custom.money(), custom.shards(), custom.items(), base.commands(), custom.display());
     }
 
-    /** The rank bonus a player would get on a door, for the menu. */
     public Reward bonusFor(Player player, int door) {
         return rankBonus(prize(door), rankOf(player).map(r -> r.value(Perk.CALENDAR_BONUS_PERCENT)).orElse(0));
     }
@@ -626,7 +580,6 @@ public class SeasonCalendar {
         return overrides.isConfigurationSection("DOORS." + door);
     }
 
-    /** Saves an in-game edit of a door's prize (money, shards and items). */
     public void saveOverride(int door, Reward reward) {
         YamlConfiguration copy = copyOverrides();
         copy.set("DOORS." + door, null);

@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip;
 
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -12,7 +13,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** Pure CoinFlip logic: amounts, payouts, states, statistics, preferences, presets and configuration. */
 class CoinFlipModelTest {
 
     @Test

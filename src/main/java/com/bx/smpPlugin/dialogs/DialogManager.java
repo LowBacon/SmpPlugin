@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.dialogs;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -16,17 +17,6 @@ import org.bukkit.entity.Player;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Entry point for the dialog interface (Paper/Purpur only).
- *
- * <p>Commands ask this class to open a screen and fall back to their chest menu when it answers
- * false, which happens on Spigot, on a pre-1.21.6 Paper, or when the operator turned the screen
- * off in {@code dialog.yml}. Button presses arrive from {@link DialogListener} and are offered to
- * each screen in turn until one claims the action.
- *
- * <p>Nothing here is constructed unless {@link DialogSupport#isAvailable()} already said yes, so
- * a Spigot server never loads a Paper class.
- */
 public final class DialogManager implements DialogGateway {
 
     private final SmpPlugin plugin;
@@ -39,11 +29,10 @@ public final class DialogManager implements DialogGateway {
     private final QuickBuyItemDialog quickBuyItem;
     private final StatsDialog stats;
     private final NoticeDialog notice;
+    private final com.bx.smpPlugin.dialogs.screens.TpaDialog tpa;
+    private final com.bx.smpPlugin.dialogs.screens.AuctionDialog auction;
     private final List<DialogScreen> screens;
 
-    /**
-     * Called through {@link DialogGateway#create}. Returns null when this server cannot show dialogs.
-     */
     public static DialogManager createIfSupported(SmpPlugin plugin) {
         if (!DialogSupport.isAvailable()) {
             return null;
@@ -63,7 +52,9 @@ public final class DialogManager implements DialogGateway {
         this.homes = new com.bx.smpPlugin.dialogs.screens.HomesDialog(plugin, config, sessions);
         this.stats = new StatsDialog(plugin, config, sessions);
         this.notice = new NoticeDialog(plugin, config, sessions);
-        this.screens = List.of(settings, rtpQueue, quickBuyItem, homes, stats, notice);
+        this.tpa = new com.bx.smpPlugin.dialogs.screens.TpaDialog(plugin, config, sessions);
+        this.auction = new com.bx.smpPlugin.dialogs.screens.AuctionDialog(plugin, config, sessions);
+        this.screens = List.of(settings, rtpQueue, quickBuyItem, tpa, auction, homes, stats, notice);
     }
 
     @SuppressWarnings("unchecked")
@@ -75,7 +66,6 @@ public final class DialogManager implements DialogGateway {
         }
         return null;
     }
-
 
     public DialogConfig getConfig() {
         return config;
@@ -93,6 +83,26 @@ public final class DialogManager implements DialogGateway {
     @Override
     public boolean openRtpQueue(Player player) {
         return config.isScreenEnabled("RTP-QUEUE") && rtpQueue.open(player);
+    }
+
+    @Override
+    public boolean openTpaPicker(Player player) {
+        return config.isScreenEnabled("TPA") && tpa.openPicker(player);
+    }
+
+    @Override
+    public boolean openTpaRequest(Player target, UUID requester, String requesterName, boolean tpaHere) {
+        return config.isScreenEnabled("TPA") && tpa.openRequest(target, requester, requesterName, tpaHere);
+    }
+
+    @Override
+    public boolean openAuctionPurchase(Player player, long listingId) {
+        return config.isScreenEnabled("AUCTION-HOUSE") && auction.openPurchase(player, listingId);
+    }
+
+    @Override
+    public boolean openAuctionSell(Player player) {
+        return config.isScreenEnabled("AUCTION-HOUSE") && auction.openSell(player);
     }
 
     @Override
@@ -135,7 +145,6 @@ public final class DialogManager implements DialogGateway {
         return config.isEnabled() && quickBuyItem.openEnchantments(player, targetSlot, material);
     }
 
-    /** Routes one button press. Unknown ids are ignored rather than logged, to stay quiet. */
     public void handle(Player player, Key key, DialogResponseView response) {
         if (player == null || !DialogActions.isOurs(key) || !config.isEnabled()) {
             return;
@@ -153,10 +162,6 @@ public final class DialogManager implements DialogGateway {
         }
     }
 
-    /**
-     * Runs a COMMAND button. The dialog is closed first so a command that opens nothing — a
-     * teleport, say — does not leave the menu sitting over the world.
-     */
     private void runCommandButton(Player player, String commandId) {
         String command = sessions.get(player.getUniqueId()).commandFor(commandId);
         if (command == null || command.isBlank()) {

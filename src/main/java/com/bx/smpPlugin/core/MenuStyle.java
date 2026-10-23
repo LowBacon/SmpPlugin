@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.core;
 
 import com.bx.smpPlugin.utils.ItemUtils;
@@ -8,10 +9,6 @@ import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * The look shared by the 4.0 menus (events, Advent, the Halloween hub): a dark frame, one accent colour per
- * screen, the same wording for buttons and states, and one action line at the bottom of every item.
- */
 public final class MenuStyle {
 
     public static final String ACCENT = "&#00E5FF";
@@ -26,12 +23,10 @@ public final class MenuStyle {
     private MenuStyle() {
     }
 
-    /** An empty pane, used for the frame. */
     public static ItemStack pane(Material material) {
         return ItemUtils.createGlassPane(material);
     }
 
-    /** Fills the outer ring of a menu with dark panes, with accent panes in the corners. */
     public static void frame(Inventory inventory, Material accent) {
         int rows = inventory.getSize() / 9;
         ItemStack dark = pane(Material.BLACK_STAINED_GLASS_PANE);
@@ -50,12 +45,10 @@ public final class MenuStyle {
         return ItemUtils.createItem(Material.ARROW, TEXT + "&lBack", List.of(MUTED + "Back to " + to + "."));
     }
 
-    /** The click hint at the bottom of an item, e.g. {@code action("Click to open")}. */
     public static String action(String text) {
         return ACCENT + "▶ " + TEXT + text;
     }
 
-    /** A lore block: description lines, a gap, then the action hints. */
     public static List<String> lore(List<String> body, String... actions) {
         List<String> lore = new ArrayList<>(body);
         if (actions.length > 0) {

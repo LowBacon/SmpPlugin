@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.utils;
 
 import com.google.gson.JsonObject;
@@ -89,9 +90,6 @@ public class ItemUtils {
         return copy;
     }
 
-    /**
-     * Adds lore to a copy without replacing the vanilla item name.
-     */
     public static ItemStack hideMenuNoise(ItemStack item, boolean hideAdditionalTooltip) {
         if (item == null) {
             return null;

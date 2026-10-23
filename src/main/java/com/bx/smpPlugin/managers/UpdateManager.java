@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -15,7 +16,6 @@ public class UpdateManager {
 
     private static final String VERSION_URL = "https://raw.githubusercontent.com/LowBacon/SmpPlugin/main/version.txt";
 
-    /** Where server owners download new versions. */
     public static final String DOWNLOAD_URL = "https://github.com/LowBacon/SmpPlugin";
 
     private final SmpPlugin plugin;
@@ -26,9 +26,6 @@ public class UpdateManager {
         this.plugin = plugin;
     }
 
-    /**
-     * Checks for updates asynchronously from the raw GitHub version file.
-     */
     public void checkForUpdates() {
         plugin.getSpigotScheduler().runAsync(() -> {
             try {

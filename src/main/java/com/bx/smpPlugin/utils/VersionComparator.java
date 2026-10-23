@@ -1,17 +1,13 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.utils;
 
 import java.util.Locale;
 
-/**
- * Compares plugin versions the semantic-versioning way: numbers part by part, and a pre-release
- * ("2.0.0-alpha.5") always below the release it leads to ("2.0.0").
- */
 public final class VersionComparator {
 
     private VersionComparator() {
     }
 
-    /** Negative when {@code a} is older than {@code b}, zero when equal, positive when newer. */
     public static int compare(String a, String b) {
         String[] left = split(a);
         String[] right = split(b);
@@ -30,7 +26,6 @@ public final class VersionComparator {
         return compare(candidate, current) > 0;
     }
 
-    /** Splits "v2.0.0-alpha.5+build" into {"2.0.0", "alpha.5"}. */
     private static String[] split(String version) {
         String clean = version == null ? "" : version.trim().toLowerCase(Locale.ROOT);
         if (clean.startsWith("v")) {

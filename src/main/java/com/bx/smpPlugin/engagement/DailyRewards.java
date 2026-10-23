@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.engagement;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -35,10 +36,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * /daily: one reward a day. Coming back on consecutive days builds a streak through seven reward
- * days; day 7 is the big one, and every finished week adds a bonus on top.
- */
 public final class DailyRewards implements CommandExecutor, Listener {
 
     public static final String PERMISSION = "smpplugin.daily";
@@ -69,7 +66,6 @@ public final class DailyRewards implements CommandExecutor, Listener {
         return Math.max(0, config().getInt("DAILY.GRACE-DAYS", 1));
     }
 
-    /** The streak a player has today (0 once broken), for placeholders. */
     public int currentStreak(UUID uuid) {
         return streak(uuid).currentStreak(today(), graceDays());
     }
@@ -88,7 +84,6 @@ public final class DailyRewards implements CommandExecutor, Listener {
         return ChronoUnit.SECONDS.between(now, midnight);
     }
 
-    /** The reward for a given streak length, including the weekly bonus. */
     Reward rewardFor(int streak) {
         ConfigurationSection day = config().getConfigurationSection("DAILY.DAYS." + DailyStreak.rewardDay(streak));
         Reward reward = Reward.read(day);
@@ -97,7 +92,6 @@ public final class DailyRewards implements CommandExecutor, Listener {
         return bonus > 0 ? reward.withMoney(reward.money() + bonus) : reward;
     }
 
-    /** The extra money and shards the player's rank adds (DAILY-BONUS-PERCENT in perks.yml). */
     private Reward rankBonus(Player player, Reward base) {
         com.bx.smpPlugin.perks.Perks perks = plugin.getV3Module() == null ? null : plugin.getV3Module().perks();
         int percent = perks == null ? 0
@@ -141,17 +135,17 @@ public final class DailyRewards implements CommandExecutor, Listener {
                 || !plugin.getFeatureManager().isEnabled(com.bx.smpPlugin.managers.FeatureManager.Feature.DAILY_REWARDS)) {
             return;
         }
-        plugin.getSpigotScheduler().runEntityLater(player, () -> {
-            if (player.isOnline() && streak(player.getUniqueId()).canClaim(today())) {
-                Text.line(player, Text.prefix(),
-                        Text.get("DAILY.REMINDER", "&7Your daily reward is ready! "),
-                        Text.button(Text.get("DAILY.REMINDER-BUTTON", "&a&l[Claim]"), "daily",
-                                Text.get("DAILY.REMINDER-HOVER", "&7Click to open /daily")));
-            }
-        }, 80L);
+        plugin.getSpigotScheduler().runEntityLater(player, () -> com.bx.smpPlugin.worlds.SmpArrival.run(plugin, player,
+                "daily", () -> {
+                    if (player.isOnline() && streak(player.getUniqueId()).canClaim(today())) {
+                        Text.line(player, Text.prefix(),
+                                Text.get("DAILY.REMINDER", "&7Your daily reward is ready! "),
+                                Text.button(Text.get("DAILY.REMINDER-BUTTON", "&a&l[Claim]"), "daily",
+                                        Text.get("DAILY.REMINDER-HOVER", "&7Click to open /daily")));
+                    }
+                }), 80L);
     }
 
-    /** The 7-day reward strip. */
     final class DailyMenu extends BaseMenu {
 
         private static final int INFO_SLOT = 4;

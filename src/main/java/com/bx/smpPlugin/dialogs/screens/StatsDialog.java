@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.dialogs.screens;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -23,14 +24,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * /stats as a pop-up: your own stats straight away, in a few short lines, with a button to look
- * up someone else and one for the leaderboards. That is the whole screen.
- *
- * <p>A player who is not online is read on the database thread and the sheet opens when the data
- * arrives. Disguised players appear under their alias and without their skin, unless the viewer
- * may see through disguises.
- */
 public final class StatsDialog extends DialogScreen {
 
     private static final String SEARCH = "STATS_SEARCH_DIALOG";
@@ -41,13 +34,11 @@ public final class StatsDialog extends DialogScreen {
         super(plugin, config, sessions);
     }
 
-    /** /stats: your own sheet. */
     public boolean open(Player player) {
         openSheet(player, player.getUniqueId(), plugin.getHideManager().visibleName(player, player));
         return true;
     }
 
-    /** /stats &lt;name&gt;: the command has already resolved the name (aliases included). */
     public boolean openFor(Player player, UUID target, String name) {
         if (target == null) {
             return open(player);
@@ -71,7 +62,6 @@ public final class StatsDialog extends DialogScreen {
 
     // ------------------------------------------------------------------ stat sheet
 
-    /** Remembers who was asked for, so a slow load that loses the race is thrown away. */
     private void openSheet(Player viewer, UUID target, String fallbackName) {
         session(viewer).setStatsTarget(target.toString());
         PlayerData live = plugin.getPlayerDataManager().get(target);
@@ -186,10 +176,6 @@ public final class StatsDialog extends DialogScreen {
         return false;
     }
 
-    /**
-     * Looks up a typed name. Online players (by alias for disguised ones) are found at once; anyone
-     * else is looked up on the database thread.
-     */
     private void search(Player player, DialogResponseView response) {
         String name = input(response, "player_name");
         if (name == null) {
@@ -231,7 +217,6 @@ public final class StatsDialog extends DialogScreen {
         return plugin.getHideManager().publicName(target, stored);
     }
 
-    /** A disguised player's skin would give them away, so only staff who can see through it get it. */
     private boolean showSkin(Player viewer, UUID target) {
         HideManager hide = plugin.getHideManager();
         return hide == null || !hide.isHidden(target) || hide.canSeeRealIdentity(viewer);

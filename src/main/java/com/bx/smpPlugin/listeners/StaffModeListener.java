@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.listeners;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -31,7 +32,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class StaffModeListener implements Listener {
 
-    /** Right-clicking a block fires the interact event for air and block; one press, one action. */
     private static final long INTERACT_COOLDOWN_MS = 200L;
 
     private final SmpPlugin plugin;
@@ -209,7 +209,6 @@ public class StaffModeListener implements Listener {
         }
     }
 
-    /** Spectators cannot use hotbar items, so sneaking is the way back to the staff tools. */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onSneak(PlayerToggleSneakEvent event) {
         Player player = event.getPlayer();

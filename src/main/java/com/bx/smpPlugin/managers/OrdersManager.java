@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.utils.PermissionUtils;
@@ -498,7 +499,8 @@ public class OrdersManager {
                                     }
                                     if (markClaimClaimed(claim.id(), player.getUniqueId(), System.currentTimeMillis())) {
                                         plugin.getSpigotScheduler().runEntity(player, () -> {
-                                            if (canFitItem(player, claim.item())) {
+                                            // Logged out since the claim was marked: hand it back to the claim list.
+                                            if (player.isOnline() && canFitItem(player, claim.item())) {
                                                 player.getInventory().addItem(claim.item());
                                                 if (PlayerSettingUtils.notificationEnabled(
                                                         plugin,
@@ -875,12 +877,6 @@ public class OrdersManager {
     public void updateClickCooldown(UUID uuid) {
         lastClickTimes.put(uuid, System.currentTimeMillis());
     }
-
-
-
-
-
-
 
     public void promptOrderSearchInput(Player player) {
         if (player == null) {
@@ -1983,8 +1979,6 @@ public class OrdersManager {
         return EditFailureReason.DATABASE_ERROR;
     }
 
-
-
     private void resendEditQuantityPrompt(Player player, Order order) {
         PendingOrderEdit pendingEdit = pendingEdits.get(player.getUniqueId());
         if (pendingEdit == null) {
@@ -2065,14 +2059,6 @@ public class OrdersManager {
                 effectiveNavigation.categoryFilter()
         ).open(player);
     }
-
-
-
-
-
-
-
-
 
     private FileConfiguration config() {
         return plugin.getConfigManager().getOrders();

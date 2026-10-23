@@ -1,11 +1,8 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import java.util.List;
 
-/**
- * Page window for the Bedrock Quick Buy catalogue. Kept separate so the size cap can be tested
- * without a server: a form that lists every material is what freezes the Bedrock client.
- */
 public final class QuickBuyBedrockPages {
 
     public static final int DEFAULT_PAGE_SIZE = 20;

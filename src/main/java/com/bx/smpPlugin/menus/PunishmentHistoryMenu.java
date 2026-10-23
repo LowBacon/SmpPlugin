@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.menus;
 
 import com.bx.smpPlugin.utils.PermissionUtils;
@@ -60,7 +61,6 @@ public class PunishmentHistoryMenu extends BaseMenu {
                 returnToProfileViewer);
     }
 
-    /** A null {@code targetUuid} lists every player's punishments, newest first. */
     public PunishmentHistoryMenu(SmpPlugin plugin, UUID targetUuid, String targetName, boolean returnToProfileViewer) {
         super(plugin, configuredTitle(plugin, targetName), configuredSize(plugin));
         this.targetUuid = targetUuid;
@@ -72,10 +72,6 @@ public class PunishmentHistoryMenu extends BaseMenu {
         return targetUuid == null;
     }
 
-    /**
-     * Shows the controls straight away and reads the page on the database thread. A history can be
-     * long and the server-wide list reads the whole table, so neither belongs on the main thread.
-     */
     @Override
     public void build(Player player) {
         clear();

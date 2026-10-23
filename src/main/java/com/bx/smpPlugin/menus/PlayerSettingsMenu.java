@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.menus;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -343,12 +344,6 @@ public final class PlayerSettingsMenu extends BaseMenu {
         return item;
     }
 
-    /**
-     * Status for a button defined only in menus.yml. STATUS-PLACEHOLDER is resolved through
-     * PlaceholderAPI and shown as Enabled/Disabled when it reads like a boolean; a COMMAND button
-     * without one shows Enabled, or the player's flight state when the command is a fly toggle.
-     * Returns null for built-in settings.
-     */
     private ButtonState customButtonState(Player player, ConfigurationSection section) {
         if (section == null) {
             return null;

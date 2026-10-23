@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.api;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -11,14 +12,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Arrays;
 import java.util.Locale;
 
-/**
- * Resolves leaderboard placeholders such as:
- * %economy_top_money_1_name%
- * %economy_top_money_1_value%
- * %economy_top_money_1_value_short%
- * %economy_top_money_1_rank%
- * %economy_top_money_1_display%
- */
 public class LeaderboardPlaceholderResolver {
 
     private final SmpPlugin plugin;

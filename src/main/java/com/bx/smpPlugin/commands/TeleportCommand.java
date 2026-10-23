@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.commands;
 
 import com.bx.smpPlugin.utils.PermissionUtils;
@@ -267,7 +268,8 @@ public class TeleportCommand implements CommandExecutor {
 
     private Double parseCoordinate(String input) {
         try {
-            return Double.parseDouble(input);
+            double value = Double.parseDouble(input);
+            return Double.isFinite(value) && Math.abs(value) <= 30_000_000D ? value : null;
         } catch (NumberFormatException exception) {
             return null;
         }

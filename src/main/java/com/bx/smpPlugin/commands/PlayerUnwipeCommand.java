@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.commands;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -20,7 +21,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/** Puts back the data a {@code /playerwipe} removed, from the backup that wipe left behind. */
 public class PlayerUnwipeCommand implements CommandExecutor, TabCompleter {
 
     private static final String PERMISSION = "smpplugin.admin.playerunwipe";
@@ -104,7 +104,6 @@ public class PlayerUnwipeCommand implements CommandExecutor, TabCompleter {
                 + archive.playerName() + " confirm &cto restore them.");
     }
 
-    /** Groups the backup's rows the way the wipe command counts them, so the two previews line up. */
     private Map<String, Integer> countsByGroup(PlayerWipeArchive archive) {
         Map<String, Integer> byGroup = new LinkedHashMap<>();
         if (archive.hasStats()) {
@@ -145,10 +144,6 @@ public class PlayerUnwipeCommand implements CommandExecutor, TabCompleter {
         return List.of();
     }
 
-    /**
-     * Tab completion fires on every keystroke, so the backup folder is listed off-thread and the
-     * result reused for a minute rather than read from disk on the main thread each time.
-     */
     private List<String> backedUpNames() {
         long now = System.currentTimeMillis();
         if (now - backedUpNamesLoadedAt >= BACKED_UP_NAMES_TTL_MS && backedUpNamesLoading.compareAndSet(false, true)) {
@@ -175,7 +170,6 @@ public class PlayerUnwipeCommand implements CommandExecutor, TabCompleter {
         return matches;
     }
 
-    /** Operators have it through smpplugin.admin; the console always may. */
     private static boolean canUse(CommandSender sender) {
         return sender instanceof org.bukkit.command.ConsoleCommandSender || PermissionUtils.has(sender, PERMISSION);
     }

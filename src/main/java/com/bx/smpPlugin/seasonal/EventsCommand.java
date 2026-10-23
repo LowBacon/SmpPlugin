@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.seasonal;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -17,18 +18,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
-/**
- * /events: the seasonal events and their switches.
- *
- * <pre>
- * /events                                   the events menu (staff can switch events in it)
- * /events status                            every event's status in chat
- * /events &lt;advent|halloween|trickortreat&gt;      one event's status
- * /events &lt;event&gt; &lt;on|off|auto&gt;               switch it (staff)
- * </pre>
- *
- * Switching never changes the dates in the event's config file: AUTO follows them again.
- */
 public final class EventsCommand implements CommandExecutor, TabCompleter {
 
     public static final String PERMISSION = "smpplugin.events";
@@ -82,7 +71,6 @@ public final class EventsCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
-    /** Switches an event and tells the sender what changed. Used by the command and the menu. */
     static void apply(SmpPlugin plugin, SeasonalEvents events, CommandSender sender, EventId id, EventMode mode) {
         SeasonalEvents.Change change = events.setMode(id, mode, sender.getName());
         switch (change) {
@@ -157,7 +145,6 @@ public final class EventsCommand implements CommandExecutor, TabCompleter {
         };
     }
 
-    /** Lines about one event, for chat and the menu. Staff also see who switched it last. */
     static List<String> describe(SeasonalEvents events, EventId id, boolean staff) {
         List<String> lines = new ArrayList<>();
         lines.add(Text.get("EVENTS.LINE-STATUS", "&7Status: {status}", "{status}", statusText(events, id)));

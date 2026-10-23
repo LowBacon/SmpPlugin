@@ -1,12 +1,9 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.platform;
 
 import java.util.Locale;
 import java.util.function.Predicate;
 
-/**
- * The server software the plugin is running on. Detection is based on classes that
- * only exist in that software, falling back to the server name reported by Bukkit.
- */
 public enum ServerPlatform {
     FOLIA("Folia"),
     PURPUR("Purpur"),
@@ -30,15 +27,10 @@ public enum ServerPlatform {
         return displayName;
     }
 
-    /** True when the platform ships Paper's API and configuration system (Paper and its forks). */
     public boolean isPaperBased() {
         return this == PAPER || this == PURPUR || this == FOLIA;
     }
 
-    /**
-     * @param classPresent tells whether a class can be loaded on this server
-     * @param serverName   the value of {@code Bukkit.getName()}
-     */
     public static ServerPlatform detect(Predicate<String> classPresent, String serverName) {
         if (classPresent.test(FOLIA_CLASS)) {
             return FOLIA;

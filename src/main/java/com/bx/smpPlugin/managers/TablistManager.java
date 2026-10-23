@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.utils.PermissionUtils;
@@ -66,21 +67,16 @@ public class TablistManager {
     private final Map<UUID, Long> skinHeadTextureRefreshTimes = new ConcurrentHashMap<>();
     private final Map<UUID, Map<String, PermissionOverride>> luckPermsCommandOverrides = new ConcurrentHashMap<>();
     private final Map<UUID, Integer> listOrders = new ConcurrentHashMap<>();
-    /** What each player was last sent, so an unchanged header, footer or name sends no packet. */
     private final Map<UUID, String> lastHeaderFooter = new ConcurrentHashMap<>();
     private final Map<UUID, String> lastNames = new ConcurrentHashMap<>();
-    /** LuckPerms group weight per player and when it was read; rank changes refresh it early. */
     private final Map<UUID, long[]> rankWeights = new ConcurrentHashMap<>();
     private static final long RANK_WEIGHT_TTL_MS = 30_000L;
-    /** Every Nth periodic name pass is sent regardless, so a missed change never sticks. */
     private static final int FORCED_NAME_PASS_EVERY = 15;
     private int namePassCounter;
     private volatile long animationFrame;
-    /** The animated title and line only change once per frame, so they are built once per frame. */
     private volatile long renderedFrame = -1L;
     private volatile String renderedTitle = "";
     private volatile String renderedLine = "";
-    /** Header and footer text read from config.yml, kept until the config object is reloaded. */
     private volatile org.bukkit.configuration.file.FileConfiguration textSource;
     private final Map<String, String> textCache = new ConcurrentHashMap<>();
 
@@ -137,10 +133,6 @@ public class TablistManager {
         }
     }
 
-    /**
-     * The periodic pass: works out the name as text first and only parses and sends it when it
-     * differs from what the player's entry already shows.
-     */
     private void updateTablistNameIfChanged(Player player) {
         updateListOrder(player);
         String signature = nameSignature(resolveNameFormat(player), player);
@@ -180,10 +172,6 @@ public class TablistManager {
 
     // ── Sorting ──────────────────────────────────────────────────────────────
 
-    /**
-     * Puts higher ranks at the top of the tab list (LuckPerms group weight) and AFK players at the
-     * bottom. Only sends a change when the position actually moves.
-     */
     private void updateListOrder(Player player) {
         if (!config().getBoolean("TABLIST.SORTING.ENABLED", true)) {
             return;
@@ -203,7 +191,6 @@ public class TablistManager {
         }
     }
 
-    /** The weight of the player's primary LuckPerms group, 0 without LuckPerms. Cached briefly. */
     private int resolveRankWeight(Player player) {
         long now = System.currentTimeMillis();
         long[] cached = rankWeights.get(player.getUniqueId());
@@ -236,7 +223,6 @@ public class TablistManager {
 
     // ── Animated title, tips and live placeholders ───────────────────────────
 
-    /** Advances the title animation one step and redraws headers and footers. */
     public void animate() {
         if (!isEnabled() || !config().getBoolean("TABLIST.ANIMATION.ENABLED", true)) {
             return;
@@ -263,7 +249,6 @@ public class TablistManager {
         return renderedTitle;
     }
 
-    /** A bar of LINE-CHAR in a two-colour gradient with its own sweeping shine, for %animated_line%. */
     private String animatedLine() {
         renderFrame();
         return renderedLine;
@@ -287,7 +272,6 @@ public class TablistManager {
         renderedFrame = frame;
     }
 
-    /** The tip for this moment: they rotate every TABLIST.TIPS-SECONDS. */
     private String currentTip() {
         List<String> tips = config().getStringList("TABLIST.TIPS");
         if (tips.isEmpty()) {
@@ -331,12 +315,6 @@ public class TablistManager {
         scheduleSkinHeadRefresh(player, playerId);
     }
 
-    /**
-     * Forces a skin head refresh for the given player, bypassing the once-per-join
-     * deduplication guard. This should be used when a permission change or skin
-     * change is detected at runtime (e.g. via LuckPerms or SkinsRestorer events)
-     * so the tablist updates without requiring a rejoin.
-     */
     public void forceRefreshSkinHeads(Player player) {
         if (player == null || !player.isOnline() || !isEnabled()
                 || !config().getBoolean("TABLIST.REFRESH-SKIN-HEADS", true)) {
@@ -354,10 +332,6 @@ public class TablistManager {
         scheduleSkinHeadRefresh(player, playerId);
     }
 
-    /**
-     * Invalidates the cached skin texture for the given player so the next
-     * refresh cycle re-fetches the texture from the game profile or SkinsRestorer.
-     */
     public void invalidateSkinCache(UUID playerId) {
         removeCachedSkinTexture(playerId);
         skinHeadTextureRefreshTimes.remove(playerId);
@@ -365,10 +339,6 @@ public class TablistManager {
         refreshedSkinHeads.remove(playerId);
     }
 
-    /**
-     * Updates the cached skin texture for the given player and refreshes their tablist entry.
-     * This is typically called when SkinsRestorer applies a new skin.
-     */
     public void updateSkinTexture(UUID playerId, String value, String signature) {
         if (playerId == null) {
             return;
@@ -539,11 +509,6 @@ public class TablistManager {
         return cached != null && cached.isValid() ? cached : null;
     }
 
-    /**
-     * The skin to draw for this player's head in a menu, from what the tab list already knows.
-     * It never asks Mojang's session servers, so it is safe on the main thread.
-     * Null when nothing is known yet (usually a player who has not joined since the restart).
-     */
     public SkinTexture knownSkinTexture(UUID playerId) {
         SkinTexture cached = cachedSkinTexture(playerId);
         if (cached != null) {
@@ -873,7 +838,6 @@ public class TablistManager {
                 : config.getString(key, ""));
     }
 
-    /** "Overworld", "Nether", "The End", or the world's own name for anything else. */
     private static String worldLabel(Player player) {
         return switch (player.getWorld().getEnvironment()) {
             case NORMAL -> "Overworld";
@@ -1248,7 +1212,6 @@ public class TablistManager {
                 .replace("<nick>", resolveNickname(player));
     }
 
-    /** Per-player stats for the header and footer, e.g. "%money% | %kills% kills". */
     private String applyStatPlaceholders(String text, Player player) {
         if (!text.contains("%")) {
             return text;
@@ -1276,11 +1239,6 @@ public class TablistManager {
                 .replace("%playtime%", com.bx.smpPlugin.utils.NumberUtils.formatTime(data.getTotalPlaytimeSeconds()));
     }
 
-    /**
-     * LuckPerms can finish loading a player's groups a moment after they join, which left new
-     * players without their rank in the tab list until something else refreshed it. Two late
-     * refreshes catch that.
-     */
     public void scheduleJoinRefresh(Player player) {
         if (player == null) {
             return;

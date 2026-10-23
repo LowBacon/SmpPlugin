@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.halloween;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -42,24 +43,12 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.logging.Level;
 
-/**
- * /trickortreat: knock on a door during Trick or Treat. The outcome is decided and handed over the moment the player
- * knocks; the knock, the door and the reveal that follow only show it, so leaving early never loses or repeats a
- * treat. Most knocks give a treat picked by weight from TRICK-OR-TREAT.TREATS; the rest play a harmless trick (a
- * scare, bats, a launch...) that can never hurt the player or take their items.
- *
- * <p>Limits: a wait between knocks (COOLDOWN-MINUTES, shorter with a rank's TRICK-OR-TREAT-COOLDOWN-CUT-PERCENT) and
- * a number of knocks a day (DAILY-LIMIT, more with TRICK-OR-TREAT-EXTRA-KNOCKS). With houses (spots set with
- * /trickortreat house add, or FancyNpcs NPCs named in NPCS) and REQUIRE-HOUSE, players go door to door and the wait
- * counts per house.
- */
 public final class TrickOrTreatCommand implements CommandExecutor, TabCompleter {
 
     public static final String PERMISSION = "smpplugin.halloween.trickortreat";
     private static final String LAST_KNOCK = "halloween.trickortreat";
     private static final String HOUSE_FILE = "data/trickortreat-houses.yml";
 
-    /** A spot players knock at. */
     public record House(String id, String name, String world, double x, double y, double z, double radius) {
 
         boolean contains(Location at) {
@@ -111,10 +100,6 @@ public final class TrickOrTreatCommand implements CommandExecutor, TabCompleter 
         return true;
     }
 
-    /**
-     * One knock. {@code npcHouse} is the house id when the player clicked a house NPC, or null for the command.
-     * Must run on the player's thread.
-     */
     public void knock(Player player, String npcHouse) {
         if (!PermissionUtils.has(player, PERMISSION)) {
             Text.send(player, "GENERAL.NO-PERMISSION", "&cYou don't have permission to do that.");
@@ -299,7 +284,6 @@ public final class TrickOrTreatCommand implements CommandExecutor, TabCompleter 
         }
     }
 
-    /** Knocks left today for the hub ("-1" means no limit). */
     public int knocksLeft(Player player) {
         int limit = dailyLimit(player);
         if (limit <= 0) {
@@ -309,7 +293,6 @@ public final class TrickOrTreatCommand implements CommandExecutor, TabCompleter 
         return Math.max(0, limit - log.usedOn(halloween.now().toLocalDate().toEpochDay()));
     }
 
-    /** Seconds until the next knock without a house (0: now). */
     public long secondsUntilKnock(Player player) {
         long last = parseLong(store.get(player.getUniqueId(), LAST_KNOCK));
         long left = cooldownMillis(player) - (System.currentTimeMillis() - last);
@@ -318,7 +301,6 @@ public final class TrickOrTreatCommand implements CommandExecutor, TabCompleter 
 
     // ------------------------------------------------------------------ houses
 
-    /** The house whose spot contains {@code at}, or null. */
     private String houseAt(Location at) {
         for (House house : houses.values()) {
             if (house.contains(at)) {
@@ -328,7 +310,6 @@ public final class TrickOrTreatCommand implements CommandExecutor, TabCompleter 
         return null;
     }
 
-    /** True when an NPC with this name is a Trick or Treat house (TRICK-OR-TREAT.NPCS). */
     public boolean isHouseNpc(String npcName) {
         if (npcName == null) {
             return false;

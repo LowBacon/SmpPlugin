@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.gambling;
 
 import com.bx.smpPlugin.economy.EconomyStore;
@@ -17,10 +18,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * The escrow guarantees: a hold exists exactly while a bet is taken and unpaid, a crash refunds it once, and a
- * payout can never happen without its hold closing in the same transaction.
- */
 class GamblingEscrowTest {
 
     private static final UUID ALICE = UUID.fromString("30000000-0000-0000-0000-00000000000a");

@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.dialogs.screens;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -15,12 +16,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-/**
- * Settings, split into the categories declared in {@code dialog.yml}.
- *
- * <p>The category screen is rebuilt after every toggle so the labels — which are just
- * {@code %economy_setting_*%} placeholders — show the value that was just chosen.
- */
 public final class SettingsDialog extends DialogScreen {
 
     private static final String PATH = "SETTINGS_DIALOG";
@@ -30,7 +25,6 @@ public final class SettingsDialog extends DialogScreen {
         super(plugin, config, sessions);
     }
 
-    /** Opens the category picker. */
     public boolean open(Player player) {
         Map<String, String> tokens = DialogConfig.tokens("player", player.getName());
         int defaultWidth = DialogConfig.clampWidth(config.integer(PATH + ".CATEGORIES-BUTTON-WIDTH", 150));
@@ -145,7 +139,6 @@ public final class SettingsDialog extends DialogScreen {
         return true;
     }
 
-    /** A category as written in the config, holding its button list verbatim. */
     private record Category(String id, String name, String label, List<?> buttons, int width) {
     }
 
@@ -192,7 +185,6 @@ public final class SettingsDialog extends DialogScreen {
         return fallback;
     }
 
-    /** Finds which category holds a toggle so the screen can be reopened after the click. */
     private String categoryOf(String toggleId) {
         String needle = DialogActions.TOGGLE + DialogActions.sanitise(toggleId);
         for (Category category : categories()) {

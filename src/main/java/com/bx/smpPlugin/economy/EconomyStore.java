@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.economy;
 
 import java.sql.Connection;
@@ -9,40 +10,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Database work of the economy: the balance columns of {@code players}, the {@code economy_ledger} table and the
- * {@code economy_holds} table (money held for unfinished games). Plain JDBC with no server dependencies, so it is
- * tested against a real SQLite database.
- *
- * <p>Balances carry a version ({@code players.money_version}) that grows with every change. A balance is only
- * ever written with a newer version than the stored one, so writes that arrive out of order (the database writer,
- * CoinFlip's own connection, a quit save) can never put an older balance back.</p>
- *
- * <p>A balance is written twice: exactly as whole cents in {@code money_cents} and as a double in {@code money},
- * which older tools, wipes and hand-written SQL read and change. See {@link #resolveCents} for which one is read.</p>
- */
 public final class EconomyStore {
 
     public static final String LEDGER_TABLE = "economy_ledger";
     public static final String HOLDS_TABLE = "economy_holds";
 
-    /** One player's money columns as they are written. */
     public record BalanceSnapshot(UUID player, long cents, double moneySpent, double moneyMade, long version) {
     }
 
-    /** A stored balance and its version. */
     public record StoredBalance(long cents, long version) {
     }
 
-    /** Money held for a game that has not been settled yet. */
     public record Hold(String id, UUID player, String name, long cents, String game, long createdAt) {
     }
 
-    /** Ledger totals of one reason. */
     public record ReasonTotal(String reason, long count, long creditedCents, long debitedCents) {
     }
 
-    /** Sum of every stored balance. */
     public record MoneySupply(long accounts, double total) {
     }
 
@@ -51,7 +35,6 @@ public final class EconomyStore {
         T run(Connection connection) throws SQLException;
     }
 
-    /** Runs one schema statement, adapting it to the database dialect. */
     @FunctionalInterface
     public interface SchemaExecutor {
         void execute(Statement statement, String sql) throws SQLException;
@@ -60,7 +43,6 @@ public final class EconomyStore {
     private EconomyStore() {
     }
 
-    /** Creates the ledger and hold tables. Safe on every start. */
     public static void createSchema(Connection connection, SchemaExecutor executor) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             executor.execute(statement, "CREATE TABLE IF NOT EXISTS " + LEDGER_TABLE + " ("
@@ -90,11 +72,6 @@ public final class EconomyStore {
         }
     }
 
-    /**
-     * Runs {@code work} as one transaction: commits when it returns, rolls back when it throws. Auto-commit is
-     * switched back on afterwards. Inside a transaction this thread already opened, the work simply joins it and
-     * the outer code commits or rolls back.
-     */
     public static <T> T inTransaction(Connection connection, Work<T> work) throws SQLException {
         if (!connection.getAutoCommit()) {
             return work.run(connection);
@@ -116,10 +93,6 @@ public final class EconomyStore {
         }
     }
 
-    /**
-     * True for errors that only mean "another connection got there first" and are worth retrying: SQLite busy or
-     * locked (including a stale read snapshot under WAL), MySQL deadlocks and lock-wait timeouts.
-     */
     public static boolean isRetryable(SQLException exception) {
         for (Throwable current = exception; current != null; current = current.getCause()) {
             if (current instanceof SQLException sql) {
@@ -135,10 +108,6 @@ public final class EconomyStore {
         return false;
     }
 
-    /**
-     * Writes a balance if {@code snapshot} is newer than the stored one. Returns false when the stored balance
-     * already has this version or a newer one, or when the player has no row yet.
-     */
     public static boolean writeSnapshot(Connection connection, BalanceSnapshot snapshot) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
                 "UPDATE players SET money = ?, money_cents = ?, money_spent = ?, money_made = ?, money_version = ?"
@@ -154,7 +123,6 @@ public final class EconomyStore {
         }
     }
 
-    /** The stored balance of one player, or null when they have no row. */
     public static StoredBalance readBalance(Connection connection, UUID player) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
                 "SELECT money, money_cents, money_version FROM players WHERE uuid = ?")) {
@@ -169,12 +137,6 @@ public final class EconomyStore {
         }
     }
 
-    /**
-     * The balance a row holds. {@code moneyCents} carries every cent of any balance, but it is trusted only while
-     * it still matches {@code money}: a wipe, an older plugin version or a hand-written SQL change sets
-     * {@code money} alone, and then {@code money} is the balance. A NULL {@code moneyCents} (a row 4.1.0 or later has
-     * not written yet) also reads {@code money}.
-     */
     public static long resolveCents(double money, Long moneyCents) {
         if (moneyCents != null && moneyCents >= 0L && Double.compare(Money.toUnits(moneyCents), money) == 0) {
             return moneyCents;
@@ -182,10 +144,6 @@ public final class EconomyStore {
         return Money.storedToCents(money);
     }
 
-    /**
-     * Sets a stored balance if its version is still {@code expectedVersion}; the new version is
-     * {@code expectedVersion + 1}. Returns false when someone else changed the balance first.
-     */
     public static boolean compareAndSet(Connection connection, UUID player, long expectedVersion, long newCents)
             throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
@@ -219,7 +177,6 @@ public final class EconomyStore {
         }
     }
 
-    /** A player's ledger rows, newest first. */
     public static List<LedgerEntry> history(Connection connection, UUID player, int limit, int offset)
             throws SQLException {
         List<LedgerEntry> entries = new ArrayList<>();
@@ -253,7 +210,6 @@ public final class EconomyStore {
         }
     }
 
-    /** Totals per reason of every change since {@code sinceMillis}. */
     public static List<ReasonTotal> totalsSince(Connection connection, long sinceMillis) throws SQLException {
         List<ReasonTotal> totals = new ArrayList<>();
         try (PreparedStatement statement = connection.prepareStatement(
@@ -271,7 +227,6 @@ public final class EconomyStore {
         return totals;
     }
 
-    /** Number of accounts and the sum of their balances (a double sum: a statistic, not a balance). */
     public static MoneySupply moneySupply(Connection connection) throws SQLException {
         try (Statement statement = connection.createStatement();
              ResultSet rs = statement.executeQuery("SELECT COUNT(*), COALESCE(SUM(money), 0) FROM players")) {
@@ -279,7 +234,6 @@ public final class EconomyStore {
         }
     }
 
-    /** Deletes ledger rows older than {@code beforeMillis}. Returns how many were removed. */
     public static int pruneLedger(Connection connection, long beforeMillis) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
                 "DELETE FROM " + LEDGER_TABLE + " WHERE created_at < ?")) {
@@ -302,7 +256,6 @@ public final class EconomyStore {
         }
     }
 
-    /** Changes what a hold is worth. Returns false when the hold does not exist. */
     public static boolean updateHold(Connection connection, String id, long cents) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
                 "UPDATE " + HOLDS_TABLE + " SET cents = ? WHERE hold_id = ?")) {
@@ -312,7 +265,6 @@ public final class EconomyStore {
         }
     }
 
-    /** Removes a hold. Returns false when it was already gone. */
     public static boolean deleteHold(Connection connection, String id) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
                 "DELETE FROM " + HOLDS_TABLE + " WHERE hold_id = ?")) {

@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.utils;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -11,14 +12,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
 
-/**
- * Reads the optional {@code DEFAULT} and {@code ENABLED} keys admins may place under each
- * {@code SETTINGS-MENU.BUTTONS} entry in menus.yml.
- *
- * <p>{@code DEFAULT} decides what a setting looks like for players who have never touched it,
- * {@code ENABLED: false} removes the option from /settings entirely and pins every player to the
- * configured default.</p>
- */
 public final class PlayerSettingDefaults {
 
     public static final String BUTTONS_PATH = "SETTINGS-MENU.BUTTONS";
@@ -31,17 +24,12 @@ public final class PlayerSettingDefaults {
     private PlayerSettingDefaults() {
     }
 
-    /**
-     * Forces the settings table to load during plugin enable so the first player join does not
-     * pay for class initialization on the server thread.
-     */
     public static void initialize() {
         if (BINDINGS.isEmpty()) {
             throw new IllegalStateException("PlayerSettingDefaults failed to register settings");
         }
     }
 
-    /** Whether the button described by {@code buttonSection} should still be offered to players. */
     public static boolean isOptionEnabled(ConfigurationSection buttonSection) {
         return buttonSection == null || buttonSection.getBoolean(ENABLED_KEY, true);
     }
@@ -54,7 +42,6 @@ public final class PlayerSettingDefaults {
         return isOptionEnabled(buttons(plugin), key);
     }
 
-    /** Applies every configured {@code DEFAULT} to a player who has no stored settings yet. */
     public static void applyDefaults(SmpPlugin plugin, PlayerData data) {
         applyDefaults(buttons(plugin), data, warningSink(plugin));
     }
@@ -76,13 +63,6 @@ public final class PlayerSettingDefaults {
         }
     }
 
-    /**
-     * Pins every option turned off with {@code ENABLED: false} back to its configured default, so a
-     * removed option behaves the same for players who had already toggled it.
-     *
-     * <p>The previous dirty flag is restored afterwards: the override lives in memory and never
-     * schedules a database write on its own.</p>
-     */
     public static void applyDisabledOptions(SmpPlugin plugin, PlayerData data) {
         applyDisabledOptions(buttons(plugin), data, warningSink(plugin));
     }

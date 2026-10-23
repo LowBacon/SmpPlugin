@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -17,21 +18,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Matchmaking in front of RTP. Players run /rtpq to wait for other players, and once enough of
- * them are waiting the whole group is dropped at one shared random location rather than at a
- * random location each, which is what /rtp does. Everybody lands within a few blocks of
- * everybody else, so a fight can start without anyone swapping coordinates first.
- *
- * <p>The search reuses the RTP engine through {@link RTPManager#findSafeLocationAsync}, so a
- * match is never blocked by RTP cooldowns, playtime requirements, or the RTP slot queue. The
- * waiting list only lives in memory, so leaving the server or reloading the config drops the
- * player from it.
- *
- * <p>A server can skip the command entirely by naming a cuboid in {@code QUEUE.CUBOID}. Players
- * standing inside it are queued a second after they walk in and taken back off the queue when
- * they walk out, so a group forms by gathering in one room instead of by typing.
- */
 public class RTPQueueManager {
 
     private static final int DEFAULT_MATCH_SIZE = 2;
@@ -87,20 +73,12 @@ public class RTPQueueManager {
         return plugin.getRtpManager().resolveWorldSelector(configured);
     }
 
-    /**
-     * Name of the cuboid that queues players by standing in it, or null when the server has not
-     * set one and {@code /rtpq} is the only way in.
-     */
     public String getCuboidName() {
         FileConfiguration rtp = rtpConfig();
         String configured = rtp == null ? null : rtp.getString("QUEUE.CUBOID", "");
         return configured == null || configured.isBlank() ? null : configured;
     }
 
-    /**
-     * Whether the per-second cuboid sweep has anything to do, so the task can skip walking the
-     * whole player list on servers that never set a queue cuboid.
-     */
     public boolean isZoneActive() {
         return plugin != null
                 && plugin.getCuboidManager() != null
@@ -155,19 +133,10 @@ public class RTPQueueManager {
         }
     }
 
-    /**
-     * Puts a player in the waiting list, and starts the match as soon as that fills it.
-     *
-     * @return true when the player is waiting in the queue once this returns
-     */
     public boolean join(Player player) {
         return join(player, true);
     }
 
-    /**
-     * @param notifyRefusal false for the cuboid join, which would otherwise repeat the same
-     *                      refusal once a second at a player who is only standing there
-     */
     private boolean join(Player player, boolean notifyRefusal) {
         if (player == null) {
             return false;
@@ -247,11 +216,6 @@ public class RTPQueueManager {
         return true;
     }
 
-    /**
-     * Queues a player standing in {@code QUEUE.CUBOID} and takes them off again once they walk
-     * out. Only the players the cuboid put there are pulled back out by it, so somebody who ran
-     * {@code /rtpq} elsewhere keeps their place after crossing the region.
-     */
     public void tickZone(Player player) {
         if (player == null) {
             return;
@@ -284,11 +248,6 @@ public class RTPQueueManager {
         }
     }
 
-    /**
-     * Takes a player back out of the waiting list at their own request.
-     *
-     * @return true when the player was queued and has now been removed
-     */
     public boolean leave(Player player) {
         if (player == null) {
             return false;
@@ -317,9 +276,6 @@ public class RTPQueueManager {
         return true;
     }
 
-    /**
-     * Drops a player who has disconnected, without telling the rest of the queue they left.
-     */
     public void handleQuit(UUID playerId) {
         zoneJoined.remove(playerId);
         if (!remove(playerId)) {
@@ -340,10 +296,6 @@ public class RTPQueueManager {
         }
     }
 
-    /**
-     * Pulls the players for one match off the front of the waiting list, longest wait first,
-     * and leaves the list untouched while it is still too short to fill a match.
-     */
     List<UUID> pollMatchParty() {
         int needed = getMatchSize();
         synchronized (waiting) {
@@ -411,14 +363,6 @@ public class RTPQueueManager {
         });
     }
 
-    /**
-     * Sends the whole party to the meeting point. Everybody after the first gets their own
-     * search within SPREAD-RADIUS of it, so the group lands together without stacking up on a
-     * single block, and anybody the spread search cannot place lands on the point itself.
-     *
-     * <p>The teleports deliberately skip the usual RTP stand-still countdown: one player moving
-     * would otherwise cancel their half of the match and strand the rest out in the wild alone.
-     */
     private void teleportParty(List<Player> matched, Location meetingPoint, RTPManager.SearchSettings settings) {
         int spreadRadius = getSpreadRadius();
         for (int index = 0; index < matched.size(); index++) {

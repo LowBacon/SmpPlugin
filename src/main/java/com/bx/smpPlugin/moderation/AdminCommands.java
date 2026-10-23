@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.moderation;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -43,10 +44,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * World and staff tools: /broadcast, /day /night /sun /rain /thunder, /smite, /butcher,
- * /spawnmob, /more, /countdown, /performance, /speed, /whois and /spook.
- */
 public final class AdminCommands implements CommandExecutor, TabCompleter {
 
     private final SmpPlugin plugin;
@@ -281,7 +278,6 @@ public final class AdminCommands implements CommandExecutor, TabCompleter {
         Text.send(sender, "ADMIN.BUTCHER", "&7Removed &f{count} &7mob(s).", "{count}", Integer.toString(removed));
     }
 
-    /** Never removes named, tamed or leashed mobs, villagers, golems or armour stands. */
     static boolean removable(LivingEntity entity, boolean animalsToo) {
         if (entity.getCustomName() != null || entity.isLeashed()) {
             return false;
@@ -437,10 +433,6 @@ public final class AdminCommands implements CommandExecutor, TabCompleter {
                 "{player}", target.getName(), "{mode}", fly ? "fly" : "walk", "{level}", String.format(Locale.ROOT, "%.1f", level));
     }
 
-    /**
-     * Level 1 is the vanilla speed (walk 0.2, fly 0.1) and 10 the fastest the game allows (1.0);
-     * levels below 1 slow down in proportion.
-     */
     static float speedValue(float level, boolean fly) {
         float normal = fly ? 0.1F : 0.2F;
         if (level < 1F) {

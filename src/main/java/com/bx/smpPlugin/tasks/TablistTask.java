@@ -1,11 +1,9 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.tasks;
 
 import com.bx.smpPlugin.SmpPlugin;
 import com.bx.smpPlugin.managers.OptimizationManager;
 
-/**
- * Updates tablist header/footer and entry names for all players every 40 ticks (2s).
- */
 public class TablistTask implements Runnable {
 
     private final SmpPlugin plugin;

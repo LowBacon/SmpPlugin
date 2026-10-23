@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.dialogs.screens;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -47,12 +48,10 @@ import static com.bx.smpPlugin.menus.QuickBuyCatalog.*;
 
 public final class QuickBuyItemDialog extends DialogScreen {
 
-    /** Side-by-side Cancel / Add to Quick Buy, matching Design/Quick Buy/Buy Item/3.png. */
     static final int AMOUNT_COLUMNS = 2;
     static final int AMOUNT_BUTTON_WIDTH = 150;
     static final int AMOUNT_INPUT_WIDTH = 200;
 
-    /** Choose Enchantments matching Design/Quick Buy/Buy Item/Choose Enchantments/main.png. */
     public static final int ENCHANT_COLUMNS = 6;
     public static final int ENCHANT_NAME_WIDTH = 145;
     public static final int ENCHANT_LEVEL_WIDTH = 42;
@@ -485,11 +484,6 @@ public final class QuickBuyItemDialog extends DialogScreen {
         }
     }
 
-    /**
-     * Hover text for a Choose Item button: the item name, then {@code Worth:} plus the inventory
-     * worth lore line (green {@code $} and compact amount). Unsellable items, a globally disabled
-     * worth-lore switch, and a player who turned Worth Display off leave the tooltip off.
-     */
     public static String chooseItemWorthTooltip(
             SmpPlugin plugin,
             Player player,
@@ -541,13 +535,6 @@ public final class QuickBuyItemDialog extends DialogScreen {
         return "<item:" + path + ">";
     }
 
-    /**
-     * The skin texture that draws a head or a skull, or blank for everything else.
-     *
-     * <p>No atlas holds a head, but a head can be drawn from any skin texture, and a mob texture
-     * lays its face out where a player skin keeps one. So a creeper head is a head wearing
-     * creeper.png rather than a stand-in item that merely hints at the mob.
-     */
     public static String getHeadTexture(Material mat) {
         if (mat == null) {
             return "";

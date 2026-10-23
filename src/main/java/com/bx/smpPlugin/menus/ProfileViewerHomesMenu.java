@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.menus;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -46,7 +47,6 @@ public class ProfileViewerHomesMenu extends BaseMenu {
         this(plugin, targetUuid, true);
     }
 
-    /** {@code returnToProfile} false (opened with /seehomes): the back button closes instead. */
     public ProfileViewerHomesMenu(SmpPlugin plugin, UUID targetUuid, boolean returnToProfile) {
         super(plugin, configuredTitle(plugin, targetUuid), configuredSize(plugin));
         this.targetUuid = targetUuid;

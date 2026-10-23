@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.models;
 
 import com.bx.smpPlugin.economy.Money;
@@ -9,7 +10,6 @@ public class PlayerData {
 
     private final UUID uuid;
     private String username;
-    /** The balance in whole cents; see {@link Money}. */
     private long moneyCents;
     private long shards;
     private int kills;
@@ -66,12 +66,9 @@ public class PlayerData {
     private long keyAllRemainingSeconds;
     private long keyAllAnchorPlaytimeSeconds;
     private boolean dirty;
-    /** Grows with every balance change; stored as players.money_version so an older balance never overwrites a newer one. */
     private long moneyVersion;
 
-    /** The money columns read together, so a save never mixes two different changes. */
     public record MoneyState(long cents, double moneySpent, double moneyMade, long version) {
-        /** The balance as the double the {@code money} column holds next to the exact {@code money_cents}. */
         public double money() {
             return Money.toUnits(cents);
         }
@@ -183,27 +180,20 @@ public class PlayerData {
         return moneyCents;
     }
 
-    /** Sets the balance in whole cents and moves the balance version on. */
     public synchronized void setMoneyCents(long cents) {
         this.moneyCents = Math.max(0L, cents);
         moneyVersion++;
         dirty = true;
     }
 
-    /** The balance as a double for display, placeholders and Vault; never more than the cents ({@link Money#toUnits}). */
     public synchronized double getMoney() {
         return Money.toUnits(moneyCents);
     }
 
-    /** Sets the balance from an amount, rounded to the nearest cent, and moves the balance version on. */
     public synchronized void setMoney(double money) {
         setMoneyCents(Money.storedToCents(money));
     }
 
-    /**
-     * Adds to the balance outside the economy service. New code should use
-     * {@link com.bx.smpPlugin.managers.EconomyManager#deposit} so the change is logged and saved at once.
-     */
     public synchronized void addMoney(double amount) {
         setMoneyCents(Money.add(moneyCents, Money.toCents(amount).orElse(0L)).orElse(Money.MAX_CENTS));
     }
@@ -226,20 +216,14 @@ public class PlayerData {
         return moneyVersion;
     }
 
-    /** Only for loading a stored row. */
     public synchronized void setMoneyVersion(long moneyVersion) {
         this.moneyVersion = Math.max(0L, moneyVersion);
     }
 
-    /** The balance, totals and balance version as one consistent reading. */
     public synchronized MoneyState moneyState() {
         return new MoneyState(moneyCents, moneySpent, moneyMade, moneyVersion);
     }
 
-    /**
-     * Moves the balance version past {@code storedVersion} when something else wrote a newer one, so this copy's
-     * next save is not ignored. Returns the state to write.
-     */
     public synchronized MoneyState ensureMoneyVersionAbove(long storedVersion) {
         if (moneyVersion <= storedVersion) {
             moneyVersion = storedVersion + 1L;
@@ -258,11 +242,17 @@ public class PlayerData {
     }
 
     public void addShards(long amount) {
-        setShards(this.shards + amount);
+        // Saturating: an overflow wrapped negative and was stored as 0.
+        long sum = this.shards + amount;
+        if (amount > 0 && sum < this.shards) {
+            sum = Long.MAX_VALUE;
+        }
+        setShards(sum);
     }
 
     public boolean removeShards(long amount) {
-        if (this.shards < amount) {
+        // A negative amount would add shards.
+        if (amount < 0 || this.shards < amount) {
             return false;
         }
         setShards(this.shards - amount);
@@ -571,7 +561,6 @@ public class PlayerData {
         dirty = true;
     }
 
-    /** When on, selling also sells what is inside shulker boxes. */
     public boolean isSellShulkersEnabled() {
         return sellShulkersEnabled;
     }
@@ -581,7 +570,6 @@ public class PlayerData {
         dirty = true;
     }
 
-    /** When on, the player's auction and order activity is left out of server announcements. */
     public boolean isPrivateTransactionsEnabled() {
         return privateTransactionsEnabled;
     }

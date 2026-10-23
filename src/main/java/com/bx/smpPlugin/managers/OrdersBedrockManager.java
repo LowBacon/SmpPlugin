@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -382,11 +383,6 @@ public final class OrdersBedrockManager {
                 && plugin.getServer().getPluginManager().isPluginEnabled("floodgate");
     }
 
-    /**
-     * Uses reflection for the optional Floodgate API. This keeps Floodgate as a
-     * true runtime integration instead of making the whole build depend on
-     * OpenCollab's Maven repository. Floodgate is optional at runtime anyway.
-     */
     private boolean floodgateIsBedrock(Player player) {
         try {
             Class<?> apiClass = Class.forName("org.geysermc.floodgate.api.FloodgateApi");

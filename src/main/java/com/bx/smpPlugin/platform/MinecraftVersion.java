@@ -1,14 +1,10 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.platform;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * A Minecraft release version such as {@code 26.3} or {@code 1.21.10}.
- * Only the numeric release components are compared; build suffixes such as
- * {@code -R0.1-SNAPSHOT} or {@code .build.157-beta} are ignored.
- */
 public final class MinecraftVersion implements Comparable<MinecraftVersion> {
 
     private final int[] components;
@@ -17,12 +13,6 @@ public final class MinecraftVersion implements Comparable<MinecraftVersion> {
         this.components = components;
     }
 
-    /**
-     * Parses a version string. Accepts plain versions ({@code 26.3}) as well as
-     * Bukkit version strings ({@code 26.3-R0.1-SNAPSHOT}).
-     *
-     * @throws IllegalArgumentException when no numeric release component is present
-     */
     public static MinecraftVersion parse(String raw) {
         if (raw == null || raw.isBlank()) {
             throw new IllegalArgumentException("version is blank");

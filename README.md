@@ -167,10 +167,8 @@ The Auction House is now only `/ah` (`/auctionhouse` was removed). Everything ne
 
 ### 🛡️ Moderation & Staff
 
-* Built-in anti-cheat: 23 server-side checks (fly, speed, timer, no-fall, step, water walk, boat fly, reach,
-  kill aura, anti-knockback, criticals, scaffold, nuker, fast break, through-wall interaction, inventory, x-ray
-  patterns, cheat-client signatures and more), evidence IDs, kicks and a staff-reviewed ban queue
-  (`/anticheat`, see [docs/anticheat.md](docs/anticheat.md))
+* Anti-cheat through TitanGuard: its alerts land in each player's SmpPlugin logs and its bans in
+  `/history`, and SmpPlugin's staff roles grant its permissions (see [docs/titanguard.md](docs/titanguard.md))
 * Staff mode
 * Staff chat
 * Staff list

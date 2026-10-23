@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -47,6 +48,9 @@ public class TeleportManager {
         boolean quietSpawn = "SPAWN".equals(normalizedType)
                 && PlayerSettingUtils.quietSpawnEnabled(plugin, player);
         cancel(player.getUniqueId());
+        if (blockedByCombat(player)) {
+            return;
+        }
 
         if (cooldownSecs <= 0) {
             teleportNow(player, destination, normalizedType, onSuccess);
@@ -74,6 +78,9 @@ public class TeleportManager {
             if (remaining[0] <= 0) {
                 cancel(player.getUniqueId());
                 PlayerSettingUtils.clearActionBar(player);
+                if (blockedByCombat(player)) {
+                    return;
+                }
                 teleportNow(player, destination, normalizedType, onSuccess);
             } else {
                 if (!quietSpawn) {
@@ -86,6 +93,20 @@ public class TeleportManager {
             pendingTasks.put(player.getUniqueId(), task);
         }
         pendingTypes.put(player.getUniqueId(), normalizedType);
+    }
+
+    // Every queued teleport (homes, warps, TPA, team homes, menus) stops for a player in combat,
+    // also when they got tagged during the countdown. Only some commands checked this themselves,
+    // so warps, TPA and the home menu were a way out of a fight.
+    private boolean blockedByCombat(Player player) {
+        CombatManager combat = plugin.getCombatManager();
+        if (combat == null || !combat.isEnabled() || !combat.isInCombat(player.getUniqueId())
+                || combat.isExcludedWorld(player.getWorld().getName())) {
+            return false;
+        }
+        player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getConfig()
+                .getString("COMBAT-MANAGER.BLOCK-MESSAGE", "&cYou can't teleport while in combat.")));
+        return true;
     }
 
     private void sendActionBar(Player player, int seconds) {
@@ -170,12 +191,10 @@ public class TeleportManager {
         }
     }
 
-    /** True while a teleport warmup is counting down for this player. */
     public boolean hasPendingWarmup(UUID uuid) {
         return uuid != null && pendingTasks.containsKey(uuid);
     }
 
-    /** Frees the RTP slot this teleport held so the next player in the RTP queue can start. */
     private void advanceRtpQueue() {
         if (plugin.getRtpManager() != null) {
             plugin.getRtpManager().processNextInQueue();

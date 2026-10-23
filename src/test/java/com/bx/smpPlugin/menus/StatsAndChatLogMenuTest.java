@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.menus;
 
 import com.bx.smpPlugin.managers.HomeManager;

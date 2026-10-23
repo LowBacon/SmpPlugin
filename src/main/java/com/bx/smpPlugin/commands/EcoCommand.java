@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.commands;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -19,11 +20,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * /eco: staff economy tools. give / take / set / reset change a balance (recorded in the ledger with the staff
- * member as the actor and an optional note); history shows any player's ledger; stats shows the money supply,
- * where money came from and went in a time window, and the health of the balance writer.
- */
 public class EcoCommand implements CommandExecutor, TabCompleter {
 
     static final String HISTORY_PERMISSION = "smpplugin.admin.economy.history";

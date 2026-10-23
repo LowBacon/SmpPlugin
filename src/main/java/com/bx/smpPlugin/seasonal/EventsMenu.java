@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.seasonal;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -17,17 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * /events as a menu. Players see which events run and can jump into them; staff with
- * {@value EventsCommand#ADMIN_PERMISSION} also switch them (left click on, right click off, shift click back to the
- * dates). Permission and the event's state are checked again on every click, never taken from when it opened.
- *
- * <pre>
- *  row 0   frame ........ [info] ........ frame
- *  row 1   frame . [advent] . [halloween] . [trick or treat] . frame
- *  row 2   frame ........ [close] ....... frame
- * </pre>
- */
 public final class EventsMenu extends BaseMenu {
 
     private static final int INFO_SLOT = 4;

@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.utils.PermissionUtils;
@@ -409,7 +410,6 @@ public class PortalManager {
         return portal != null && plugin.getCuboidManager().exists(portal.cuboidName());
     }
 
-    /** The named AFK zone, or the best zone for this player when the portal names none. */
     private com.bx.smpPlugin.afk.AfkZone resolveAfkZone(PortalDefinition portal, org.bukkit.entity.Player player) {
         String value = portal.destinationValue();
         if (value != null && !value.isBlank()) {

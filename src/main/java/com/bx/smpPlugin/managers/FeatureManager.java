@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -76,7 +77,6 @@ public class FeatureManager {
         HIDE("HIDE", "Hide", "Persistent player identity scrambling and configured disguises.", "NAME_TAG", "HIDE"),
         FRIENDS("FRIENDS", "friends", "player friends/follows system.", "PLAYER_HEAD", "FRIEND"),
         SAFETY("SAFETY", "safety", "safety command and info.", "BOOK", "SAFETY"),
-        ANTICHEAT("ANTICHEAT", "anti-cheat", "server-side movement, combat, block, inventory and x-ray checks with staff alerts and a ban queue.", "OBSERVER", null),
         COINFLIP("COINFLIP", "coinflip", "1v1 coin flips for in-game currency with practice mode, history, stats and leaderboards.", "SUNFLOWER", null),
         HALLOWEEN("HALLOWEEN", "halloween", "Spooky Calendar, Trick or Treat, candy drops and pumpkin heads.", "JACK_O_LANTERN", null),
         ADVENT("ADVENT", "advent calendar", "/advent: a winter calendar with a gift behind each door until Christmas Eve.", "SNOW_BLOCK", null),
@@ -91,7 +91,9 @@ public class FeatureManager {
         STAFF_EXTRAS("STAFF_EXTRAS", "staff extras", "social and command spy, whois, permission tools and world commands.", "SPYGLASS", null),
         GAMBLING("GAMBLING", "gambling", "/dice bets against the house and the /roulette head jackpot.", "EMERALD", null),
         GUIDE("GUIDE", "guide", "/guide: a getting-started guide that only lists features that are turned on.", "WRITTEN_BOOK", null),
-        BORDERS("BORDERS", "spawn and lobby borders", "real Minecraft world borders around the spawn and the lobby.", "IRON_BARS", null);
+        BORDERS("BORDERS", "spawn and lobby borders", "real Minecraft world borders around the spawn and the lobby.", "IRON_BARS", null),
+        LOBBY("LOBBY", "lobby", "joining into the lobby, /lobby and the lobby world. Off: players join straight into the SMP and anyone in the lobby goes back with their items.", "OAK_DOOR", null),
+        SPAWN_WORLD("SPAWN_WORLD", "spawn world", "the separate spawn world from worlds.yml. Off: /spawn and /setspawn work anywhere, as before 4.2.", "GRASS_BLOCK", null);
 
         private final String configKey;
         private final String displayName;
@@ -192,6 +194,7 @@ public class FeatureManager {
             case "msg", "reply", "pm" -> new Feature[]{Feature.MESSAGING};
             case "home", "homes", "sethome", "delhome", "renamehome" -> new Feature[]{Feature.HOMES};
             case "spawn" -> new Feature[]{Feature.SPAWN};
+            case "lobby", "setlobby", "hub" -> new Feature[]{Feature.LOBBY};
             case "afk" -> new Feature[]{Feature.AFK};
             case "tpa", "tpahere", "tpaccept", "tpadeny", "tpacancel" -> new Feature[]{Feature.TPA};
             case "tpauto", "tpahereauto" -> new Feature[]{Feature.TPA, Feature.TPA_AUTO};
@@ -238,7 +241,6 @@ public class FeatureManager {
             case "amethysttool" -> new Feature[]{Feature.AMETHYST_TOOLS};
             case "friends", "friend" -> new Feature[]{Feature.FRIENDS};
             case "safety" -> new Feature[]{Feature.SAFETY};
-            case "anticheat" -> new Feature[]{Feature.ANTICHEAT};
             case "coinflip", "cf" -> new Feature[]{Feature.COINFLIP};
             case "halloween", "trickortreat" -> new Feature[]{Feature.HALLOWEEN};
             case "advent" -> new Feature[]{Feature.ADVENT};
@@ -329,6 +331,19 @@ public class FeatureManager {
         }
 
         switch (feature) {
+            case LOBBY, SPAWN_WORLD -> {
+                if (plugin.getWorldSystem() != null) {
+                    plugin.getWorldSystem().reload();
+                }
+                if (plugin.getLobbyManager() != null) {
+                    plugin.getLobbyManager().reload();
+                    if (feature == Feature.LOBBY && !isEnabled(Feature.LOBBY)) {
+                        for (Player player : plugin.getServer().getOnlinePlayers()) {
+                            plugin.getLobbyManager().releaseFromLobby(player);
+                        }
+                    }
+                }
+            }
             case SCOREBOARD -> {
                 if (plugin.getScoreboardManager() != null) {
                     plugin.getScoreboardManager().updateAll();

@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip.bukkit;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -20,11 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Drives every reveal from one repeating task, so the number of running tasks never grows with the number of
- * players. Each reveal is a small state machine (frame list, position, countdown). A reveal stops by itself when
- * its viewer closes the menu or leaves; that has no effect on the stored result or on the payout.
- */
 public final class CoinFlipAnimator {
 
     private final SmpPlugin plugin;
@@ -62,7 +58,6 @@ public final class CoinFlipAnimator {
         task = plugin.getSpigotScheduler().runGlobalTimer(this::tick, 1L, 1L);
     }
 
-    /** Opens the reveal for a match participant. Returns the animation length in ticks (0 = shown at once). */
     public long startMatch(Player viewer, CoinFlipMatch match) {
         boolean idle = viewer.getOpenInventory().getType() == org.bukkit.event.inventory.InventoryType.CRAFTING
                 || viewer.getOpenInventory().getTopInventory().getHolder() instanceof CoinFlipMenu;
@@ -74,7 +69,6 @@ public final class CoinFlipAnimator {
         return begin(viewer, menu, false, null);
     }
 
-    /** Opens a practice reveal; the result message is sent when it ends. */
     public void startPractice(Player viewer, CoinSide pick, CoinSide outcome) {
         FlipMenu menu = new FlipMenu(module, viewer.getUniqueId(), pick, outcome);
         if (begin(viewer, menu, true, pick) == 0L) {
@@ -97,7 +91,6 @@ public final class CoinFlipAnimator {
         return preset.totalTicks();
     }
 
-    /** Settlement finished: show the result at once to anyone still watching that match. */
     public void finish(String matchId) {
         Iterator<Reveal> iterator = reveals.values().iterator();
         while (iterator.hasNext()) {

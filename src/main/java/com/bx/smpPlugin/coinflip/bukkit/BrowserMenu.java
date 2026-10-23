@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip.bukkit;
 
 import com.bx.smpPlugin.coinflip.CoinFlipConfig;
@@ -16,11 +17,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Public match browser: paged, sortable, filterable and searchable. It is redrawn from live service state whenever a
- * match changes, and a join always re-checks the match on the server, so a stale page can never join a match that
- * is no longer open.
- */
 public final class BrowserMenu extends CoinFlipMenu {
 
     enum Sort {
@@ -206,7 +202,6 @@ public final class BrowserMenu extends CoinFlipMenu {
                 || match.id().equalsIgnoreCase(CoinFlipService.normalizeId(search));
     }
 
-    /** Why the viewer cannot join, or null. Display only; the service decides. */
     private String blocker(CoinFlipMatch match, long balance) {
         if (match.creatorId().equals(viewer)) {
             return "Your own match";

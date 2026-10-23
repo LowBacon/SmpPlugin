@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.display;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -20,19 +21,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-/**
- * /guide: the getting-started guide from guide.yml, one short page at a time, with clickable
- * commands and Previous / Next buttons.
- *
- * <p>A command line is only shown when the command exists on this server (from any plugin), its
- * CustomSmp feature is on and the reader may use it, so the guide never advertises something a
- * player cannot do. Pages with nothing left to show are skipped.
- */
 public final class GuideCommand implements CommandExecutor, TabCompleter {
 
     public static final String PERMISSION = "smpplugin.guide";
 
-    /** One line of a page: plain text, or a command with its explanation. */
     record Line(String text, String command, boolean suggest) {
     }
 
@@ -121,7 +113,6 @@ public final class GuideCommand implements CommandExecutor, TabCompleter {
         return plugin.getConfigManager().getGuide();
     }
 
-    /** The pages as this reader sees them: unusable commands and empty pages left out. */
     List<Page> pagesFor(CommandSender reader) {
         FileConfiguration config = config();
         ConfigurationSection section = config == null ? null : config.getConfigurationSection("PAGES");
@@ -174,7 +165,6 @@ public final class GuideCommand implements CommandExecutor, TabCompleter {
         return null;
     }
 
-    /** Whether the command exists, its feature is on, and the reader may run it. */
     private boolean usable(CommandSender reader, String commandLine) {
         String root = commandLine.substring(1).split(" ")[0].toLowerCase(Locale.ROOT);
         if (root.isEmpty()) {

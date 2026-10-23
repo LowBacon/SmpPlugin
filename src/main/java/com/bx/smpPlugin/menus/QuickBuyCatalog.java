@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.menus;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -15,13 +16,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-/**
- * Item and enchantment catalogue for Quick Buy: which materials can be chosen and which
- * enchantments each one can carry.
- *
- * <p>Kept out of the dialog package on purpose. The chest menus and Bedrock forms use these
- * lookups too, and a Spigot server must be able to load them without any Paper dialog class.
- */
 public final class QuickBuyCatalog {
 
     private QuickBuyCatalog() {
@@ -39,11 +33,6 @@ public final class QuickBuyCatalog {
         return getSelectableMaterials(plugin, query, ChooseItemBlacklist.configuredEntries(plugin));
     }
 
-    /**
-     * @param shopBlacklist names merged onto the built-in unsuitable set. Quick Buy
-     *        passes {@code QUICK-BUY.CHOOSE-ITEM.BLACKLIST}. The orders picker passes
-     *        an empty list so a shop.yml entry does not hide the same item there.
-     */
     public static List<Material> getSelectableMaterials(
             SmpPlugin plugin,
             String query,
@@ -114,10 +103,6 @@ public final class QuickBuyCatalog {
         return list;
     }
 
-    /**
-     * True when {@code material} is hidden by the Choose Item blacklist (built-in
-     * survival-unsuitable items plus {@code QUICK-BUY.CHOOSE-ITEM.BLACKLIST}).
-     */
     public static boolean isBlacklisted(SmpPlugin plugin, Material material) {
         return ChooseItemBlacklist.isBlacklisted(plugin, material);
     }
@@ -561,12 +546,10 @@ public final class QuickBuyCatalog {
         };
     }
 
-    /** False when the bundled texture list could not be read. */
     public static boolean hasKnownTextures() {
         return !KNOWN_TEXTURES.isEmpty();
     }
 
-    /** True when the bundled texture list contains {@code path} (for example {@code item/stick}). */
     public static boolean hasTexture(String path) {
         return KNOWN_TEXTURES.contains(path);
     }

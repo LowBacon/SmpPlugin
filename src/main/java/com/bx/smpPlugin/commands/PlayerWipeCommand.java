@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.commands;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -131,10 +132,6 @@ public class PlayerWipeCommand implements CommandExecutor, TabCompleter {
         return names.stream().sorted(String.CASE_INSENSITIVE_ORDER).toList();
     }
 
-    /**
-     * Tab completion runs on the main thread and fires on every keystroke, so the stored names come
-     * from a snapshot that is refreshed off-thread rather than from a query the server waits on.
-     */
     private List<String> storedNames() {
         long now = System.currentTimeMillis();
         if (now - storedNamesLoadedAt >= STORED_NAMES_TTL_MS && storedNamesLoading.compareAndSet(false, true)) {
@@ -161,7 +158,6 @@ public class PlayerWipeCommand implements CommandExecutor, TabCompleter {
         return matches;
     }
 
-    /** Operators have it through smpplugin.admin; the console always may. */
     private static boolean canUse(CommandSender sender) {
         return sender instanceof org.bukkit.command.ConsoleCommandSender || PermissionUtils.has(sender, PERMISSION);
     }

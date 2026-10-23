@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip;
 
 import com.bx.smpPlugin.coinflip.storage.CoinFlipDao;
@@ -27,21 +28,6 @@ import java.util.function.ToLongFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * CoinFlip use cases. Every public method is called on the server thread and completes its future on the server
- * thread. Money moves in three steps so that every change is either recorded or knowably not made:
- *
- * <ol>
- *   <li><b>Intent</b>: the journal row is stored before any balance changes.</li>
- *   <li><b>Change</b>: the online player's balance changes in memory (the economy's own storage).</li>
- *   <li><b>Apply</b>: the new balance, the journal row (now APPLIED) and the match state are written in one
- *       database transaction.</li>
- * </ol>
- *
- * If step 3 is rolled back, a debit is reversed in memory; a credit is retried. If the outcome of a commit is
- * unknown, the match is held as RECOVERY_REQUIRED and staff decide with the journal in front of them. Nothing is
- * ever deleted to hide an error, and a payout never happens without both stakes recorded as taken.
- */
 public final class CoinFlipService {
 
     private static final int APPLY_RETRIES = 3;
@@ -49,7 +35,6 @@ public final class CoinFlipService {
     private static final String ID_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-    /** What happened, for the player who asked. */
     public record Outcome(boolean success, String messageKey, Map<String, String> placeholders, CoinFlipMatch match) {
         static Outcome ok(String key, Map<String, String> placeholders, CoinFlipMatch match) {
             return new Outcome(true, key, placeholders, match);
@@ -64,7 +49,6 @@ public final class CoinFlipService {
         }
     }
 
-    /** Request to create a public match or a private challenge. */
     public record CreateRequest(UUID player, String playerName, long stakeCents, CoinSide side, UUID invitee,
                                 String inviteeName) {
     }
@@ -93,7 +77,6 @@ public final class CoinFlipService {
     private boolean wageringPaused;
     private boolean recovered;
 
-    /** Delayed execution on the server thread. */
     @FunctionalInterface
     public interface Scheduler {
         void runLater(long ticks, Runnable task);
@@ -127,7 +110,6 @@ public final class CoinFlipService {
         return id == null ? Optional.empty() : Optional.ofNullable(active.get(normalizeId(id)));
     }
 
-    /** Joinable public matches, newest first, capped at the configured listing size. */
     public List<CoinFlipMatch> publicListings() {
         long now = clock.getAsLong();
         return active.values().stream()
@@ -177,7 +159,6 @@ public final class CoinFlipService {
 
     // ── Player lifecycle ─────────────────────────────────────────────────────────
 
-    /** Loads preferences and pays any claims once the player is online. */
     public void playerJoined(UUID player) {
         loadPreferences(player);
         deliverClaims(player);
@@ -475,7 +456,6 @@ public final class CoinFlipService {
         });
     }
 
-    /** Voids a join whose stake was never taken (or was given back) and lists the match again. */
     private void releaseJoin(CoinFlipMatch match, CoinFlipTransaction stake, String note) {
         long now = clock.getAsLong();
         onMain(repository.transaction(dao -> {
@@ -499,7 +479,6 @@ public final class CoinFlipService {
 
     // ── Settle ───────────────────────────────────────────────────────────────────
 
-    /** Pays the winner of a LOCKED match. Safe to call more than once; only one settlement can run. */
     public void settle(CoinFlipMatch match) {
         settle(match, 0);
     }
@@ -609,11 +588,6 @@ public final class CoinFlipService {
         scheduler.runLater(100L * (attempt + 1), () -> settle(match, attempt + 1));
     }
 
-    /**
-     * Runs the apply step of a credit. A credit already added in memory cannot always be taken back (the player
-     * may have spent it), so a rolled-back apply is retried with a fresh balance; after the retries the match is
-     * held for staff with the journal row still at INTENT.
-     */
     private <T> void applyCredit(CoinFlipTransaction credit, Supplier<CompletableFuture<T>> apply, int attempt,
                                  java.util.function.BiConsumer<T, Throwable> done) {
         onMain(apply.get()).whenComplete((value, error) -> {
@@ -662,7 +636,6 @@ public final class CoinFlipService {
                 });
     }
 
-    /** Staff cancellation of a waiting match; a reason is mandatory and audited. */
     public CompletableFuture<Outcome> adminCancel(String actor, String matchId, String reason) {
         CoinFlipMatch match = active.get(normalizeId(matchId));
         if (match == null) {
@@ -677,7 +650,6 @@ public final class CoinFlipService {
         return refund(match, MatchState.CANCELLED, "staff: " + reason, actor, true);
     }
 
-    /** Called every second: expires waiting matches past their time, a bounded number per call. */
     public void sweepExpired() {
         long now = clock.getAsLong();
         int handled = 0;
@@ -794,7 +766,6 @@ public final class CoinFlipService {
 
     // ── Claims ───────────────────────────────────────────────────────────────────
 
-    /** Pays every credit owed to a player who is now online, one at a time. */
     public void deliverClaims(UUID player) {
         if (!repository.isReady() || !recovered || !deliveringClaims.add(player)) {
             return;
@@ -866,15 +837,9 @@ public final class CoinFlipService {
 
     // ── Recovery and staff tools ─────────────────────────────────────────────────
 
-    /** Result of startup recovery. */
     public record RecoveryReport(int unknownTransactions, int refunded, int settled, int cancelled, int heldForReview) {
     }
 
-    /**
-     * Brings storage to a consistent state after a start: unfinished intents become UNKNOWN (their match is held
-     * for review), waiting matches are refunded as claims, locked matches are paid out as claims. All of it is
-     * database-only, so running it twice changes nothing the second time.
-     */
     public CompletableFuture<RecoveryReport> recoverAtStartup() {
         CoinFlipConfig current = config.get();
         long now = clock.getAsLong();
@@ -945,10 +910,6 @@ public final class CoinFlipService {
         }));
     }
 
-    /**
-     * Staff decision on an UNKNOWN (or stuck INTENT) transaction. {@code applied} means the balance did change.
-     * Afterwards the match is reconciled from the journal if nothing else is unresolved.
-     */
     public CompletableFuture<Outcome> resolve(String actor, String transactionId, boolean applied, String reason) {
         if (reason == null || reason.isBlank()) {
             return done(Outcome.fail("admin-reason-required"));
@@ -994,7 +955,6 @@ public final class CoinFlipService {
         });
     }
 
-    /** Retries stuck settlements and reconciles held matches whose transactions are all resolved. */
     public CompletableFuture<Integer> recoverNow(String actor) {
         int retried = 0;
         for (CoinFlipMatch match : List.copyOf(active.values())) {
@@ -1048,7 +1008,6 @@ public final class CoinFlipService {
         });
     }
 
-    /** Re-reads one match after staff work: final matches leave memory, others are refreshed. */
     private CompletableFuture<Outcome> reloadAfterStaffAction(String matchId) {
         return onMain(repository.transaction(dao -> dao.loadMatch(matchId))).thenApply(stored -> {
             if (stored.isEmpty()) {
@@ -1071,7 +1030,6 @@ public final class CoinFlipService {
         });
     }
 
-    /** Ledger check of recent finished matches: every stake taken is paid out, refunded or held as a fee. */
     public CompletableFuture<List<String>> reconcileReport(int limit) {
         return onMain(repository.transaction(dao -> {
             List<String> problems = new ArrayList<>();
@@ -1133,7 +1091,6 @@ public final class CoinFlipService {
 
     // ── Practice ─────────────────────────────────────────────────────────────────
 
-    /** A practice flip: same randomness, no currency, no wagering record. Only a practice counter is kept. */
     public CoinSide practiceFlip(UUID player, String name) {
         CoinSide result = random.flip();
         if (repository.isReady()) {
@@ -1209,7 +1166,6 @@ public final class CoinFlipService {
         return Optional.empty();
     }
 
-    /** Daily caps, checked inside the same transaction that records the stake intent, so they cannot be raced. */
     private static void checkDailyLimits(CoinFlipDao dao, UUID player, long stake, long dayStart, boolean creating,
                                          CoinFlipConfig current) throws java.sql.SQLException {
         if (current.dailyWagerCapCents() > 0L && dao.stakedSince(player, dayStart) + stake > current.dailyWagerCapCents()) {
@@ -1231,7 +1187,6 @@ public final class CoinFlipService {
 
     // ── Helpers ──────────────────────────────────────────────────────────────────
 
-    /** Voids an intent that never changed a balance, and cancels the match row if it is still CREATING. */
     private void abandon(CoinFlipMatch match, CoinFlipTransaction intent, MatchState expected, String note) {
         long now = clock.getAsLong();
         repository.transaction(dao -> {

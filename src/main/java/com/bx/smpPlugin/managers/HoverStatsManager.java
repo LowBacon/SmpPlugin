@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -86,7 +87,6 @@ public class HoverStatsManager {
         );
     }
 
-    /** Builds the resolved hover text for both Bungee and Adventure chat renderers. */
     public String buildHoverText(Player speaker, String prefix) {
         List<String> hoverLines = getHoverLines();
         if (hoverLines.isEmpty()) {
@@ -121,10 +121,6 @@ public class HoverStatsManager {
                 : new ClickEvent(ClickEvent.Action.RUN_COMMAND, clickAction.command());
     }
 
-    /**
-     * Returns the hover text as component JSON for integrations that render chat
-     * through Paper's Adventure API, such as modern EssentialsXChat.
-     */
     public String buildHoverJson(Player speaker, String prefix) {
         String hoverText = buildHoverText(speaker, prefix);
         return hoverText == null ? null : ComponentSerializer.toString(ColorUtils.toBaseComponents(hoverText, speaker));

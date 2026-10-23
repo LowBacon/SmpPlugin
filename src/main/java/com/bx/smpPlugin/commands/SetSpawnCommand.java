@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.commands;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -9,7 +10,6 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-/** Sets the server's single primary spawn point. */
 public class SetSpawnCommand implements CommandExecutor {
 
     private static final String PERMISSION = "smpplugin.admin.setspawn";
@@ -32,10 +32,19 @@ public class SetSpawnCommand implements CommandExecutor {
             return true;
         }
 
+        var worlds = plugin.getWorldSystem();
+        if (worlds != null && worlds.refuseOutside(player, "spawn", "the spawn")) {
+            return true;
+        }
+
         Location location = player.getLocation();
         if (!plugin.getSpawnManager().setPrimarySpawnLocation(location)) {
             sender.sendMessage(ColorUtils.toComponent("&cThe spawn could not be saved. Check the server console for details."));
             return true;
+        }
+        if (worlds != null && worlds.isWorld(location.getWorld(), "spawn")) {
+            // Also the spawn world's own spawn point, for respawns and /smp world tp.
+            worlds.setSpawn("spawn", location);
         }
 
         sender.sendMessage(ColorUtils.toComponent("&aSpawn set to &f"

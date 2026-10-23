@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.commands;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -13,7 +14,6 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 
-/** /baltop [page]: the richest players, from the same cached ranking as /leaderboard money. */
 public class BaltopCommand implements CommandExecutor, TabCompleter {
 
     static final String PERMISSION = "smpplugin.baltop";

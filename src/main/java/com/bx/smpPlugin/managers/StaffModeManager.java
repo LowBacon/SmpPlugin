@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.utils.PermissionUtils;
@@ -369,10 +370,6 @@ public class StaffModeManager {
         return true;
     }
 
-    /**
-     * Switches between spectator and staff mode's creative. Spectators cannot use hotbar items, so
-     * sneaking switches back (see StaffModeListener#onSneak).
-     */
     public boolean toggleSpectator(Player player) {
         if (player == null || !isInStaffMode(player.getUniqueId()) || !canUseSpectator(player)) {
             return false;
@@ -392,7 +389,6 @@ public class StaffModeManager {
         return true;
     }
 
-    /** Right-click a player with the inspect tool: their profile, or their inventory as a fallback. */
     public void inspect(Player staff, Player target) {
         if (staff == null || target == null) {
             return;

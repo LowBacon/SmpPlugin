@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.gambling;
 
 import org.junit.jupiter.api.Test;

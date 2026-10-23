@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.halloween;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -18,10 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Halloween: the Spooky Calendar (a {@link SeasonCalendar} read from halloween.yml) and Trick or Treat, which is its
- * own event in /events with its own dates (TRICK-OR-TREAT.FIRST-DAY and LAST-DAY, the calendar's by default).
- */
 public final class HalloweenManager extends SeasonCalendar {
 
     public static final String USE_PERMISSION = "smpplugin.halloween";
@@ -63,7 +60,6 @@ public final class HalloweenManager extends SeasonCalendar {
         });
     }
 
-    /** Connects the hub once it exists (it needs this calendar first). */
     public void attach(HalloweenHub hub, HalloweenMenus menus) {
         this.hub = hub;
         this.menus = menus;
@@ -92,7 +88,6 @@ public final class HalloweenManager extends SeasonCalendar {
         }
     }
 
-    /** Trick or Treat's dates: TRICK-OR-TREAT.FIRST-DAY and LAST-DAY when set, otherwise the calendar's season. */
     public CalendarRules trickOrTreatRules() {
         CalendarRules season = rules();
         FileConfiguration c = config();

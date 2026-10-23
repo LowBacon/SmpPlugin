@@ -1,9 +1,9 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.seasonal;
 
 import java.util.Locale;
 import java.util.Optional;
 
-/** The seasonal events staff can switch with /events. The key never changes; it is stored in data/events.yml. */
 public enum EventId {
     ADVENT("advent", "Advent Calendar"),
     HALLOWEEN("halloween", "Halloween"),
@@ -25,7 +25,6 @@ public enum EventId {
         return displayName;
     }
 
-    /** Accepts the key, the enum name and a few spellings ("trick-or-treat", "tot"). */
     public static Optional<EventId> parse(String raw) {
         if (raw == null) {
             return Optional.empty();

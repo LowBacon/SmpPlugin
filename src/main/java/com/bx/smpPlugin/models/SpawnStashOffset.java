@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.models;
 
 public record SpawnStashOffset(int x, int y, int z) {

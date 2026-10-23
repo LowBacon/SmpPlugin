@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip;
 
 import org.bukkit.configuration.ConfigurationSection;
@@ -10,15 +11,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-/**
- * Validated, immutable snapshot of coinflip.yml. Every problem is reported with its key, the expected value,
- * what was found and what was done about it. Money settings are never silently relaxed: an invalid fee or
- * stake limit marks the snapshot {@link #wageringBlocked()} so wagering stays off until it is fixed
- * (practice mode keeps working).
- */
 public final class CoinFlipConfig {
 
-    /** Main-menu buttons whose slots are configurable. */
     public static final List<String> MAIN_BUTTONS = List.of("BALANCE", "CREATE", "BROWSE", "CHALLENGE", "MY-MATCHES",
             "HISTORY", "STATS", "LEADERBOARDS", "ACHIEVEMENTS", "PRACTICE", "SETTINGS", "HELP", "CLOSE");
     private static final Map<String, Integer> DEFAULT_SLOTS = defaultSlots();
@@ -265,7 +259,6 @@ public final class CoinFlipConfig {
         return Collections.unmodifiableMap(slots);
     }
 
-    /** Reads GUI.MAIN-SLOTS; any out-of-range or duplicate slot sends the whole layout back to the defaults. */
     private Map<String, Integer> readSlots(ConfigurationSection root) {
         ConfigurationSection section = root == null ? null : root.getConfigurationSection("GUI.MAIN-SLOTS");
         if (section == null) {
@@ -346,11 +339,6 @@ public final class CoinFlipConfig {
         return integer(root, key, fallback, min, max) * 1_000L;
     }
 
-    /**
-     * Reads an amount of coins. A required limit that is invalid blocks wagering; an optional one (0 = off)
-     * that is invalid is switched off, which is the stricter of the two choices only for caps that are
-     * informational. Stake limits are always required.
-     */
     private long money(ConfigurationSection root, String key, double fallback, boolean required) {
         double value = number(root, key, fallback);
         if (!Double.isFinite(value) || value < 0D || (required && value <= 0D)) {
@@ -382,7 +370,6 @@ public final class CoinFlipConfig {
         return List.copyOf(problems);
     }
 
-    /** True when a money setting is invalid; wagering stays off, practice still works. */
     public boolean wageringBlocked() {
         return wageringBlocked;
     }

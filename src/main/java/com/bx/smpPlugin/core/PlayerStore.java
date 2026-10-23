@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.core;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -16,15 +17,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 
-/**
- * Small per-player values for the 3.0 features: daily streaks, challenge progress, opened
- * calendar doors, spy toggles.
- *
- * <p>Each value is one short string under a section name, in the table {@code v3_player_data}
- * of the plugin's own database (SQLite, MySQL, or the MongoDB bridge). A player's values are
- * read on the login thread before they join, so every lookup while they are online is a map
- * read. Writes go to the database writer thread in order.
- */
 public final class PlayerStore {
 
     private static final String TABLE = "v3_player_data";
@@ -37,7 +29,6 @@ public final class PlayerStore {
         this.plugin = plugin;
     }
 
-    /** Creates the table. Safe to call on every start. */
     public void initialize() {
         DatabaseManager database = plugin.getDatabaseManager();
         Connection connection = database == null ? null : database.getConnection();
@@ -77,15 +68,6 @@ public final class PlayerStore {
         return plugin.getDatabaseManager() == null ? null : plugin.getDatabaseManager().getConnection();
     }
 
-    /**
-     * Reads every value a player has. Blocks; call it on the login thread or the database thread.
-     *
-     * <p>When the read fails the player stays not loaded, so features answer "still loading" instead of treating
-     * them as a new player: an empty copy would let them claim every calendar door again and would overwrite what
-     * the database holds on the next save.
-     *
-     * @return true when the player's values are in memory
-     */
     public boolean loadBlocking(UUID uuid) {
         if (!ready || uuid == null) {
             return false;
@@ -115,7 +97,6 @@ public final class PlayerStore {
         return true;
     }
 
-    /** Loads in the background, for players already online when the plugin starts. */
     public void loadAsync(UUID uuid) {
         plugin.getDatabaseManager().executeAsync(() -> loadBlocking(uuid));
     }
@@ -129,13 +110,11 @@ public final class PlayerStore {
         cache.remove(uuid);
     }
 
-    /** The value for an online (loaded) player, or null. */
     public String get(UUID uuid, String section) {
         Map<String, String> values = cache.get(uuid);
         return values == null ? null : values.get(section);
     }
 
-    /** Every loaded value of a player whose section is {@code prefix} or starts with {@code prefix + "."}. */
     public Map<String, String> sections(UUID uuid, String prefix) {
         Map<String, String> values = cache.get(uuid);
         Map<String, String> out = new java.util.TreeMap<>();
@@ -149,7 +128,6 @@ public final class PlayerStore {
         return out;
     }
 
-    /** Reads a value for any player, online or not, and answers on the main thread. */
     public void getAnywhere(UUID uuid, String section, Consumer<String> callback) {
         if (isLoaded(uuid)) {
             callback.accept(get(uuid, section));
@@ -161,7 +139,6 @@ public final class PlayerStore {
         });
     }
 
-    /** Reads one value straight from the database. Blocking: database thread only. */
     public String readBlocking(UUID uuid, String section) {
         if (!ready) {
             return null;
@@ -179,15 +156,9 @@ public final class PlayerStore {
         }
     }
 
-    /** Values changed with {@link #setDeferred} and not written yet, by player and section. */
     private final Map<UUID, Map<String, String>> deferred = new ConcurrentHashMap<>();
     private static final String DELETED = "\u0000deleted";
 
-    /**
-     * Stores a value in memory now and in the database with the next {@link #flushDeferred()} (every 30 seconds,
-     * when the player leaves, and at shutdown). For values that change very often and may lose a few seconds in a
-     * crash, such as quest progress; never for anything that pays out.
-     */
     public void setDeferred(UUID uuid, String section, String value) {
         if (uuid == null || section == null) {
             return;
@@ -210,7 +181,6 @@ public final class PlayerStore {
         });
     }
 
-    /** Writes every deferred value (of one player, or of everyone when {@code uuid} is null). */
     public void flushDeferred(UUID uuid) {
         if (uuid != null) {
             flushPlayer(uuid);
@@ -232,7 +202,6 @@ public final class PlayerStore {
                 writeBlocking(uuid, section, DELETED.equals(value) ? null : value, now)));
     }
 
-    /** Stores a value (null deletes it) in memory now and in the database in the background. */
     public void set(UUID uuid, String section, String value) {
         if (uuid == null || section == null) {
             return;
@@ -286,7 +255,6 @@ public final class PlayerStore {
         }
     }
 
-    /** Every stored value of one section, for admin statistics. Blocking: database thread only. */
     public Map<UUID, String> readSectionBlocking(String section) {
         Map<UUID, String> out = new HashMap<>();
         if (!ready) {
@@ -310,7 +278,6 @@ public final class PlayerStore {
         return out;
     }
 
-    /** Deletes one section for every player, e.g. a calendar reset. Runs in the background. */
     public void deleteSectionEverywhere(String section) {
         cache.values().forEach(values -> values.remove(section));
         if (!ready) {

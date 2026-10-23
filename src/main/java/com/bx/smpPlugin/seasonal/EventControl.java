@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.seasonal;
 
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -14,13 +15,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * The /events switches, kept in {@code data/events.yml} so they survive restarts. Only the mode and who set it are
- * stored here; the dates stay in each event's own config file and are never written.
- */
 public final class EventControl {
 
-    /** One event's switch and who last changed it. */
     public record Setting(EventMode mode, String changedBy, long changedAtMillis) {
         static final Setting DEFAULT = new Setting(EventMode.AUTO, null, 0L);
     }
@@ -44,7 +40,6 @@ public final class EventControl {
         return setting(id).mode();
     }
 
-    /** Changes and saves one switch. Returns false (nothing changed) when the file could not be read at start. */
     public synchronized boolean set(EventId id, EventMode mode, String actor, long nowMillis) {
         if (!readable) {
             return false;
@@ -54,7 +49,6 @@ public final class EventControl {
         return true;
     }
 
-    /** False when data/events.yml was damaged at start; switches then stay AUTO until the file is fixed. */
     public synchronized boolean isReadable() {
         return readable;
     }

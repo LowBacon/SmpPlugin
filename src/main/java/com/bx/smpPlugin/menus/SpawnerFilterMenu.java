@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.menus;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -16,11 +17,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Every drop the spawner type can make, each one on or off. A drop that is off is never stored,
- * so storage fills up with only what the owner wants. Unlike the storage screen this lists drops
- * that are not stored right now, so a filtered drop can always be switched back on.
- */
 public class SpawnerFilterMenu extends BaseMenu {
 
     private static final int SIZE = 27;

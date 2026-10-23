@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.utils.PermissionUtils;
@@ -885,6 +886,7 @@ public class SpawnerManager {
         Map<SellCategory, Double> earnedByCategory = new EnumMap<>(SellCategory.class);
         double totalPayout = 0D;
         long soldItems = 0L;
+        List<SoldLoot> sold = new ArrayList<>();
 
         for (SpawnerLootEntry entry : new ArrayList<>(instance.getStoredLootEntries())) {
             if (instance.isLootDisabled(entry.getKey())) {
@@ -908,23 +910,28 @@ public class SpawnerManager {
             totalPayout += payout;
             soldItems += entry.getAmount();
             earnedByCategory.merge(category, baseTotal, Double::sum);
-
-            int historyAmount = (int) Math.min(Integer.MAX_VALUE, entry.getAmount());
-            plugin.getDatabaseManager().addSellHistory(player.getUniqueId(), entry.getMaterial().name(), historyAmount, payout);
-            instance.removeStoredLoot(entry.getKey(), entry.getAmount());
+            sold.add(new SoldLoot(entry, payout));
         }
 
         if (totalPayout <= 0D || soldItems <= 0L) {
             return failSell("&cthere are no sellable items stored in that spawner.");
         }
 
-        for (Map.Entry<SellCategory, Double> progressEntry : earnedByCategory.entrySet()) {
-            plugin.getDatabaseManager().addSellProgress(player.getUniqueId(), progressEntry.getKey(), progressEntry.getValue());
-        }
-
+        // Paid first, then the loot leaves the spawner: a refused payout (the balance cap, storage
+        // down) used to delete the loot and count the sale anyway.
         var depositResult = plugin.getEconomyManager().deposit(player, totalPayout, EconomyReason.SELL_PAYOUT);
         if (!depositResult.success()) {
             return failSell("&cfailed to pay out the spawner loot sale.");
+        }
+
+        for (SoldLoot loot : sold) {
+            int historyAmount = (int) Math.min(Integer.MAX_VALUE, loot.entry().getAmount());
+            plugin.getDatabaseManager().addSellHistory(player.getUniqueId(), loot.entry().getMaterial().name(),
+                    historyAmount, loot.payout());
+            instance.removeStoredLoot(loot.entry().getKey(), loot.entry().getAmount());
+        }
+        for (Map.Entry<SellCategory, Double> progressEntry : earnedByCategory.entrySet()) {
+            plugin.getDatabaseManager().addSellProgress(player.getUniqueId(), progressEntry.getKey(), progressEntry.getValue());
         }
 
         PlayerData data = plugin.getPlayerDataManager().get(player);
@@ -947,9 +954,11 @@ public class SpawnerManager {
         );
     }
 
+    private record SoldLoot(SpawnerLootEntry entry, double payout) {
+    }
+
     // ── Spawner menu ───────────────────────────────────────────────────────────
 
-    /** Right-click on a spawner: the overview menu, or straight to storage when GUI.MAIN is off. */
     public void openMenu(Player player, SpawnerInstance instance) {
         if (player == null || instance == null) {
             return;
@@ -1001,7 +1010,6 @@ public class SpawnerManager {
         }
     }
 
-    /** What "sell all" would pay this player right now, with their sell multipliers. */
     public double estimateLootWorth(Player player, SpawnerInstance instance) {
         if (instance == null) {
             return 0D;
@@ -1028,7 +1036,6 @@ public class SpawnerManager {
         return total;
     }
 
-    /** Sell price of one item, 0 when it cannot be sold. */
     public double getUnitWorth(Material material) {
         if (material == null) {
             return 0D;
@@ -1045,10 +1052,6 @@ public class SpawnerManager {
         return storeXp;
     }
 
-    /**
-     * Time until this spawner next pays out. Loot lands on the first generation run after a full
-     * interval has passed, so this lines up with the task rather than with the raw interval.
-     */
     public long getMillisUntilNextCycle(SpawnerInstance instance) {
         long interval = generationIntervalSeconds * 1000L;
         long now = System.currentTimeMillis();
@@ -1070,7 +1073,6 @@ public class SpawnerManager {
         return 3600D / Math.max(1L, generationIntervalSeconds);
     }
 
-    /** Average amount of one drop made per hour at this stack size. */
     private double getDropPerHour(SpawnerInstance instance, SpawnerTypeDefinition.DropDefinition drop) {
         SpawnerTypeDefinition definition = getTypeDefinition(instance.getMobTypeKey());
         if (definition == null || drop == null) {
@@ -1080,7 +1082,6 @@ public class SpawnerManager {
                 * drop.chance() * drop.averageDropAmount();
     }
 
-    /** Average items per hour across the drops that are not filtered out. */
     public double getItemsPerHour(SpawnerInstance instance) {
         SpawnerTypeDefinition definition = getTypeDefinition(instance.getMobTypeKey());
         if (definition == null) {
@@ -1095,7 +1096,6 @@ public class SpawnerManager {
         return total;
     }
 
-    /** Why this spawner is not producing right now, or null while it is. */
     public String getPausedReason(SpawnerInstance instance) {
         if (!enabled) {
             return "spawners are turned off";

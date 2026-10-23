@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -184,7 +185,6 @@ class LanguageManagerTest {
 
         assertEquals(0, added, "en_US.yml is missing player-facing text from current SmpPlugin resources");
     }
-
 
     private static int mergeCurrentResourceText(YamlConfiguration target) throws Exception {
         int added = 0;

@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.utils;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -12,10 +13,6 @@ import java.util.Locale;
 
 public class SoundUtils {
 
-    /**
-     * Play a sound from config format: "namespace:sound.key|volume|pitch"
-     * e.g. "minecraft:ui.button.click|1.0|1.0"
-     */
     public static void play(Player player, String soundConfig) {
         if (player == null || soundConfig == null || soundConfig.isBlank()) return;
         String[] parts = soundConfig.split("\\|");
@@ -63,7 +60,6 @@ public class SoundUtils {
         } catch (Exception ignored) {}
     }
 
-    /** Play a sound from a ConfigurationSection by key path */
     public static void play(Player player, ConfigurationSection section, String path) {
         if (section == null) return;
         String val = section.getString(path);

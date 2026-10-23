@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.gambling;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -27,22 +28,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * /roulette: everyone puts money into one pot; a reel of the players' heads spins and the head
- * that stops in the middle takes the pot (minus the fee in extras.yml).
- *
- * <p>How a round runs:
- * <ol>
- *   <li>The first bet opens a round. A second player starts the countdown; more can join until the
- *       last few seconds, when bets lock.</li>
- *   <li>When the countdown ends the server draws the winner (SecureRandom, chance = bet / pot), then
- *       builds a reel that stops on that head. The animation shows the draw; it never changes it.</li>
- *   <li>The winner is paid once, and the round is closed.</li>
- * </ol>
- * Bets sit in {@link GamblingEscrow} until then. If the round is cancelled, nobody else joins in
- * time, or the server stops before the draw, every bet goes back to its owner. If the server stops
- * during the spin, the winner (already drawn) is paid at once.
- */
 public final class Roulette implements CommandExecutor, TabCompleter {
 
     public static final String PERMISSION = "smpplugin.roulette";
@@ -56,7 +41,6 @@ public final class Roulette implements CommandExecutor, TabCompleter {
     record Entry(UUID player, String name, long stake, String holdId) {
     }
 
-    /** One round. Only touched on the server thread. */
     static final class Round {
         final int number;
         final long openedAt = System.currentTimeMillis();
@@ -109,7 +93,6 @@ public final class Roulette implements CommandExecutor, TabCompleter {
     private final Map<UUID, Long> lastAction = new HashMap<>();
     private final RouletteMenu menu;
     private Round round;
-    /** The last finished round, so the menu can keep showing who won. */
     private Round last;
     private int rounds;
     private BukkitTask ticker;
@@ -459,7 +442,6 @@ public final class Roulette implements CommandExecutor, TabCompleter {
 
     // ------------------------------------------------------------------ ending a round
 
-    /** Pays the winner of a drawn round. Runs once per round. */
     private void settle(Round current) {
         if (current.state == State.SETTLED || current.winner < 0) {
             return;
@@ -497,7 +479,6 @@ public final class Roulette implements CommandExecutor, TabCompleter {
         menu.showWinner(current);
     }
 
-    /** Gives every bet back and closes the round. */
     private void cancel(String reason) {
         Round current = round;
         if (current == null) {
@@ -521,7 +502,6 @@ public final class Roulette implements CommandExecutor, TabCompleter {
                 entry.holdId());
     }
 
-    /** Server stopping: pay a drawn winner, give every other bet back. Nothing is scheduled. */
     void shutdown() {
         stopTicker();
         Round current = round;

@@ -1,15 +1,9 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.afk;
 
 import com.bx.smpPlugin.utils.LocationUtils;
 import org.bukkit.Location;
 
-/**
- * One AFK zone: where {@code /afk} drops players, and optionally a box in which they earn shards.
- * A zone without a region is only a teleport destination.
- *
- * @param spawn  serialized spawn location, kept as text so a zone survives its world being unloaded
- * @param region the box players earn in, or null for a teleport-only zone
- */
 public record AfkZone(
         String id,
         String displayName,
@@ -26,7 +20,6 @@ public record AfkZone(
         rewardSeconds = Math.max(1, rewardSeconds);
     }
 
-    /** An axis-aligned box in one world, inclusive. */
     public record Region(String world, double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
 
         public Region {
@@ -41,7 +34,6 @@ public record AfkZone(
             minZ = lowZ;
         }
 
-        /** The blocks between two corners, both corner blocks included. */
         public static Region ofCorners(Location first, Location second) {
             int lowY = Math.min(first.getBlockY(), second.getBlockY());
             int highY = Math.max(first.getBlockY(), second.getBlockY());
@@ -56,7 +48,6 @@ public record AfkZone(
                     Math.max(first.getBlockZ(), second.getBlockZ()) + 1D);
         }
 
-        /** A square of the given radius around a point, the full height of the world. */
         public static Region square(Location center, int radius) {
             double cx = center.getBlockX() + 0.5D;
             double cz = center.getBlockZ() + 0.5D;
@@ -86,7 +77,6 @@ public record AfkZone(
         return region != null;
     }
 
-    /** True when this zone pays anything. */
     public boolean paysRewards() {
         return region != null && rewardAmount > 0L;
     }
@@ -95,7 +85,6 @@ public record AfkZone(
         return region != null && region.contains(location);
     }
 
-    /** The spawn, or null while its world is not loaded. */
     public Location spawnLocation() {
         return LocationUtils.parse(spawn);
     }

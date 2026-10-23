@@ -1,13 +1,10 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.ToLongFunction;
 
-/**
- * Cosmetic milestones. None rewards losing, chasing losses or staking more; most reward taking part.
- * Progress is read from {@link CoinFlipStats}, so an achievement unlocks exactly when its statistic does.
- */
 public enum Achievement {
     FIRST_PRACTICE("Warm-up", "Flip a practice coin.", "FEATHER", CoinFlipStats::practiceFlips, 1),
     FIRST_MATCH("Heads or Tails", "Finish your first match.", "GOLD_NUGGET", CoinFlipStats::played, 1),
@@ -65,7 +62,6 @@ public enum Achievement {
         return metric.applyAsLong(stats) >= target;
     }
 
-    /** Every achievement the stats have reached. Callers insert them idempotently; duplicates are ignored. */
     public static List<Achievement> reachedBy(CoinFlipStats stats) {
         List<Achievement> reached = new ArrayList<>();
         for (Achievement achievement : values()) {

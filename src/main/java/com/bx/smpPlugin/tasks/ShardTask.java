@@ -1,16 +1,10 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.tasks;
 
 import com.bx.smpPlugin.SmpPlugin;
 import com.bx.smpPlugin.managers.ShardManager;
 import org.bukkit.entity.Player;
 
-/**
- * Runs every minute. Awards passive "everywhere" shards to players
- * who pass the configured eligibility checks for the perk.
- *
- * Spawn-cuboid shards are handled separately by {@link ShardCuboidTask}
- * which runs every second and drives the per-player countdown display.
- */
 public class ShardTask implements Runnable {
 
     private final SmpPlugin plugin;

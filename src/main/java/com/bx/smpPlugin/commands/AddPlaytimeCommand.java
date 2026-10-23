@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.commands;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -107,8 +108,6 @@ public class AddPlaytimeCommand implements CommandExecutor, TabCompleter {
         return matches;
     }
 
-    /** Online players are resolved from the live cache; offline players are looked up locally
-     *  (never via Bukkit's blocking, network-hitting getOfflinePlayer(String)). */
     private PlayerData resolveData(Player targetPlayer, String rawName) {
         if (targetPlayer != null) {
             return plugin.getPlayerDataManager().get(targetPlayer);
@@ -123,8 +122,6 @@ public class AddPlaytimeCommand implements CommandExecutor, TabCompleter {
         }
     }
 
-    /** Accepts plain seconds ("3600") or a compound duration ("1d2h30m", using s/m/h/d/w units).
-     *  Returns Long.MIN_VALUE if the input can't be parsed either way. */
     private long parseDurationSeconds(String input) {
         if (input == null || input.isBlank()) {
             return Long.MIN_VALUE;

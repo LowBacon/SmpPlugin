@@ -1,6 +1,6 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.display;
 
-/** Lets tests in other packages read how guide.yml lines are parsed. */
 public final class GuideCommandTestAccess {
 
     private GuideCommandTestAccess() {

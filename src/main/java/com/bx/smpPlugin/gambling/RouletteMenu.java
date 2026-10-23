@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.gambling;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -17,22 +18,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * The roulette screen. There is one screen for the whole server and everyone who opens it looks at
- * the same inventory, so a reel step is drawn once however many people are watching.
- *
- * <pre>
- *  row 0   frame, pot in the middle
- *  row 1   frame, ▼ marker above the middle of the reel
- *  row 2   the reel: nine heads; the one in the middle (slot 22) wins
- *  row 3   frame, ▲ marker below the middle
- *  row 4   everyone in the round, biggest bet first
- *  row 5   rules, own amount, quick bets, status, leave, close
- * </pre>
- * The menu only shows the round; joining and leaving go through {@link Roulette}, which checks
- * everything again.
- */
 final class RouletteMenu extends BaseMenu {
+
+    @Override
+    protected boolean animatesOpening() {
+        return false;
+    }
 
     private static final int POT_SLOT = 4;
     private static final int TOP_MARKER = 13;
@@ -49,7 +40,6 @@ final class RouletteMenu extends BaseMenu {
     private static final Material[] FLASH = {Material.YELLOW_STAINED_GLASS_PANE, Material.ORANGE_STAINED_GLASS_PANE};
 
     private final Roulette roulette;
-    /** Heads for the round being spun, built once when the spin starts. */
     private final Map<Integer, ItemStack> reelHeads = new HashMap<>();
     private final Map<Integer, Long> quickBets = new HashMap<>();
 
@@ -73,7 +63,6 @@ final class RouletteMenu extends BaseMenu {
         drawStatus();
     }
 
-    /** Redraws for everyone who has the screen open. */
     void refresh() {
         if (!inventory.getViewers().isEmpty()) {
             build(null);
@@ -93,7 +82,6 @@ final class RouletteMenu extends BaseMenu {
         set(BOTTOM_MARKER, Gui.item(Material.LIME_STAINED_GLASS_PANE, "&a&l▲ &7The head that stops here wins"));
     }
 
-    /** Pot, players, buttons and the countdown: everything except the reel. Cheap; runs once a second. */
     void renderStatus() {
         if (!inventory.getViewers().isEmpty()) {
             drawStatus();
@@ -197,7 +185,6 @@ final class RouletteMenu extends BaseMenu {
         }
     }
 
-    /** Builds each player's head once for the spin, so the steps only move ready items around. */
     void prepareSpin(Roulette.Round round) {
         reelHeads.clear();
         long pot = round.pot();
@@ -224,7 +211,6 @@ final class RouletteMenu extends BaseMenu {
         }
     }
 
-    /** Frame flash and a click that drops in pitch as the reel slows. */
     void tick(int position, int steps) {
         if (inventory.getViewers().isEmpty()) {
             return;

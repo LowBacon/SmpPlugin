@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.models;
 
 import java.util.Arrays;
@@ -29,7 +30,6 @@ public enum SellCategory {
     public String getWorthSectionKey() {
         return worthSectionKey;
     }
-
 
     public static Optional<SellCategory> fromConfigKey(String key) {
         if (key == null || key.isBlank()) {

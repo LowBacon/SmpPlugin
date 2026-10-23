@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.permissions;
 
 import org.bukkit.permissions.PermissionDefault;
@@ -11,20 +12,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-/**
- * The single list of every permission SmpPlugin checks.
- *
- * <p>The {@code permissions:} section of plugin.yml and {@code docs/permissions-reference.md}
- * are generated from this class ({@link PermissionRenderer}); {@code PermissionRegistryTest}
- * fails the build when either file is stale or when source code checks a node that is not
- * listed here. Regenerate with:</p>
- * <pre>mvn test -Dtest=PermissionRegistryTest -Dsmpplugin.regenerate=true</pre>
- *
- * <p>Default policy: player features default to {@code true}; staff, admin, perks, bypasses and
- * destructive actions default to {@code false}. For migration, {@code smpplugin.admin} stays
- * default-op and grants staff tools, administration and operational bypasses, but never
- * destructive actions or security bypasses.</p>
- */
 public final class PermissionRegistry {
 
     public static final String ADMIN_BUNDLE = "smpplugin.admin";
@@ -36,27 +23,13 @@ public final class PermissionRegistry {
     public static final String ROLE_MANAGER = "smpplugin.role.manager";
     public static final String ROLE_DEVELOPER = "smpplugin.role.developer";
     public static final String ROLE_COOWNER = "smpplugin.role.coowner";
-    /** Start, end and give away money with /giveaway. Only senior ranks and ops. */
     public static final String GIVEAWAY_MANAGE = "smpplugin.giveaway.manage";
-    /** The ready-made staff roles, lowest first. */
     public static final List<String> ROLES = List.of(ROLE_HELPER, ROLE_MODERATOR, ROLE_ADMIN, ROLE_MANAGER,
             ROLE_DEVELOPER, ROLE_COOWNER, ROLE_OWNER);
 
-    /**
-     * Numbered permissions resolved at runtime, e.g. {@code smpplugin.homes.10}.
-     * They are documented but not declared, because the numbers are chosen by the server owner.
-     *
-     * @param pattern     the documented form
-     * @param prefix      the literal prefix used in code
-     * @param description what the number means
-     */
     public record NumberedPermission(String pattern, String prefix, String description) {
     }
 
-    /**
-     * Auction House actions. Code builds these nodes as {@code "smpplugin.auctionhouse." + action},
-     * which the source scan in PermissionRegistryTest cannot see, so they are listed here and tested.
-     */
     public static final List<String> AUCTION_ACTIONS =
             List.of("use", "sell", "buy", "cancel", "claims", "my", "limit", "fastbuy", "fastsell");
 
@@ -210,8 +183,10 @@ public final class PermissionRegistry {
         staff("smpplugin.staff.fakeplayer.alert", "Receive fake-player alerts.", "Declared in 2.0; previously undeclared.");
         staff("smpplugin.staff.spawnstash", "Spawn and manage bait stashes with /spawnstash.", "Declared in 2.0; previously undeclared.");
         staff("smpplugin.staff.spawnstash.alert", "Receive alerts when a bait stash is found.", "Declared in 2.0; previously undeclared.");
-        staff("smpplugin.security.alerts", "Receive anti-cheat alerts and toggle them with /anticheat alerts.", "New in 2.0.");
-        staff("smpplugin.security.inspect", "View anti-cheat status, check settings, flag history and evidence.", "New in 2.0.");
+        staff("smpplugin.security.alerts", "Receive TitanGuard anti-cheat alerts (grants titanguard.alerts; /tg alerts toggles them).",
+                "New in 2.0. Since 4.2 the anti-cheat is TitanGuard.");
+        staff("smpplugin.security.inspect", "View TitanGuard violation levels and evidence (grants titanguard.evidence).",
+                "New in 2.0. Since 4.2 the anti-cheat is TitanGuard.");
         staff("smpplugin.coinflip.alerts", "Receive CoinFlip storage and settlement alerts.", "New in 2.0.");
         staff("smpplugin.coinflip.inspect", "/coinflipadmin status, inspect, audit, reconcile report, debug and any player's statistics.",
                 "New in 2.0.");
@@ -273,8 +248,8 @@ public final class PermissionRegistry {
         admin("smpplugin.admin.safety.give", "Give the safety book to a player.", "Renamed from safety.add in 2.0.");
         admin("smpplugin.admin.friends", "Use administrative /friends subcommands.", "Renamed from donutfriends.admin in 2.0.");
         admin("smpplugin.hide.admin", "Manage other players' hide and disguise state.", "Declared in 2.0; previously undeclared.");
-        admin("smpplugin.security.manage", "Grant temporary anti-cheat exemptions, reset violation levels and reload anticheat.yml.",
-                "New in 2.0.");
+        admin("smpplugin.security.manage", "Manage TitanGuard: exemptions, resets, reviews and reload (grants titanguard.admin).",
+                "New in 2.0. Since 4.2 the anti-cheat is TitanGuard.");
         admin("smpplugin.coinflip.admin.cancel", "Cancel and refund a waiting CoinFlip match (a reason is required and audited).",
                 "New in 2.0.");
         admin("smpplugin.coinflip.admin.recover", "Retry stuck CoinFlip payouts and reconcile held matches from the journal.", "New in 2.0.");
@@ -319,16 +294,13 @@ public final class PermissionRegistry {
         securityBypass("smpplugin.staff.spawnstash.bypass", "Do not trigger bait-stash alerts.",
                 "Declared in 2.0; previously undeclared.");
         securityBypass("smpplugin.bypass.anticheat.movement",
-                "Skip anti-cheat movement checks (fly, speed, timer, no-fall, step, water walk, boat fly). Use is logged once per session.",
+                "Skip TitanGuard movement checks (grants titanguard.bypass.movement).",
                 "New in 2.0. Must be granted as the exact node; staff mode does not grant it.");
         securityBypass("smpplugin.bypass.anticheat.combat",
-                "Skip anti-cheat combat checks (reach, wall hit, kill aura, autoclicker, anti-knockback, criticals). Use is logged.",
+                "Skip TitanGuard combat checks (grants titanguard.bypass.combat).",
                 "New in 2.0. Must be granted as the exact node.");
         securityBypass("smpplugin.bypass.anticheat.world",
-                "Skip anti-cheat block checks (fast break, nuker, fast place, block reach, scaffold, through-wall, x-ray). Use is logged.",
-                "New in 2.0. Must be granted as the exact node.");
-        securityBypass("smpplugin.bypass.anticheat.player",
-                "Skip anti-cheat inventory, auto-totem and cheat-client checks. Use is logged.",
+                "Skip TitanGuard block reach, nuker and x-ray checks (grants titanguard.bypass.world and .xray).",
                 "New in 2.0. Must be granted as the exact node.");
 
         // ── Destructive or overwriting actions (default false, never bundled) ──────
@@ -450,6 +422,16 @@ public final class PermissionRegistry {
         admin("smpplugin.admin.events", "Switch seasonal events on, off or back to their dates with /events.",
                 "New in 4.0.");
 
+        // ── 4.2: the lobby, spawn and FFA worlds ──────────────────────────────────────
+        admin("smpplugin.admin.world", "Manage the lobby, spawn and FFA worlds with /smp world (status, info, setspawn, tp, reload).",
+                "New in 4.2.");
+        operationalBypass("smpplugin.world.bypass.commands", "Run any command in a world with a command allowlist (the lobby).",
+                "New in 4.2.");
+        operationalBypass("smpplugin.world.bypass.build", "Build, open containers and leave by pearl or portal in the protected parts of the lobby, spawn and FFA worlds.",
+                "New in 4.2.");
+        securityBypass("smpplugin.world.seeall", "See players in every world, including the lobby, whatever the world's visibility rules.",
+                "New in 4.2. Granted one by one (not in any role or to operators), so the lobby really is separate for everyone else.");
+
         // ── Legacy bundles kept so 1.5 grants behave the same ───────────────────────
         node("smpplugin.staff.punishments.create", "Legacy bundle: every punishment-creating action.",
                 PermissionCategory.LEGACY,
@@ -565,7 +547,6 @@ public final class PermissionRegistry {
         return NUMBERED;
     }
 
-    /** True when the node is declared or is a numbered form such as {@code smpplugin.homes.5}. */
     public static boolean isKnown(String node) {
         if (isRegistered(node)) {
             return true;
@@ -598,13 +579,26 @@ public final class PermissionRegistry {
         List<String> children = switch (node) {
             case "smpplugin.staff.punishments.ban" -> List.of("smpplugin.staff.punishments.tempban");
             case "smpplugin.staff.punishments.mute" -> List.of("smpplugin.staff.punishments.tempmute");
-            default -> List.of();
+            default -> titanGuardChildren(node);
         };
         node(node, description, PermissionCategory.STAFF, children, history);
     }
 
     private static void admin(String node, String description, String history) {
-        node(node, description, PermissionCategory.ADMIN, List.of(), history);
+        node(node, description, PermissionCategory.ADMIN, titanGuardChildren(node), history);
+    }
+
+    // TitanGuard's own permissions granted by SmpPlugin's anti-cheat nodes.
+    private static List<String> titanGuardChildren(String node) {
+        return switch (node) {
+            case "smpplugin.security.alerts" -> List.of("titanguard.alerts");
+            case "smpplugin.security.inspect" -> List.of("titanguard.evidence");
+            case "smpplugin.security.manage" -> List.of("titanguard.admin");
+            case "smpplugin.bypass.anticheat.movement" -> List.of("titanguard.bypass.movement");
+            case "smpplugin.bypass.anticheat.combat" -> List.of("titanguard.bypass.combat");
+            case "smpplugin.bypass.anticheat.world" -> List.of("titanguard.bypass.world", "titanguard.bypass.xray");
+            default -> List.of();
+        };
     }
 
     private static void operationalBypass(String node, String description, String history) {
@@ -612,7 +606,7 @@ public final class PermissionRegistry {
     }
 
     private static void securityBypass(String node, String description, String history) {
-        node(node, description, PermissionCategory.SECURITY_BYPASS, List.of(), history);
+        node(node, description, PermissionCategory.SECURITY_BYPASS, titanGuardChildren(node), history);
     }
 
     private static void destructive(String node, String description, String history) {

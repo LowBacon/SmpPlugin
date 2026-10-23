@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.commands;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -9,7 +10,6 @@ import org.bukkit.command.CommandSender;
 
 import java.util.Arrays;
 
-/** /addmoney: kept for existing staff habits; the same change as /eco give. */
 public class AddMoneyCommand implements CommandExecutor {
 
     private static final String PERMISSION = "smpplugin.admin.addmoney";

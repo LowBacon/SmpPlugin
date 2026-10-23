@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.perks;
 
 import org.bukkit.configuration.ConfigurationSection;
@@ -18,26 +19,6 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
-/**
- * The ranks of perks.yml and what each adds. Nothing about ranks is built in: there can be any number of them,
- * with any names, and the order comes only from their PRIORITY.
- *
- * <pre>
- * ENABLED: true
- * CAPS:                              # optional lower limits, per perk
- *   CALENDAR-BONUS-PERCENT: 50
- * RANKS:
- *   vip:
- *     PERMISSION: smpplugin.rank.vip
- *     PRIORITY: 10
- *     DISPLAY: "&amp;a&amp;lVIP"
- *     PERKS:
- *       CALENDAR-BONUS-PERCENT: 10
- * </pre>
- *
- * The file is read again on every {@link #reload()}; problems (an unknown perk, a value over its cap, two ranks with
- * one permission) are logged once per reload and the bad value is left out or capped, never guessed.
- */
 public final class Perks {
 
     private final Supplier<FileConfiguration> config;
@@ -53,7 +34,6 @@ public final class Perks {
         reload();
     }
 
-    /** Reads perks.yml again. */
     public void reload() {
         FileConfiguration file = config.get();
         List<String> found = new ArrayList<>();
@@ -64,13 +44,11 @@ public final class Perks {
         }
     }
 
-    /** True when perks.yml ENABLED is true and the PERKS feature is on. */
     public boolean isEnabled() {
         FileConfiguration file = config.get();
         return (file == null || file.getBoolean("ENABLED", true)) && featureEnabled.getAsBoolean();
     }
 
-    /** Every rank, highest priority first. */
     public List<Rank> ranks() {
         return ranks;
     }
@@ -83,12 +61,10 @@ public final class Perks {
         return ranks.stream().filter(rank -> rank.id().equals(wanted)).findFirst();
     }
 
-    /** What the last reload complained about. */
     public List<String> problems() {
         return problems;
     }
 
-    /** The highest rank the player has (by permission), or empty. */
     public Optional<Rank> rankOf(Predicate<String> hasPermission) {
         if (!isEnabled()) {
             return Optional.empty();
@@ -101,12 +77,10 @@ public final class Perks {
         return Optional.empty();
     }
 
-    /** The perk's value for a player: their highest rank's value, or 0. */
     public int value(Predicate<String> hasPermission, Perk perk) {
         return rankOf(hasPermission).map(rank -> rank.value(perk)).orElse(0);
     }
 
-    /** {@code amount} plus the perk's percent, rounded down so a bonus never mints fractions of a cent. */
     public static double withPercent(double amount, int percent) {
         if (amount <= 0D || percent <= 0) {
             return amount;
@@ -115,7 +89,6 @@ public final class Perks {
         return (cents + cents * percent / 100L) / 100D;
     }
 
-    /** As {@link #withPercent(double, int)} for whole numbers (shards, candy). */
     public static long withPercent(long amount, int percent) {
         if (amount <= 0L || percent <= 0) {
             return amount;

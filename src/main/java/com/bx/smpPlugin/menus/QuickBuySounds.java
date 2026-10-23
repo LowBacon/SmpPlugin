@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.menus;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -7,9 +8,6 @@ import org.bukkit.entity.Player;
 import java.util.Locale;
 import java.util.Map;
 
-/**
- * Dedicated Quick Buy sounds from {@code sounds.yml}, matching the Orders pattern.
- */
 public final class QuickBuySounds {
 
     public static final String OPEN = "QUICK_BUY.OPEN";
@@ -74,10 +72,6 @@ public final class QuickBuySounds {
         play(player, plugin, FAIL);
     }
 
-    /**
-     * Purchase success: {@code shop.yml} {@code QUICK-BUY.PURCHASE-SOUND} overrides
-     * {@code sounds.yml} {@code QUICK_BUY.BUY-SUCCESS} when set.
-     */
     public static void playPurchase(Player player, SmpPlugin plugin) {
         if (player == null || plugin == null || plugin.getConfigManager() == null) {
             return;

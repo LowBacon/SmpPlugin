@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.seasonal;
 
 import com.bx.smpPlugin.core.Text;
@@ -12,10 +13,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-/**
- * How a calendar looks and sounds: the words, colours, icons and effects. Each event has its own defaults (spooky
- * for Halloween, wintry for Advent); every value can be changed in the event's CALENDAR section.
- */
 public record CalendarTheme(
         String title,
         String accent,
@@ -67,7 +64,6 @@ public record CalendarTheme(
         icons = Map.copyOf(icons);
     }
 
-    /** The theme from a CALENDAR section, each missing or broken value taken from {@code defaults}. */
     public static CalendarTheme read(ConfigurationSection section, CalendarTheme defaults) {
         if (section == null) {
             return defaults;

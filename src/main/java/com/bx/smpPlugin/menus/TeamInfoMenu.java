@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.menus;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -21,10 +22,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 
-/**
- * Read-only view of a team anyone can open with /team info, so the roster of a team you are not in
- * is visible without joining it. Nothing in here edits the team.
- */
 public class TeamInfoMenu extends BaseMenu {
 
     private static final String MENU_PATH = "TEAM-MENUS.TEAM-INFO";
@@ -78,7 +75,6 @@ public class TeamInfoMenu extends BaseMenu {
         SoundUtils.play(player, plugin.getConfigManager().getSound("MENUS.BUTTON-CLICK"));
     }
 
-    /** Leader first, then everyone else by name, so the roster reads the same on every page load. */
     static List<UUID> orderMembers(Team team, Function<UUID, String> nameResolver) {
         List<UUID> ordered = new ArrayList<>(team.getMemberUuids());
         ordered.sort(Comparator
@@ -142,7 +138,6 @@ public class TeamInfoMenu extends BaseMenu {
         );
     }
 
-    /** Shown when menus.yml has no SUMMARY-BUTTON lore yet. */
     private List<String> withDefaultLore(List<String> configured, Map<String, String> placeholders) {
         if (!configured.isEmpty()) {
             return configured;
@@ -195,7 +190,6 @@ public class TeamInfoMenu extends BaseMenu {
         }
     }
 
-    /** Mirrors HideManager#visibleName, except it also has to work for members who are offline. */
     private String displayName(Player viewer, UUID memberUuid) {
         HideManager hideManager = plugin.getHideManager();
         String realName = realName(memberUuid, "unknown");

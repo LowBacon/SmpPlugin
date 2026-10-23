@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.menus;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -18,10 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Staff browser for logged chat, newest first. Pages are read on the database thread so a long
- * history never stalls the server; the menu shows a loading pane until the page arrives.
- */
 public class ChatLogsMenu extends BaseMenu {
 
     private static final int PER_PAGE = 45;
@@ -40,7 +37,6 @@ public class ChatLogsMenu extends BaseMenu {
     private int total;
     private int loadToken;
 
-    /** Pass a null uuid to browse everyone's chat instead of one player's. */
     public ChatLogsMenu(SmpPlugin plugin, UUID targetUuid, String targetName) {
         super(plugin, targetUuid == null ? "&8Chat Log" : "&8Chat Log: " + targetName, 54);
         this.targetUuid = targetUuid;
@@ -141,7 +137,6 @@ public class ChatLogsMenu extends BaseMenu {
         return ItemUtils.createPlayerHead(Bukkit.getOfflinePlayer(entry.playerUuid()), "&e" + name, lore);
     }
 
-    /** Breaks a message over several lore lines so long ones stay readable. */
     static List<String> wrap(String message) {
         List<String> lines = new ArrayList<>();
         if (message == null || message.isBlank()) {

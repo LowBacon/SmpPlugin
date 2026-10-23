@@ -1,12 +1,8 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip;
 
 import java.util.UUID;
 
-/**
- * Lifetime statistics for one player. Only completed matches count; cancelled, expired and refunded matches
- * never change wins, losses or money figures. "Gross payouts" is what the player received from wins;
- * "net" is gross payouts minus everything they staked in completed matches.
- */
 public record CoinFlipStats(
         UUID playerId,
         String playerName,
@@ -38,7 +34,6 @@ public record CoinFlipStats(
         return new CoinFlipStats(playerId, playerName, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "", false);
     }
 
-    /** Win percentage over completed matches, or -1 when none were played. */
     public double winRate() {
         return played == 0 ? -1D : wins * 100D / played;
     }
@@ -54,14 +49,6 @@ public record CoinFlipStats(
         return headsPicks > tailsPicks ? CoinSide.HEADS : CoinSide.TAILS;
     }
 
-    /**
-     * The statistics after one completed match.
-     *
-     * @param won        whether this player won
-     * @param pick       the side this player was on
-     * @param joined     whether this player joined (rather than created) the match
-     * @param day        the server-local day, e.g. 2026-10-12, for the active-days count
-     */
     public CoinFlipStats afterMatch(String name, boolean won, long stake, long payout, CoinSide pick,
                                     boolean privateMatch, boolean joined, long durationMillis, long nowMillis, String day) {
         long net = won ? payout - stake : -stake;

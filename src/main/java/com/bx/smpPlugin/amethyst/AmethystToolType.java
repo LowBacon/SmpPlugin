@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.amethyst;
 
 public enum AmethystToolType {
@@ -18,7 +19,6 @@ public enum AmethystToolType {
         return displayName;
     }
 
-    /** Returns null on unknown name */
     public static AmethystToolType fromString(String name) {
         if (name == null) return null;
         try {
@@ -28,7 +28,6 @@ public enum AmethystToolType {
         }
     }
 
-    /** Config section key for this type */
     public String getConfigKey() {
         return switch (this) {
             case DRILL       -> "DRILL";

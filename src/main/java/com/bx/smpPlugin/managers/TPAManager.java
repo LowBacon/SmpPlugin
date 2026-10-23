@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -18,11 +19,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
-/**
- * Manages /tpa and /tpahere requests.
- * tpaHere = false -> requester teleports to target.
- * tpaHere = true -> target teleports to requester.
- */
 public class TPAManager {
 
     private static final long REQUEST_EXPIRY_TICKS = 15 * 60 * 20L;

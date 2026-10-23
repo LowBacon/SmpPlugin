@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.models;
 
 import com.bx.smpPlugin.testsupport.ServerApiCondition;

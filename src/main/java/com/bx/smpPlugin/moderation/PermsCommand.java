@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.moderation;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -20,16 +21,6 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 
-/**
- * /perms: the permission tools for admins.
- * <pre>
- * /perms roles                     the ready-made staff roles and what they cover
- * /perms role &lt;helper|moderator|admin|owner&gt; [page]   every node a role grants
- * /perms explain &lt;node&gt;             what a node does, who has it by default, what it includes
- * /perms check &lt;player&gt; &lt;node&gt;      whether an online player has a node, and where it comes from
- * /perms player &lt;player&gt;            which roles and bundles an online player has
- * </pre>
- */
 public final class PermsCommand implements CommandExecutor, TabCompleter {
 
     public static final String PERMISSION = "smpplugin.admin.perms";
@@ -66,7 +57,6 @@ public final class PermsCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
-    /** Every node a role grants, following child bundles. */
     static Set<String> expand(String node) {
         Set<String> out = new LinkedHashSet<>();
         expand(node, out);

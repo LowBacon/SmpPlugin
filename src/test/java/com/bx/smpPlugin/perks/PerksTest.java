@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.perks;
 
 import org.bukkit.configuration.file.YamlConfiguration;

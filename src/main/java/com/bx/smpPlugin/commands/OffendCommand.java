@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.commands;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -24,14 +25,6 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * {@code /offend <player> <offense> [time]}: punishes a player with a preset rule from
- * offenses.yml. The rule picks the punishment type, and the player's earlier punishments for the
- * same offense pick the duration from its ladder, so staff do not have to look up the history.
- *
- * <p>{@code /offend <player>} previews what every offense would give that player, and
- * {@code /offend list} lists the offenses.
- */
 public class OffendCommand implements CommandExecutor, TabCompleter {
 
     public static final String PERMISSION = "smpplugin.staff.punishments.offend";
@@ -179,7 +172,6 @@ public class OffendCommand implements CommandExecutor, TabCompleter {
         }
     }
 
-    /** Shows what each offense would give this player next, using their own history. */
     private void sendPreview(CommandSender sender, ResolvedTarget target) {
         send(sender, plugin.getConfigManager().getMessageOrDefault(
                 "PUNISHMENTS.OFFEND-PREVIEW-HEADER",

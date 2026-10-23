@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.core;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -17,29 +18,16 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-/**
- * Small animations for chest menus: a slot that spins through items before a reveal, a wave that
- * fills the menu when it opens, and a border that shimmers while it stays open.
- *
- * <p>Every animation runs on the viewer's own scheduler, touches only the slots it owns, and stops
- * by itself as soon as the viewer is looking at something else, so a closed menu costs nothing.
- */
 public final class MenuFx {
 
     private MenuFx() {
     }
 
-    /** True while this player still has the menu open. */
     public static boolean isViewing(Player player, InventoryHolder holder) {
         return player != null && player.isOnline()
                 && player.getOpenInventory().getTopInventory().getHolder() == holder;
     }
 
-    /**
-     * Plays a sound by its Minecraft key, e.g. {@code ui.toast.challenge_complete}. It never loads the
-     * {@link Sound} class, whose constants come from the server's registry, so services that also run without a
-     * server (the unit tests) can use it without breaking that registry for everything that runs after them.
-     */
     public static void soundKey(Player player, String key, float volume, float pitch) {
         if (player != null && key != null && !key.isBlank()) {
             player.playSound(player.getLocation(), key, volume, pitch);
@@ -52,11 +40,6 @@ public final class MenuFx {
         }
     }
 
-    /**
-     * Spins one slot through {@code frames} for {@code steps} steps, slowing down at the end like
-     * a wheel, with a rising note on each step. {@code done} always runs once, even if the player
-     * closes the menu half way, so a prize is never lost to an impatient click.
-     */
     public static void spin(SmpPlugin plugin, Player player, InventoryHolder holder, Inventory inventory, int slot,
                             List<ItemStack> frames, int steps, Runnable done) {
         if (frames.isEmpty() || steps <= 0) {
@@ -88,10 +71,6 @@ public final class MenuFx {
         }, 1L, 1L));
     }
 
-    /**
-     * Fills a menu with a diagonal wave: items appear from the top-left corner outwards over a
-     * few ticks. Slots not in {@code items} are left alone.
-     */
     public static void wave(SmpPlugin plugin, Player player, InventoryHolder holder, Inventory inventory,
                             Map<Integer, ItemStack> items, ItemStack cover) {
         List<Integer> slots = new ArrayList<>(items.keySet());
@@ -119,10 +98,6 @@ public final class MenuFx {
         }, 1L, 1L));
     }
 
-    /**
-     * Cycles the given border slots through the colours while the menu is open. Each slot is one
-     * step behind its neighbour, which reads as light running round the frame.
-     */
     public static void shimmer(SmpPlugin plugin, Player player, InventoryHolder holder, Inventory inventory,
                                List<Integer> border, List<Material> colours, long periodTicks) {
         if (border.isEmpty() || colours.isEmpty()) {
@@ -143,7 +118,6 @@ public final class MenuFx {
         }, periodTicks, periodTicks));
     }
 
-    /** The outer ring of a chest menu with the given number of rows. */
     public static List<Integer> borderSlots(int rows) {
         List<Integer> out = new ArrayList<>();
         int size = rows * 9;

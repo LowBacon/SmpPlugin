@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.commands;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -7,10 +8,6 @@ import com.bx.smpPlugin.utils.ColorUtils;
 import com.bx.smpPlugin.utils.NumberUtils;
 import org.bukkit.entity.Player;
 
-/**
- * Punishment message text and its delivery, shared by the direct punishment commands and by
- * {@code /offend}, so a new punishment type only has to be handled in one place.
- */
 final class PunishmentMessages {
 
     private final SmpPlugin plugin;
@@ -19,7 +16,6 @@ final class PunishmentMessages {
         this.plugin = plugin;
     }
 
-    /** Kicks, warns or tells an online target about the punishment that was just recorded. */
     void applyRuntimeEffect(PunishmentType type, Player onlineTarget, PunishmentRecord record) {
         if (onlineTarget == null) {
             return;

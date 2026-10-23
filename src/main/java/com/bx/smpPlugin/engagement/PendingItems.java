@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.engagement;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -15,14 +16,6 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
 
-/**
- * The reward vault: items owed to a player that could not be handed over (a full inventory, or they were offline).
- * Kept in the player store until they make room, and never dropped on the ground where anyone could pick them up.
- *
- * <p>Every batch is its own entry ({@code pending.items.<id>}), so adding never reads and rewrites what is already
- * there: a batch added while the player logs in is at worst handed over on the next login, never lost. The single
- * {@code pending.items} entry written by 3.0 is read as one more batch.
- */
 public final class PendingItems {
 
     static final String SECTION = "pending.items";
@@ -35,15 +28,10 @@ public final class PendingItems {
         return plugin.getV3Module() == null ? null : plugin.getV3Module().store();
     }
 
-    /** Keeps one item for a player, online or not. */
     public static boolean add(SmpPlugin plugin, UUID owner, ItemStack item) {
         return item != null && keep(plugin, owner, List.of(item));
     }
 
-    /**
-     * Keeps items for a player, online or not. Any thread. Returns false (and keeps nothing) when the vault is not
-     * available, so the caller can fall back.
-     */
     public static boolean keep(SmpPlugin plugin, UUID owner, List<ItemStack> items) {
         PlayerStore store = store(plugin);
         if (store == null || !store.isReady() || owner == null || items == null || items.isEmpty()) {
@@ -62,12 +50,6 @@ public final class PendingItems {
         return true;
     }
 
-    /**
-     * Gives items to an online player; what does not fit goes to the vault (with a message), or, only when the
-     * vault cannot be used, drops at their feet. Call on the player's thread.
-     *
-     * @return the stacks that went to the vault
-     */
     public static int giveOrKeep(SmpPlugin plugin, Player player, List<ItemStack> items) {
         List<ItemStack> rest = new ArrayList<>();
         for (ItemStack item : items) {
@@ -94,7 +76,6 @@ public final class PendingItems {
         return 0;
     }
 
-    /** Stacks waiting for a loaded player. */
     public static int waiting(PlayerStore store, UUID owner) {
         int count = 0;
         for (String stored : store.sections(owner, SECTION).values()) {
@@ -103,12 +84,6 @@ public final class PendingItems {
         return count;
     }
 
-    /**
-     * Hands over what fits. What does not fit stays in the vault. Call on the player's thread.
-     *
-     * @param quiet true to say nothing when the vault is empty
-     * @return the stacks still waiting
-     */
     public static int deliver(SmpPlugin plugin, PlayerStore store, Player player, boolean quiet) {
         UUID uuid = player.getUniqueId();
         int given = 0;

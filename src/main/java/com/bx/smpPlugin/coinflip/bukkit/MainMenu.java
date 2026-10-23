@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip.bukkit;
 
 import com.bx.smpPlugin.coinflip.CoinFlipConfig;
@@ -14,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/** "More" from the CoinFlip screen: challenges, history, statistics and settings. Reads only in-memory state. */
 public final class MainMenu extends CoinFlipMenu {
 
     public MainMenu(CoinFlipModule module, UUID viewer) {

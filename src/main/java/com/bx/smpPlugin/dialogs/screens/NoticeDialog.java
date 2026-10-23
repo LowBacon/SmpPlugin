@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.dialogs.screens;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -15,13 +16,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Pop-ups for prizes and announcements: the calendar reveal, daily rewards, finished challenges.
- *
- * <p>An animation is a list of these shown one after another; each new frame replaces the last on
- * the client, which reads as motion. Starting another animation for the same player cancels the
- * frames still queued from the previous one.
- */
 public final class NoticeDialog extends DialogScreen {
 
     private final Map<UUID, Integer> animationIds = new ConcurrentHashMap<>();

@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.listeners;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -66,7 +67,8 @@ public class PlayerDeathListener implements Listener {
             if (killerData != null) {
                 killerData.addKill();
                 killerData.addKillStreak();
-                if (plugin.getFeatureManager().isEnabled(FeatureManager.Feature.SHARDS)) {
+                if (plugin.getFeatureManager().isEnabled(FeatureManager.Feature.SHARDS)
+                        && plugin.getShardManager().mayRewardKill(killer, victim)) {
                     long shardsPerKill = plugin.getShardManager().rollKillReward();
                     plugin.getShardManager().giveShards(killer, shardsPerKill, true);
                 }

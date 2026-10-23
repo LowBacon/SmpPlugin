@@ -1,0 +1,213 @@
+# ==============================================================================
+# The lobby, spawn and FFA worlds (new in 4.2)
+# ==============================================================================
+# Three real Minecraft worlds, each with its own rules:
+#   lobby  the hub players join into. No sidebar, no PvP, nothing to break, and
+#          only the commands in ALLOWED-COMMANDS work. It is the lobby of /lobby
+#          unless you set another place with /setlobby.
+#   spawn  the survival spawn. Protected within PROTECTED-RADIUS blocks of its
+#          spawn point; beyond that it plays like any survival world. It is the
+#          spawn of /spawn unless you set another place with /setspawn.
+#   ffa    the free-for-all arena: PvP on, nothing to break.
+#
+# At start-up each world is loaded. One that does not exist is created only
+# when CREATE-IF-MISSING is true. An existing world is never regenerated,
+# reset or deleted, and no world is ever unloaded.
+#
+# What players see (in the world and in the tab list) is decided by the world
+# they stand in (VISIBILITY):
+#   SAME_WORLD  only players in a world with the same VISIBILITY-GROUP
+#               (lobby sees the lobby, ffa sees ffa)
+#   ALL_ONLINE  every online player (spawn sees everyone, lobby and ffa too)
+# HIDDEN-FROM-OTHER-WORLDS: true hides a world's players from every other
+# world, whatever that world's VISIBILITY. The lobby has it, so it is a place
+# of its own: the SMP does not see lobby players and the lobby sees only the
+# lobby. Every other world (world, world_nether, the duel arenas...) uses
+# OTHER-WORLDS-GROUP and OTHER-WORLDS-VISIBILITY. Vanished staff stay hidden
+# either way. smpplugin.world.seeall sees everyone (given one by one, not to
+# operators automatically).
+#
+# The three worlds start empty (VOID) so you can build them. /setspawn only
+# works in the spawn world, /setlobby in the lobby world and /ffaarena setpos
+# in the ffa world.
+#
+# Staff tools: /smp world status | info [world] | setspawn <world> |
+# tp [player] <world> | reload  (smpplugin.admin.world)
+# Bypasses: COMMAND-BYPASS below (any command in the lobby),
+# smpplugin.world.bypass.build (build and leave by pearl or portal in
+# protected areas), smpplugin.world.seeall (see players of every world).
+# ==============================================================================
+
+# false: no world is loaded, created or protected by SmpPlugin.
+ENABLED: true
+
+# Players see only players in a world with the same VISIBILITY-GROUP.
+VISIBILITY-BY-WORLD: true
+
+# The group of every world that is not one of the three below. "spawn" keeps
+# survival players in the normal worlds visible to players at spawn.
+OTHER-WORLDS-GROUP: spawn
+
+# What players in those other worlds see: ALL_ONLINE (like the spawn) or SAME_WORLD.
+OTHER-WORLDS-VISIBILITY: ALL_ONLINE
+
+# Who keeps all of their normal commands in a world with a command allowlist
+# (the lobby). It only lifts the allowlist: nobody gains a command their
+# permissions do not already give them.
+COMMAND-BYPASS:
+  # Server operators.
+  OPS: true
+  # Anyone with one of these permissions. smpplugin.world.bypass.commands is in
+  # the smpplugin.admin bundle and in the owner, co-owner, developer and manager roles.
+  PERMISSIONS:
+  - smpplugin.world.bypass.commands
+  # Members of these LuckPerms groups (checked as group.<name>, which LuckPerms
+  # gives only to real members, never because of a name, prefix or nickname).
+  # Names are not case sensitive: CoOwner is coowner.
+  GROUPS:
+  - owner
+  - coowner
+  - co-owner
+  - dev
+  - developer
+  - manager
+
+MESSAGES:
+  PROTECTED: '&cYou can''t do that here.'
+  COMMAND-BLOCKED: '&cThat command can''t be used in the {world}. &7Try /lobby survival.'
+
+WORLDS:
+  LOBBY:
+    ENABLED: true
+    WORLD-NAME: lobby
+    CREATE-IF-MISSING: true
+    # VOID: an empty world with only a small stone platform at the spawn, to build on.
+    # NORMAL, FLAT, LARGE_BIOMES and AMPLIFIED are only used when the world is created.
+    GENERATOR: VOID
+    ENVIRONMENT: NORMAL
+    VISIBILITY-GROUP: lobby
+    # SAME_WORLD: lobby players see only lobby players.
+    VISIBILITY: SAME_WORLD
+    # Lobby players are not seen from the SMP or FFA either.
+    HIDDEN-FROM-OTHER-WORLDS: true
+    # The SmpPlugin sidebar. false shows no sidebar at all (not an empty one).
+    SIDEBAR: false
+    PVP: false
+    BLOCK-BREAK: false
+    BLOCK-PLACE: false
+    CONTAINERS: false
+    # Item frames, armour stands and vehicles. Villagers and NPCs stay clickable.
+    ENTITY-INTERACT: false
+    ITEM-DROP: false
+    ITEM-PICKUP: false
+    HUNGER: false
+    FALL-DAMAGE: false
+    # Fire, lava, drowning and the like. Falling into the void sends a player back to the spawn.
+    OTHER-DAMAGE: false
+    MOB-SPAWNING: false
+    PORTALS: false
+    # Ender pearls, chorus fruit and spectating into another world. /lobby survival,
+    # the NPC and staff teleports always work.
+    LEAVE-BY-TELEPORT: false
+    # Entering the lobby world any other way than /lobby (for example a staff /tp)
+    # saves and clears the survival inventory exactly like /lobby does.
+    SAVE-INVENTORY-ON-ENTRY: true
+    COMMAND-ALLOWLIST: true
+    # Aliases count (/w is /msg) and plugin:command labels cannot get round the list.
+    ALLOWED-COMMANDS:
+    - help
+    - list
+    - msg
+    - tell
+    - reply
+    - rules
+    - lobby
+    - spawn
+    # -1 protects the whole world, 0 nothing, a number that many blocks from the spawn point.
+    PROTECTED-RADIUS: -1
+    RESPAWN-IN-WORLD: true
+    # On death: DEFAULT (whatever the server and other plugins do), KEEP or DROP.
+    DEATH-INVENTORY: DEFAULT
+    # PEACEFUL, EASY, NORMAL, HARD, or '' to leave the world's own setting.
+    DIFFICULTY: PEACEFUL
+    # A time of day (0-24000) that the world stays at, or -1 for a normal day.
+    LOCK-TIME: 6000
+    LOCK-WEATHER: true
+    # Any game rule by name, e.g. keepInventory: true. An unknown name is skipped with a warning.
+    GAMERULES: {}
+    # Where players arrive. Set it in game with /smp world setspawn lobby.
+    SPAWN: ''
+
+  SPAWN:
+    ENABLED: true
+    WORLD-NAME: spawn
+    CREATE-IF-MISSING: true
+    GENERATOR: VOID
+    ENVIRONMENT: NORMAL
+    VISIBILITY-GROUP: spawn
+    # ALL_ONLINE: spawn players see everyone online, except worlds that are
+    # HIDDEN-FROM-OTHER-WORLDS (the lobby).
+    VISIBILITY: ALL_ONLINE
+    HIDDEN-FROM-OTHER-WORLDS: false
+    SIDEBAR: true
+    PVP: false
+    BLOCK-BREAK: false
+    BLOCK-PLACE: false
+    CONTAINERS: false
+    ENTITY-INTERACT: true
+    ITEM-DROP: true
+    ITEM-PICKUP: true
+    HUNGER: true
+    FALL-DAMAGE: true
+    OTHER-DAMAGE: true
+    MOB-SPAWNING: true
+    PORTALS: true
+    LEAVE-BY-TELEPORT: true
+    COMMAND-ALLOWLIST: false
+    ALLOWED-COMMANDS: []
+    # Only this close to the spawn point is protected; -1 protects the whole world.
+    PROTECTED-RADIUS: 100
+    RESPAWN-IN-WORLD: false
+    DEATH-INVENTORY: DEFAULT
+    DIFFICULTY: ''
+    LOCK-TIME: -1
+    LOCK-WEATHER: false
+    GAMERULES: {}
+    SPAWN: ''
+
+  FFA:
+    ENABLED: true
+    WORLD-NAME: ffa
+    CREATE-IF-MISSING: true
+    GENERATOR: VOID
+    ENVIRONMENT: NORMAL
+    VISIBILITY-GROUP: ffa
+    # SAME_WORLD: FFA players see only FFA players.
+    VISIBILITY: SAME_WORLD
+    HIDDEN-FROM-OTHER-WORLDS: false
+    SIDEBAR: true
+    PVP: true
+    BLOCK-BREAK: false
+    BLOCK-PLACE: false
+    CONTAINERS: false
+    ENTITY-INTERACT: true
+    ITEM-DROP: true
+    ITEM-PICKUP: true
+    HUNGER: true
+    FALL-DAMAGE: true
+    OTHER-DAMAGE: true
+    MOB-SPAWNING: false
+    PORTALS: false
+    LEAVE-BY-TELEPORT: true
+    COMMAND-ALLOWLIST: false
+    ALLOWED-COMMANDS: []
+    PROTECTED-RADIUS: -1
+    RESPAWN-IN-WORLD: true
+    # KEEP gives players their items back after an FFA death; DROP leaves them on the floor.
+    # /ffa arenas with kits handle their own inventories either way.
+    DEATH-INVENTORY: DEFAULT
+    DIFFICULTY: ''
+    LOCK-TIME: -1
+    LOCK-WEATHER: false
+    GAMERULES: {}
+    SPAWN: ''

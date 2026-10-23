@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.engagement;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -19,10 +20,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ThreadLocalRandom;
 
-/**
- * Rotating announcements from extras.yml (ANNOUNCER). Each entry is one line or a list of lines.
- * {@code /announcer [list|send <n>|toggle]} lets staff preview, push one now, or pause them.
- */
 public final class Announcer implements CommandExecutor, TabCompleter {
 
     public static final String PERMISSION = "smpplugin.admin.announcer";
@@ -41,7 +38,6 @@ public final class Announcer implements CommandExecutor, TabCompleter {
         return extras == null ? new YamlConfiguration() : extras;
     }
 
-    /** Every announcement as a list of lines. */
     List<List<String>> messages() {
         List<List<String>> out = new ArrayList<>();
         List<?> raw = config().getList("ANNOUNCER.MESSAGES");
@@ -60,7 +56,6 @@ public final class Announcer implements CommandExecutor, TabCompleter {
         return out;
     }
 
-    /** Called every 20 seconds by the module. */
     public void tick() {
         if (paused || !config().getBoolean("ANNOUNCER.ENABLED", true)
                 || !plugin.getFeatureManager().isEnabled(FeatureManager.Feature.ANNOUNCER)

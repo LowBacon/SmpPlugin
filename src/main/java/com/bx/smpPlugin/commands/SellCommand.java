@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.commands;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -86,4 +87,3 @@ public class SellCommand implements CommandExecutor, TabCompleter {
         return Collections.emptyList();
     }
 }
-

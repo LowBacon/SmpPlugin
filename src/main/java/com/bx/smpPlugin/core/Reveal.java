@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.core;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -8,11 +9,6 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * The pop-up that finishes a prize reveal: a few frames of a growing row of symbols, then the
- * prize with a button back to where it came from. Only on Paper and Purpur; returns false
- * elsewhere so the caller can stay in chat.
- */
 public final class Reveal {
 
     private Reveal() {

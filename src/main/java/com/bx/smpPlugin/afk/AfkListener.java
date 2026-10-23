@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.afk;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -18,7 +19,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.Locale;
 
-/** Everything that counts as a player being at the keyboard. */
 public class AfkListener implements Listener {
 
     private final SmpPlugin plugin;

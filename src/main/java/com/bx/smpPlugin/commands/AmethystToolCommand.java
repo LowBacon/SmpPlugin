@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.commands;
 
 import com.bx.smpPlugin.utils.PermissionUtils;
@@ -84,7 +85,7 @@ public class AmethystToolCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
 
-            target.getInventory().addItem(item);
+            com.bx.smpPlugin.engagement.PendingItems.giveOrKeep(plugin, target, java.util.List.of(item));
             sender.sendMessage(ColorUtils.toComponent(
                     mgr.getMessage("GIVE-SUCCESS",
                             "{type}", type.getDisplayName(),

@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -21,20 +22,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Calculates fair, balanced, and realistic prices for Minecraft items that
- * are not explicitly listed in worth.yml.
- *
- * <p>Pricing strategy:
- * <ol>
- *   <li>Blocks unobtainable/admin items (Bedrock, Barrier, Command Blocks).</li>
- *   <li>Curated base prices for non-craftable items (1.21 Trial items, Spawn Eggs, Music Discs, etc.).</li>
- *   <li>Dynamic vanilla recipe cost calculation (synthesizing ingredient costs from worth.yml).</li>
- *   <li>Material name pattern heuristics (slabs, stairs, walls, signs, variants).</li>
- *   <li>Sensible generic fallbacks.</li>
- * </ol>
- * </p>
- */
 public class BalancedPriceManager {
 
     private final SmpPlugin plugin;
@@ -85,12 +72,6 @@ public class BalancedPriceManager {
                 || name.endsWith("_WALL") || name.endsWith("_SLAB") || name.endsWith("_STAIRS");
     }
 
-    /**
-     * Resolves an automatic balanced price for the given material.
-     *
-     * @param material The material to price.
-     * @return A positive balanced price, or -1.0 if unobtainable / invalid.
-     */
     public double getBalancedPrice(Material material) {
         if (isAir(material) || UNOBTAINABLE.contains(material)) {
             return -1.0;

@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.halloween;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -15,15 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * /halloween: the Halloween hub. On top of the calendar commands (edit, give, reset, test, stats, reload):
- *
- * <pre>
- * /halloween calendar                         the Spooky Calendar itself
- * /halloween candy                            your candy
- * /halloween candy &lt;player&gt; &lt;give|take|set&gt; &lt;n&gt;  change anyone's candy (staff)
- * </pre>
- */
 public final class HalloweenCommand extends CalendarCommand {
 
     private final HalloweenHub hub;

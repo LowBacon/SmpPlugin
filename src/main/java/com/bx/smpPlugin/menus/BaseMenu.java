@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.menus;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -15,6 +16,7 @@ public abstract class BaseMenu implements InventoryHolder {
 
     protected final SmpPlugin plugin;
     protected Inventory inventory;
+    private int renderVersion;
 
     public BaseMenu(SmpPlugin plugin, String title, int size) {
         this.plugin = plugin;
@@ -28,32 +30,46 @@ public abstract class BaseMenu implements InventoryHolder {
 
     public abstract void build(Player player);
 
-    /** Override this to handle clicks with click-type awareness. */
     public void handleClick(int slot, Player player, ClickType clickType) {
         handleClick(slot, player); // default: delegate to simple version
     }
 
-    /** Legacy simple click handler — override if you don't need click type. */
     public void handleClick(int slot, Player player) {}
 
     public void onClose(Player player) {}
 
     public void open(Player player) {
+        boolean fromGame = !(player.getOpenInventory().getTopInventory().getHolder() instanceof BaseMenu);
         build(player);
         player.openInventory(inventory);
+        if (fromGame && animatesOpening()) {
+            MenuReveal.play(plugin, player, this);
+        }
     }
 
-    /** Closes the menu for the player. */
+    // Menus players put items into, and menus with an animation of their own, open without the
+    // shared reveal.
+    protected boolean animatesOpening() {
+        return !(this instanceof com.bx.smpPlugin.core.InteractiveMenu
+                || this instanceof SellMenu
+                || this instanceof CrateEditorMenu
+                || this instanceof OrdersDepositMenu
+                || this instanceof OrdersInventoryItemMenu
+                || this instanceof RTPMenu
+                || this instanceof CrateGachaMenu
+                || this instanceof com.bx.smpPlugin.coinflip.bukkit.CoinFlipMenu);
+    }
+
+    int renderVersion() {
+        return renderVersion;
+    }
+
     public void close(Player player) {
         if (player != null) {
             player.closeInventory();
         }
     }
 
-    /**
-     * Whether this menu may be reopened as a parent screen. One-shot escrow screens return false
-     * so a listed item cannot be confirmed or refunded a second time.
-     */
     public boolean isEscBackTarget() {
         return true;
     }
@@ -64,6 +80,7 @@ public abstract class BaseMenu implements InventoryHolder {
     }
 
     protected void fill(Material material) {
+        renderVersion++;
         ItemUtils.fillInventory(inventory, material);
     }
 
@@ -74,6 +91,7 @@ public abstract class BaseMenu implements InventoryHolder {
     }
 
     protected void clear() {
+        renderVersion++;
         inventory.clear();
     }
 

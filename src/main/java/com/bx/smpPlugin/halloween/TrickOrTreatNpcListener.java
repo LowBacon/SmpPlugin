@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.halloween;
 
 import de.oliver.fancynpcs.api.Npc;
@@ -6,10 +7,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
-/**
- * Clicking a FancyNpcs NPC named in TRICK-OR-TREAT.NPCS knocks on its door. Kept in its own class because it names
- * FancyNpcs classes: it is only created when FancyNpcs is installed, so servers without it never load them.
- */
 public final class TrickOrTreatNpcListener implements Listener {
 
     private final TrickOrTreatCommand trickOrTreat;

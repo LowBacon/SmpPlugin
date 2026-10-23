@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip;
 
 import java.util.ArrayList;
@@ -5,12 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Per-player CoinFlip settings, stored as one short {@code key=value;...} string. Unknown keys are ignored
- * and missing keys fall back to defaults, so older or newer rows always load.
- *
- * @param selfExcludedUntilMillis while in the future, the player cannot stake currency (practice still works)
- */
 public record CoinFlipPreferences(
         AnimationPreset animation,
         boolean sounds,

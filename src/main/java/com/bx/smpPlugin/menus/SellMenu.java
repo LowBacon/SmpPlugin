@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.menus;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -16,14 +17,6 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 
-/**
- * The sell grid.
- *
- * <p>Selling is always confirmed: items sit in the grid until the player clicks the sell button,
- * and closing the menu hands everything back. There is no instant or sell-on-close mode — the
- * button's label carries the running total so a player always sees the price before agreeing to
- * it. Category multiplier progress lives on {@code /sellmulti}.
- */
 public class SellMenu extends BaseMenu {
 
     private static final int SIZE = 54;
@@ -47,7 +40,6 @@ public class SellMenu extends BaseMenu {
         refreshSellButton(player);
     }
 
-    /** Redraws the sell button so its label matches what is currently in the grid. */
     private void refreshSellButton(Player player) {
         FileConfiguration menus = plugin.getConfigManager().getMenus();
         double worth = plugin.getShopManager().previewSellWorth(player, inventory, 0, sellButtonSlot);
@@ -154,10 +146,6 @@ public class SellMenu extends BaseMenu {
         }
     }
 
-    /**
-     * The click event fires before the item actually lands in the slot, so the total is read a
-     * tick later. One pending refresh at a time is enough for a burst of shift-clicks.
-     */
     private void scheduleRefresh(Player player) {
         if (refreshScheduled) {
             return;
@@ -178,7 +166,6 @@ public class SellMenu extends BaseMenu {
         return slot >= 0 && slot < sellButtonSlot;
     }
 
-    /** Everything before the button is sellable, so the slot doubles as the grid size. */
     static int resolveSellButtonSlot(SmpPlugin plugin) {
         int configured = plugin.getConfigManager().getMenus()
                 .getInt("SELL-MENU.SELL-BUTTON.SLOT", DEFAULT_SELL_BUTTON_SLOT);

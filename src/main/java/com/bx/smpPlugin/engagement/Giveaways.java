@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.engagement;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -26,29 +27,10 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * /giveaway: staff give away the item in their hand, or an amount of money. Players join with a
- * click; when the timer ends, winners are drawn from those still online.
- *
- * <pre>
- * /giveaway start [seconds]                     give away the item in your hand (one winner)
- * /giveaway money &lt;amount&gt; [seconds] [winners]   give away money (each winner gets the amount)
- * /giveaway join | cancel
- * </pre>
- * An item prize is the real item, taken from the host's hand and given back if the giveaway is
- * cancelled or nobody joins (kept for them until they next join if they are offline by then).
- *
- * <p>Only senior staff may start or cancel one: server operators, the console, anyone with
- * {@code smpplugin.giveaway.manage} (the manager, developer, co-owner and owner roles), and members
- * of the permission groups listed under {@code GIVEAWAYS.MANAGER-GROUPS} in extras.yml. A group is
- * checked through the {@code group.<name>} permission that LuckPerms gives every member. Every
- * action checks this itself, so no alias, menu or tab completion can get around it.
- */
 public final class Giveaways implements CommandExecutor, TabCompleter {
 
     public static final String JOIN_PERMISSION = "smpplugin.giveaway.join";
     public static final String MANAGE_PERMISSION = com.bx.smpPlugin.permissions.PermissionRegistry.GIVEAWAY_MANAGE;
-    /** Ranks that may manage giveaways when extras.yml does not list any. */
     public static final List<String> DEFAULT_MANAGER_GROUPS = List.of("manager", "developer", "coowner", "owner");
 
     private final SmpPlugin plugin;
@@ -99,7 +81,6 @@ public final class Giveaways implements CommandExecutor, TabCompleter {
                 : plugin.getConfigManager().getExtras().getLong("GIVEAWAYS.DEFAULT-SECONDS", 60L);
     }
 
-    /** Whether this sender may start or cancel giveaways (see the class comment). */
     public boolean canManage(CommandSender sender) {
         if (sender == null) {
             return false;
@@ -293,10 +274,17 @@ public final class Giveaways implements CommandExecutor, TabCompleter {
         for (Player winner : winners) {
             names.add(winner.getName());
             plugin.getSpigotScheduler().runEntity(winner, () -> {
-                if (giveaway.item != null) {
-                    for (ItemStack rest : winner.getInventory().addItem(giveaway.item.clone()).values()) {
-                        winner.getWorld().dropItemNaturally(winner.getLocation(), rest);
+                if (!winner.isOnline()) {
+                    // Left in the tick between the draw and the prize: it waits in their reward vault.
+                    if (giveaway.item != null) {
+                        PendingItems.keep(plugin, winner.getUniqueId(), List.of(giveaway.item.clone()));
+                    } else {
+                        new Reward(giveaway.money, 0L, List.of(), List.of(), List.of()).give(plugin, winner);
                     }
+                    return;
+                }
+                if (giveaway.item != null) {
+                    PendingItems.giveOrKeep(plugin, winner, List.of(giveaway.item.clone()));
                 } else {
                     new Reward(giveaway.money, 0L, List.of(), List.of(), List.of()).give(plugin, winner);
                 }
@@ -325,12 +313,10 @@ public final class Giveaways implements CommandExecutor, TabCompleter {
         Text.broadcast(Text.prefix() + Text.get("GIVEAWAY.CANCELLED", "&7The giveaway was cancelled."));
     }
 
-    /** Gives an item prize back to the host, now or the next time they join. */
     private void refund(Giveaway giveaway) {
         refund(giveaway, false);
     }
 
-    /** {@code now}: give it back on this thread (used while the plugin shuts down, when nothing can be scheduled). */
     private void refund(Giveaway giveaway, boolean now) {
         if (giveaway.item == null) {
             return;

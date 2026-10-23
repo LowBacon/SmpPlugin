@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.amethyst;
 
 import com.bx.smpPlugin.utils.PermissionUtils;
@@ -54,6 +55,9 @@ public class AmethystToolsListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent event) {
+        if (event instanceof AmethystBlockBreakEvent) {
+            return;
+        }
         Player player = event.getPlayer();
         if (player.getGameMode() == GameMode.CREATIVE) {
             return;
@@ -105,10 +109,9 @@ public class AmethystToolsListener implements Listener {
         int count = 1;
         manager.spawnAmethystParticles(origin.getLocation());
         for (Block block : toBreak) {
-            if (disabled.contains(block.getType()) || block.getType().isAir()) {
+            if (disabled.contains(block.getType()) || !breakExtra(player, block, item)) {
                 continue;
             }
-            block.breakNaturally(item);
             manager.spawnAmethystParticles(block.getLocation());
             count++;
         }
@@ -137,10 +140,9 @@ public class AmethystToolsListener implements Listener {
         int count = 1;
         manager.spawnAmethystParticles(origin.getLocation());
         for (Block block : toBreak) {
-            if (!allowed.contains(block.getType()) || block.getType().isAir()) {
+            if (!allowed.contains(block.getType()) || !breakExtra(player, block, item)) {
                 continue;
             }
-            block.breakNaturally(item);
             manager.spawnAmethystParticles(block.getLocation());
             count++;
         }
@@ -167,15 +169,18 @@ public class AmethystToolsListener implements Listener {
         logs.remove(origin);
 
         manager.spawnAmethystParticles(origin.getLocation());
+        int broken = 0;
         for (Block log : logs) {
-            log.breakNaturally(item);
-            manager.spawnAmethystParticles(log.getLocation());
+            if (breakExtra(player, log, item)) {
+                manager.spawnAmethystParticles(log.getLocation());
+                broken++;
+            }
         }
 
         SoundUtils.play(player, manager.getSound("BREAK"));
         if (shouldSendBreakMessages(player)) {
             player.sendMessage(ColorUtils.toComponent(
-                    manager.getMessage("CHOP-BREAK", "{count}", String.valueOf(logs.size() + 1))));
+                    manager.getMessage("CHOP-BREAK", "{count}", String.valueOf(broken + 1))));
         }
     }
 
@@ -598,6 +603,28 @@ public class AmethystToolsListener implements Listener {
     private boolean shouldSendBreakMessages(Player player) {
         PlayerData data = plugin.getPlayerDataManager().get(player);
         return data == null || data.isAmethystBreakMessagesEnabled();
+    }
+
+    // Every extra block asks the server first, like a block the player broke by hand: spawn and
+    // lobby protection, claim plugins and bound crates can refuse it. Breaking them directly let
+    // one block just outside a protected area tear out the blocks inside it. Unbreakable blocks
+    // (bedrock, barriers, portal frames) are never touched.
+    private boolean breakExtra(Player player, Block block, ItemStack item) {
+        Material type = block.getType();
+        if (type.isAir() || type.getHardness() < 0F) {
+            return false;
+        }
+        AmethystBlockBreakEvent check = new AmethystBlockBreakEvent(block, player);
+        plugin.getServer().getPluginManager().callEvent(check);
+        if (check.isCancelled() || block.getType() != type) {
+            return false;
+        }
+        if (check.isDropItems()) {
+            block.breakNaturally(item);
+        } else {
+            block.setType(Material.AIR);
+        }
+        return true;
     }
 
     private List<Block> getAoeBlocks(Block origin, Player player, int radius) {

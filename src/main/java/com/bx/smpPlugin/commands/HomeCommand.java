@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.commands;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -23,12 +24,8 @@ public class HomeCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) { sender.sendMessage("ᴘʟᴀʏᴇʀ ᴏɴʟʏ."); return true; }
-
-        if (plugin.getCombatManager().isInCombat(player.getUniqueId())) {
-            player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getConfig()
-                    .getString("COMBAT-MANAGER.BLOCK-MESSAGE", "&cʏᴏᴜ ᴄᴀɴ'ᴛ ᴜѕᴇ ᴛʜɪѕ ɪɴ ᴄᴏᴍʙᴀᴛ.")));
-            return true;
-        }
+        // Combat only stops the teleport (the teleport queue refuses it); setting, renaming,
+        // deleting and browsing homes stay available.
 
         // Works for /smpplugin:sethome too, not just the plain label.
         String sub = CommandLabelUtils.normalizeLabel(label, command);
@@ -40,13 +37,20 @@ public class HomeCommand implements CommandExecutor {
         }
 
         if (sub.equals("sethome")) {
-            String name = args.length > 0 ? args[0] : "home";
+            String name = args.length > 0 ? args[0] : homes.nextHomeName(player);
             if (!HomeManager.isValidHomeName(name)) {
                 player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage("HOME.INVALID-NAME")));
                 return true;
             }
             if (homes.isInArena(player)) {
                 player.sendMessage(ColorUtils.toComponent("&cYou can't set a home inside a duel or FFA arena."));
+                return true;
+            }
+            var worlds = plugin.getWorldSystem();
+            var rules = worlds == null ? null : worlds.rulesFor(player.getWorld());
+            if (rules != null && (rules.key().equals("lobby") || rules.key().equals("ffa"))
+                    && !com.bx.smpPlugin.utils.PermissionUtils.has(player, com.bx.smpPlugin.worlds.WorldSystem.BYPASS_BUILD)) {
+                player.sendMessage(ColorUtils.toComponent("&cYou can't set a home in the " + rules.key() + "."));
                 return true;
             }
             boolean exists = homes.getHome(player.getUniqueId(), name) != null;
@@ -57,7 +61,9 @@ public class HomeCommand implements CommandExecutor {
                 return true;
             }
             if (homes.setHome(player, name)) {
-                player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage("HOME.SET")));
+                player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage("HOME.SET")
+                        + " &8(&f" + name + "&8, &7" + homes.getHomeCount(player.getUniqueId()) + "/"
+                        + homes.getMaxHomes(player) + "&8)"));
             }
             return true;
         }

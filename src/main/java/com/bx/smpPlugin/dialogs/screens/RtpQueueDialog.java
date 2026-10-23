@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.dialogs.screens;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -12,7 +13,6 @@ import org.bukkit.entity.Player;
 
 import java.util.Map;
 
-/** The yes/no prompt in front of the shared random-teleport queue. */
 public final class RtpQueueDialog extends DialogScreen {
 
     private static final String PATH = "RTP_QUEUE_DIALOG";

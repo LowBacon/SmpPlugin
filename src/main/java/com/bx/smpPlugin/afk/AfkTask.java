@@ -1,8 +1,8 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.afk;
 
 import com.bx.smpPlugin.SmpPlugin;
 
-/** Ticks the AFK system once a second for every online player, on each player's own thread. */
 public final class AfkTask implements Runnable {
 
     private final SmpPlugin plugin;

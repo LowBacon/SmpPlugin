@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -57,7 +58,6 @@ public class DuelWorldManager {
     private static final String STATIC_WORLDS_PATH = "MAP_SOURCES.STATIC_WORLDS";
     private static final String RANDOM_BIOMES_PATH = "MAP_SOURCES.RANDOM_BIOMES";
     private static final String FLAT_POOL_PATH = RANDOM_BIOMES_PATH + ".FLAT_POOL";
-    /** Minecraft's own default superflat layers, valid on every supported version. */
     static final String FLAT_PRESET = "{\"layers\":[{\"block\":\"minecraft:bedrock\",\"height\":1},"
             + "{\"block\":\"minecraft:dirt\",\"height\":2},{\"block\":\"minecraft:grass_block\",\"height\":1}],"
             + "\"biome\":\"minecraft:plains\"}";

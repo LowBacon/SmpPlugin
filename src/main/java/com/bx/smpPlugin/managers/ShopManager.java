@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.utils.PermissionUtils;
@@ -188,7 +189,6 @@ public class ShopManager {
         private final List<PendingSellHistory> history = new ArrayList<>();
         private final List<Integer> soldSlots = new ArrayList<>();
         private double totalPayout;
-        /** Mirrors the seller's "Include Shulker on Sell" setting for the whole sale. */
         private boolean expandContainers = true;
     }
 
@@ -278,7 +278,6 @@ public class ShopManager {
             );
         }
 
-        /** Kept so callers that predate custom item data keep compiling. */
         public ShopItem(
                 String key,
                 String menuSection,
@@ -397,10 +396,6 @@ public class ShopManager {
         }
     }
 
-    /**
-     * What one click on a pinned slot costs. {@code totalPrice} is the unit price times the
-     * pinned amount. A matching auction listing only supplies that unit price.
-     */
     public static double pricePaidFor(QuickBuyQuote quote) {
         if (quote == null || quote.outOfStock()) {
             return 0D;
@@ -556,10 +551,6 @@ public class ShopManager {
         return new QuickBuyQuote(0, 0, null, false, true);
     }
 
-    /**
-     * Lowest unit price Quick Buy may charge so a purchase cannot be sold back for more than it cost.
-     * Uses the buyer's current sell-category multiplier on top of {@code worth.yml}.
-     */
     double minimumQuickBuyUnitPrice(Player buyer, ItemStack sample) {
         if (sample == null || plugin.getWorthManager() == null) {
             return 0D;
@@ -588,10 +579,6 @@ public class ShopManager {
         return min > 0D && unitPrice < min ? min : unitPrice;
     }
 
-    /**
-     * Unit price from {@code QUICK-BUY.PRICING.FIXED-ITEMS}, or {@code -1} when this material
-     * has no positive finite price there. Keys may be {@code STICK} or {@code minecraft:stick}.
-     */
     double fixedItemUnitPrice(Material material) {
         if (material == null || material.isAir() || plugin.getConfigManager() == null) {
             return -1;
@@ -678,10 +665,6 @@ public class ShopManager {
         return new QuickBuyQuote(unitPrice, unitPrice * qty, listing, true, false);
     }
 
-    /**
-     * @param ceiling when true, keep listings whose unit price is strictly below {@code bound};
-     *                when false, keep listings at or above {@code bound} (a non-positive bound allows any price)
-     */
     private AuctionListing cheapestQuickBuyListing(
             Player buyer,
             Material material,
@@ -861,7 +844,6 @@ public class ShopManager {
         }
         return CompletableFuture.completedFuture(new QuickBuyExecutionResult(true, "", price, entry.buyAmount()));
     }
-
 
     public boolean isFavorite(UUID playerId, ShopItem item) {
         return getPreference(playerId).favorites().contains(favoriteId(item));
@@ -1193,9 +1175,6 @@ public class ShopManager {
         return validatePurchase(player, item, amount);
     }
 
-    /**
-     * Process a shop purchase and return a rich result for menu feedback.
-     */
     public PurchaseResult purchase(Player player, ShopItem item, int amount) {
         PurchaseResult preview = validatePurchase(player, item, amount);
         if (!preview.success()) {
@@ -1542,10 +1521,6 @@ public class ShopManager {
         }
     }
 
-    /**
-     * The exact item stored as ITEM-DATA, or null when the entry is a plain MATERIAL one.
-     * Menus use this so the icon matches what the buyer actually receives.
-     */
     public ItemStack createCustomItem(ShopItem item) {
         if (item == null || !item.hasCustomItemData()) {
             return null;
@@ -1916,10 +1891,6 @@ public class ShopManager {
         return sale;
     }
 
-    /**
-     * What the given inventory range is worth to this player right now, without selling
-     * anything. The sell menu puts this on its confirm button.
-     */
     public double previewSellWorth(Player player, Inventory inventory, int startInclusive, int endExclusive) {
         if (player == null || inventory == null) {
             return 0;

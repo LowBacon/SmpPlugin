@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.menus;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -20,11 +21,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-/**
- * /menu: one chest screen that reaches the main features. Every button simply runs its command as
- * the player, so permissions and feature toggles keep working, and buttons for commands the player
- * cannot use are left out. The whole layout lives in menus.yml under MAIN-MENU.
- */
 public class MainMenu extends BaseMenu {
 
     private static final String PATH = "MAIN-MENU";
@@ -121,7 +117,6 @@ public class MainMenu extends BaseMenu {
         return ItemUtils.createPlayerHead(player, "&f&l" + plugin.getHideManager().publicName(player), lore);
     }
 
-    /** A command is shown when it exists and the player passes its permission. */
     private boolean canUse(Player player, String command) {
         String name = command.split(" ", 2)[0].toLowerCase(Locale.ROOT);
         PluginCommand pluginCommand = Bukkit.getPluginCommand(name);

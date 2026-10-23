@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.dialogs;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -11,12 +12,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-/**
- * Bridges Paper's custom-click event onto {@link DialogManager}.
- *
- * <p>Only registered when {@link DialogSupport#isAvailable()}, so the Paper event class is never
- * named on a server that does not ship it.
- */
 public final class DialogListener implements Listener {
 
     private final SmpPlugin plugin;

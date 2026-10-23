@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -24,16 +25,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
-/**
- * Owns the protected lobby: the lobby location, its square border, its protection toggles, and
- * every player's last-known SMP location (so the SMP-entrance NPC / /lobby survival can restore
- * them exactly). Config lives in lobby.yml via {@link ConfigManager#getLobby()}.
- *
- * Player SMP locations are intentionally kept in their own small flat file
- * (lobby-playerlocations.yml, in the plugin's data folder) rather than the main player database -
- * this is a self-contained, easily-removable feature that doesn't touch the existing
- * PlayerData/DatabaseManager schema.
- */
 public final class LobbyManager {
 
     private final SmpPlugin plugin;
@@ -68,7 +59,6 @@ public final class LobbyManager {
         loadPlayerLocations();
     }
 
-    /** Re-reads lobby.yml. Does not touch the saved-player-location cache. */
     public void reload() {
         loadConfig();
     }
@@ -76,6 +66,10 @@ public final class LobbyManager {
     private void loadConfig() {
         FileConfiguration lobby = plugin.getConfigManager().getLobby();
         lobbyLocation = LocationUtils.parse(lobby.getString("LOCATIONS.LOBBY-LOCATION", ""));
+        if (lobbyLocation == null && plugin.getWorldSystem() != null) {
+            // No /setlobby yet: the dedicated "lobby" world (worlds.yml) is the lobby.
+            lobbyLocation = plugin.getWorldSystem().spawnLocation("lobby");
+        }
         borderEnabled = lobby.getBoolean("BORDER.ENABLED", true);
 
         if (lobby.contains("BORDER.MIN-X")) {
@@ -125,24 +119,39 @@ public final class LobbyManager {
         return saved;
     }
 
-    /** True while the player is standing in the lobby world. Called frequently (chat, scoreboard) - kept cheap. */
-    /**
-     * True while the player is actually within the lobby (world + border bounds, if a border is
-     * enabled). Called frequently (chat, scoreboard, protection) - kept cheap.
-     *
-     * Checking border bounds (not just world) matters whenever the lobby and the SMP share the
-     * same world rather than being separate dedicated worlds - without this, leaving the lobby
-     * area would never actually register as "leaving the lobby", so the scoreboard/chat/
-     * protection would incorrectly keep treating the whole world as the lobby forever.
-     */
+    public boolean isLobbyWorld(org.bukkit.World world) {
+        return world != null && lobbyLocation != null && world.equals(lobbyLocation.getWorld());
+    }
+
+    public boolean isLobbyActive() {
+        return com.bx.smpPlugin.managers.FeatureManager.isEnabled(plugin.getConfigManager().getConfig(),
+                FeatureManager.Feature.LOBBY);
+    }
+
+    // With the lobby switched off, anyone still holding a lobby snapshot (in the lobby when it was
+    // turned off, or offline then) goes back to where they were with their items.
+    public void releaseFromLobby(Player player) {
+        if (player == null || !player.isOnline() || isLobbyActive()) {
+            return;
+        }
+        if (hasSavedInventory(player.getUniqueId())) {
+            sendToSurvival(player);
+        }
+    }
+
     public boolean isInLobby(Player player) {
         return isLocationInLobby(player.getLocation());
     }
 
-    /** Same check as {@link #isInLobby(Player)} but for events that only give us a Location (explosions, redstone, mob-griefing) rather than a Player. */
     public boolean isLocationInLobby(Location location) {
+        if (!isLobbyActive()) {
+            return false;
+        }
         if (lobbyLocation == null || location.getWorld() == null || !location.getWorld().equals(lobbyLocation.getWorld())) {
             return false;
+        }
+        if (plugin.getWorldSystem() != null && plugin.getWorldSystem().isWorld(location.getWorld(), "lobby")) {
+            return true; // A dedicated lobby world is the lobby from edge to edge.
         }
         if (!borderEnabled) {
             return true; // No border configured - the whole world counts as "the lobby".
@@ -156,15 +165,10 @@ public final class LobbyManager {
     // Join / leave orchestration
     // ------------------------------------------------------------------
 
-    /**
-     * Teleports the player into the lobby (Folia-safe, via SpigotScheduler). If they weren't
-     * already in the lobby, their current position is saved first as their "last SMP location"
-     * so the NPC / /lobby survival can restore it later. Optionally applies the configured
-     * join effects (heal/feed/clear-effects/reset-xp/gamemode/title/actionbar/sound) - callers
-     * pass false for applyJoinEffects when this is a plain "/lobby" request rather than an
-     * actual server join.
-     */
     public boolean sendToLobby(Player player, boolean applyJoinEffects) {
+        if (!isLobbyActive()) {
+            return false;
+        }
         if (lobbyLocation == null) {
             plugin.getLogger().warning("Lobby location is not set - use /setlobby. "
                     + player.getName() + " was not teleported.");
@@ -181,28 +185,58 @@ public final class LobbyManager {
         }
 
         plugin.getSpigotScheduler().teleport(player, lobbyLocation.clone()).thenAccept(success -> {
-            if (Boolean.TRUE.equals(success) && applyJoinEffects) {
+            if (!Boolean.TRUE.equals(success)) {
+                // Still in the SMP: give the inventory straight back instead of leaving them empty-handed.
+                if (wasOutsideLobby) {
+                    plugin.getSpigotScheduler().runEntity(player, () -> {
+                        if (player.isOnline() && !isInLobby(player)) {
+                            restoreInventory(player);
+                        }
+                    });
+                }
+                return;
+            }
+            if (applyJoinEffects) {
                 plugin.getSpigotScheduler().runEntity(player, () -> applyJoinEffects(player));
             }
         });
         return true;
     }
 
+    public void restoreAfterLeaving(Player player, boolean alwaysSetGameMode) {
+        boolean hadSaved = hasSavedInventory(player.getUniqueId());
+        restoreInventory(player);
+        // The join greetings and reminders held back while in the lobby.
+        com.bx.smpPlugin.worlds.SmpArrival.arrived(plugin, player);
+        FileConfiguration lobby = config();
+        if ((hadSaved || alwaysSetGameMode) && lobby.getBoolean("LEAVE-TO-SURVIVAL.SET-GAMEMODE", true)) {
+            String modeName = lobby.getString("LEAVE-TO-SURVIVAL.GAMEMODE", "SURVIVAL");
+            try {
+                player.setGameMode(GameMode.valueOf(modeName.toUpperCase(Locale.ROOT)));
+            } catch (IllegalArgumentException ex) {
+                plugin.getLogger().warning("Invalid LEAVE-TO-SURVIVAL.GAMEMODE '" + modeName + "' in lobby.yml - skipping.");
+            }
+        }
+    }
+
     private void applyJoinEffects(Player player) {
         FileConfiguration lobby = config();
-        if (lobby.getBoolean("JOIN.HEAL", true)) {
+        // Health, XP and effects are only reset when the snapshot holds the real values to give
+        // back on the way out; otherwise every join cost players their XP and healed them for free.
+        boolean statusSaved = hasSavedInventory(player.getUniqueId());
+        if (statusSaved && lobby.getBoolean("JOIN.HEAL", true)) {
             player.setHealth(AttributeUtils.getMaxHealth(player));
         }
-        if (lobby.getBoolean("JOIN.FEED", true)) {
+        if (statusSaved && lobby.getBoolean("JOIN.FEED", true)) {
             player.setFoodLevel(20);
             player.setSaturation(20f);
         }
-        if (lobby.getBoolean("JOIN.CLEAR-POTION-EFFECTS", true)) {
+        if (statusSaved && lobby.getBoolean("JOIN.CLEAR-POTION-EFFECTS", true)) {
             for (PotionEffect effect : new ArrayList<>(player.getActivePotionEffects())) {
                 player.removePotionEffect(effect.getType());
             }
         }
-        if (lobby.getBoolean("JOIN.RESET-EXPERIENCE", true)) {
+        if (statusSaved && lobby.getBoolean("JOIN.RESET-EXPERIENCE", true)) {
             player.setExp(0f);
             player.setLevel(0);
             player.setTotalExperience(0);
@@ -232,11 +266,6 @@ public final class LobbyManager {
         SoundUtils.play(player, lobby.getString("JOIN.WELCOME-SOUND", ""));
     }
 
-    /**
-     * Sends the player from the lobby into the SMP: restores their exact saved location, or
-     * falls back to the main server spawn (/setspawn) if they've never been in the SMP before.
-     * Used by both /lobby survival (and /smpplugin survival) and the FancyNpcs NPC.
-     */
     public void sendToSurvival(Player player) {
         FileConfiguration lobby = config();
         Location destination = getSavedSmpLocation(player.getUniqueId());
@@ -268,17 +297,7 @@ public final class LobbyManager {
                 return;
             }
             plugin.getSpigotScheduler().runEntity(player, () -> {
-                // Restore inventory before applying other effects
-                restoreInventory(player);
-                
-                if (lobby.getBoolean("LEAVE-TO-SURVIVAL.SET-GAMEMODE", true)) {
-                    String modeName = lobby.getString("LEAVE-TO-SURVIVAL.GAMEMODE", "SURVIVAL");
-                    try {
-                        player.setGameMode(GameMode.valueOf(modeName.toUpperCase(Locale.ROOT)));
-                    } catch (IllegalArgumentException ex) {
-                        plugin.getLogger().warning("Invalid LEAVE-TO-SURVIVAL.GAMEMODE '" + modeName + "' in lobby.yml - skipping.");
-                    }
-                }
+                restoreAfterLeaving(player, true);
                 for (String rawCommand : lobby.getStringList("LEAVE-TO-SURVIVAL.COMMANDS-ON-ENTER")) {
                     String parsed = rawCommand.replace("%player%", player.getName());
                     org.bukkit.Bukkit.dispatchCommand(org.bukkit.Bukkit.getConsoleSender(), parsed);
@@ -289,7 +308,6 @@ public final class LobbyManager {
         });
     }
 
-    /** True if the player should currently be blocked from entering survival (in combat, if configured). */
     public boolean isBlockedByCombat(Player player) {
         if (!config().getBoolean("COOLDOWNS.BLOCK-DURING-COMBAT", true)) {
             return false;
@@ -320,26 +338,19 @@ public final class LobbyManager {
         return borderEnabled;
     }
 
-    /** Half-width for display purposes (e.g. /lobby border with no args) - reflects the average of the current rectangle's half-widths, even if it isn't a perfect square. */
     public double getBorderRadius() {
         return ((borderMaxX - borderMinX) + (borderMaxZ - borderMinZ)) / 4.0;
     }
 
-    /** A human-readable "X x Z" description of the current border size, for command output. */
     public String describeBorderSize() {
         return String.format(Locale.ROOT, "%.0f x %.0f", borderMaxX - borderMinX, borderMaxZ - borderMinZ);
     }
 
-    /** Sets a square border of the given half-width, centered on the lobby location. */
     public void setBorderRadius(double radius) {
         applyRadius(Math.max(1.0, radius));
         persistBorder();
     }
 
-    /**
-     * Sets the lobby area to a square of the given half-width around a point. Used by /border lobby,
-     * so the lobby area and the visible Minecraft border are the same square.
-     */
     public void setBorderSquare(double centerX, double centerZ, double halfWidth) {
         double radius = Math.max(1.0, halfWidth);
         borderMinX = centerX - radius;
@@ -349,7 +360,6 @@ public final class LobbyManager {
         persistBorder();
     }
 
-    /** The lobby area as {minX, maxX, minZ, maxZ}, or null before the lobby is set up. */
     public double[] getBorderBounds() {
         return lobbyLocation == null ? null : new double[]{borderMinX, borderMaxX, borderMinZ, borderMaxZ};
     }
@@ -363,18 +373,10 @@ public final class LobbyManager {
         borderMaxZ = centerZ + radius;
     }
 
-    /**
-     * First step of setting an exact rectangular border: remembers this corner for the player.
-     * Nothing is persisted until {@link #setBorderCorner2(Player, Location)} is also called.
-     */
     public void setBorderCorner1(Player player, Location location) {
         pendingBorderCorner1.put(player.getUniqueId(), new double[]{location.getX(), location.getZ()});
     }
 
-    /**
-     * Completes a two-corner border definition started with {@link #setBorderCorner1}. Returns
-     * false if the player hasn't set a first corner yet this session.
-     */
     public boolean setBorderCorner2(Player player, Location location) {
         double[] corner1 = pendingBorderCorner1.remove(player.getUniqueId());
         if (corner1 == null) {
@@ -403,11 +405,6 @@ public final class LobbyManager {
         plugin.getConfigManager().saveLobby();
     }
 
-    /**
-     * If the location is outside the rectangular lobby border, returns a corrected location
-     * clamped to just inside the edge. Returns null if already inside (or the border/lobby isn't
-     * set up) so callers can treat null as "no change needed".
-     */
     public Location clampIfOutside(Location location) {
         if (!borderEnabled || lobbyLocation == null || location.getWorld() == null
                 || !location.getWorld().equals(lobbyLocation.getWorld())) {
@@ -432,9 +429,11 @@ public final class LobbyManager {
         return clamped;
     }
 
-    /** Cosmetic message/sound feedback when a player presses against the border, cooldown-throttled. */
     public void warnIfNearEdge(Player player, Location location) {
-        if (!borderEnabled || lobbyLocation == null) {
+        if (!borderEnabled || lobbyLocation == null || location.getWorld() == null
+                || !location.getWorld().equals(lobbyLocation.getWorld())) {
+            // Only in the lobby's own world. Elsewhere every spot is "outside" the rectangle, so
+            // players in the SMP were told every few seconds that they had reached the lobby border.
             return;
         }
         boolean messageEnabled = config().getBoolean("BORDER.WARN-MESSAGE-ENABLED", true);
@@ -486,7 +485,6 @@ public final class LobbyManager {
     // Command cooldowns (/lobby, /smpplugin)
     // ------------------------------------------------------------------
 
-    /** Returns remaining cooldown seconds (0 if not on cooldown), and starts a fresh cooldown as a side effect if not on cooldown. */
     public long checkAndStartCommandCooldown(Player player) {
         long cooldownSeconds = config().getLong("COOLDOWNS.LOBBY-COMMAND-SECONDS", 5);
         if (cooldownSeconds <= 0 || player.hasPermission("smpplugin.bypass.lobby")) {
@@ -523,7 +521,14 @@ public final class LobbyManager {
     // Per-player saved SMP location
     // ------------------------------------------------------------------
 
-    /** Captures the player's current position as their "last SMP location", if they're not currently in the lobby. */
+    public void saveSmpLocation(Player player, Location from) {
+        if (from == null || from.getWorld() == null || isLocationInLobby(from)) {
+            return;
+        }
+        lastSmpLocations.put(player.getUniqueId(), PlayerLocation.of(from));
+        plugin.getSpigotScheduler().runAsync(this::flushPlayerLocationsToDisk);
+    }
+
     public void saveSmpLocationIfOutsideLobby(Player player) {
         Location current = player.getLocation();
         if (isInLobby(player)) {
@@ -566,7 +571,6 @@ public final class LobbyManager {
         plugin.getLogger().info("Loaded " + lastSmpLocations.size() + " saved lobby player location(s).");
     }
 
-    /** Safe to call from any thread - only touches the filesystem. */
     private synchronized void flushPlayerLocationsToDisk() {
         YamlConfiguration yaml = new YamlConfiguration();
         for (Map.Entry<UUID, PlayerLocation> entry : lastSmpLocations.entrySet()) {
@@ -605,62 +609,173 @@ public final class LobbyManager {
     // Inventory Management
     // ------------------------------------------------------------------
 
-    /**
-     * Saves the player's current inventory and clears it. This should be called when
-     * the player is about to enter the lobby from the SMP.
-     */
+    // Saves everything the lobby takes away (items, XP, health, hunger, effects) and clears the
+    // inventory. An existing snapshot is never overwritten: what the player carries then goes to
+    // the reward vault, so a failed teleport or an exit that skipped the restore loses nothing.
     public void saveAndClearInventory(Player player) {
+        UUID uuid = player.getUniqueId();
         org.bukkit.inventory.PlayerInventory inv = player.getInventory();
-        
-        // Save current inventory
-        SavedInventory saved = new SavedInventory(
-            inv.getStorageContents().clone(),
-            inv.getArmorContents().clone(),
-            inv.getItemInOffHand() != null ? inv.getItemInOffHand().clone() : null
-        );
-        
-        savedInventories.put(player.getUniqueId(), saved);
-        
-        // Clear inventory
+        if (savedInventories.containsKey(uuid)) {
+            List<org.bukkit.inventory.ItemStack> carried = player.getGameMode() == GameMode.CREATIVE
+                    ? List.of() : nonEmpty(inv.getContents());
+            if (!carried.isEmpty()) {
+                if (!com.bx.smpPlugin.engagement.PendingItems.keep(plugin, uuid, carried)) {
+                    plugin.getLogger().warning(player.getName() + " already has a saved lobby inventory and the reward"
+                            + " vault is unavailable; their current items are left in place.");
+                    return;
+                }
+                plugin.getLogger().warning(player.getName() + " entered the lobby with a saved inventory already held; "
+                        + carried.size() + " carried stack(s) went to their reward vault (/claimitems).");
+            }
+            clearInventory(inv);
+            return;
+        }
+        SavedInventory saved = SavedInventory.of(player);
+        savedInventories.put(uuid, saved);
+        persistSavedInventory(uuid, saved);
+        clearInventory(inv);
+    }
+
+    // Gives back the snapshot. Items gained in the lobby (a reward, a staff /give) are handed back
+    // on top instead of being overwritten; what does not fit goes to the reward vault. Not in
+    // creative, where items cost nothing.
+    public void restoreInventory(Player player) {
+        SavedInventory saved = savedInventories.remove(player.getUniqueId());
+        if (saved == null) {
+            return;
+        }
+        deleteSavedInventoryFile(player.getUniqueId());
+
+        org.bukkit.inventory.PlayerInventory inv = player.getInventory();
+        List<org.bukkit.inventory.ItemStack> gainedInLobby = player.getGameMode() == GameMode.CREATIVE
+                ? List.of() : nonEmpty(inv.getContents());
+        inv.setStorageContents(saved.storage());
+        inv.setArmorContents(saved.armor());
+        inv.setItemInOffHand(saved.offHand());
+        saved.applyStatus(player);
+        if (!gainedInLobby.isEmpty()) {
+            plugin.getLogger().info("Gave " + player.getName() + " back " + gainedInLobby.size()
+                    + " item stack(s) they got while in the lobby.");
+            com.bx.smpPlugin.engagement.PendingItems.giveOrKeep(plugin, player, gainedInLobby);
+        }
+    }
+
+    public boolean hasSavedInventory(UUID uuid) {
+        return savedInventories.containsKey(uuid);
+    }
+
+    public void clearSavedInventory(UUID uuid) {
+        savedInventories.remove(uuid);
+        deleteSavedInventoryFile(uuid);
+    }
+
+    // Reads a saved snapshot from disk on the login thread. The in-memory copy, when there is one,
+    // is newer than the file (its write may still be queued), so it always wins.
+    public void preloadSavedInventory(UUID uuid) {
+        File file = savedInventoryFile(uuid);
+        if (uuid == null || savedInventories.containsKey(uuid) || !file.isFile()) {
+            return;
+        }
+        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+        List<?> storage = yaml.getList("STORAGE");
+        List<?> armor = yaml.getList("ARMOR");
+        if (storage == null || armor == null) {
+            plugin.getLogger().warning("Could not read the saved lobby inventory " + file.getName()
+                    + "; it is kept on disk for staff to look at.");
+            return;
+        }
+        List<PotionEffect> effects = null;
+        if (yaml.contains("EFFECTS")) {
+            effects = new ArrayList<>();
+            for (Object raw : yaml.getList("EFFECTS", List.of())) {
+                if (raw instanceof PotionEffect effect) {
+                    effects.add(effect);
+                }
+            }
+        }
+        savedInventories.putIfAbsent(uuid, new SavedInventory(toItems(storage), toItems(armor),
+                yaml.getItemStack("OFF-HAND"),
+                yaml.contains("LEVEL") ? yaml.getInt("LEVEL") : null,
+                yaml.contains("EXP") ? (float) yaml.getDouble("EXP") : null,
+                yaml.contains("TOTAL-EXP") ? yaml.getInt("TOTAL-EXP") : null,
+                yaml.contains("HEALTH") ? yaml.getDouble("HEALTH") : null,
+                yaml.contains("FOOD") ? yaml.getInt("FOOD") : null,
+                yaml.contains("SATURATION") ? (float) yaml.getDouble("SATURATION") : null,
+                effects));
+    }
+
+    private static List<org.bukkit.inventory.ItemStack> nonEmpty(org.bukkit.inventory.ItemStack[] contents) {
+        List<org.bukkit.inventory.ItemStack> items = new ArrayList<>();
+        for (org.bukkit.inventory.ItemStack item : contents) {
+            if (item != null && !item.getType().isAir()) {
+                items.add(item.clone());
+            }
+        }
+        return items;
+    }
+
+    private static void clearInventory(org.bukkit.inventory.PlayerInventory inv) {
         inv.clear();
         inv.setArmorContents(new org.bukkit.inventory.ItemStack[4]);
         inv.setItemInOffHand(null);
     }
 
-    /**
-     * Restores a player's saved inventory. This should be called when the player
-     * leaves the lobby and returns to the SMP.
-     */
-    public void restoreInventory(Player player) {
-        SavedInventory saved = savedInventories.remove(player.getUniqueId());
-        if (saved == null) {
-            return; // No saved inventory to restore
+    private static org.bukkit.inventory.ItemStack[] toItems(List<?> raw) {
+        org.bukkit.inventory.ItemStack[] items = new org.bukkit.inventory.ItemStack[raw.size()];
+        for (int i = 0; i < raw.size(); i++) {
+            items[i] = raw.get(i) instanceof org.bukkit.inventory.ItemStack stack ? stack : null;
         }
-        
-        org.bukkit.inventory.PlayerInventory inv = player.getInventory();
-        inv.setStorageContents(saved.storage);
-        inv.setArmorContents(saved.armor);
-        if (saved.offHand != null) {
-            inv.setItemInOffHand(saved.offHand);
-        }
+        return items;
     }
 
-    /**
-     * Checks if a player has a saved inventory.
-     */
-    public boolean hasSavedInventory(UUID uuid) {
-        return savedInventories.containsKey(uuid);
+    private File savedInventoryFile(UUID uuid) {
+        return new File(new File(plugin.getDataFolder(), "data/lobby-inventories"), uuid + ".yml");
     }
 
-    /**
-     * Clears a player's saved inventory without restoring it.
-     * Useful for cleanup on logout.
-     */
-    public void clearSavedInventory(UUID uuid) {
-        savedInventories.remove(uuid);
+    // Serialised on the main thread, written in order on the database writer thread. The file is
+    // written next to the real one and moved over it, so a crash never leaves half a file.
+    private void persistSavedInventory(UUID uuid, SavedInventory saved) {
+        YamlConfiguration yaml = new YamlConfiguration();
+        yaml.set("STORAGE", java.util.Arrays.asList(saved.storage()));
+        yaml.set("ARMOR", java.util.Arrays.asList(saved.armor()));
+        yaml.set("OFF-HAND", saved.offHand());
+        yaml.set("LEVEL", saved.level());
+        yaml.set("EXP", saved.exp() == null ? null : saved.exp().doubleValue());
+        yaml.set("TOTAL-EXP", saved.totalExperience());
+        yaml.set("HEALTH", saved.health());
+        yaml.set("FOOD", saved.food());
+        yaml.set("SATURATION", saved.saturation() == null ? null : saved.saturation().doubleValue());
+        yaml.set("EFFECTS", saved.effects());
+        yaml.set("SAVED-AT", System.currentTimeMillis());
+        String text = yaml.saveToString();
+        File file = savedInventoryFile(uuid);
+        plugin.getDatabaseManager().executeAsync(() -> {
+            try {
+                java.nio.file.Files.createDirectories(file.getParentFile().toPath());
+                java.nio.file.Path temp = file.toPath().resolveSibling(file.getName() + ".tmp");
+                java.nio.file.Files.writeString(temp, text, java.nio.charset.StandardCharsets.UTF_8);
+                try {
+                    java.nio.file.Files.move(temp, file.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING,
+                            java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+                } catch (java.nio.file.AtomicMoveNotSupportedException exception) {
+                    java.nio.file.Files.move(temp, file.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                }
+            } catch (IOException exception) {
+                plugin.getLogger().log(Level.SEVERE, "Could not save the lobby inventory of " + uuid
+                        + "; it is still held in memory until they leave the lobby.", exception);
+            }
+        });
     }
 
-    /** Immutable snapshot of a location, serializable via the project's "world,x,y,z,yaw,pitch" convention. */
+    private void deleteSavedInventoryFile(UUID uuid) {
+        File file = savedInventoryFile(uuid);
+        plugin.getDatabaseManager().executeAsync(() -> {
+            if (file.exists() && !file.delete()) {
+                plugin.getLogger().warning("Could not delete " + file.getPath() + " after restoring it.");
+            }
+        });
+    }
+
     private static final class PlayerLocation {
         private final String serialized;
 
@@ -681,16 +796,45 @@ public final class LobbyManager {
         }
     }
 
-    /** Immutable snapshot of a player's inventory for restoration when leaving the lobby. */
-    private static final class SavedInventory {
-        private final org.bukkit.inventory.ItemStack[] storage;
-        private final org.bukkit.inventory.ItemStack[] armor;
-        private final org.bukkit.inventory.ItemStack offHand;
+    // Status fields are null in snapshots written before 4.2; those are then left as they are.
+    private record SavedInventory(org.bukkit.inventory.ItemStack[] storage, org.bukkit.inventory.ItemStack[] armor,
+                                  org.bukkit.inventory.ItemStack offHand, Integer level, Float exp,
+                                  Integer totalExperience, Double health, Integer food, Float saturation,
+                                  List<PotionEffect> effects) {
 
-        SavedInventory(org.bukkit.inventory.ItemStack[] storage, org.bukkit.inventory.ItemStack[] armor, org.bukkit.inventory.ItemStack offHand) {
-            this.storage = storage;
-            this.armor = armor;
-            this.offHand = offHand;
+        static SavedInventory of(Player player) {
+            org.bukkit.inventory.PlayerInventory inv = player.getInventory();
+            org.bukkit.inventory.ItemStack offHand = inv.getItemInOffHand();
+            return new SavedInventory(inv.getStorageContents().clone(), inv.getArmorContents().clone(),
+                    offHand.getType().isAir() ? null : offHand.clone(),
+                    player.getLevel(), player.getExp(), player.getTotalExperience(),
+                    player.getHealth(), player.getFoodLevel(), player.getSaturation(),
+                    new ArrayList<>(player.getActivePotionEffects()));
+        }
+
+        void applyStatus(Player player) {
+            if (level != null && exp != null) {
+                if (totalExperience != null) {
+                    player.setTotalExperience(totalExperience);
+                }
+                player.setLevel(level);
+                player.setExp(Math.max(0F, Math.min(0.9999F, exp)));
+            }
+            if (health != null && !player.isDead()) {
+                player.setHealth(Math.max(1D, Math.min(health, AttributeUtils.getMaxHealth(player))));
+            }
+            if (food != null) {
+                player.setFoodLevel(Math.max(0, Math.min(20, food)));
+            }
+            if (saturation != null) {
+                player.setSaturation(Math.max(0F, saturation));
+            }
+            if (effects != null) {
+                for (PotionEffect active : new ArrayList<>(player.getActivePotionEffects())) {
+                    player.removePotionEffect(active.getType());
+                }
+                player.addPotionEffects(effects);
+            }
         }
     }
 }

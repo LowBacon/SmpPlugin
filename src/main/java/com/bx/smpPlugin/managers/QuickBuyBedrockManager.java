@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -26,16 +27,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Paged Floodgate catalogue for pinning a Quick Buy item. The Java Choose Item dialog sends one
- * button per material, and that form freezes a Bedrock client.
- */
 public final class QuickBuyBedrockManager implements Listener {
 
-    /**
-     * A chest opened in the same moment a Floodgate form closes leaves Bedrock unable to open
-     * any container until the player rejoins.
-     */
     static final long CHEST_AFTER_FORM_TICKS = 10L;
 
     private final SmpPlugin plugin;
@@ -83,10 +76,6 @@ public final class QuickBuyBedrockManager implements Listener {
         return true;
     }
 
-    /**
-     * Search from the chest catalogue. Returns false when Floodgate cannot take the form, so the
-     * caller can ask in chat instead of opening a sign.
-     */
     public boolean openItemSearch(Player player, int targetSlot, String query) {
         if (!accepts(player)) {
             return false;
@@ -114,9 +103,6 @@ public final class QuickBuyBedrockManager implements Listener {
         return true;
     }
 
-    /**
-     * Search on the Quick Buy grid. The chest reopens only after the form has been gone for a bit.
-     */
     public boolean openListingSearch(
             Player player,
             QuickBuyMenu.Filter filter,
@@ -608,10 +594,6 @@ public final class QuickBuyBedrockManager implements Listener {
         private final Map<Enchantment, Integer> enchants = new LinkedHashMap<>();
     }
 
-    /**
-     * Sends a Cumulus form through Floodgate by reflection, so Floodgate stays an optional runtime
-     * integration and the build does not depend on its Maven repository.
-     */
     private static boolean floodgateSendForm(Player player, Form form) throws ReflectiveOperationException {
         Class<?> apiClass = Class.forName("org.geysermc.floodgate.api.FloodgateApi");
         Object api = apiClass.getMethod("getInstance").invoke(null);

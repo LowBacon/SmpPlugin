@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.halloween;
 
 import com.bx.smpPlugin.halloween.CalendarRules.DoorState;

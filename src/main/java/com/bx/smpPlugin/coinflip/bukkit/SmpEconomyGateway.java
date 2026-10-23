@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip.bukkit;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -12,11 +13,6 @@ import org.bukkit.entity.Player;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Connects CoinFlip to SmpPlugin's own economy (the same balances Vault and /pay use). Only players who are online
- * and whose data is loaded are changed; CoinFlip pays everyone else through claims. Each change is also written to
- * the player's log so it shows up in /logs.
- */
 public final class SmpEconomyGateway implements EconomyGateway {
 
     private final SmpPlugin plugin;

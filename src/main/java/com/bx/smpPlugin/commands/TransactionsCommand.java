@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.commands;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -15,7 +16,6 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 
-/** /transactions [page]: a player's own balance history from the economy ledger, newest first. */
 public class TransactionsCommand implements CommandExecutor, TabCompleter {
 
     static final String PERMISSION = "smpplugin.transactions";
@@ -54,7 +54,6 @@ public class TransactionsCommand implements CommandExecutor, TabCompleter {
         }
     }
 
-    /** Prints a history page with Previous / Next buttons that run {@code /<command> <page>}. */
     static void render(SmpPlugin plugin, CommandSender to, EconomyManager.HistoryPage page, String header, String command) {
         int pages = page.pages();
         int shown = Math.min(page.page(), pages);

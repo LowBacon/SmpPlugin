@@ -1,10 +1,6 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.seasonal;
 
-/**
- * A player's calendar streak for one season: days in a row with at least one door opened, the best run, which
- * streak bonuses were already given and whether the completion prize was. Stored as
- * {@code lastDay;streak;best;milestones;completed}. Pure arithmetic so it can be tested.
- */
 public record ClaimStreak(long lastDay, int streak, int best, long milestones, boolean completed) {
 
     public static final ClaimStreak NEW = new ClaimStreak(Long.MIN_VALUE, 0, 0, 0L, false);
@@ -26,10 +22,6 @@ public record ClaimStreak(long lastDay, int streak, int best, long milestones, b
         return lastDay + ";" + streak + ";" + best + ";" + milestones + ";" + (completed ? "1" : "0");
     }
 
-    /**
-     * The streak after opening a door on {@code day}. A second door the same day keeps it; the next day adds one;
-     * a gap longer than {@code graceDays} starts again at one.
-     */
     public ClaimStreak claimOn(long day, int graceDays) {
         int next;
         if (lastDay == Long.MIN_VALUE) {
@@ -45,7 +37,6 @@ public record ClaimStreak(long lastDay, int streak, int best, long milestones, b
         return new ClaimStreak(day, next, Math.max(best, next), milestones, completed);
     }
 
-    /** The streak as it stands today: 0 once a gap longer than the grace days has passed. */
     public int current(long today, int graceDays) {
         if (lastDay == Long.MIN_VALUE) {
             return 0;

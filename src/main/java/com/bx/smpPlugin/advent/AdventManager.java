@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.advent;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -23,11 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * The Advent Calendar (/advent): a door a day from 1 to 24 December, read from advent.yml. On top of the shared
- * calendar it keeps a streak of days in a row, with STREAK.BONUSES at set lengths and a COMPLETION prize for
- * opening every door. A short reminder on join points to doors that are ready.
- */
 public final class AdventManager extends SeasonCalendar implements Listener {
 
     public static final String USE_PERMISSION = "smpplugin.advent";
@@ -89,18 +85,19 @@ public final class AdventManager extends SeasonCalendar implements Listener {
         if (!inSeason() || !config().getBoolean("JOIN-REMINDER", true) || !PermissionUtils.has(player, USE_PERMISSION)) {
             return;
         }
-        plugin.getSpigotScheduler().runEntityLater(player, () -> {
-            if (!player.isOnline() || !inSeason() || !store.isLoaded(player.getUniqueId())) {
-                return;
-            }
-            int ready = claimableCount(player.getUniqueId());
-            if (ready > 0) {
-                Text.line(player, Text.prefix(),
-                        Text.get("ADVENT.REMINDER", "&7You have &b{count} &7unopened door{s} in the Advent Calendar! ",
-                                "{count}", Integer.toString(ready), "{s}", ready == 1 ? "" : "s"),
-                        Text.button(Text.get("ADVENT.REMINDER-BUTTON", "&b&l[Open]"), "advent",
-                                Text.get("ADVENT.REMINDER-HOVER", "&7Click to open the calendar")));
-            }
-        }, 70L);
+        plugin.getSpigotScheduler().runEntityLater(player, () -> com.bx.smpPlugin.worlds.SmpArrival.run(plugin, player,
+                "advent", () -> {
+                    if (!player.isOnline() || !inSeason() || !store.isLoaded(player.getUniqueId())) {
+                        return;
+                    }
+                    int ready = claimableCount(player.getUniqueId());
+                    if (ready > 0) {
+                        Text.line(player, Text.prefix(),
+                                Text.get("ADVENT.REMINDER", "&7You have &b{count} &7unopened door{s} in the Advent Calendar! ",
+                                        "{count}", Integer.toString(ready), "{s}", ready == 1 ? "" : "s"),
+                                Text.button(Text.get("ADVENT.REMINDER-BUTTON", "&b&l[Open]"), "advent",
+                                        Text.get("ADVENT.REMINDER-HOVER", "&7Click to open the calendar")));
+                    }
+                }), 70L);
     }
 }

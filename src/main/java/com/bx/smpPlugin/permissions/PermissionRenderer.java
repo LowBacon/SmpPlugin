@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.permissions;
 
 import org.bukkit.permissions.PermissionDefault;
@@ -6,7 +7,6 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
-/** Renders {@link PermissionRegistry} as plugin.yml YAML and as Markdown documentation. */
 public final class PermissionRenderer {
 
     public static final String YAML_BEGIN = "# BEGIN GENERATED PERMISSIONS - edit PermissionRegistry.java, not this section";
@@ -32,7 +32,6 @@ public final class PermissionRenderer {
         return titles;
     }
 
-    /** The {@code permissions:} block for plugin.yml, including the marker comments. */
     public static String renderPluginYml(List<PermissionNode> nodes) {
         StringBuilder yaml = new StringBuilder();
         yaml.append(YAML_BEGIN).append('\n');

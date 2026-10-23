@@ -126,8 +126,8 @@ is set up from config files and built to stay light on the server.
   - `/whois`, `/socialspy`, `/commandspy`, `/broadcast`
   - `/day`, `/night`, `/sun`, `/rain`, `/thunder`
   - `/butcher`, `/spawnmob`, `/speed`, `/performance`
-- **Also included:** `/chatlog`, `/alts`, `/invsee`, `/playerwipe` (with undo), built-in anti-cheat
-  and maintenance mode
+- **Also included:** `/chatlog`, `/alts`, `/invsee`, `/playerwipe` (with undo), TitanGuard anti-cheat
+  integration and maintenance mode
 
 ---
 

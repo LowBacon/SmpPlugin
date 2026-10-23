@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip;
 
 import com.bx.smpPlugin.coinflip.storage.CoinFlipDao;
@@ -12,7 +13,6 @@ import static com.bx.smpPlugin.coinflip.CoinFlipTestHarness.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** Leaderboard ordering, privacy, history paging and rate limiting. */
 class CoinFlipStorageTest {
 
     @TempDir

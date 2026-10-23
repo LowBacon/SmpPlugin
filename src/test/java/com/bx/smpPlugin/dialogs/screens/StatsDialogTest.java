@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.dialogs.screens;
 
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -18,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class StatsDialogTest {
 
-    /** Every token StatsDialog fills on the sheet. */
     private static final Set<String> SHEET_TOKENS = Set.of(
             "player", "player_uuid", "status", "team", "money", "shards", "kills", "deaths", "kd", "playtime",
             "blocks_broken", "blocks_placed", "mobs_killed", "kill_streak", "highest_kill_streak");

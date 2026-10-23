@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.models;
 
 import org.bukkit.Material;
@@ -23,7 +24,6 @@ public record SpawnerTypeDefinition(
         xpPerCycle = Double.isFinite(xpPerCycle) ? Math.max(0D, xpPerCycle) : 0D;
     }
 
-    /** Roughly what killing one of these mobs drops in vanilla, used when a type sets no XP_PER_CYCLE. */
     public static double defaultXpPerCycle(EntityType entityType) {
         if (entityType == null) {
             return 0D;

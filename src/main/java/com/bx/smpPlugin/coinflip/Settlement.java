@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip;
 
 import com.bx.smpPlugin.coinflip.storage.CoinFlipDao;
@@ -13,17 +14,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Database work shared by live settlement, startup recovery and staff reconciliation. Everything here runs inside
- * one storage transaction, so a match's completion, statistics, periods, fee record and achievements are stored
- * together or not at all; the match's LOCKED-to-COMPLETED compare-and-set makes the whole step happen once.
- */
 public final class Settlement {
 
     private Settlement() {
     }
 
-    /** Ledger summary of one match. */
     public record Ledger(long stakesApplied, int stakeCount, long credits, boolean payoutRecorded,
                          Map<UUID, Long> stakeByPlayer, Map<UUID, Long> refundByPlayer, boolean anyUnknown) {
     }
@@ -70,11 +65,6 @@ public final class Settlement {
         return new Ledger(stakes, stakeCount, credits, payout, stakeBy, refundBy, unknown);
     }
 
-    /**
-     * Completes a LOCKED match: fee record, LOCKED to COMPLETED, statistics, weekly and monthly totals and
-     * achievements for both players, and an audit row. Returns the achievements each player newly unlocked.
-     * The payout transaction itself is written by the caller in the same database transaction.
-     */
     public static Map<UUID, List<Achievement>> finish(CoinFlipDao dao, CoinFlipMatch match, long now, ZoneId zone,
                                                       boolean achievementsEnabled) throws SQLException {
         long fee = match.feeCents();
@@ -123,7 +113,6 @@ public final class Settlement {
         return unlocked;
     }
 
-    /** Period keys for leaderboards: "W2026-41" and "M2026-10". */
     public static String weekKey(long now, ZoneId zone) {
         LocalDate date = Instant.ofEpochMilli(now).atZone(zone).toLocalDate();
         return "W" + date.get(IsoFields.WEEK_BASED_YEAR) + "-" + String.format("%02d", date.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR));
@@ -134,17 +123,10 @@ public final class Settlement {
         return "M" + date.getYear() + "-" + String.format("%02d", date.getMonthValue());
     }
 
-    /** Start of the server-local day containing {@code now}, for daily limits. */
     public static long startOfDay(long now, ZoneId zone) {
         return Instant.ofEpochMilli(now).atZone(zone).toLocalDate().atStartOfDay(zone).toInstant().toEpochMilli();
     }
 
-    /**
-     * Brings a match without unresolved transactions to a final state using only the journal:
-     * if the outcome is stored and both stakes were taken, the winner is paid (as a claim if not paid yet) and the
-     * match completes; otherwise every stake taken and not yet returned is refunded as a claim and the match is
-     * cancelled. Returns true when the match was finished.
-     */
     public static boolean reconcile(CoinFlipDao dao, String matchId, long now, ZoneId zone, boolean achievementsEnabled,
                                     String actor) throws SQLException {
         // Always decide from the stored row: memory may be ahead of or behind the database after a storage error.

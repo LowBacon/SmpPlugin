@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.advent;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -34,7 +35,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** The Advent Calendar end to end on a real SQLite player store and economy, without a server. */
 class AdventCalendarTest {
 
     private static final UUID HOLLY = UUID.fromString("50000000-0000-0000-0000-0000000000a1");

@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -140,9 +141,7 @@ public class RTPManager {
 
     private static final class DirectSearchState {
         private final SearchSettings settings;
-        /** Whether this particular search may generate terrain, regardless of what the config allows. */
         private final boolean allowChunkGeneration;
-        /** Whether this search is the background warm-up rather than one somebody is waiting on. */
         private final boolean backgroundWarmUp;
         private final AtomicInteger attemptsUsed = new AtomicInteger();
         private final AtomicInteger chunkSamplesUsed = new AtomicInteger();
@@ -371,12 +370,6 @@ public class RTPManager {
         return Math.max(1, plugin.getConfigManager().getRtp().getInt("SETTINGS.SEARCH-ATTEMPTS-PER-TICK", DEFAULT_SEARCH_ATTEMPTS_PER_TICK));
     }
 
-    /**
-     * How long the searching display is held before the teleport is allowed to start, in ticks.
-     *
-     * <p>RTP is instant by default. Raise this only if the searching action bar should stay
-     * on screen after a spot is already known. 0 teleports as soon as a spot is known.</p>
-     */
     public long getMinSearchDisplayTicks() {
         if (plugin == null || plugin.getConfigManager() == null || plugin.getConfigManager().getRtp() == null) {
             return DEFAULT_MIN_SEARCH_DISPLAY_TICKS;
@@ -385,13 +378,6 @@ public class RTPManager {
                 .getLong(MIN_SEARCH_DISPLAY_TICKS_SETTING, DEFAULT_MIN_SEARCH_DISPLAY_TICKS));
     }
 
-    /**
-     * How long the found location display is held before the teleport is queued, in ticks.
-     *
-     * <p>This one is paid on every teleport, including one served straight from the location
-     * cache. RTP is instant by default, so 0 queues the teleport immediately instead of
-     * waiting for surrounding chunks.</p>
-     */
     public long getFoundDisplayTicks() {
         if (plugin == null || plugin.getConfigManager() == null || plugin.getConfigManager().getRtp() == null) {
             return DEFAULT_FOUND_DISPLAY_TICKS;
@@ -430,7 +416,6 @@ public class RTPManager {
         }
     }
 
-    /** @return whether a background search was actually started for this world. */
     public boolean refillPreCache(String worldName) {
         if (!isPreCacheReady() || worldName == null || worldName.isBlank()) {
             return false;
@@ -466,7 +451,6 @@ public class RTPManager {
         return startPreCacheSearch(worldKey, settings);
     }
 
-    /** Starts filling cached RTP spots for menu destinations so a click can teleport immediately. */
     public void prefetchMenuDestinations() {
         if (!isPreCacheReady() || getPreCacheSize() <= 0) {
             return;
@@ -478,15 +462,6 @@ public class RTPManager {
         }
     }
 
-    /**
-     * Whether a search under the current config can get hold of a chunk at all.
-     *
-     * <p>A sample is only ever prepared by generating the chunk or by reading one that is already
-     * generated. Forbid both and every random sample returns nothing without so much as touching the
-     * world, so the search burns its whole budget and fails on a world that is perfectly fine. The
-     * background warm-up is the one that suffers for it, because it is not allowed to generate and
-     * so depends entirely on {@code LOAD-GENERATED-CHUNKS} being on.</p>
-     */
     private boolean canPrepareChunks(boolean allowChunkGeneration) {
         FileConfiguration rtp = plugin.getConfigManager().getRtp();
         if (rtp.getBoolean(LOAD_GENERATED_CHUNKS_SETTING, true)) {
@@ -507,15 +482,6 @@ public class RTPManager {
                 + " SETTINGS.LOCATION-CACHE.GENERATE-CHUNKS to let the warm-up generate its own.");
     }
 
-    /**
-     * Slows a world's warm-up down after it comes back empty-handed.
-     *
-     * <p>A world nobody has explored has no terrain to offer, and no amount of retrying changes
-     * that. Without a backoff the sweep starts another doomed search every few seconds and buries
-     * the console in warnings for a server that is behaving exactly as configured. Each failure
-     * doubles the wait for that world alone, so a world that is fine keeps its normal cadence, and
-     * one success puts the failing world straight back to it.</p>
-     */
     private void backOffPreCacheWorld(String worldKey) {
         int streak = preCacheFailureStreak.merge(worldKey, 1, Integer::sum);
         long wait = Math.min(
@@ -536,15 +502,6 @@ public class RTPManager {
         preCacheRetryAtMillis.remove(worldKey);
     }
 
-    /**
-     * Starts the one background search this server is allowed to have running.
-     *
-     * <p>The ceiling is deliberately low. A search may generate terrain, and on a world that has
-     * never been walked that is the expensive part, so the warm-up takes one world at a time with a
-     * pause between searches rather than filling every world at once.</p>
-     *
-     * @return whether the search was started
-     */
     private boolean startPreCacheSearch(String worldKey, SearchSettings settings) {
         expireOverduePreCacheSearch();
         if (System.currentTimeMillis() < nextPreCacheSearchAtMillis) {
@@ -593,14 +550,6 @@ public class RTPManager {
         return true;
     }
 
-    /**
-     * Ends a background search that has outstayed its deadline.
-     *
-     * <p>Completing the future is what stops it. Every chain checks the future before its next step,
-     * so this winds the search down for real. Merely dropping the record of it would leave it
-     * generating chunks alongside the replacement that took its place, and each round of that makes
-     * the next search slower and more likely to overrun in turn.</p>
-     */
     private void expireOverduePreCacheSearch() {
         CompletableFuture<Location> running = preCacheSearch.get();
         if (running == null || System.currentTimeMillis() < preCacheSearchDeadlineMillis) {
@@ -609,11 +558,6 @@ public class RTPManager {
         running.complete(null);
     }
 
-    /**
-     * Drops the running warm-up on reload. Cancelling rather than completing it keeps the search
-     * from being counted as a world that had nothing to offer, which it never got the chance to
-     * decide either way.
-     */
     private void cancelPreCacheSearch() {
         CompletableFuture<Location> running = preCacheSearch.getAndSet(null);
         if (running != null) {
@@ -621,13 +565,6 @@ public class RTPManager {
         }
     }
 
-    /**
-     * Whether one sample of a search may generate the chunk it lands on.
-     *
-     * <p>A search that is not allowed to generate never does, whatever the config says. That is what
-     * keeps the background warm-up off chunk generation on servers where {@code GENERATE-CHUNKS} is
-     * on for players.</p>
-     */
     static boolean shouldGenerateForSample(
             boolean allowChunkGeneration,
             boolean generateChunksConfigured,
@@ -636,23 +573,10 @@ public class RTPManager {
         return allowChunkGeneration && (generateChunksConfigured || generateFallback);
     }
 
-    /**
-     * Off unless the admin turned {@code LOCATION-CACHE.GENERATE-CHUNKS} on. Loading already
-     * generated chunks from disk still pulls them into the ticking world, which is what dropped
-     * TPS the moment the first player joined and the warm-up started.
-     */
     static boolean shouldLoadDiskChunksForBackgroundWarmUp(boolean cacheGenerateChunks) {
         return cacheGenerateChunks;
     }
 
-    /**
-     * Whether the background warm-up may generate terrain.
-     *
-     * <p>Off by default, and deliberately separate from {@code SETTINGS.GENERATE-CHUNKS}. Generating
-     * on demand for a player who asked costs a burst; generating in the background costs it over and
-     * over on a world nobody has walked yet, which is enough to bury a small box. An admin with the
-     * headroom can turn it on and get a cache that fills on brand new terrain.</p>
-     */
     public boolean isPreCacheChunkGenerationEnabled() {
         if (plugin == null || plugin.getConfigManager() == null || plugin.getConfigManager().getRtp() == null) {
             return false;
@@ -660,11 +584,6 @@ public class RTPManager {
         return plugin.getConfigManager().getRtp().getBoolean(LOCATION_CACHE_GENERATE_CHUNKS_SETTING, false);
     }
 
-    /**
-     * Background searches run on fewer parallel chains than a player-facing one. Nobody is waiting
-     * on the result, so the warm-up has no business claiming the chunk throughput a waiting player
-     * gets.
-     */
     private int getPreCacheParallelAttempts() {
         return preCacheParallelAttempts(isPreCacheChunkGenerationEnabled(), getSearchAttemptsPerTick());
     }
@@ -877,13 +796,11 @@ public class RTPManager {
         return lowest == Integer.MAX_VALUE ? worldCooldown : lowest;
     }
 
-    /** Seconds left on this player's cooldown for a world, 0 when they can RTP there now. */
     public long getCooldownRemainingSeconds(Player player, String worldName) {
         long remaining = getCooldownRemainingMillis(player, worldName);
         return remaining <= 0L ? 0L : Math.max(1L, (long) Math.ceil(remaining / 1000.0D));
     }
 
-    /** Total playtime in hours, the figure REQUIRED-PLAYTIME-HOURS is checked against. */
     public double getPlaytimeHours(Player player) {
         if (player == null || plugin.getPlayerDataManager() == null) {
             return 0.0D;
@@ -1368,11 +1285,6 @@ public class RTPManager {
         scheduleDirectSearchStep(state, future, state.settings.attemptIntervalTicks());
     }
 
-    /**
-     * A cached spot has to be far enough from the world centre that a player standing at spawn
-     * can actually use it. Nearby loaded chunks pass the safe-stand check and then get rejected
-     * the moment someone clicks RTP, which is the wait after the button.
-     */
     private boolean isUsefulCacheLocation(SearchSettings settings, Location found) {
         if (found == null || settings == null) {
             return false;
@@ -1923,11 +1835,6 @@ public class RTPManager {
         return lastSample;
     }
 
-    /**
-     * Raises the inner ring when the origin is still near the world centre. Sampling 500–2000
-     * around spawn can never satisfy a 2000-block player distance, so those attempts only delay
-     * the teleport after the RTP button.
-     */
     static int innerSampleRadius(
             int centerX,
             int centerZ,
@@ -2126,11 +2033,6 @@ public class RTPManager {
         return Math.max(1, plugin.getConfigManager().getRtp().getInt(PRELOAD_MAX_TICKS_SETTING, 40));
     }
 
-    /**
-     * Picks one of the world's loaded chunks at random, or {@code null} when it has none. Only the
-     * chunk coordinates are read here, never a block, so the caller can hop to the region that owns
-     * that chunk before touching it.
-     */
     int[] nextLoadedChunkSample(World world) {
         return nextLoadedChunkSample(world, null);
     }
@@ -2160,14 +2062,6 @@ public class RTPManager {
         return null;
     }
 
-    /**
-     * Probes a single column inside one already-loaded chunk.
-     *
-     * <p>Folia splits a world into regions and only lets a thread read the chunks its own region
-     * owns, so this has to run on the region that owns {@code chunkX, chunkZ} and must not wander
-     * outside it. Reading a spread of loaded chunks from one region thread trips Folia's tick
-     * thread check and finds nothing.</p>
-     */
     private LocationAttempt tryLoadedChunkLocationAttempt(SearchSettings settings, int chunkX, int chunkZ) {
         if (settings == null || settings.worldName() == null || settings.worldName().isBlank()) {
             return new LocationAttempt(null, false);
@@ -2816,14 +2710,6 @@ public class RTPManager {
         return String.valueOf(Math.max(0, limit));
     }
 
-    /**
-     * Caps a search counter at its own limit for display.
-     *
-     * <p>Checks run several at a time and the budget is tested before they report back, so the last
-     * few can land after the limit has already been reached. The raw tally is honest about how much
-     * work happened, but "attempts 72/64" in a log just reads as a broken counter to whoever runs
-     * the server, so what gets shown stops at the ceiling they configured.</p>
-     */
     static int displaySearchCount(int used, int limit) {
         if (limit <= 0) {
             return Math.max(0, used);

@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.halloween;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -24,11 +25,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * The Halloween hub (/halloween) and its pages: the calendar, Trick or Treat, the daily treat bag, quests, the candy
- * shop, candy milestones and the candy leaderboard. Every click checks the permission and whether Halloween runs
- * again; nothing is trusted from when the page was opened.
- */
 public final class HalloweenMenus {
 
     private static final String ORANGE = "&#FF9A1F";
@@ -488,7 +484,6 @@ public final class HalloweenMenus {
         }
     }
 
-    /** The slots inside the frame of a six-row page, without the bottom row. */
     private static List<Integer> contentSlots() {
         List<Integer> slots = new ArrayList<>();
         for (int row = 1; row <= 4; row++) {

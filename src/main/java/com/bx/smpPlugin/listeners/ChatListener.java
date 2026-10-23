@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.listeners;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -69,8 +70,6 @@ public class ChatListener implements Listener {
                     plugin.getOrdersManager().handlePendingInput(player, rawMessage));
             return;
         }
-
-
 
         PunishmentRecord activeMute = plugin.getPunishmentManager()
                 .getActiveRecord(player.getUniqueId(), PunishmentType.MUTE)
@@ -235,7 +234,6 @@ public class ChatListener implements Listener {
         );
     }
 
-    /** Every spelling of the mute placeholders older configs and other plugins' templates use. */
     private String[] punishmentPlaceholders(PunishmentRecord record) {
         String expires = formatExpires(record);
         String issuer = formatIssuer(record);

@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -209,11 +210,6 @@ public class WorthManager {
         return resolveSellWorthEntries(item, true);
     }
 
-    /**
-     * @param expandContainers false leaves shulkers and other containers packed, so an unpriced
-     *                         full container is skipped instead of being sold for its contents.
-     *                         Players choose this with the "Include Shulker on Sell" setting.
-     */
     public List<SellWorthEntry> resolveSellWorthEntries(ItemStack item, boolean expandContainers) {
         if (item == null || item.getType().isAir()) {
             return List.of();
@@ -883,26 +879,12 @@ public class WorthManager {
                 && blockStateMeta.getBlockState() instanceof Container;
     }
 
-    /**
-     * Whether this item is a container that still holds something the sale would not pay for.
-     *
-     * <p>A shulker is bought and sold as a single stack, so a sale that prices the box on its own
-     * takes everything inside with it. That is what used to happen with CONTAINER.ENABLED off: the
-     * box kept its own price from worth.yml, the contents were skipped, and the whole slot was
-     * cleared for the price of an empty shulker. It went the same way for a container nested deeper
-     * than MAX-CONTAINER-DEPTH, or for any container at all once ALLOW-NESTED-CONTAINERS closed the
-     * expansion off.</p>
-     *
-     * <p>Treating it as unsellable is what stops that. The sell window puts back whatever it did not
-     * take, so a full shulker comes home and an empty one still sells for its own price.</p>
-     */
     private boolean isUnpricedFullContainer(ItemStack item, int depth, boolean allowNestedExpansion) {
         return isSupportedContainer(item)
                 && !willPriceContainerContents(depth, allowNestedExpansion)
                 && containerHasContents(item);
     }
 
-    /** The same test the collectors use before they walk into a container. */
     boolean willPriceContainerContents(int depth, boolean allowNestedExpansion) {
         return isContainerWorthEnabled()
                 && allowNestedExpansion

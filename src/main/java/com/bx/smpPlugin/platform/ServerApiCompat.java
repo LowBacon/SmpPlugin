@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.platform;
 
 import org.bukkit.GameRule;
@@ -8,37 +9,18 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Optional;
 
-/**
- * Small adapters for API that differs between Spigot and Paper/Purpur 26.3.
- *
- * <p>Paper hard-forked from Spigot, so the same feature can have different names, return types or
- * even class kinds (Spigot's {@code GameRule} is an interface, Paper's is a class). Code compiled
- * against one API can then fail on the other with {@code NoSuchFieldError} or
- * {@code NoSuchMethodError}. Everything here is resolved by name at runtime and works on both.</p>
- */
 public final class ServerApiCompat {
 
-    /** Spigot 26.3 name first, then the Paper/Purpur name. */
     static final String[] ADVANCEMENT_MESSAGE_RULE_FIELDS = {"SHOW_ADVANCEMENT_MESSAGES", "ANNOUNCE_ADVANCEMENTS"};
 
     private static volatile Optional<GameRule<Boolean>> advancementMessagesRule;
 
-    /**
-     * What a completed advancement shows in chat.
-     *
-     * @param title plain-text title
-     * @param frame {@code TASK}, {@code GOAL} or {@code CHALLENGE}; empty when unknown
-     */
     public record AdvancementInfo(String title, String frame) {
     }
 
     private ServerApiCompat() {
     }
 
-    /**
-     * The boolean game rule controlling vanilla advancement chat messages
-     * ({@code SHOW_ADVANCEMENT_MESSAGES} on Spigot, {@code ANNOUNCE_ADVANCEMENTS} on Paper/Purpur).
-     */
     public static Optional<GameRule<Boolean>> advancementMessagesRule() {
         Optional<GameRule<Boolean>> cached = advancementMessagesRule;
         if (cached == null) {
@@ -67,15 +49,10 @@ public final class ServerApiCompat {
         return Optional.empty();
     }
 
-    /**
-     * Reads an advancement's chat title and frame on either API. Empty for advancements without a
-     * display (recipes and other hidden ones), or when neither API shape is present.
-     */
     public static Optional<AdvancementInfo> describe(Advancement advancement) {
         return describeAdvancement(advancement);
     }
 
-    /** Works on any object with a {@code getDisplay()} method; separated so it can be tested without a server. */
     static Optional<AdvancementInfo> describeAdvancement(Object advancement) {
         if (advancement == null) {
             return Optional.empty();
@@ -102,7 +79,6 @@ public final class ServerApiCompat {
         return Optional.empty();
     }
 
-    /** Serialises an Adventure component to plain text with the server's own serializer. */
     static String plainText(Object component) {
         try {
             ClassLoader loader = component.getClass().getClassLoader();

@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip.bukkit;
 
 import com.bx.smpPlugin.coinflip.CoinFlipConfig;
@@ -12,10 +13,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
-/**
- * Last look before the stake is reserved: stake, pot, fee, payout, side, visibility and expiry. Large stakes need a
- * second click. The confirm button locks while the request is in flight, so it cannot be submitted twice.
- */
 public final class ReviewMenu extends CoinFlipMenu {
 
     private final CreateMenu.Draft draft;

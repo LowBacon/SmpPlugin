@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.commands;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -15,10 +16,6 @@ import org.bukkit.entity.Player;
 
 import java.util.UUID;
 
-/**
- * /stats [player]: the stats dialogs on Paper and Purpur (a player list, then a stat sheet), the
- * chest stats menu where dialogs are off or unavailable, and a short summary for the console.
- */
 public class StatsCommand implements CommandExecutor {
 
     private final SmpPlugin plugin;

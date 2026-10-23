@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.seasonal;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -21,13 +22,6 @@ import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Edits the prize behind one door. The top four rows hold the prize items: drop items in or take
- * them out like a chest. The bottom row sets money and shards and saves.
- *
- * <p>Nothing changes until Save is pressed. Items left in the area when the menu closes without
- * saving go back to the editor's inventory, so nothing is lost by accident.
- */
 public final class DoorEditorMenu extends BaseMenu implements InteractiveMenu {
 
     private static final int AREA = 36;
@@ -200,10 +194,6 @@ public final class DoorEditorMenu extends BaseMenu implements InteractiveMenu {
         }
     }
 
-    /**
-     * Gives the editor back what is in the prize area. The area starts with copies of the saved
-     * prize, which the editor never owned, so only items that are not part of the saved prize go back.
-     */
     private void returnItems(Player player) {
         List<ItemStack> original = new ArrayList<>(calendar.prize(door).items());
         Inventory area = inventory;

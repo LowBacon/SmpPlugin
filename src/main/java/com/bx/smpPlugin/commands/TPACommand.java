@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.commands;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -51,6 +52,9 @@ public class TPACommand implements CommandExecutor {
 
     private void handleTpa(Player player, String[] args) {
         if (args.length == 0) {
+            if (plugin.getDialogManager() != null && plugin.getDialogManager().openTpaPicker(player)) {
+                return;
+            }
             new TpaQueueMenu(plugin, false).open(player);
             return;
         }
@@ -128,6 +132,9 @@ public class TPACommand implements CommandExecutor {
 
     private void handleTpaHere(Player player, String[] args) {
         if (args.length == 0) {
+            if (plugin.getDialogManager() != null && plugin.getDialogManager().openTpaPicker(player)) {
+                return;
+            }
             new TpaQueueMenu(plugin, true).open(player);
             return;
         }
@@ -296,6 +303,10 @@ public class TPACommand implements CommandExecutor {
             return;
         }
 
+        if (plugin.getDialogManager() != null
+                && plugin.getDialogManager().openTpaRequest(target, requesterUuid, requesterName, tpaHere)) {
+            return;
+        }
         new TpaConfirmMenu(plugin, requesterName, tpaHere).open(target);
     }
 

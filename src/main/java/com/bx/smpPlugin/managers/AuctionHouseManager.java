@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -770,7 +771,12 @@ public final class AuctionHouseManager {
                             return new CancelListingResult(true, null, cancelledListing);
                         });
                     } else {
-                        plugin.getSpigotScheduler().runEntity(owner, () -> restoreEscrow(owner, cancelledListing.item()));
+                        // The cancel always writes an item claim; the cache only missed it (its refresh
+                        // failed). Handing the item over here as well would give it twice, so the claim
+                        // is collected the normal, leased way instead.
+                        plugin.getLogger().warning("Auction listing #" + cancelledListing.id()
+                                + " was cancelled but its claim was not in the cache yet; collecting it from the database.");
+                        processAutoClaims(owner);
                         plugin.getPlayerLogsManager().log(
                                 owner.getUniqueId(),
                                 owner.getName(),
@@ -1060,8 +1066,13 @@ public final class AuctionHouseManager {
                 result.complete(new ClaimResult(false, ClaimFailureReason.DATABASE_ERROR, claim));
                 return;
             }
-            Map<Integer, ItemStack> leftovers = player.getInventory().addItem(claim.item().clone());
-            player.updateInventory();
+            // Logged out while the claim was being completed: the whole item becomes a new claim.
+            Map<Integer, ItemStack> leftovers = player.isOnline()
+                    ? player.getInventory().addItem(claim.item().clone())
+                    : Map.of(0, claim.item().clone());
+            if (player.isOnline()) {
+                player.updateInventory();
+            }
             CompletableFuture<Void> recovery = CompletableFuture.completedFuture(null);
             for (ItemStack leftover : leftovers.values()) {
                 recovery = recovery.thenCompose(ignored -> repository.createPendingItemClaim(
@@ -1246,7 +1257,6 @@ public final class AuctionHouseManager {
         PlayerSettingUtils.sendActionBar(plugin, seller, actionBar);
         AuctionHouseSounds.play(seller, plugin, AuctionHouseSounds.BOUGHT_YOUR_ITEM);
     }
-
 
     private FileConfiguration config() {
         return plugin.getConfigManager().getAuctionHouse();

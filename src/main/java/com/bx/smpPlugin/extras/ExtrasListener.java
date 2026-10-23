@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.extras;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -18,10 +19,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Small bits of state behind the extra commands: where /back goes, keeping /firework harmless,
- * and emptying /trash. Locations are kept in memory only and dropped when a player leaves.
- */
 public final class ExtrasListener implements Listener {
 
     public static final String HARMLESS_FIREWORK_TAG = "smpplugin_harmless_firework";

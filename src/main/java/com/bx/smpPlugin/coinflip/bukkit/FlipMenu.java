@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip.bukkit;
 
 import com.bx.smpPlugin.coinflip.CoinFlipMatch;
@@ -9,14 +10,6 @@ import org.bukkit.inventory.ItemStack;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * The reveal screen. It only displays: the result is already stored before this menu opens, closing it stops the
- * animation but not the payout, and the same result arrives in chat either way.
- *
- * <p>The coin is tossed: it jumps from the middle into the top row, spins there while the frame flashes the colour
- * of the face that is up and the head of the player on that side lights up, then drops back and lands on the stored
- * result. The winner's head stays lit; the loser's turns into a skull.
- */
 public final class FlipMenu extends CoinFlipMenu {
 
     private static final int COIN_LOW = 13;
@@ -34,7 +27,6 @@ public final class FlipMenu extends CoinFlipMenu {
     private int coinSlot = COIN_LOW;
     private boolean revealed;
 
-    /** A real match reveal. */
     FlipMenu(CoinFlipModule module, UUID viewer, CoinFlipMatch match) {
         super(module, viewer, "Flip &8#" + match.id(), 27);
         this.match = match;
@@ -42,7 +34,6 @@ public final class FlipMenu extends CoinFlipMenu {
         this.outcome = match.outcome();
     }
 
-    /** A practice flip. */
     FlipMenu(CoinFlipModule module, UUID viewer, CoinSide pick, CoinSide outcome) {
         super(module, viewer, "Practice flip", 27);
         this.match = null;
@@ -71,7 +62,6 @@ public final class FlipMenu extends CoinFlipMenu {
         button(CLOSE_SLOT, Gui.item(Material.BARRIER, Gui.BAD + "Close", Gui.MUTED + "The result still arrives in chat."), () -> close());
     }
 
-    /** Next animation frame: flips the coin face and moves it along its toss. */
     void frame(boolean reducedMotion, int frame, int frames) {
         showing = showing.opposite();
         if (!reducedMotion) {
@@ -87,7 +77,6 @@ public final class FlipMenu extends CoinFlipMenu {
         drawCoin();
     }
 
-    /** Older callers without progress information: flip the face only. */
     void frame(boolean reducedMotion) {
         frame(reducedMotion, 0, 1);
     }

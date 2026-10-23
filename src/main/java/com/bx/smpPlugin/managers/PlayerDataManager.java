@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -14,12 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PlayerDataManager {
 
     private final SmpPlugin plugin;
-    /** Read from leaderboards and placeholders off the main thread, so it has to be concurrent. */
     private final Map<UUID, PlayerData> cache = new ConcurrentHashMap<>();
-    /**
-     * Players whose quit save is still queued on the database thread. A quick rejoin takes this
-     * copy back instead of reading a row the save has not reached yet.
-     */
     private final Map<UUID, PlayerData> savingAfterQuit = new ConcurrentHashMap<>();
 
     public PlayerDataManager(SmpPlugin plugin) {
@@ -65,7 +61,6 @@ public class PlayerDataManager {
         return data;
     }
 
-    /** Commits the session and queues the save; the row is written on the database thread. */
     public void unload(UUID uuid) {
         PlayerData data = cache.remove(uuid);
         if (data == null) {
@@ -79,10 +74,6 @@ public class PlayerDataManager {
         });
     }
 
-    /**
-     * Drops one player's cached copy without saving it. A restore has just rewritten their row, so
-     * writing the in-memory totals back would undo it.
-     */
     public void discardWithoutSaving(UUID uuid) {
         if (uuid != null) {
             cache.remove(uuid);
@@ -94,10 +85,6 @@ public class PlayerDataManager {
         return uuid != null && savingAfterQuit.containsKey(uuid);
     }
 
-    /**
-     * The copy of a player who just quit and whose save is still queued, or null. Balance changes go to this copy
-     * so the queued save and a quick rejoin both see them.
-     */
     public PlayerData getSaving(UUID uuid) {
         return uuid == null ? null : savingAfterQuit.get(uuid);
     }
@@ -130,14 +117,12 @@ public class PlayerDataManager {
         return uuid != null && cache.containsKey(uuid);
     }
 
-    /** Re-pins options removed with ENABLED: false after menus.yml was reloaded. */
     public void refreshRemovedSettingOptions() {
         for (PlayerData data : cache.values()) {
             PlayerSettingDefaults.applyDisabledOptions(plugin, data);
         }
     }
 
-    /** Periodic dirty-save without committing sessions */
     public void autoSaveDirty() {
         if (plugin.getStatsWipeManager() != null && plugin.getStatsWipeManager().isWipeInProgress()) {
             return;

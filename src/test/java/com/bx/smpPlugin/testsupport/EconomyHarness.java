@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.testsupport;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -34,11 +35,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-/**
- * A plugin with a real DatabaseManager (in-memory SQLite behind the plugin's own thread-safe connection wrapper),
- * a real PlayerDataManager and a real EconomyManager, without a Minecraft server. Players are "online" when they
- * are in {@link #online}; their data is in the PlayerDataManager cache exactly as after a join.
- */
 public final class EconomyHarness implements AutoCloseable {
 
     public final SmpPlugin plugin;
@@ -47,7 +43,6 @@ public final class EconomyHarness implements AutoCloseable {
     public final EconomyManager economy;
     public final YamlConfiguration config = new YamlConfiguration();
     public final Map<UUID, Player> online = new ConcurrentHashMap<>();
-    /** The plugin's data folder, a fresh temporary directory. */
     public final File dataFolder;
     private final Connection raw;
 
@@ -83,7 +78,6 @@ public final class EconomyHarness implements AutoCloseable {
         set(SmpPlugin.class, plugin, "economyManager", economy);
     }
 
-    /** A player who is online with {@code money} in memory and the same balance stored. */
     @SuppressWarnings("unchecked")
     public PlayerData addOnline(UUID uuid, String name, double money) throws Exception {
         PlayerData data = new PlayerData(uuid, name);
@@ -96,14 +90,12 @@ public final class EconomyHarness implements AutoCloseable {
         return data;
     }
 
-    /** A player who is offline with a stored row. */
     public void addOffline(UUID uuid, String name, double money) {
         PlayerData data = new PlayerData(uuid, name);
         data.setMoney(money);
         database.savePlayer(data);
     }
 
-    /** Waits until everything queued on the database writer so far has run. */
     public void drainWrites() throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
         database.executeAsync(latch::countDown);
@@ -120,7 +112,6 @@ public final class EconomyHarness implements AutoCloseable {
         return queryDouble("SELECT money FROM players WHERE uuid = ?", uuid);
     }
 
-    /** The exact stored balance, {@code players.money_cents}; null when no 4.1.0 or later save wrote it. */
     public Long storedCents(UUID uuid) throws SQLException {
         try (PreparedStatement statement = connection().prepareStatement(
                 "SELECT money_cents FROM players WHERE uuid = ?")) {
@@ -182,10 +173,6 @@ public final class EconomyHarness implements AutoCloseable {
         return (SmpPlugin) constructor.newInstance();
     }
 
-    /**
-     * The Paper API declares {@code JavaPlugin.logger} as a plain {@link Logger}; the Spigot API declares it as a
-     * {@link PluginLogger}, which can only be made from a plugin with a description and a server.
-     */
     private void installLogger() throws Exception {
         Logger logger = Logger.getLogger("EconomyHarness");
         if (!JavaPlugin.class.getDeclaredField("logger").getType().isInstance(logger)) {
@@ -231,7 +218,6 @@ public final class EconomyHarness implements AutoCloseable {
                 });
     }
 
-    /** A stand-in online player that only knows its id and name. */
     public static Player player(UUID uuid, String name) {
         return (Player) Proxy.newProxyInstance(EconomyHarness.class.getClassLoader(), new Class<?>[]{Player.class},
                 (proxy, method, args) -> switch (method.getName()) {

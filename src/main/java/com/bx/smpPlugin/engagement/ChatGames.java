@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.engagement;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -28,12 +29,6 @@ import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * Chat games: a question appears in chat and the first player to type the answer wins a prize.
- * Games start by themselves every few minutes when enough players are online, or by staff with
- * /chatgame start. Answers are read from chat that actually went out, so a muted or filtered
- * message never wins.
- */
 public final class ChatGames implements CommandExecutor, TabCompleter, Listener {
 
     public static final String HOST_PERMISSION = "smpplugin.staff.chatgame";
@@ -42,7 +37,6 @@ public final class ChatGames implements CommandExecutor, TabCompleter, Listener 
         UNSCRAMBLE, MATH, TYPE, TRIVIA
     }
 
-    /** A running game. {@code won} flips once, from whichever chat thread gets there first. */
     record Game(Type type, String question, List<String> answers, long startedAt, AtomicBoolean won) {
     }
 
@@ -60,7 +54,6 @@ public final class ChatGames implements CommandExecutor, TabCompleter, Listener 
         return extras == null ? new YamlConfiguration() : extras;
     }
 
-    /** Called every minute by the module: starts a game when the interval has passed. */
     public void autoTick() {
         if (active != null || !config().getBoolean("CHAT-GAMES.AUTO", true)
                 || !plugin.getFeatureManager().isEnabled(FeatureManager.Feature.EVENTS)) {

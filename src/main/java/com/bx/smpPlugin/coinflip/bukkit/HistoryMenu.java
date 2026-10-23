@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip.bukkit;
 
 import com.bx.smpPlugin.coinflip.CoinFlipMatch;
@@ -13,10 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Paginated match history, loaded one page at a time (never the whole history) off the server thread. Shows a
- * loading state while the page is read and an error state if storage is unavailable.
- */
 public final class HistoryMenu extends CoinFlipMenu {
 
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(ZoneId.systemDefault());

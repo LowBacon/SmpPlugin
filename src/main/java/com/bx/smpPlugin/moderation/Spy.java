@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.moderation;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -18,10 +19,6 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * /socialspy shows staff the private messages players send each other; /commandspy shows the
- * commands they run. Login and password commands are never shown. The toggles are remembered.
- */
 public final class Spy implements CommandExecutor, Listener {
 
     public static final String SOCIAL_PERMISSION = "smpplugin.staff.socialspy";
@@ -77,7 +74,6 @@ public final class Spy implements CommandExecutor, Listener {
         return true;
     }
 
-    /** The command name without a leading slash or plugin prefix, e.g. "smpplugin:msg" -> "msg". */
     static String label(String message) {
         String body = message.startsWith("/") ? message.substring(1) : message;
         int space = body.indexOf(' ');

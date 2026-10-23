@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip.bukkit;
 
 import com.bx.smpPlugin.coinflip.CoinFlipConfig;
@@ -25,11 +26,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
-/**
- * {@code /coinflipadmin} ({@code /cfadmin}): status, inspection, audit, cancellation, recovery, reconciliation,
- * transaction resolution, statistics reset, wagering switch and reload. Every subcommand has its own permission;
- * cancellations, resolutions and resets require a reason and are written to the audit log.
- */
 public final class CoinFlipAdminCommand implements CommandExecutor, TabCompleter {
 
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
@@ -361,7 +357,6 @@ public final class CoinFlipAdminCommand implements CommandExecutor, TabCompleter
         reply(sender, module.messages().chat(outcome.messageKey(), outcome.placeholders()));
     }
 
-    /** Sends from any thread. */
     private void reply(CommandSender sender, String message) {
         module.plugin().getSpigotScheduler().runGlobal(() -> send(sender, message));
     }

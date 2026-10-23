@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.afk;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -28,27 +29,12 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * The AFK system.
- *
- * <ul>
- *   <li><b>Status.</b> A player who stops giving input for {@code STATUS.IDLE-SECONDS} is AFK; {@code /away}
- *   sets it by hand. Any real input clears it. AFK players are tagged in the tab list and pause shard
- *   regions.</li>
- *   <li><b>Zones.</b> Areas where waiting around pays shards on a timer, with a countdown on screen.
- *   {@code /afk} takes players there, staff build them with {@code /afkzone}.</li>
- *   <li><b>Idle actions.</b> Optionally move long-idle players into a zone, or kick them.</li>
- * </ul>
- *
- * Maps are concurrent: chat arrives off the main thread and Folia ticks players on region threads.
- */
 public class AfkManager {
 
     public enum Display { BOSSBAR, ACTIONBAR, NONE }
 
     private static final double ROTATION_EPSILON = 0.5D;
 
-    /** Where one player stands with respect to the zones. */
     private static final class ZoneState {
         String zoneId;
         int seconds;
@@ -111,7 +97,6 @@ public class AfkManager {
         }
     }
 
-    /** Real input from the player: resets the idle timer and ends the AFK status. */
     public void recordActivity(Player player) {
         UUID uuid = player.getUniqueId();
         lastActivity.put(uuid, System.currentTimeMillis());
@@ -122,10 +107,6 @@ public class AfkManager {
         }
     }
 
-    /**
-     * Head turns always count. Walking counts unless the player is only being carried (in a vehicle,
-     * or drifting in water), so AFK pools and water streams cannot fake activity.
-     */
     public void handleMove(Player player, Location from, Location to) {
         if (from == null || to == null) {
             return;
@@ -162,13 +143,11 @@ public class AfkManager {
         return player.isInsideVehicle() || (player.isInWater() && !player.isSwimming() && !player.isSprinting());
     }
 
-    /** Seconds since the player last gave real input, or Long.MAX_VALUE if unknown. */
     public long getIdleSeconds(UUID uuid) {
         Long last = lastActivity.get(uuid);
         return last == null ? Long.MAX_VALUE : Math.max(0L, (System.currentTimeMillis() - last) / 1000L);
     }
 
-    /** True when the player did something within the last {@code windowSeconds}; a window of 0 always passes. */
     public boolean hasRecentActivity(UUID uuid, int windowSeconds) {
         if (windowSeconds <= 0) {
             return true;
@@ -188,7 +167,6 @@ public class AfkManager {
         return since == null ? 0L : Math.max(0L, (System.currentTimeMillis() - since) / 1000L);
     }
 
-    /** Shown as AFK in the tab list: the status, or standing in an AFK zone. */
     public boolean isShownAsAfk(Player player) {
         return player != null && (isAfk(player.getUniqueId()) || getCurrentZone(player) != null);
     }
@@ -201,7 +179,6 @@ public class AfkManager {
         return config().getBoolean("STATUS.GREY-NAME", true);
     }
 
-    /** {@code /away}. Returns the new state. */
     public boolean toggleAfk(Player player) {
         if (isAfk(player.getUniqueId())) {
             clearAfk(player, true);
@@ -281,7 +258,6 @@ public class AfkManager {
         return AfkZoneStore.isValidId(AfkZoneStore.normalizeId(id));
     }
 
-    /** The zone whose box contains this location, if any. */
     public AfkZone zoneAt(Location location) {
         for (AfkZone zone : store.all()) {
             if (zone.contains(location)) {
@@ -291,7 +267,6 @@ public class AfkManager {
         return null;
     }
 
-    /** The zone the player was in at the last tick (cheap, used by the tab list and placeholders). */
     public AfkZone getCurrentZone(Player player) {
         ZoneState state = zoneStates.get(player.getUniqueId());
         return state == null || state.zoneId == null ? null : store.get(state.zoneId);
@@ -318,7 +293,6 @@ public class AfkManager {
         return zone == null ? 0L : Math.max(0, zone.rewardSeconds() - state.seconds);
     }
 
-    /** Zones a player can be sent to, ones that pay first, then nearest in the same world. */
     public List<AfkZone> destinationsFor(Player player) {
         List<AfkZone> zones = new ArrayList<>();
         for (AfkZone zone : store.all()) {
@@ -340,7 +314,6 @@ public class AfkManager {
         return from.distanceSquared(to);
     }
 
-    /** Teleports straight away, used for idle players and portals. */
     public void teleport(Player player, AfkZone zone, String message) {
         Location spawn = zone == null ? null : zone.spawnLocation();
         if (spawn == null) {
@@ -353,7 +326,6 @@ public class AfkManager {
         });
     }
 
-    /** {@code /afk}: goes through the normal teleport warm-up. */
     public void teleportWithWarmup(Player player, AfkZone zone) {
         Location spawn = zone.spawnLocation();
         if (spawn == null) {
@@ -370,7 +342,6 @@ public class AfkManager {
         selections.computeIfAbsent(player.getUniqueId(), ignored -> new Location[2])[index] = location.clone();
     }
 
-    /** Both corners in one world, or null. */
     public AfkZone.Region getSelection(Player player) {
         Location[] corners = selections.get(player.getUniqueId());
         if (corners == null || corners[0] == null || corners[1] == null
@@ -543,10 +514,6 @@ public class AfkManager {
         }
     }
 
-    /**
-     * Outlines zone edges with particles only the viewer sees: near the edge of a zone when particles
-     * are on, and the whole nearby edge for 30 seconds after {@code /afkzone show}.
-     */
     private void drawOutlines(Player player) {
         Long until = outlineUntil.get(player.getUniqueId());
         boolean forced = until != null && until > System.currentTimeMillis();

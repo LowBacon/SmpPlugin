@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip.bukkit;
 
 import com.bx.smpPlugin.coinflip.CoinFlipConfig;
@@ -12,11 +13,6 @@ import java.time.Duration;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
-/**
- * Optional Discord post for finished matches with a large pot. Disabled by default. Posts go out on the HTTP
- * client's own threads with a timeout, at most one per MIN-INTERVAL, and contain only player names (reduced to
- * safe characters), the pot and the match ID: never balances, UUIDs or transaction details.
- */
 public final class CoinFlipWebhook {
 
     private final Logger logger;
@@ -58,7 +54,6 @@ public final class CoinFlipWebhook {
         });
     }
 
-    /** Player names and IDs only ever contain letters, digits and underscores. */
     static String safe(String value) {
         return value == null ? "?" : value.replaceAll("[^A-Za-z0-9_]", "");
     }

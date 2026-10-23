@@ -1,13 +1,9 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip;
 
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
-/**
- * One match. Identity, stake and terms never change after creation; the opponent and outcome are set once.
- * State changes go through {@link #transition}, a compare-and-set that also enforces {@link MatchState}'s
- * legal transitions, so a join and a cancel racing for the same match can never both win.
- */
 public final class CoinFlipMatch {
 
     private final String id;
@@ -48,10 +44,6 @@ public final class CoinFlipMatch {
         this.state = new AtomicReference<>(state);
     }
 
-    /**
-     * Moves from {@code expected} to {@code next} if the match is still in {@code expected} and the
-     * transition is legal. Returns false (and changes nothing) otherwise.
-     */
     public boolean transition(MatchState expected, MatchState next) {
         if (!expected.canMoveTo(next)) {
             return false;
@@ -59,7 +51,6 @@ public final class CoinFlipMatch {
         return state.compareAndSet(expected, next);
     }
 
-    /** Rebuilds a match exactly as stored. Used by storage only; live code creates matches with the constructor. */
     public static CoinFlipMatch restore(String id, UUID creatorId, String creatorName, CoinSide creatorSide,
                                         boolean privateMatch, UUID inviteeId, String inviteeName, long stakeCents,
                                         int feeBasisPoints, long createdAtMillis, long expiresAtMillis, MatchState state,
@@ -77,7 +68,6 @@ public final class CoinFlipMatch {
         return match;
     }
 
-    /** Forces the in-memory state to the reconciled one; never used for live transitions. */
     void restoreState(MatchState restored) {
         state.set(restored);
     }
@@ -86,7 +76,6 @@ public final class CoinFlipMatch {
         return state.get();
     }
 
-    /** Sets the opponent, outcome and settlement terms once. Returns false if they were already set. */
     synchronized boolean lock(UUID opponentId, String opponentName, CoinSide outcome, String outcomeId, long joinedAtMillis) {
         if (this.outcome != null) {
             return false;
@@ -99,7 +88,6 @@ public final class CoinFlipMatch {
         return true;
     }
 
-    /** Clears a reserved-but-failed join so the match can be joined again. Only legal before an outcome exists. */
     synchronized void clearPendingOpponent() {
         if (outcome == null) {
             opponentId = null;

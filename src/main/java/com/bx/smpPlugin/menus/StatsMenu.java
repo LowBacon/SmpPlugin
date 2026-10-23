@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.menus;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -19,17 +20,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
-/**
- * /stats: one small screen. The player's head on top, five numbers in a row, and two buttons.
- *
- * <pre>
- *  . . . . [head] . . . .
- *  . . [$] [◆] [⚔] [⌚] [⛏] . .
- *  . . . [top] . [x] . . .
- * </pre>
- *
- * Offline players are read on the database thread, so opening someone's stats never stalls the server.
- */
 public class StatsMenu extends BaseMenu {
 
     private static final String MENU_PATH = "STATS-MENU";
@@ -139,7 +129,6 @@ public class StatsMenu extends BaseMenu {
         return ItemUtils.hideMenuNoise(ItemUtils.createItem(material, name, lore), false);
     }
 
-    /** "#3 on the leaderboard", coloured gold, silver and bronze for the top three. */
     static String placeLine(int place) {
         String color = place == 1 ? "&6" : place == 2 ? "&f" : place == 3 ? "&#CD7F32" : "&7";
         return color + "#" + NumberUtils.format(place) + " &7on the leaderboard";

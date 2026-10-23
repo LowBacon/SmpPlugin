@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -21,11 +22,6 @@ import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * The other half of {@link PlayerWipeManager}: every wipe leaves a backup of the rows it removed in
- * a folder beside the plugin's configuration, and this puts one of them back. Backups are kept
- * indefinitely and never overwritten, so a player wiped twice can be taken back to either point.
- */
 public class PlayerUnwipeManager {
 
     private static final String BACKUP_FOLDER = "player-wipe-backups";
@@ -34,10 +30,6 @@ public class PlayerUnwipeManager {
     private static final DateTimeFormatter READABLE =
             DateTimeFormatter.ofPattern("d MMM yyyy 'at' HH:mm").withZone(ZoneId.systemDefault());
 
-    /**
-     * A backup filename, read without opening the file. Tab completion runs on every keystroke, so
-     * the name and uuid live in the filename rather than behind a parse of every backup on disk.
-     */
     private static final Pattern FILE_NAME = Pattern.compile(
             "^(.*)_([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})_(.+)\\.yml$");
 
@@ -58,7 +50,6 @@ public class PlayerUnwipeManager {
         }
     }
 
-    /** One backup on disk, described by its filename alone. */
     public record ArchiveFile(File file, UUID playerUuid, String playerName, String stamp) {
     }
 
@@ -81,10 +72,6 @@ public class PlayerUnwipeManager {
         return new File(plugin.getDataFolder(), BACKUP_FOLDER);
     }
 
-    /**
-     * Writes the backup a wipe just captured. The wipe has not run yet when this is called, so a
-     * failure here stops the wipe rather than losing the only copy of the player's data.
-     */
     public File write(PlayerWipeArchive archive) throws IOException {
         File directory = backupDirectory();
         String base = sanitize(archive.playerName()) + "_" + archive.playerUuid() + "_"
@@ -99,7 +86,6 @@ public class PlayerUnwipeManager {
         return file;
     }
 
-    /** The most recent backup for one player, or null when they have never been wiped. */
     public PlayerWipeArchive findLatest(UUID playerUuid) {
         ArchiveFile latest = null;
         for (ArchiveFile candidate : listArchiveFiles()) {
@@ -122,7 +108,6 @@ public class PlayerUnwipeManager {
         }
     }
 
-    /** Every player with a backup on disk, newest name first, for tab completion. */
     public List<String> backedUpPlayerNames() {
         Set<String> names = new LinkedHashSet<>();
         for (ArchiveFile archive : listArchiveFiles()) {
@@ -160,10 +145,6 @@ public class PlayerUnwipeManager {
         return archives;
     }
 
-    /**
-     * Resolves a name to a player who has a backup. Unlike a wipe this cannot fall back to the
-     * server's player list: the whole point is that the target may be long gone.
-     */
     public UUID resolveBackedUpPlayer(String input) {
         if (input == null || input.isBlank()) {
             return null;
@@ -220,7 +201,6 @@ public class PlayerUnwipeManager {
         }
     }
 
-    /** Closes anything showing the player's current contents before those rows are replaced. */
     private void discardOpenState(UUID playerUuid) {
         if (plugin.getEnderChestManager() != null) {
             plugin.getEnderChestManager().discardForPlayerWipe(playerUuid);
@@ -229,10 +209,6 @@ public class PlayerUnwipeManager {
         plugin.getCrateManager().clearPendingBind(playerUuid);
     }
 
-    /**
-     * Reads the restored rows back into memory. This mirrors the cache clearing a wipe does, with
-     * the player's own data loaded again afterwards so nothing writes the wiped state back over it.
-     */
     private void reloadCaches(UUID playerUuid) {
         plugin.getPlayerDataManager().discardWithoutSaving(playerUuid);
         plugin.getCrateManager().unloadKeyBalanceCache(playerUuid);

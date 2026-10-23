@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip.bukkit;
 
 import com.bx.smpPlugin.coinflip.CoinFlipConfig;
@@ -15,12 +16,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/** Stake, side and visibility selection. Nothing moves until the review screen is confirmed. */
 public final class CreateMenu extends CoinFlipMenu {
 
     private static final int[] INCREMENT_SLOTS = {10, 11, 12, 13, 14, 15, 16};
 
-    /** The player's choices while navigating between create, challenge and review screens. */
     public static final class Draft {
         long stakeCents;
         CoinSide side;
@@ -199,7 +198,6 @@ public final class CreateMenu extends CoinFlipMenu {
         });
     }
 
-    /** Null when the draft can be submitted; otherwise the reason it cannot. */
     private String problem(CoinFlipConfig config, long balance) {
         if (!module.service().wageringOpen()) {
             return "Wagering is paused right now.";

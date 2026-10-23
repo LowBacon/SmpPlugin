@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -15,10 +16,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Chat prompt for Quick Buy search when a Bedrock player has no Floodgate form.
- * A sign editor on Bedrock closes itself and then refuses every container until rejoin.
- */
 public final class QuickBuySearchPrompt implements Listener {
 
     private enum Kind {

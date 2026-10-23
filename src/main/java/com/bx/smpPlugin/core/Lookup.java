@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.core;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -8,17 +9,11 @@ import org.bukkit.entity.Player;
 
 import java.util.function.Consumer;
 
-/**
- * Finds a player by name without stalling the server. An online player answers at once; anyone
- * else needs the database and possibly Mojang (for a name the server has never seen), so that part
- * runs off the main thread and the answer comes back on the sender's thread.
- */
 public final class Lookup {
 
     private Lookup() {
     }
 
-    /** Calls back with the account, or null when nobody by that name has joined. */
     public static void account(SmpPlugin plugin, CommandSender sender, String name,
                                Consumer<EconomyManager.AccountReference> callback) {
         Player online = name == null ? null : Bukkit.getPlayerExact(name);

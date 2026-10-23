@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -14,7 +15,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** The 4.1 configuration changes: no balance limit unless one is set. */
 class V41ConfigTest {
 
     private static final List<String> OLD_ECONOMY = List.of(

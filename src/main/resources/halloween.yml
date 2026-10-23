@@ -324,8 +324,14 @@ SHOP:
 
 AMBIENCE:
   # Only during the season (and grace days).
-  # A greeting title once a day, and a clickable reminder about unopened doors.
+  # A greeting on the screen and a clickable reminder about unopened doors.
+  # Players who join into the lobby get them when they step into the SMP.
   JOIN-REMINDER: true
+  # How long the greeting stays on the screen (4-20 seconds).
+  GREETING-SECONDS: 8
+  # true: the greeting only on the first visit of the day; false: every time
+  # a player joins and enters the SMP.
+  GREETING-ONCE-A-DAY: false
   # Hostile mobs killed by players can drop Halloween Candy. Eating it gives a
   # short random boost (speed, jump, night vision, regeneration, ...).
   CANDY-DROPS:

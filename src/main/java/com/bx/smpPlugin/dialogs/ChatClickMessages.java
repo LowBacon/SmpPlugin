@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.dialogs;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -11,13 +12,6 @@ import org.bukkit.entity.Player;
 import java.time.Duration;
 import java.util.function.Consumer;
 
-/**
- * Clickable chat that runs on the server instead of asking the client to confirm a command.
- *
- * <p>A {@code run_command} click in 1.21.6+ opens Minecraft's command-confirm dialog. That
- * screen is gone from this flow, so a callback is used. For TPA / TPAHERE the click only
- * accepts the request; the 5s stand-still warmup still runs afterwards. RTP teleports at once.
- */
 public final class ChatClickMessages {
 
     private static final Duration CLICK_LIFETIME = Duration.ofMinutes(15);
@@ -25,10 +19,6 @@ public final class ChatClickMessages {
     private ChatClickMessages() {
     }
 
-    /**
-     * Sends {@code legacy} as a clickable line. Returns false when this server cannot attach a
-     * server-side click, so the caller can fall back to a Bungee {@code RUN_COMMAND}.
-     */
     public static boolean sendInstantAction(
             SmpPlugin plugin,
             Player viewer,

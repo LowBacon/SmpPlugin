@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.extras;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -31,18 +32,12 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
-/**
- * Social and silly commands: emotes (/slap /highfive /poke /wave /cheer), /rps, /rate, /firework
- * and /sit. All of them are cosmetic: none can hurt a player, move their items to someone else or
- * be used to farm money. /dice lives in {@link com.bx.smpPlugin.gambling.DiceGame}.
- */
 public final class FunCommands implements CommandExecutor, TabCompleter {
 
     public static final List<String> EMOTES = List.of("slap", "highfive", "poke", "wave", "cheer");
 
     private final SmpPlugin plugin;
     private final Map<String, Map<UUID, Long>> cooldowns = new ConcurrentHashMap<>();
-    /** Seats from /sit, removed as soon as nobody sits on them. */
     private final Map<UUID, ArmorStand> seats = new ConcurrentHashMap<>();
 
     public FunCommands(SmpPlugin plugin) {
@@ -101,7 +96,6 @@ public final class FunCommands implements CommandExecutor, TabCompleter {
         return false;
     }
 
-    /** Players who see a social message: nearby players, or the whole server, per extras.yml. */
     private List<Player> audience(Player source) {
         List<Player> out = new ArrayList<>();
         boolean server = "SERVER".equalsIgnoreCase(config().getString("EMOTES.AUDIENCE", "NEARBY"));
@@ -307,7 +301,6 @@ public final class FunCommands implements CommandExecutor, TabCompleter {
         Text.actionBar(player, Text.get("FUN.SITTING", "&7You sit down. &8(sneak to stand up)"));
     }
 
-    /** Removes seats nobody sits on any more. Runs every second. */
     public void cleanSeats() {
         seats.entrySet().removeIf(entry -> {
             ArmorStand seat = entry.getValue();

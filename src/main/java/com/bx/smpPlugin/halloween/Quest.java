@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.halloween;
 
 import com.bx.smpPlugin.core.Reward;
@@ -7,10 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * One Halloween quest from halloween.yml QUESTS: what it counts, how many, and what finishing it gives (CANDY plus
- * an optional reward). Quests run for the whole season and are finished once.
- */
 public record Quest(String id, String name, List<String> description, QuestType type, String target, int amount,
                     long candy, Reward reward, String icon) {
 
@@ -18,7 +15,6 @@ public record Quest(String id, String name, List<String> description, QuestType 
         description = List.copyOf(description);
     }
 
-    /** True when an action of this type (and target, for KILL_MOB and BREAK_BLOCK) counts for this quest. */
     public boolean counts(QuestType action, String actionTarget) {
         if (action != type) {
             return false;
@@ -26,7 +22,6 @@ public record Quest(String id, String name, List<String> description, QuestType 
         return !type.needsTarget() || target != null && target.equalsIgnoreCase(actionTarget);
     }
 
-    /** Every valid quest of a QUESTS section; problems are added to {@code problems} and the quest is left out. */
     public static List<Quest> readAll(ConfigurationSection section, List<String> problems) {
         List<Quest> quests = new ArrayList<>();
         if (section == null) {

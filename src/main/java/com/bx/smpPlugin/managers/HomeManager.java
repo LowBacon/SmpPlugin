@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.utils.PermissionUtils;
@@ -18,11 +19,9 @@ public class HomeManager {
 
     private static final int HOMES_PER_PAGE = 5;
     private static final int MAX_PERMISSION_VALUE = 100;
-    /** Letters, digits, _ and -, up to 16 characters: fits a menu title and a command argument. */
     private static final Pattern HOME_NAME = Pattern.compile("^[A-Za-z0-9_-]{1,16}$");
 
     private final SmpPlugin plugin;
-    /** UUID → list of homes */
     private final Map<UUID, List<Home>> cache = new ConcurrentHashMap<>();
     private final Map<UUID, PendingHomeInput> pendingInputs = new ConcurrentHashMap<>();
 
@@ -30,7 +29,6 @@ public class HomeManager {
         this.plugin = plugin;
     }
 
-    /** Uses the rows read at login when there are any, so the join does not touch the database. */
     public void loadHomes(Player player) {
         UUID uuid = player.getUniqueId();
         List<Home> homes = plugin.getJoinPreloadListener() == null
@@ -42,7 +40,6 @@ public class HomeManager {
         cache.put(uuid, new CopyOnWriteArrayList<>(homes == null ? List.of() : homes));
     }
 
-    /** Reads someone else's homes, live when they are online. Runs on the database thread. */
     public List<Home> loadHomesFor(UUID uuid) {
         List<Home> live = cache.get(uuid);
         return live != null ? List.copyOf(live) : plugin.getDatabaseManager().loadHomes(uuid);
@@ -93,7 +90,47 @@ public class HomeManager {
             }
         }
 
-        return permissionHomes > 0 ? permissionHomes : defaultHomes;
+        // Ranks by name: a LuckPerms group, a perks rank (smpplugin.rank.<name>) or a staff role
+        // (smpplugin.role.<name>); "op" is server operators. The highest a player has wins.
+        org.bukkit.configuration.ConfigurationSection ranks = plugin.getConfigManager().getConfig()
+                .getConfigurationSection("SETTINGS.HOME-RANKS");
+        if (ranks != null) {
+            for (String rank : ranks.getKeys(false)) {
+                if (ranks.isInt(rank) && hasRank(player, rank)) {
+                    permissionHomes = Math.max(permissionHomes, Math.min(MAX_PERMISSION_VALUE, ranks.getInt(rank)));
+                }
+            }
+        }
+
+        // A rank never gives fewer homes than everyone gets.
+        return Math.max(defaultHomes, permissionHomes);
+    }
+
+    static boolean hasRank(Player player, String rank) {
+        String name = rank.trim().toLowerCase(java.util.Locale.ROOT);
+        if (name.isEmpty()) {
+            return false;
+        }
+        if (name.equals("op")) {
+            return player.isOp();
+        }
+        return player.hasPermission("group." + name)
+                || PermissionUtils.has(player, "smpplugin.rank." + name)
+                || PermissionUtils.has(player, "smpplugin.role." + name);
+    }
+
+    // The name /sethome uses without one: "home" first, then home2, home3... while there is room;
+    // when every home is used it moves "home".
+    public String nextHomeName(Player player) {
+        if (getHome(player.getUniqueId(), "home") == null || !canSetHome(player)) {
+            return "home";
+        }
+        for (int i = 2; i <= MAX_PERMISSION_VALUE + 1; i++) {
+            if (getHome(player.getUniqueId(), "home" + i) == null) {
+                return "home" + i;
+            }
+        }
+        return "home";
     }
 
     public int getMaxHomePages(Player player) {
@@ -128,10 +165,6 @@ public class HomeManager {
         return true;
     }
 
-    /**
-     * The cache is what players see, so writes go to the database thread. They queue there in
-     * order, which keeps a rename's delete ahead of its save.
-     */
     private void saveAsync(Home home) {
         if (home.getLocation() == null) {
             return;
@@ -141,7 +174,6 @@ public class HomeManager {
         plugin.getDatabaseManager().executeAsync(() -> plugin.getDatabaseManager().saveHome(copy));
     }
 
-    /** Sets the item a home is shown with; a blank or unknown material goes back to the bed. */
     public boolean setIcon(UUID uuid, String homeName, String materialName) {
         Home home = getHome(uuid, homeName);
         if (home == null) {
@@ -155,7 +187,6 @@ public class HomeManager {
         return true;
     }
 
-    /** The material a home is drawn with in menus. */
     public static org.bukkit.Material iconOf(Home home) {
         if (home != null && home.hasIcon()) {
             org.bukkit.Material material = org.bukkit.Material.matchMaterial(home.getIcon());
@@ -254,7 +285,6 @@ public class HomeManager {
         new HomeMenu(plugin).open(player);
     }
 
-    /** Duel and FFA arenas are temporary, so homes can't be set in them. */
     public boolean isInArena(Player player) {
         return (plugin.getDuelManager() != null && (plugin.getDuelManager().isInDuel(player.getUniqueId())
                 || plugin.getDuelManager().isTransitioning(player.getUniqueId())))
@@ -262,10 +292,6 @@ public class HomeManager {
                 || plugin.getFfaManager().isInMatch(player.getUniqueId())));
     }
 
-    /**
-     * Opens the homes screen: the dialog grid on Paper 1.21.6+, the chest menu everywhere else
-     * (Spigot, older servers, Bedrock players through Geyser, or HOMES off in dialog.yml).
-     */
     public void openHomes(Player player) {
         boolean bedrock = com.bx.smpPlugin.utils.BedrockPlayers.isBedrock(player);
         if (!bedrock && plugin.getDialogManager() != null && plugin.getDialogManager().openHomes(player)) {

@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip.bukkit;
 
 import com.bx.smpPlugin.coinflip.CoinFlipConfig;
@@ -12,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/** Rules, odds, fees, limits and commands in plain language. */
 public final class HelpMenu extends CoinFlipMenu {
 
     public HelpMenu(CoinFlipModule module, UUID viewer) {
@@ -57,7 +57,6 @@ public final class HelpMenu extends CoinFlipMenu {
         back(() -> openMenu(new MainMenu(module, viewer)));
     }
 
-    /** Splits a long message into lore lines of about 34 visible characters, keeping its colour. */
     private static List<String> wrap(String text) {
         String colour = text.startsWith("&") && text.length() > 1 ? text.substring(0, 2) : Gui.MUTED;
         String plain = ColorUtils.strip(ColorUtils.colorize(text));

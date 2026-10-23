@@ -1,9 +1,6 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.perks;
 
-/**
- * What a rank can add. Every perk is a whole number with a hard limit in code; perks.yml CAPS can only lower it.
- * None of them touches gambling odds, prices, anti-cheat, moderation or anything another player loses out on.
- */
 public enum Perk {
     CALENDAR_BONUS_PERCENT("CALENDAR-BONUS-PERCENT", "more money and shards behind Advent and Halloween doors", "%", 100),
     CALENDAR_STREAK_GRACE_DAYS("CALENDAR-STREAK-GRACE-DAYS", "days a calendar streak survives a missed day", " day(s)", 3),
@@ -25,7 +22,6 @@ public enum Perk {
         this.hardCap = hardCap;
     }
 
-    /** The key in perks.yml. */
     public String key() {
         return key;
     }
@@ -38,7 +34,6 @@ public enum Perk {
         return unit;
     }
 
-    /** The most this perk can ever be, whatever perks.yml says. */
     public int hardCap() {
         return hardCap;
     }

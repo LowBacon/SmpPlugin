@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.invsee;
 
 import org.bukkit.inventory.Inventory;

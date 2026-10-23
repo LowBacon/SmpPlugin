@@ -1,17 +1,12 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.halloween;
 
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 
-/**
- * A player's Halloween candy for one season: what they can spend, everything they earned (for milestones and the
- * leaderboard; spending never lowers it) and the milestones already given. Stored as
- * {@code balance;earned;m1,m2,...}. Pure arithmetic so it can be tested.
- */
 public record CandyAccount(long balance, long earned, Set<Long> milestones) {
 
-    /** No one can hold more candy than this; earning stops there instead of overflowing. */
     public static final long MAX = 1_000_000_000L;
     public static final CandyAccount EMPTY = new CandyAccount(0L, 0L, Set.of());
 
@@ -52,7 +47,6 @@ public record CandyAccount(long balance, long earned, Set<Long> milestones) {
         return out.toString();
     }
 
-    /** Adds earned candy (both to the balance and to the total). */
     public CandyAccount earn(long amount) {
         if (amount <= 0L) {
             return this;
@@ -60,7 +54,6 @@ public record CandyAccount(long balance, long earned, Set<Long> milestones) {
         return new CandyAccount(safeAdd(balance, amount), safeAdd(earned, amount), milestones);
     }
 
-    /** Takes candy away when there is enough; the earned total stays. */
     public Optional<CandyAccount> spend(long amount) {
         if (amount < 0L || amount > balance) {
             return Optional.empty();
@@ -68,7 +61,6 @@ public record CandyAccount(long balance, long earned, Set<Long> milestones) {
         return Optional.of(new CandyAccount(balance - amount, earned, milestones));
     }
 
-    /** Staff corrections: sets the balance (the earned total grows when it would fall below it). */
     public CandyAccount withBalance(long newBalance) {
         long clamped = Math.max(0L, Math.min(MAX, newBalance));
         return new CandyAccount(clamped, Math.max(earned, clamped), milestones);

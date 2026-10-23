@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.extras;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -37,10 +38,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Everyday helpers: portable workstations, /back, /near, /seen, /coords, /suicide,
- * /ptime, /pweather, /repair, /skull, /lore, /glow, /online, /uptime and /calc.
- */
 public final class UtilityCommands implements CommandExecutor, TabCompleter {
 
     private static final List<String> WORKSTATIONS =
@@ -212,7 +209,6 @@ public final class UtilityCommands implements CommandExecutor, TabCompleter {
                 "{radius}", Integer.toString((int) radius), "{list}", String.join("&8, ", found));
     }
 
-    /** An arrow pointing from where the player looks towards the target. */
     static String arrow(Location from, Location to) {
         double dx = to.getX() - from.getX();
         double dz = to.getZ() - from.getZ();

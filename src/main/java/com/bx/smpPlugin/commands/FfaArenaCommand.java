@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.commands;
 
 import com.bx.smpPlugin.utils.PermissionUtils;
@@ -171,6 +172,9 @@ public class FfaArenaCommand implements CommandExecutor {
             return true;
         }
         if (subcommand.equals("setpos") || subcommand.equals("setpos1") || subcommand.equals("setpos2")) {
+            if (plugin.getWorldSystem() != null && plugin.getWorldSystem().refuseOutside(player, "ffa", "an FFA arena")) {
+                return true;
+            }
             if (!plugin.getFfaManager().setArenaRegionPos(id, player.getLocation())) {
                 sender.sendMessage(ColorUtils.toComponent("&cᴄᴏᴜʟᴅ ɴᴏᴛ ѕᴇᴛ ꜰꜰᴀ ʀᴇɢɪᴏɴ ꜰᴏʀ ᴛʜᴀᴛ ᴀʀᴇɴᴀ."));
                 return true;

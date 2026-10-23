@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.permissions;
 
 import org.bukkit.configuration.ConfigurationSection;
@@ -23,20 +24,14 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-/**
- * Keeps plugin.yml, the generated docs and the source code consistent with {@link PermissionRegistry}.
- * Run with {@code -Dsmpplugin.regenerate=true} to rewrite the generated files instead of comparing them.
- */
 class PermissionRegistryTest {
 
     private static final Path PLUGIN_YML = Path.of("src/main/resources/plugin.yml");
     private static final Path DOCS = Path.of("docs/permissions-reference.md");
     private static final boolean REGENERATE = Boolean.getBoolean("smpplugin.regenerate");
 
-    /** Permission-like strings in code that are not permissions. */
     private static final Set<String> NOT_PERMISSIONS = Set.of("smpplugin.loaded-in-process");
 
-    /** String literals that look like a full permission node. A trailing dot means a prefix and is skipped. */
     private static final Pattern NODE_LITERAL = Pattern.compile(
             "\"((?:smpplugin|anvilmod|safety|donutauction|donutfriends)\\.[A-Za-z0-9_.\\-]*[A-Za-z0-9_\\-])\"");
 
@@ -44,6 +39,9 @@ class PermissionRegistryTest {
     void everyChildIsRegistered() {
         for (PermissionNode node : PermissionRegistry.all()) {
             for (String child : node.children()) {
+                if (child.startsWith("titanguard.")) {
+                    continue;
+                }
                 assertTrue(PermissionRegistry.isRegistered(child), node.node() + " has unregistered child " + child);
             }
         }

@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.platform;
 
 import net.kyori.adventure.text.Component;

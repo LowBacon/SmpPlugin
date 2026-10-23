@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.platform;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -12,17 +13,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Builds the startup and {@code /smpplugin status} report: platform, Java runtime,
- * storage, optional integrations and native anti-Xray, each with an explicit status.
- *
- * <p>Optional plugins that are installed are reported as {@link CapabilityStatus#UNTESTED}:
- * SmpPlugin loads them, but their compatibility with Minecraft 26.3 is their authors'
- * responsibility and has not been verified here.</p>
- */
 public final class PlatformReport {
 
-    /** Optional plugin name → SmpPlugin features that depend on it. */
     static final Map<String, String> OPTIONAL_DEPENDENCIES = optionalDependencies();
 
     private PlatformReport() {
@@ -126,21 +118,17 @@ public final class PlatformReport {
     }
 
     private static Capability antiCheatCapability(SmpPlugin plugin) {
-        var antiCheat = plugin.getAntiCheatManager();
-        if (antiCheat == null) {
-            return new Capability("Anti-cheat", CapabilityStatus.UNAVAILABLE, "failed to start; see the startup log.");
-        }
-        if (antiCheat.isDeferringToTitanGuard()) {
-            return new Capability("Anti-cheat", CapabilityStatus.SUPPORTED,
-                    "standing down: TitanGuard is running (anticheat.yml DEFER-TO-TITANGUARD).");
-        }
-        if (!antiCheat.isActive()) {
+        var bridge = plugin.getTitanGuardBridge();
+        if (bridge == null || bridge.version() == null) {
             return new Capability("Anti-cheat", CapabilityStatus.UNAVAILABLE,
-                    "turned off (anticheat.yml ENABLED or /smpplugin features).");
+                    "TitanGuard is not installed: no anti-cheat is running.");
         }
-        return new Capability("Anti-cheat", CapabilityStatus.UNTESTED,
-                antiCheat.enabledCheckCount() + " server-side checks on; alerts and evidence active."
-                        + " Thresholds have not been tuned on a live 26.3 server yet. Details: /anticheat status");
+        if (!bridge.linked()) {
+            return new Capability("Anti-cheat", CapabilityStatus.SUPPORTED,
+                    "TitanGuard " + bridge.version() + " running; update it to 1.2.0+ for alerts in player logs.");
+        }
+        return new Capability("Anti-cheat", CapabilityStatus.SUPPORTED,
+                "TitanGuard " + bridge.version() + " linked: alerts in player logs, bans in /history. Details: /tg status");
     }
 
     private static Capability storageCapability(SmpPlugin plugin) {
@@ -209,7 +197,6 @@ public final class PlatformReport {
         return capabilities;
     }
 
-    /** Paper's default settings directory is {@code config/} in the server root. */
     private static File paperConfigDirectory() {
         File relative = new File("config");
         if (relative.isDirectory()) {

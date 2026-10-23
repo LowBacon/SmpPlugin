@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.menus;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -18,10 +19,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-/**
- * Every spawner in one world, 45 to a page. Left-click teleports on top of a spawner, right-click opens
- * it as if you had clicked the block.
- */
 public class SpawnerPanelMenu extends BaseMenu {
 
     private static final int PAGE_SIZE = 45;

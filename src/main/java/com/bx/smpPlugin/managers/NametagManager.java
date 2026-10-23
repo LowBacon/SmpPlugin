@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -30,27 +31,11 @@ import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * The name above each player's head: their rank prefix (the same LuckPerms, PlaceholderAPI or Vault prefix the tab
- * list and chat show), set in config.yml {@code NAMETAGS}.
- *
- * <p>Minecraft draws text around a name tag only from a scoreboard team's prefix and suffix, read from the scoreboard
- * the viewer's client uses. Every player who sees the sidebar has a private scoreboard ({@link ScoreboardManager}), so
- * each player's team is kept on the main scoreboard and on every one of those private boards. Scoreboards of other
- * plugins are never touched, and on the main scoreboard a player who is already in another plugin's team stays there
- * unless {@code OVERRIDE-OTHER-TEAMS} is on. Minecraft saves the main scoreboard with the world, so the teams are
- * taken off it at shutdown, and any left by a crash are cleared at start.
- *
- * <p>Players hidden with /hide get no team (the Hide feature owns their name tag), and nothing is done while TAB or
- * NametagEdit is installed, since they manage name tags themselves. Main thread only.
- */
 public final class NametagManager {
 
-    /** Every team of this class starts with this, followed by the player's whole UUID. */
     static final String TEAM_PREFIX = "smpnt";
     private static final List<String> NAMETAG_PLUGINS = List.of("TAB", "NametagEdit");
 
-    /** What one player's team shows, and the name it holds. */
     record Tag(String team, String entry, String prefix, String suffix, ChatColor color) {
     }
 
@@ -98,7 +83,6 @@ public final class NametagManager {
         this.logger = logger;
     }
 
-    /** True on Folia (no scoreboard teams there) or while another name tag plugin is enabled; says so once. */
     private static BooleanSupplier handledElsewhere(SmpPlugin plugin) {
         AtomicBoolean told = new AtomicBoolean();
         return () -> {
@@ -123,13 +107,11 @@ public final class NametagManager {
         return (c == null || c.getBoolean("NAMETAGS.ENABLED", true)) && !handledElsewhere.getAsBoolean();
     }
 
-    /** How often the periodic pass runs, in ticks (NAMETAGS.UPDATE-TICKS, at least 10). */
     public long updateTicks() {
         FileConfiguration c = config.get();
         return Math.max(10L, c == null ? 40L : c.getLong("NAMETAGS.UPDATE-TICKS", 40L));
     }
 
-    /** At start: clears teams a crash left on the main scoreboard, then sets everyone online. */
     public void start(Collection<? extends Player> online) {
         Scoreboard main = mainBoard.get();
         if (main != null) {
@@ -139,7 +121,6 @@ public final class NametagManager {
         refreshAll(online);
     }
 
-    /** After /smpplugin reload: the settings may have changed, so every team is set again (or removed). */
     public void reload(Collection<? extends Player> online) {
         if (!isEnabled()) {
             shutdown();
@@ -149,14 +130,12 @@ public final class NametagManager {
         refreshAll(online);
     }
 
-    /** The periodic pass: picks up rank changes, /hide and new players. Writes only what changed. */
     public void refreshAll(Collection<? extends Player> online) {
         for (Player player : online) {
             refresh(player);
         }
     }
 
-    /** Sets (or removes) one player's name tag on every board. */
     public void refresh(Player player) {
         if (player == null) {
             return;
@@ -185,7 +164,6 @@ public final class NametagManager {
         }
     }
 
-    /** A new private board (ScoreboardManager just made one): it gets every online player's team. */
     public void applyAllTo(Scoreboard board) {
         if (board == null || !isEnabled()) {
             return;
@@ -195,14 +173,12 @@ public final class NametagManager {
         }
     }
 
-    /** A player left: their team goes from every board. */
     public void remove(Player player) {
         if (player != null && applied.remove(player.getUniqueId()) != null) {
             removeEverywhere(player.getUniqueId());
         }
     }
 
-    /** At shutdown (or when switched off): every team of this class goes from every board. */
     public void shutdown() {
         for (Scoreboard board : boards()) {
             removeOurTeams(board);
@@ -229,18 +205,10 @@ public final class NametagManager {
         return Objects.requireNonNullElse(colorize.apply(filled, player), "");
     }
 
-    /**
-     * The whole UUID, so two players can never share a team (a shortened one can). Team names are no longer limited to
-     * 16 characters since Minecraft 1.18, and the plugin needs 1.21.11.
-     */
     static String teamName(UUID uuid) {
         return TEAM_PREFIX + uuid.toString().replace("-", "");
     }
 
-    /**
-     * The colour of the name itself (Minecraft colours a name tag by its team colour): a colour name such as WHITE or
-     * GOLD, or AUTO for the last colour used in the prefix. Anything else is white.
-     */
     static ChatColor nameColor(String setting, String prefix) {
         String wanted = setting == null ? "WHITE" : setting.trim().toUpperCase(Locale.ROOT).replace(' ', '_');
         if (wanted.equals("AUTO")) {
@@ -254,7 +222,6 @@ public final class NametagManager {
         }
     }
 
-    /** The last colour in a legacy text (§c, or §x§r§r§g§g§b§b hex, which becomes the nearest of the 16 colours). */
     private static ChatColor lastColor(String legacy) {
         ChatColor found = ChatColor.WHITE;
         for (int i = 0; i + 1 < legacy.length(); i++) {
@@ -311,7 +278,6 @@ public final class NametagManager {
         return c == null || !c.getBoolean("NAMETAGS.OVERRIDE-OTHER-TEAMS", false);
     }
 
-    /** The main scoreboard and the plugin's own sidebar boards, each once. */
     private Set<Scoreboard> boards() {
         Set<Scoreboard> boards = Collections.newSetFromMap(new IdentityHashMap<>());
         Scoreboard main = mainBoard.get();
@@ -329,7 +295,6 @@ public final class NametagManager {
         return boards;
     }
 
-    /** Puts one player's name into their team on one board. False when another plugin's team keeps them. */
     private boolean apply(Scoreboard board, String entry, Tag tag, boolean respectOthers) {
         try {
             Team current = board.getEntryTeam(entry);

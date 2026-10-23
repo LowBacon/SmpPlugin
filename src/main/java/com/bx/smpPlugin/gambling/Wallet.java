@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.gambling;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -13,12 +14,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 
-/**
- * The one place /dice and /roulette touch money. Amounts are whole cents (see {@link StakeMath}), so a bet, a
- * payout and a refund always add up exactly. Every movement goes through SmpPlugin's economy (the balances Vault
- * and /pay use), is written to the player's /logs, and opens or closes its escrow hold in the same database
- * transaction as the balance change.
- */
 final class Wallet {
 
     private final SmpPlugin plugin;
@@ -37,10 +32,6 @@ final class Wallet {
         return StakeMath.fromEconomy(plugin.getEconomyManager().getBalance(player));
     }
 
-    /**
-     * Takes a bet from an online player and opens its hold in the same transaction. False (and nothing changed)
-     * when they cannot afford it or the economy refused.
-     */
     boolean take(Player player, GamblingEscrow.Hold hold) {
         long cents = hold.cents();
         if (cents <= 0L || balance(player) < cents) {
@@ -56,10 +47,6 @@ final class Wallet {
         return result.success();
     }
 
-    /**
-     * Pays a player, online or not, and closes {@code holdIds} in the same transaction. False only when the economy
-     * refused, in which case nothing changed and the caller keeps the money held.
-     */
     boolean pay(UUID uuid, String name, long cents, EconomyReason reason, String detail, Collection<String> holdIds) {
         if (cents <= 0L) {
             escrow.closeWithoutPayment(holdIds);

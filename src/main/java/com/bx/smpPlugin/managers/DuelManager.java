@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -120,6 +121,7 @@ public class DuelManager {
     private final Map<UUID, Long> activeMatchIds = new HashMap<>();
     private final Set<String> reservedArenaIds = new HashSet<>();
     private final Map<UUID, PendingRespawnState> pendingRespawns = new HashMap<>();
+    private final DuelRestoreStore restoreStore;
     private final Map<UUID, DuelStats> statsCache = new HashMap<>();
     private final Map<Long, ArenaSnapshot> arenaSnapshots = new HashMap<>();
     private final Set<UUID> preparingDuelPlayers = new HashSet<>();
@@ -138,8 +140,31 @@ public class DuelManager {
     public DuelManager(SmpPlugin plugin) {
         this.plugin = plugin;
         this.worldManager = new DuelWorldManager(plugin);
+        this.restoreStore = new DuelRestoreStore(plugin);
         ensureTables();
         reload();
+        for (Map.Entry<UUID, DuelRestoreStore.Owed> entry : restoreStore.loadAll().entrySet()) {
+            DuelRestoreStore.Owed owed = entry.getValue();
+            pendingRespawns.put(entry.getKey(), new PendingRespawnState(null, owed.returnLocation(), 0L,
+                    new GeneratedInventorySnapshot(owed.storage(), owed.armor(), owed.offHand(), owed.cursor())));
+        }
+    }
+
+    private void owe(UUID uuid, PendingRespawnState state) {
+        pendingRespawns.put(uuid, state);
+        GeneratedInventorySnapshot snapshot = state.restoreSnapshot();
+        if (snapshot != null) {
+            restoreStore.save(uuid, new DuelRestoreStore.Owed(snapshot.storage(), snapshot.armor(), snapshot.offHand(),
+                    snapshot.cursor(), state.returnLocation()));
+        }
+    }
+
+    private PendingRespawnState settle(UUID uuid) {
+        PendingRespawnState state = pendingRespawns.remove(uuid);
+        if (state != null && state.restoreSnapshot() != null) {
+            restoreStore.delete(uuid);
+        }
+        return state;
     }
 
     public void reload() {
@@ -394,7 +419,6 @@ public class DuelManager {
         return statsCache.computeIfAbsent(uuid, this::loadStats);
     }
 
-    /** Forgets the cached copy so the next read comes from the database (after a player wipe). */
     public void forgetStats(UUID uuid) {
         if (uuid != null) {
             statsCache.remove(uuid);
@@ -1232,12 +1256,15 @@ public class DuelManager {
     }
 
     public boolean consumeRespawn(Player player, org.bukkit.event.player.PlayerRespawnEvent event) {
-        PendingRespawnState state = pendingRespawns.remove(player.getUniqueId());
-        if (state == null || state.respawnLocation() == null || state.respawnLocation().getWorld() == null) {
+        PendingRespawnState state = settle(player.getUniqueId());
+        if (state == null) {
             return false;
         }
-
-        event.setRespawnLocation(state.respawnLocation());
+        // Without an arena spot the kept items used to be dropped; they now come back wherever
+        // the player respawns.
+        if (state.respawnLocation() != null && state.respawnLocation().getWorld() != null) {
+            event.setRespawnLocation(state.respawnLocation());
+        }
         plugin.getSpigotScheduler().runEntity(player, () -> {
             if (!player.isOnline()) {
                 return;
@@ -1260,6 +1287,15 @@ public class DuelManager {
         UUID uuid = player.getUniqueId();
         if (isTransitioning(uuid) || transitionStates.containsKey(uuid)) {
             restoreTransitionState(player);
+        }
+
+        // Owed items for a player who is already alive (they respawned before a restart).
+        PendingRespawnState owed = pendingRespawns.get(uuid);
+        if (owed != null && owed.restoreSnapshot() != null && !player.isDead()) {
+            settle(uuid);
+            restoreSnapshotDirectly(player, owed.restoreSnapshot());
+            teleportAfterDelay(uuid, owed.returnLocation(), 1L, true);
+            return;
         }
 
         DuelArena arena = findArenaContainingLocation(player.getLocation());
@@ -1312,7 +1348,12 @@ public class DuelManager {
             restoreTransitionState(player);
         }
 
-        pendingRespawns.remove(player.getUniqueId());
+        // A loser quitting on the death screen keeps what they are owed; it comes back when they
+        // respawn after rejoining. Only a state without items is let go.
+        PendingRespawnState owed = pendingRespawns.get(player.getUniqueId());
+        if (owed != null && owed.restoreSnapshot() == null) {
+            pendingRespawns.remove(player.getUniqueId());
+        }
         queue.remove(player.getUniqueId());
         queueSelections.remove(player.getUniqueId());
         removeCrossServerQueueEntry(player.getUniqueId());
@@ -1588,7 +1629,7 @@ public class DuelManager {
         prepareTransition(match.getPlayerTwoUuid());
 
         if ("DEATH".equalsIgnoreCase(endReason) && loserUuid != null) {
-            pendingRespawns.put(loserUuid, new PendingRespawnState(
+            owe(loserUuid, new PendingRespawnState(
                     resolveArenaStayLocation(match, loserUuid),
                     resolveReturnLocation(match, loserUuid),
                     delayTicks,

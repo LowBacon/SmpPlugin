@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -69,7 +70,8 @@ public class ConfigManager {
             "perks.yml",
             "extras.yml",
             "guide.yml",
-            "borders.yml"
+            "borders.yml",
+            "worlds.yml"
     );
 
     private static final DateTimeFormatter BACKUP_TIMESTAMP_FORMAT =
@@ -118,6 +120,7 @@ public class ConfigManager {
     private FileConfiguration extras;
     private FileConfiguration guide;
     private FileConfiguration borders;
+    private FileConfiguration worlds;
 
     public ConfigManager(SmpPlugin plugin) {
         this.plugin = plugin;
@@ -150,6 +153,7 @@ public class ConfigManager {
         extras       = load("extras.yml", extras);
         guide        = load("guide.yml", guide);
         borders      = load("borders.yml", borders);
+        worlds       = load("worlds.yml", worlds);
         lobby        = load("lobby.yml", lobby);
         worth        = load("worth.yml", worth);
         amethystTools = load("amethyst-tools.yml", amethystTools);
@@ -175,11 +179,106 @@ public class ConfigManager {
         filter       = load("filter.yml", filter);
     }
 
+    private static final java.util.regex.Pattern LEAKED_LABEL = java.util.regex.Pattern.compile(
+            "^(\\s*)# The text or mode for .*?Available options: Any string text ?(.*)$");
+    private static final java.util.regex.Pattern LEAKED_COMMENT = java.util.regex.Pattern.compile(
+            "^\\s*# (The text or value for|The text or mode for|The numerical value for|The decimal value for"
+                    + "|Determines whether|Configuration section for)\\b.*");
+    private static final java.util.regex.Pattern QUOTED_VALUE_START = java.util.regex.Pattern.compile(
+            "^\\s*(?:-\\s+)?(?:[^#'\"\\s][^:]*:\\s+)?'(.*)$");
+
+    private void repairLeakedComments(File backupDirectory) {
+        for (String name : CONFIGURATION_RESOURCES) {
+            File file = new File(plugin.getDataFolder(), name);
+            if (!file.isFile()) {
+                continue;
+            }
+            try {
+                String raw = Files.readString(file.toPath(), StandardCharsets.UTF_8);
+                if (!raw.contains("# The text or")) {
+                    continue;
+                }
+                String newline = raw.contains("\r\n") ? "\r\n" : "\n";
+                List<String> lines = new ArrayList<>(Arrays.asList(raw.split("\r?\n", -1)));
+                List<String> repaired = repairLeakedCommentLines(lines);
+                if (repaired.equals(lines)) {
+                    continue;
+                }
+                if (!backupExistingFile(file, backupDirectory)) {
+                    plugin.getLogger().warning("Did not repair " + name + " because it could not be backed up first.");
+                    continue;
+                }
+                Files.writeString(file.toPath(), String.join(newline, repaired), StandardCharsets.UTF_8);
+                plugin.getLogger().info("Repaired " + name + ": removed config comments that had ended up inside messages"
+                        + " (for example the ban and mute screens). The old file is in config-backups.");
+            } catch (IOException exception) {
+                plugin.getLogger().log(Level.WARNING, "Could not check " + name + " for comments inside messages", exception);
+            }
+        }
+    }
+
+    static List<String> repairLeakedCommentLines(List<String> lines) {
+        List<String> out = new ArrayList<>(lines.size());
+        boolean inside = false;
+        boolean stripText = false;
+        for (String line : lines) {
+            String stripped = line.stripLeading();
+            if (inside) {
+                if (stripped.startsWith("#") && LEAKED_COMMENT.matcher(line).matches()) {
+                    java.util.regex.Matcher label = LEAKED_LABEL.matcher(line);
+                    if (label.matches() && !label.group(2).isBlank()) {
+                        String tail = label.group(2).stripTrailing();
+                        out.add(label.group(1) + tail);
+                        if (unescapedQuotes(tail) % 2 == 1) {
+                            inside = false;
+                        }
+                    } else if (line.stripTrailing().endsWith("Any string")) {
+                        // The generator wrapped this comment: its "text <label>" landed on the next line.
+                        stripText = true;
+                    }
+                    continue;
+                }
+                if (stripText && stripped.startsWith("text ")) {
+                    line = line.substring(0, line.length() - stripped.length()) + stripped.substring("text ".length());
+                    stripText = false;
+                }
+                out.add(line);
+                if (unescapedQuotes(line) % 2 == 1) {
+                    inside = false;
+                }
+                continue;
+            }
+            out.add(line);
+            if (stripped.startsWith("#")) {
+                continue;
+            }
+            java.util.regex.Matcher start = QUOTED_VALUE_START.matcher(line);
+            if (start.matches() && (line.contains(":") || stripped.startsWith("- '"))
+                    && unescapedQuotes(start.group(1)) % 2 == 0) {
+                inside = true;
+            }
+        }
+        return out;
+    }
+
+    private static int unescapedQuotes(String text) {
+        String body = text.replace("''", "");
+        int count = 0;
+        for (int i = 0; i < body.length(); i++) {
+            if (body.charAt(i) == '\'') {
+                count++;
+            }
+        }
+        return count;
+    }
+
     private void syncBundledConfigurations() {
         File backupDirectory = new File(
                 new File(plugin.getDataFolder(), "config-backups"),
                 LocalDateTime.now().format(BACKUP_TIMESTAMP_FORMAT)
         );
+
+        repairLeakedComments(backupDirectory);
 
         int created = 0;
         int updated = 0;
@@ -207,24 +306,17 @@ public class ConfigManager {
         migrateMaxBalance(backupDirectory);
     }
 
-    /** The two footer lines 3.0 shipped with: personal stats, then online count, ping, TPS and world. */
     static final String OLD_FOOTER_STATS_LINE =
             "  - '&a$ &f%money%  &8•  &d✦ &f%shards%  &8•  &c⚔ &f%kills%  &8•  &e⌚ &f%playtime%'";
     static final String OLD_FOOTER_SERVER_LINE =
             "  - '&7Online &f%online%&8/&7%max_players%  &8•  &7Ping %ping_colored%  &8•  &7TPS %tps_colored%  &8•  &7%world%'";
     static final String NEW_FOOTER_SERVER_LINE = "  - '&7Online &f%online%&8/&7%max_players%'";
 
-    /**
-     * 3.1 keeps the tab list clean: no money, statistics, ping or TPS. A config.yml whose footer still
-     * has the exact lines 3.0 shipped with gets the new lines (after a backup); a footer anyone has
-     * changed is left exactly as it is.
-     */
     private void migrateTablistFooter(File backupDirectory) {
         migrateConfigLines(backupDirectory, ConfigManager::migrateFooterLines, "the tab list footer",
                 "Simplified the default tab list footer in config.yml (no money, stats, ping or TPS).");
     }
 
-    /** The comment 4.0 shipped above ECONOMY.MAX-BALANCE, and the limit of 10 trillion it set by default. */
     static final List<String> OLD_MAX_BALANCE_COMMENT = List.of(
             "  # The highest balance a deposit can reach. A balance already above it is kept but cannot grow.",
             "  # Available options: Any number up to 35000000000000 (the largest amount the database stores with exact cents)");
@@ -234,18 +326,12 @@ public class ConfigManager {
             "  # cannot grow. Available options: 0, or any amount up to 92233720368547758 (the most a balance can hold)");
     static final String NEW_MAX_BALANCE_LINE = "  MAX-BALANCE: 0";
 
-    /**
-     * 4.1 has no balance limit unless one is set. A config.yml with the exact comment 4.0 shipped above
-     * ECONOMY.MAX-BALANCE gets the new comment, and the old default limit of 10 trillion becomes 0, no limit;
-     * a limit anyone chose themselves is kept.
-     */
     private void migrateMaxBalance(File backupDirectory) {
         migrateConfigLines(backupDirectory, ConfigManager::migrateMaxBalanceLines, "the balance limit",
                 "Updated ECONOMY.MAX-BALANCE in config.yml: there is no balance limit unless you set one"
                         + " (a limit you chose yourself is kept).");
     }
 
-    /** Pure part of {@link #migrateMaxBalance}: only the exact old default lines are touched. */
     static List<String> migrateMaxBalanceLines(List<String> lines) {
         int comment = Collections.indexOfSubList(lines, OLD_MAX_BALANCE_COMMENT);
         int value = comment + OLD_MAX_BALANCE_COMMENT.size();
@@ -262,7 +348,6 @@ public class ConfigManager {
         return updated;
     }
 
-    /** Rewrites config.yml with {@code migration} when it changes anything, after backing the file up. */
     private void migrateConfigLines(File backupDirectory, UnaryOperator<List<String>> migration, String subject,
                                     String done) {
         File file = new File(plugin.getDataFolder(), "config.yml");
@@ -287,7 +372,6 @@ public class ConfigManager {
         }
     }
 
-    /** Pure part of {@link #migrateTablistFooter}: only the exact old default lines are touched. */
     static List<String> migrateFooterLines(List<String> lines) {
         int stats = lines.indexOf(OLD_FOOTER_STATS_LINE);
         int server = lines.indexOf(OLD_FOOTER_SERVER_LINE);
@@ -1947,11 +2031,6 @@ public class ConfigManager {
         return false;
     }
 
-    /**
-     * Lets a server's own copy of a file read any key it lacks from the copy inside the jar. A
-     * dialog.yml written by an older version then still gets the screens added since, while every
-     * key the owner did write keeps its value. Defaults are only read, never saved into the file.
-     */
     private FileConfiguration withBundledDefaults(String name, FileConfiguration configuration) {
         if (configuration == null) {
             return null;
@@ -2162,16 +2241,14 @@ public class ConfigManager {
     public FileConfiguration getAnvilModeration() { return anvilModeration; }
     public FileConfiguration getEnchantments()  { return enchantments; }
     public FileConfiguration getFilter()        { return filter; }
-    /** Spooky Calendar, Trick or Treat and the Halloween ambience (3.0). */
     public FileConfiguration getHalloween()     { return halloween; }
-    /** The Advent Calendar (4.0). */
     public FileConfiguration getAdvent()        { return advent; }
-    /** Ranks (VIP, VIP+ ...) and what each one adds (4.0). */
     public FileConfiguration getPerks()         { return perks; }
-    /** Daily rewards, challenges, events, emotes and the other 3.0 extras. */
     public FileConfiguration getExtras()        { return extras; }
     public FileConfiguration getGuide()         { return guide; }
     public FileConfiguration getBorders()       { return borders; }
+    public FileConfiguration getWorlds()        { return worlds; }
+    public boolean saveWorlds() { return save("worlds.yml", worlds); }
 
     public FileConfiguration getLegacyMessages() { return messages; }
     public FileConfiguration getLegacyDeathMessages() { return deathMessages; }

@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.afk;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -14,7 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** {@code /afk} when there is more than one zone: one button per zone, click to go. */
 public class AfkZoneMenu extends BaseMenu {
 
     private static final int[] SLOTS = {13, 11, 15, 12, 14, 10, 16, 22, 20, 24, 21, 23, 19, 25};

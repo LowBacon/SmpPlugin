@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -16,11 +17,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.logging.Level;
 
-/**
- * Keeps one item from the configured rotation marked as the farming meta. The meta item keeps
- * its normal worth.yml price as a base and sells for a multiple of it until the rotation moves
- * on to the next item.
- */
 public class FarmingMetaManager {
 
     private final SmpPlugin plugin;
@@ -81,10 +77,6 @@ public class FarmingMetaManager {
         return configured;
     }
 
-    /**
-     * The factor to apply to a worth price. This runs for every item a player looks at or sells,
-     * so it answers with a plain field comparison before it reads any configuration.
-     */
     public double getMultiplierFor(Material material) {
         if (material == null || material != currentItem) {
             return 1.0D;
@@ -124,10 +116,6 @@ public class FarmingMetaManager {
         return NumberUtils.formatTimeLong(getRemainingSeconds());
     }
 
-    /**
-     * The rotation in configuration order, without duplicates and without items that have no
-     * price to multiply.
-     */
     public List<Material> getRotationItems() {
         List<Material> items = new ArrayList<>();
         WorthManager worthManager = plugin.getWorthManager();
@@ -169,10 +157,6 @@ public class FarmingMetaManager {
         return Material.getMaterial(name.toUpperCase(Locale.US).replace(' ', '_'));
     }
 
-    /**
-     * Fills a message with the meta item, what it is worth before and after the multiplier, and
-     * how long the rotation has left.
-     */
     public String formatMetaMessage(String messagePath) {
         WorthManager worthManager = plugin.getWorthManager();
         double baseWorth = worthManager.getBaseWorth(currentItem);

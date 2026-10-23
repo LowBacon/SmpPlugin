@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.afk;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -17,11 +18,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-/**
- * Reads and writes the {@code ZONES} section of afk.yml, and on first start brings over the AFK
- * setups of older versions (the AFK Lounge, /setafk points, the AFK location and AFK-bound cuboids)
- * so nothing an admin built is lost.
- */
 final class AfkZoneStore {
 
     private static final Pattern VALID_ID = Pattern.compile("^[a-z0-9_-]{1,32}$");
@@ -84,7 +80,6 @@ final class AfkZoneStore {
                 section.getInt("REWARD.EVERY-SECONDS", 60));
     }
 
-    /** Saves or replaces one zone. */
     boolean put(AfkZone zone) {
         FileConfiguration config = plugin.getConfigManager().getAfk();
         write(config, zone);
@@ -190,7 +185,6 @@ final class AfkZoneStore {
         }
     }
 
-    /** /setafk points and the single AFK location become teleport-only zones. */
     private void importPoints(List<AfkZone> imported) {
         FileConfiguration config = plugin.getConfigManager().getConfig();
         Map<String, String> points = new LinkedHashMap<>();

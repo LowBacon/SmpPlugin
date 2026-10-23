@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -21,16 +22,10 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Preset offenses for {@code /offend}, read from offenses.yml. Each offense has a punishment type
- * and a ladder of durations; a player's earlier punishments for the same offense pick the rung.
- */
 public class OffenseManager {
 
-    /** "mo" is listed before the single letters so "1mo" is a month, not one minute. */
     private static final Pattern DURATION_PATTERN = Pattern.compile("(\\d+)\\s*(mo|[smhdwy])", Pattern.CASE_INSENSITIVE);
 
-    /** How far back the escalation count looks. Older records past this still count as one tier. */
     private static final int HISTORY_SCAN_LIMIT = 500;
 
     public record OffenseRule(
@@ -43,7 +38,6 @@ public class OffenseManager {
             durations = durations == null ? List.of() : List.copyOf(durations);
         }
 
-        /** The duration for a player with {@code tierIndex} earlier offenses; the last rung repeats. */
         public String getDurationForTier(int tierIndex) {
             if (durations.isEmpty()) {
                 return "perm";
@@ -52,7 +46,6 @@ public class OffenseManager {
             return durations.get(index);
         }
 
-        /** The text stored as the punishment reason, which also marks the record as this offense. */
         public String reasonText() {
             return name + " (" + key + ")";
         }
@@ -118,10 +111,6 @@ public class OffenseManager {
         return offenses;
     }
 
-    /**
-     * Counts the player's earlier punishments for this offense, so each offense climbs its own
-     * ladder. Punishments staff removed (a won appeal, a mistake) do not count.
-     */
     public int countPreviousOffenses(UUID targetUuid, OffenseRule rule) {
         if (targetUuid == null || rule == null) {
             return 0;
@@ -147,11 +136,6 @@ public class OffenseManager {
         return count;
     }
 
-    /**
-     * Parses a duration such as "30s", "15m", "2h", "5d", "1w", "1mo", "1y" or a combination like
-     * "1d12h". Returns {@code null} for permanent ("perm", "permanent" or anything unreadable) and
-     * {@code 0} for an instant warning ("0" or "0s"). A bare number is read as days.
-     */
     public static Long parseDurationToMillis(String input) {
         if (input == null || input.isBlank()) {
             return null;

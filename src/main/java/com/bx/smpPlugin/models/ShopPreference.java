@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.models;
 
 import java.util.HashMap;
@@ -47,4 +48,3 @@ public record ShopPreference(
         return new ShopPreference(playerId, favorites, updated);
     }
 }
-

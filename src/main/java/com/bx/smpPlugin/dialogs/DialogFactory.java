@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.dialogs;
 
 import io.papermc.paper.dialog.Dialog;
@@ -19,19 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Assembles Adventure dialogs out of {@link DialogConfig} specs.
- *
- * <p>This is the only place that decides how a configured button becomes an action. Both
- * {@code ACTION} and {@code COMMAND} end up as a namespaced custom click that
- * {@link DialogListener} routes back to {@link DialogManager}: routing commands through the
- * plugin as well means the dialog is always closed before the command runs, so a command that
- * opens nothing does not leave the menu hanging over the world. {@code ACTION} wins when a
- * button carries both.
- */
 public final class DialogFactory {
 
-    /** Mutable accumulator so screens can build a dialog without threading a dozen arguments. */
     public static final class Screen {
 
         private final Player viewer;
@@ -89,15 +79,10 @@ public final class DialogFactory {
             return this;
         }
 
-        /** Adds a paragraph of text. Blank input is skipped so an unset DESCRIPTION adds nothing. */
         public Screen text(String raw) {
             return text(raw, 0);
         }
 
-        /**
-         * Adds a paragraph of text at an explicit GUI width so wrapping matches a reference layout.
-         * {@code width <= 0} keeps Paper's default (200).
-         */
         public Screen text(String raw, int width) {
             if (raw != null && !raw.isBlank()) {
                 for (Component line : DialogText.lines(raw, viewer)) {
@@ -116,7 +101,6 @@ public final class DialogFactory {
             return this;
         }
 
-        /** Adds the icon shown above the dialog contents. A blank or unknown material is skipped. */
         public Screen item(String materialName) {
             Material material = parseMaterial(materialName);
             if (material != null) {
@@ -126,10 +110,15 @@ public final class DialogFactory {
         }
 
         public Screen item(ItemStack stack) {
+            return item(stack, false);
+        }
+
+        // With the tooltip the player can hover the item and read its name, enchantments and lore.
+        public Screen item(ItemStack stack, boolean tooltip) {
             if (stack != null && !stack.getType().isAir()) {
                 body.add(DialogBody.item(stack)
-                        .showDecorations(false)
-                        .showTooltip(false)
+                        .showDecorations(tooltip)
+                        .showTooltip(tooltip)
                         .build());
             }
             return this;
@@ -192,7 +181,6 @@ public final class DialogFactory {
             return this;
         }
 
-        /** Adds a button straight from its parts, for rows the config cannot describe. */
         public Screen button(String label, String tooltip, int width, String action) {
             return button(new DialogConfig.ButtonSpec(label, tooltip, DialogConfig.clampWidth(width), action, null));
         }
@@ -216,13 +204,11 @@ public final class DialogFactory {
             return this;
         }
 
-        /** Adds a button that runs a command as the player. */
         public Screen commandButton(String label, String tooltip, int width, String command) {
             return button(new DialogConfig.ButtonSpec(
                     label, tooltip, DialogConfig.clampWidth(width), null, command));
         }
 
-        /** Adds a button with no action at all, used for locked or informational slots. */
         public Screen inertButton(String label, String tooltip, int width) {
             if (label == null) {
                 return this;
@@ -234,7 +220,6 @@ public final class DialogFactory {
             return this;
         }
 
-        /** The button pinned below the grid, rendered full width by the client. */
         public Screen exit(String label, String action, int width) {
             if (label == null || label.isBlank()) {
                 return this;
@@ -275,10 +260,6 @@ public final class DialogFactory {
             return Dialog.create(factory -> factory.empty().base(builtBase).type(builtType));
         }
 
-        /**
-         * The external title is what the client shows when the dialog is reached from a list, and
-         * it is optional, so it is only set when the config actually gave one.
-         */
         private DialogBase base() {
             DialogBase.Builder builder = DialogBase.builder(title)
                     .canCloseWithEscape(canCloseWithEscape)
@@ -292,7 +273,6 @@ public final class DialogFactory {
             return builder.build();
         }
 
-        /** Builds a yes/no dialog instead of a button grid. */
         public Dialog buildConfirmation(DialogConfig.ButtonSpec yes, DialogConfig.ButtonSpec no) {
             DialogBase base = base();
             ActionButton yesButton = toButton(yes, viewer, commands);
@@ -306,7 +286,6 @@ public final class DialogFactory {
     private DialogFactory() {
     }
 
-    /** Hands a command to the session and gets back the id a button can carry. */
     @FunctionalInterface
     public interface CommandRegistrar {
         String register(String command);
@@ -316,7 +295,6 @@ public final class DialogFactory {
         return new Screen(viewer, commands);
     }
 
-    /** Without a registrar, command buttons fall back to a plain client-side run-command. */
     public static Screen screen(Player viewer) {
         return new Screen(viewer, null);
     }
@@ -343,15 +321,6 @@ public final class DialogFactory {
         return builder.build();
     }
 
-    /**
-     * Turns a configured {@code COMMAND} into an action.
-     *
-     * <p>A command template is a macro: the server refuses to build one that has no
-     * {@code $(input)} variable in it, which is every plain command an operator is likely to
-     * write. So a template is only used when the command actually substitutes an input.
-     * Everything else is registered with the player's session and dispatched by the plugin,
-     * which closes the dialog first.
-     */
     private static DialogAction commandAction(String configured, CommandRegistrar commands) {
         String command = configured.trim();
         if (command.startsWith("/")) {
@@ -370,7 +339,6 @@ public final class DialogFactory {
         return DialogAction.staticAction(ClickEvent.runCommand('/' + command));
     }
 
-    /** True when the command references a dialog input, e.g. {@code msg $(player_name) hi}. */
     static boolean usesInputSubstitution(String command) {
         if (command == null) {
             return false;
@@ -379,7 +347,6 @@ public final class DialogFactory {
         return open >= 0 && command.indexOf(')', open + 2) > open + 2;
     }
 
-    /** A tooltip is optional, so an unset one is left off rather than sent as an empty line. */
     private static void applyTooltip(ActionButton.Builder builder, String tooltip, Player viewer) {
         Component rendered = DialogText.tooltip(tooltip, viewer);
         if (rendered != null) {
@@ -405,7 +372,6 @@ public final class DialogFactory {
         return Material.matchMaterial(name.trim().toUpperCase(java.util.Locale.ROOT));
     }
 
-    /** Shorthand used by screens that only need one token pair. */
     public static Map<String, String> tokens(String... pairs) {
         return DialogConfig.tokens(pairs);
     }

@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.commands;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -17,10 +18,6 @@ import org.bukkit.entity.Player;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * /spawn: back to spawn (with the usual teleport delay), or the spawn menu when there are several
- * spawn areas. Staff can send someone else with /spawn &lt;player&gt;, which teleports at once.
- */
 public class SpawnCommand implements CommandExecutor, TabCompleter {
 
     public static final String OTHERS_PERMISSION = "smpplugin.staff.spawn.others";
@@ -85,7 +82,6 @@ public class SpawnCommand implements CommandExecutor, TabCompleter {
         }
     }
 
-    /** Explains why there is no spawn: never set, or its world is not loaded. */
     private void notSet(CommandSender sender) {
         String raw = plugin.getConfigManager().getConfig().getString("LOCATIONS.SPAWN-LOCATION", "");
         if (raw != null && !raw.isBlank()) {

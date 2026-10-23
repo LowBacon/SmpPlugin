@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.commands;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -94,8 +95,6 @@ public class AddKillsCommand implements CommandExecutor, TabCompleter {
         return matches;
     }
 
-    /** Online players are resolved from the live cache; offline players are looked up locally
-     *  (never via Bukkit's blocking, network-hitting getOfflinePlayer(String)). */
     private PlayerData resolveData(Player targetPlayer, String rawName) {
         if (targetPlayer != null) {
             return plugin.getPlayerDataManager().get(targetPlayer);

@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.gambling;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -22,15 +23,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
-/**
- * Money that has left a player's balance but not been settled yet: a dice roll that is still spinning, or a
- * roulette entry waiting for the draw. Holds are rows of {@code economy_holds}, opened in the <em>same</em>
- * database transaction that takes the bet from the balance and closed in the same transaction that pays the
- * result. So after a crash a hold exists exactly when its bet was taken and not yet paid, and {@link #recover()}
- * gives it back at the next start. A bet can neither vanish nor be paid twice.
- *
- * <p>Holds left in {@code data/gambling-escrow.yml} by SmpPlugin 3.1 are refunded once and the file is removed.</p>
- */
 final class GamblingEscrow {
 
     record Hold(String id, UUID player, String name, long cents, String game) {
@@ -38,7 +30,6 @@ final class GamblingEscrow {
 
     private final SmpPlugin plugin;
     private final File legacyFile;
-    /** The open holds of this session, for status and shutdown checks; the database is the record. */
     private final Map<String, Hold> open = new ConcurrentHashMap<>();
 
     GamblingEscrow(SmpPlugin plugin) {
@@ -46,14 +37,12 @@ final class GamblingEscrow {
         this.legacyFile = new File(new File(plugin.getDataFolder(), "data"), "gambling-escrow.yml");
     }
 
-    /** The step that opens {@code hold}, to run in the transaction that takes the bet. */
     EconomyContext.SqlStep openStep(Hold hold) {
         long now = System.currentTimeMillis();
         return connection -> EconomyStore.insertHold(connection,
                 new EconomyStore.Hold(hold.id(), hold.player(), hold.name(), hold.cents(), hold.game(), now));
     }
 
-    /** The step that closes holds, to run in the transaction that pays them out. */
     EconomyContext.SqlStep closeStep(Collection<String> ids) {
         List<String> copy = List.copyOf(ids);
         return connection -> {
@@ -63,26 +52,19 @@ final class GamblingEscrow {
         };
     }
 
-    /** Records that the transaction that took the bet committed (or is queued to). */
     void opened(Hold hold) {
         open.put(hold.id(), hold);
     }
 
-    /** Records that the transaction that paid the holds committed (or is queued to). */
     void closed(Collection<String> ids) {
         ids.forEach(open::remove);
     }
 
-    /** Closes holds whose money stays with the house (a lost bet). */
     void closeWithoutPayment(Collection<String> ids) {
         closed(ids);
         runInBackground(closeStep(ids), "close " + ids);
     }
 
-    /**
-     * A win the economy refused to pay (e.g. the balance limit): the winner's hold keeps the whole payout so it is
-     * paid at the next start, and the other holds of the round close, in one transaction.
-     */
     void keepAsPayout(String winnerId, long payoutCents, Collection<String> otherIds) {
         Hold winner = open.get(winnerId);
         if (winner != null) {
@@ -100,10 +82,6 @@ final class GamblingEscrow {
         return open.size();
     }
 
-    /**
-     * Gives back every hold a crash left behind, each in one transaction with its refund. Runs once at start-up,
-     * before any game opens. A hold the economy refuses to pay stays for the next start.
-     */
     void recover() {
         recoverLegacyFile();
         if (plugin.getEconomyManager() == null || !plugin.getEconomyManager().isStorageReady()) {
@@ -143,11 +121,6 @@ final class GamblingEscrow {
         }
     }
 
-    /**
-     * Refunds what a 3.1 escrow file still holds. Paid entries are removed from the file at once, so a refund that
-     * fails and is retried at the next start never pays the others twice; an empty file is renamed to
-     * {@code .recovered}.
-     */
     private void recoverLegacyFile() {
         if (!legacyFile.isFile()) {
             return;

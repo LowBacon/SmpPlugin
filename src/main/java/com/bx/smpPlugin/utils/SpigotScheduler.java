@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.utils;
 
 import org.bukkit.Bukkit;
@@ -143,11 +144,6 @@ public final class SpigotScheduler {
         return runGlobal(runnable);
     }
 
-
-    /**
-     * Runs a command as the console. Called from the main thread it runs straight away;
-     * from any other thread it is handed to the main thread.
-     */
     public boolean dispatchConsoleCommand(String command) {
         if (command == null || command.isBlank()) {
             return false;
@@ -165,21 +161,20 @@ public final class SpigotScheduler {
         return true;
     }
 
-    /** Runs a command as the given player, on the main thread. */
     public boolean dispatchPlayerCommand(Player player, String rawCommand) {
         if (player == null || rawCommand == null || rawCommand.isBlank()) {
             return false;
         }
         String command = renamedCommand(rawCommand);
         if (Bukkit.isPrimaryThread()) {
-            return player.performCommand(command);
+            return performAsTyped(player, command);
         }
         runEntity(player, () -> {
             if (!player.isOnline()) {
                 return;
             }
             try {
-                player.performCommand(command);
+                performAsTyped(player, command);
             } catch (Exception exception) {
                 plugin.getLogger().log(Level.WARNING, "Failed to dispatch command '" + command
                         + "' as " + player.getName(), exception);
@@ -187,10 +182,19 @@ public final class SpigotScheduler {
         });
         return true;
     }
-    /**
-     * Commands renamed in 3.0, so menu buttons in config files written for 2.x keep working:
-     * /auctionhouse is now only /ah.
-     */
+    // Menu and dialog buttons run their command as if the player typed it: the lobby command
+    // allowlist, the combat block and command spy all see it. performCommand alone skipped them.
+    private boolean performAsTyped(Player player, String command) {
+        org.bukkit.event.player.PlayerCommandPreprocessEvent typed =
+                new org.bukkit.event.player.PlayerCommandPreprocessEvent(player, "/" + command);
+        Bukkit.getPluginManager().callEvent(typed);
+        if (typed.isCancelled()) {
+            return false;
+        }
+        String message = typed.getMessage();
+        return player.performCommand(message.startsWith("/") ? message.substring(1) : message);
+    }
+
     public static String renamedCommand(String command) {
         String trimmed = command.trim();
         String body = trimmed.startsWith("/") ? trimmed.substring(1) : trimmed;

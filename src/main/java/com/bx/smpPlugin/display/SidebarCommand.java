@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.display;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -16,21 +17,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * /sidebar: players show or hide their own scoreboard; staff edit its text without touching files.
- *
- * <pre>
- * /sidebar [toggle]              show or hide your sidebar
- * /sidebar lines                 every line with its number, and buttons to edit or remove it
- * /sidebar add [text]            add a line at the bottom (no text = an empty spacer line)
- * /sidebar set &lt;n&gt; &lt;text&gt;        replace line n
- * /sidebar insert &lt;n&gt; [text]     put a new line before line n
- * /sidebar remove &lt;n&gt;            remove line n
- * /sidebar title &lt;text&gt;          one fixed title (replaces the animated title list)
- * /sidebar reload                re-read scoreboard.yml
- * </pre>
- * Changes are saved to scoreboard.yml straight away and show on every sidebar within a second.
- */
 public final class SidebarCommand implements CommandExecutor, TabCompleter {
 
     public static final String TOGGLE_PERMISSION = "smpplugin.sidebar";
@@ -177,7 +163,6 @@ public final class SidebarCommand implements CommandExecutor, TabCompleter {
         Text.raw(sender, Text.prefix() + done);
     }
 
-    /** Line number (1-based) from args[1], as a 0-based index below {@code limit}, or -1. */
     private static int number(String[] args, int limit) {
         if (args.length < 2) {
             return -1;

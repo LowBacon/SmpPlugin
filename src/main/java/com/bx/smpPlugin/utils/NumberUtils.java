@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.utils;
 
 import java.text.DecimalFormat;
@@ -23,12 +24,10 @@ public class NumberUtils {
         SHORT_FMT = new DecimalFormat("#,##0.##", symbols);
     }
 
-    /** Format with commas: 1234567 â†’ 1,234,567 */
     public static String format(double number) {
         return COMMA_FMT.format(number);
     }
 
-    /** Format with suffix: 1500 -> 1.5K */
     public static String formatNice(double number) {
         if (!Double.isFinite(number)) {
             return "0";
@@ -55,7 +54,6 @@ public class NumberUtils {
         return sign + SHORT_FMT.format(absolute) + SHORT_SUFFIXES[suffixIndex];
     }
 
-    /** Parse a number string with optional K/M/B/T suffix */
     public static double parse(String input) {
         if (input == null || input.isBlank()) throw new NumberFormatException("Empty input");
         String clean = input.trim().replace(",", "").replace("_", "").toUpperCase(Locale.US);
@@ -65,7 +63,13 @@ public class NumberUtils {
         else if (clean.endsWith("B")) { multiplier = 1_000_000_000; clean = clean.substring(0, clean.length() - 1); }
         else if (clean.endsWith("M")) { multiplier = 1_000_000; clean = clean.substring(0, clean.length() - 1); }
         else if (clean.endsWith("K")) { multiplier = 1_000;    clean = clean.substring(0, clean.length() - 1); }
-        return Double.parseDouble(clean) * multiplier;
+        double value = Double.parseDouble(clean) * multiplier;
+        // "NaN", "Infinity" and overflowing input parse fine in Java but compare false against
+        // every bound ("amount < 1" lets NaN through), so they are refused here for every caller.
+        if (!Double.isFinite(value)) {
+            throw new NumberFormatException("Not a finite number: " + input);
+        }
+        return value;
     }
 
     public static boolean isValidPositiveAmount(String input) {
@@ -80,7 +84,6 @@ public class NumberUtils {
         durationFormatter = formatter;
     }
 
-    /** Format seconds as readable time: 3665 â†’ "1h 1m" */
     public static String formatTime(long totalSeconds) {
         DurationFormatter formatter = durationFormatter;
         if (formatter != null) {
@@ -94,7 +97,6 @@ public class NumberUtils {
         return s + "s";
     }
 
-    /** Format seconds with days: 90061 â†’ "1d 1h 1m" */
     public static String formatTimeLong(long totalSeconds) {
         DurationFormatter formatter = durationFormatter;
         if (formatter != null) {
@@ -107,7 +109,6 @@ public class NumberUtils {
         return formatTime(totalSeconds);
     }
 
-    /** Format remaining seconds for countdown display */
     public static String formatCountdown(long totalSeconds) {
         DurationFormatter formatter = durationFormatter;
         if (formatter != null) {

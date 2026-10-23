@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.dialogs.screens;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -12,23 +13,11 @@ import org.bukkit.entity.Player;
 
 import java.util.UUID;
 
-/**
- * Small player heads drawn inside dialog text and buttons.
- *
- * <p>The head carries the skin texture itself and no uuid or name. A head that only names a
- * player is drawn by the client as a static default skin (Steve, Alex, Sunny...), and a dialog
- * never redraws, so the wrong face would stay. Sending the texture avoids that.
- *
- * <p>Only skins the server already knows are used: the player's own profile when they are online,
- * or what the tab list cached. Nothing here waits on the network, so a list of heads costs a few
- * map lookups. A player with no known skin is drawn without a head.
- */
 final class DialogPlayerHeads {
 
     private DialogPlayerHeads() {
     }
 
-    /** The head for this player, or {@link Component#empty()} when no skin is known. */
     static Component component(SmpPlugin plugin, UUID uuid) {
         String texture = textureOf(plugin, uuid);
         if (texture == null) {
@@ -45,7 +34,6 @@ final class DialogPlayerHeads {
         }
     }
 
-    /** The head followed by a space and the label, or just the label when there is no head. */
     static Component withLabel(SmpPlugin plugin, UUID uuid, Component label) {
         Component head = component(plugin, uuid);
         return Component.empty().equals(head)

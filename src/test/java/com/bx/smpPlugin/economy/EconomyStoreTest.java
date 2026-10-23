@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.economy;
 
 import org.junit.jupiter.api.Test;
@@ -181,10 +182,6 @@ class EconomyStoreTest {
         }
     }
 
-    /**
-     * Many writers with their own connections (like several servers sharing one database) add to one balance with
-     * read / compare-and-set / retry. Not a single change may be lost or applied twice.
-     */
     @Test
     void concurrentCompareAndSetLosesNoUpdates(@TempDir Path folder) throws Exception {
         String url = "jdbc:sqlite:" + folder.resolve("economy.db");

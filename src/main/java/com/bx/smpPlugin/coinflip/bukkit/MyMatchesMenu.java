@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip.bukkit;
 
 import com.bx.smpPlugin.coinflip.CoinFlipMatch;
@@ -9,7 +10,6 @@ import org.bukkit.entity.Player;
 import java.util.List;
 import java.util.UUID;
 
-/** The viewer's open matches and the challenges waiting for them, with cancel, accept and decline actions. */
 public final class MyMatchesMenu extends CoinFlipMenu {
 
     public MyMatchesMenu(CoinFlipModule module, UUID viewer) {

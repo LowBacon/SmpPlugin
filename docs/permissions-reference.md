@@ -164,8 +164,8 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.staff.fakeplayer.alert` | Receive fake-player alerts. | nobody | Declared in 2.0; previously undeclared. |
 | `smpplugin.staff.spawnstash` | Spawn and manage bait stashes with /spawnstash. | nobody | Declared in 2.0; previously undeclared. |
 | `smpplugin.staff.spawnstash.alert` | Receive alerts when a bait stash is found. | nobody | Declared in 2.0; previously undeclared. |
-| `smpplugin.security.alerts` | Receive anti-cheat alerts and toggle them with /anticheat alerts. | nobody | New in 2.0. |
-| `smpplugin.security.inspect` | View anti-cheat status, check settings, flag history and evidence. | nobody | New in 2.0. |
+| `smpplugin.security.alerts` | Receive TitanGuard anti-cheat alerts (grants titanguard.alerts; /tg alerts toggles them). | nobody | New in 2.0. Since 4.2 the anti-cheat is TitanGuard. Grants: `titanguard.alerts` |
+| `smpplugin.security.inspect` | View TitanGuard violation levels and evidence (grants titanguard.evidence). | nobody | New in 2.0. Since 4.2 the anti-cheat is TitanGuard. Grants: `titanguard.evidence` |
 | `smpplugin.coinflip.alerts` | Receive CoinFlip storage and settlement alerts. | nobody | New in 2.0. |
 | `smpplugin.coinflip.inspect` | /coinflipadmin status, inspect, audit, reconcile report, debug and any player's statistics. | nobody | New in 2.0. |
 | `smpplugin.staff.poll` | Start and end polls with /poll. | nobody | New in 3.0. |
@@ -232,7 +232,7 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.admin.safety.give` | Give the safety book to a player. | nobody | Renamed from safety.add in 2.0. |
 | `smpplugin.admin.friends` | Use administrative /friends subcommands. | nobody | Renamed from donutfriends.admin in 2.0. |
 | `smpplugin.hide.admin` | Manage other players' hide and disguise state. | nobody | Declared in 2.0; previously undeclared. |
-| `smpplugin.security.manage` | Grant temporary anti-cheat exemptions, reset violation levels and reload anticheat.yml. | nobody | New in 2.0. |
+| `smpplugin.security.manage` | Manage TitanGuard: exemptions, resets, reviews and reload (grants titanguard.admin). | nobody | New in 2.0. Since 4.2 the anti-cheat is TitanGuard. Grants: `titanguard.admin` |
 | `smpplugin.coinflip.admin.cancel` | Cancel and refund a waiting CoinFlip match (a reason is required and audited). | nobody | New in 2.0. |
 | `smpplugin.coinflip.admin.recover` | Retry stuck CoinFlip payouts and reconcile held matches from the journal. | nobody | New in 2.0. |
 | `smpplugin.coinflip.admin.reload` | Reload coinflip.yml and coinflip-messages.yml and refresh leaderboards. | nobody | New in 2.0. |
@@ -259,6 +259,7 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.admin.advent` | Edit Advent Calendar gifts and use /advent give, reset, test and stats. | nobody | New in 4.0. |
 | `smpplugin.admin.perks` | See which rank an online player gets with /perks check. | nobody | New in 4.0. |
 | `smpplugin.admin.events` | Switch seasonal events on, off or back to their dates with /events. | nobody | New in 4.0. |
+| `smpplugin.admin.world` | Manage the lobby, spawn and FFA worlds with /smp world (status, info, setspawn, tp, reload). | nobody | New in 4.2. |
 
 ## Operational bypasses (default: nobody; ops via smpplugin.admin)
 
@@ -269,6 +270,8 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.afk.kickbypass` | Never get kicked for being AFK (afk.yml IDLE-ACTIONS.KICK-SECONDS). | nobody | New in 2.0.0-alpha.5. |
 | `smpplugin.admin.maintenance.bypass` | Join and stay on the server during maintenance. | nobody | Declared in 2.0; previously undeclared. |
 | `smpplugin.bypass.border` | Walk through the spawn and lobby borders (staff building or moderating). | nobody | New in 3.1. |
+| `smpplugin.world.bypass.commands` | Run any command in a world with a command allowlist (the lobby). | nobody | New in 4.2. |
+| `smpplugin.world.bypass.build` | Build, open containers and leave by pearl or portal in the protected parts of the lobby, spawn and FFA worlds. | nobody | New in 4.2. |
 
 ## Security and privacy bypasses (default: nobody; never bundled)
 
@@ -288,10 +291,10 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.preventdrop.bypass` | Drop items where item dropping is blocked. | nobody | Declared in 2.0; previously undeclared. |
 | `smpplugin.staff.fakeplayer.bypass` | Not affected by fake-player restrictions. | nobody | Declared in 2.0; previously undeclared. |
 | `smpplugin.staff.spawnstash.bypass` | Do not trigger bait-stash alerts. | nobody | Declared in 2.0; previously undeclared. |
-| `smpplugin.bypass.anticheat.movement` | Skip anti-cheat movement checks (fly, speed, timer, no-fall, step, water walk, boat fly). Use is logged once per session. | nobody | New in 2.0. Must be granted as the exact node; staff mode does not grant it. |
-| `smpplugin.bypass.anticheat.combat` | Skip anti-cheat combat checks (reach, wall hit, kill aura, autoclicker, anti-knockback, criticals). Use is logged. | nobody | New in 2.0. Must be granted as the exact node. |
-| `smpplugin.bypass.anticheat.world` | Skip anti-cheat block checks (fast break, nuker, fast place, block reach, scaffold, through-wall, x-ray). Use is logged. | nobody | New in 2.0. Must be granted as the exact node. |
-| `smpplugin.bypass.anticheat.player` | Skip anti-cheat inventory, auto-totem and cheat-client checks. Use is logged. | nobody | New in 2.0. Must be granted as the exact node. |
+| `smpplugin.bypass.anticheat.movement` | Skip TitanGuard movement checks (grants titanguard.bypass.movement). | nobody | New in 2.0. Must be granted as the exact node; staff mode does not grant it. Grants: `titanguard.bypass.movement` |
+| `smpplugin.bypass.anticheat.combat` | Skip TitanGuard combat checks (grants titanguard.bypass.combat). | nobody | New in 2.0. Must be granted as the exact node. Grants: `titanguard.bypass.combat` |
+| `smpplugin.bypass.anticheat.world` | Skip TitanGuard block reach, nuker and x-ray checks (grants titanguard.bypass.world and .xray). | nobody | New in 2.0. Must be granted as the exact node. Grants: `titanguard.bypass.world`, `titanguard.bypass.xray` |
+| `smpplugin.world.seeall` | See players in every world, including the lobby, whatever the world's visibility rules. | nobody | New in 4.2. Granted one by one (not in any role or to operators), so the lobby really is separate for everyone else. |
 
 ## Destructive actions (default: nobody; never bundled)
 
@@ -319,7 +322,7 @@ including destructive actions and bypasses. Only use one when you mean that.
 
 | Node | Allows | Default | Notes |
 |---|---|---|---|
-| `smpplugin.admin` | Default-op administrator bundle: staff tools, administration and operational bypasses. Excludes destructive actions and security bypasses. | ops | In 2.0 this no longer includes destructive actions or security bypasses. Contains 143 nodes: every node in the staff, administration and operational-bypass tables. |
+| `smpplugin.admin` | Default-op administrator bundle: staff tools, administration and operational bypasses. Excludes destructive actions and security bypasses. | ops | In 2.0 this no longer includes destructive actions or security bypasses. Contains 146 nodes: every node in the staff, administration and operational-bypass tables. |
 | `smpplugin.role.helper` | Helper role: staff chat, reports, warn, kick, temp-mute, /whois and events. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 14 nodes: every node in the staff, administration and operational-bypass tables. |
 | `smpplugin.role.moderator` | Moderator role: everything a helper has, plus staff mode, vanish, freeze, bans, mutes, invsee and spy. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 31 nodes: every node in the staff, administration and operational-bypass tables. |
 | `smpplugin.role.admin` | Admin role: everything a moderator has plus every tool in smpplugin.admin (no destructive actions). | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 2 nodes: every node in the staff, administration and operational-bypass tables. |

@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.engagement;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -40,12 +41,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * /challenges: a few goals a day, the same for everyone (picked from the pool with the date as
- * the seed). Progress is the difference between a player's stats now and when they first played
- * that day, so nothing extra is counted per block or per kill. A short timer pays out finished
- * goals while players play.
- */
 public final class Challenges implements CommandExecutor {
 
     public static final String PERMISSION = "smpplugin.challenges";
@@ -77,7 +72,6 @@ public final class Challenges implements CommandExecutor {
     public record Challenge(String key, String name, Material icon, Type type, long goal, Reward reward) {
     }
 
-    /** One player's day: the stat values when the day started and which goals are paid out. */
     record DayState(long day, Map<Type, Long> baseline, Set<String> done, boolean bonusPaid) {
 
         static DayState parse(String stored) {
@@ -146,7 +140,6 @@ public final class Challenges implements CommandExecutor {
         return ChronoUnit.SECONDS.between(now, now.toLocalDate().plusDays(1).atStartOfDay(zone()));
     }
 
-    /** Every challenge in the pool, in a stable order. */
     List<Challenge> pool() {
         List<Challenge> out = new ArrayList<>();
         ConfigurationSection section = config().getConfigurationSection("CHALLENGES.POOL");
@@ -167,7 +160,6 @@ public final class Challenges implements CommandExecutor {
         return out;
     }
 
-    /** Today's challenges: the same for everyone, reshuffled every day. */
     public List<Challenge> todays() {
         return pick(pool(), today(), Math.max(1, config().getInt("CHALLENGES.PER-DAY", 3)));
     }
@@ -189,7 +181,6 @@ public final class Challenges implements CommandExecutor {
         };
     }
 
-    /** Today's state for an online player, starting the day if needed. Null when data is not loaded. */
     DayState stateOf(Player player) {
         UUID uuid = player.getUniqueId();
         PlayerData data = plugin.getPlayerDataManager().get(player);
@@ -209,7 +200,6 @@ public final class Challenges implements CommandExecutor {
         return state;
     }
 
-    /** How many of today's challenges an online player has finished, for placeholders. */
     public int doneToday(Player player) {
         DayState state = stateOf(player);
         return state == null ? 0 : (int) todays().stream().filter(c -> state.done().contains(c.key())).count();
@@ -228,7 +218,6 @@ public final class Challenges implements CommandExecutor {
         return Math.max(0L, metric(data, challenge.type()) - start);
     }
 
-    /** Pays out finished challenges. Called by a timer and when the menu opens. */
     public void check(Player player) {
         if (!plugin.getFeatureManager().isEnabled(FeatureManager.Feature.CHALLENGES) || !PermissionUtils.has(player, PERMISSION)) {
             return;
@@ -266,7 +255,6 @@ public final class Challenges implements CommandExecutor {
         }
     }
 
-    /** Runs the payout check for everyone online, each on their own thread. */
     public void checkAll() {
         for (Player player : Bukkit.getOnlinePlayers()) {
             plugin.getSpigotScheduler().runEntity(player, () -> {

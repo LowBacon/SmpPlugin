@@ -1,13 +1,8 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.tasks;
 
 import com.bx.smpPlugin.SmpPlugin;
 
-/**
- * Saves changed player rows every DATABASE.AUTOSAVE-SECONDS (60 by default). Balances are written as they change
- * (see EconomyManager); this covers shards, statistics and settings. With the MongoDB mirror, the local copy is
- * uploaded every DATABASE.MONGODB.SYNC-INTERVAL-SECONDS. Once a day old ledger rows are pruned when
- * ECONOMY.LEDGER.RETENTION-DAYS is set.
- */
 public class AutoSaveTask implements Runnable {
 
     static final int DEFAULT_SECONDS = 60;

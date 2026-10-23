@@ -1,11 +1,8 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.tasks;
 
 import com.bx.smpPlugin.SmpPlugin;
 
-/**
- * Checks every 30 seconds whether the Billford trade rotation timer has
- * expired and, if so, advances to the next trade.
- */
 public class BillfordTask implements Runnable {
 
     private final SmpPlugin plugin;

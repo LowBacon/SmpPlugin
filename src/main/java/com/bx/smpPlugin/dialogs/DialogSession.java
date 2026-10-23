@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.dialogs;
 
 import java.util.ArrayDeque;
@@ -8,17 +9,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * The scratch state a player accumulates while walking through dialogs: who they picked, what
- * they typed, which filter is active.
- *
- * <p>None of this is worth persisting — it is rebuilt the moment the player opens a screen again
- * — so it lives in memory and is dropped on quit. The pay and stats shortlists are the one part
- * players notice, and they are capped so a session cannot grow without bound.
- */
 public final class DialogSession {
 
-    /** How the friends list is filtered. */
     public enum FriendFilter {
         ALL, FRIENDS, FOLLOWING, FOLLOWERS;
 
@@ -27,7 +19,6 @@ public final class DialogSession {
         }
     }
 
-    /** A remembered player, kept by uuid so a rename does not orphan the entry. */
     public record Shortcut(UUID uuid, String name) {
     }
 
@@ -126,10 +117,6 @@ public final class DialogSession {
         this.friendSearch = friendSearch == null || friendSearch.isBlank() ? null : friendSearch.trim();
     }
 
-    /**
-     * Action id to reopen when Pay / Stats / Teleport was launched from another screen
-     * (Friends details). Null means each of those screens uses its own list as Back.
-     */
     public String overlayReturnAction() {
         return overlayReturnAction;
     }
@@ -205,14 +192,6 @@ public final class DialogSession {
         this.searchResults = searchResults == null ? List.of() : List.copyOf(searchResults);
     }
 
-    /**
-     * Assigns a short id to a command so a dialog button can carry it.
-     *
-     * <p>A command cannot live inside a resource location — arguments bring spaces and capitals
-     * that get stripped — so the button holds an id and the command is looked up when it is
-     * clicked. The same command always gets the same id, and the oldest is dropped once the map
-     * is full, which only a player who opens dozens of distinct screens would ever reach.
-     */
     public String registerCommand(String command) {
         if (command == null || command.isBlank()) {
             return null;
@@ -300,7 +279,6 @@ public final class DialogSession {
         }
     }
 
-    /** Session store keyed by player, cleared on quit. */
     public static final class Store {
 
         private final Map<UUID, DialogSession> sessions = new ConcurrentHashMap<>();

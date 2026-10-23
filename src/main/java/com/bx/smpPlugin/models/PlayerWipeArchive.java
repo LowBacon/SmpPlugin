@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.models;
 
 import org.bukkit.configuration.ConfigurationSection;
@@ -12,14 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Everything a player wipe removed, kept on disk so {@code /playerunwipe} can put it back. The rows
- * are stored exactly as the database handed them over — column names beside the values, one entry
- * per row — so restoring is an insert rather than a guess at what the old state looked like.
- */
 public final class PlayerWipeArchive {
 
-    /** The archive layout, so an older file is rejected rather than half-read. */
     public static final int FORMAT = 1;
 
     public record TableRows(List<String> columns, List<List<Object>> rows) {
@@ -88,7 +83,6 @@ public final class PlayerWipeArchive {
         return tables;
     }
 
-    /** True when the wipe found a {@code players} row to reset, so there is one to restore. */
     public boolean hasStats() {
         return !statColumns.isEmpty() && statColumns.size() == statValues.size();
     }
@@ -128,10 +122,6 @@ public final class PlayerWipeArchive {
         yaml.save(file);
     }
 
-    /**
-     * Reads an archive back. Anything malformed throws rather than restoring part of a player, so a
-     * hand-edited or truncated file cannot leave them half-way between two states.
-     */
     public static PlayerWipeArchive load(File file) throws IOException {
         YamlConfiguration yaml = new YamlConfiguration();
         try {

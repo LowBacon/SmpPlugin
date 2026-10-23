@@ -1,17 +1,13 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import java.util.Locale;
 
-/** The pure parts of the tab list's look: the shining title, colours and sort order. */
 final class TablistEffects {
 
     private TablistEffects() {
     }
 
-    /**
-     * Colours each letter of {@code text} in {@code base}, with a band of {@code shine} that sweeps
-     * across it from left to right as {@code frame} counts up, pausing a little between sweeps.
-     */
     static String shimmer(String text, int base, int shine, long frame, boolean bold) {
         if (text == null || text.isEmpty()) {
             return "";
@@ -31,10 +27,6 @@ final class TablistEffects {
         return out.toString();
     }
 
-    /**
-     * {@code length} copies of {@code character}, fading from {@code from} to {@code to} along the
-     * bar, with a {@code shine} band sweeping across it as {@code frame} counts up.
-     */
     static String gradientLine(String character, int length, int from, int to, int shine, long frame) {
         if (character == null || character.isEmpty() || length <= 0) {
             return "";
@@ -70,7 +62,6 @@ final class TablistEffects {
         }
     }
 
-    /** Higher comes first. Active players always sit above AFK ones, then by rank weight. */
     static int listOrder(int rankWeight, boolean afk) {
         int weight = Math.max(0, Math.min(99_999, rankWeight));
         return afk ? weight : 100_000 + weight;

@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip.bukkit;
 
 import com.bx.smpPlugin.coinflip.CoinSide;
@@ -8,7 +9,6 @@ import org.bukkit.entity.Player;
 import java.util.Map;
 import java.util.UUID;
 
-/** Practice flips: the same fair coin and animation, no currency, no match record. */
 public final class PracticeMenu extends CoinFlipMenu {
 
     private static final long PRACTICE_COOLDOWN_MILLIS = 1_500L;

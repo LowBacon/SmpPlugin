@@ -1,5 +1,128 @@
 # Changelog
 
+## 4.2.0 — unreleased
+
+**The lobby, spawn and FFA as three real worlds, each with its own rules.** See
+[docs/worlds.md](docs/worlds.md).
+
+### Added
+- **`lobby`, `spawn` and `ffa` worlds** (`worlds.yml`). Loaded at start-up and created only when
+  missing; an existing world is never regenerated, reset, deleted or unloaded. Both world layouts
+  are recognised (folders up to 1.21.11, `world/dimensions/minecraft/<name>` on 26.x).
+- **Per-world rules:** sidebar, PvP, building, containers, item frames and armour stands, item
+  drops and pick-ups, hunger, fall and other damage, natural mob spawning, portals, leaving by
+  pearl or chorus fruit, respawning in the world, death inventory, difficulty, locked time and
+  weather, and any game rule. Protection covers the whole world or a radius around its spawn point,
+  so the spawn world can protect only the spawn.
+- **Players only see players in their own world group**, in the world and in the tab list (lobby,
+  spawn plus the survival worlds, FFA). Built on the existing visibility manager, so vanish and the
+  other hiding reasons are never undone. `smpplugin.world.seeall` sees everyone.
+- **Join notices wait for the SMP:** the Halloween greeting and Spooky Calendar reminder, the
+  daily-reward, Advent, mail and friends reminders and reward-vault items are held back while a
+  player is in the lobby and played one after another, spaced out, when they step into the SMP.
+  Players who join straight into the SMP get them at once. The friends line is skipped for players
+  who follow nobody.
+- **A smoother Halloween greeting:** one steady title with the welcome and then the countdown fading
+  in beneath it, about 8 seconds (`AMBIENCE.GREETING-SECONDS`), every join by default
+  (`AMBIENCE.GREETING-ONCE-A-DAY`).
+- **The lobby is hidden from the SMP** (`HIDDEN-FROM-OTHER-WORLDS`, on for the lobby): spawn and
+  survival players no longer see lobby players in the tab list. `smpplugin.world.seeall` is no
+  longer given to operators automatically.
+
+- **The lobby and the spawn world can be switched off** in `/smpplugin features` (`lobby`,
+  `spawn_world`). With the lobby off, players join straight into the SMP and anyone in the lobby gets
+  their items back.
+- **Menus open with an animation:** the frame shows at once and the buttons sweep in diagonally with
+  a soft page sound (`MENU-ANIMATIONS` in config.yml). Moving between menus stays instant; menus with
+  their own animation (coinflip, roulette, crates, calendars, daily) keep theirs.
+
+- **TitanGuard is the anti-cheat; the built-in one is removed.** TitanGuard alerts are written to
+  player logs, its bans go through `/tempban` and `/ban` (so `/history`), and the
+  `smpplugin.security.*` permissions grant TitanGuard's. See [docs/titanguard.md](docs/titanguard.md).
+- **Homes per rank:** `SETTINGS.HOME-RANKS` gives VIP, VIP+, MVP, staff roles, owner and operators
+  more homes, matched by LuckPerms group, perks rank or staff role. `/sethome` without a name makes
+  `home2`, `home3`... while there is room. Homes can be set, renamed and deleted in combat (only the
+  teleport waits), and not in the lobby or FFA world.
+
+- **TPA as dialogs:** `/tpa` and `/tpahere` without a name open a picker with every online player's
+  head, a name box and your waiting requests; an incoming request pops up with Accept and Deny.
+- **Auction House dialogs:** buying shows the item (hover it for its tooltip), seller, price, time
+  left and whether you can afford it; `/ah sell` without a price asks for one next to the item in
+  your hand. Both run the normal Auction House rules. `SCREENS.TPA` and `SCREENS.AUCTION-HOUSE` in
+  dialog.yml switch them back to the chest menus.
+
+### Fixed
+- **A rank with fewer homes than `HOME-DEFAULT` gave fewer homes than a player without a rank.**
+- **XP and potion effects were wiped on every join** into the lobby, and joining fully healed
+  players. The lobby now saves XP, health, hunger and effects with the inventory and gives them back.
+- **A failed lobby teleport left players empty-handed,** and the next `/lobby` saved the empty
+  inventory over the real one. The inventory now comes straight back and a snapshot is never
+  overwritten.
+- **Lobby inventory files** are written crash-safely, and the in-memory copy is kept across a quick
+  rejoin.
+- **Falling off the void spawn or lobby** inside the protected area returns players to the spawn
+  instead of killing them.
+- **A cancelled auction could pay its item out twice** when the cache refresh failed.
+- **Combat logging:** warps, `/tpa`, team homes, the homes menu and countdowns started before the tag
+  now stop a tagged player. Namespaced and aliased commands count against the blocked list.
+- **Spawner loot sales** no longer delete the loot when the payout is refused.
+- **Amethyst drill, shovel and chopper** respect spawn, lobby, claim and crate protection for every
+  block and never break unbreakable blocks.
+- **Visibility changes apply at once,** so a joining player no longer flashes into other worlds' tab
+  lists.
+- **`NaN` and `Infinity` are refused** wherever players type amounts.
+- **Menu and dialog buttons** now run their command as if typed, so the lobby allowlist and the combat
+  block apply to them.
+- **Items owed to a player who logs out at the wrong moment** (order and auction claims, giveaway
+  prizes) are kept as claims or in the reward vault instead of being lost.
+- **Crate key and shard balances** no longer wrap to 0 when a very large amount is added.
+- **Duel losers who quit on the death screen** no longer lose the items they keep; FFA and duel gear
+  owed after a death comes back even without a respawn spot, and survives a restart.
+- **Kill shards can't be farmed** with a second account: the same victim pays again after 5 minutes,
+  and never when both players share an address.
+- See [docs/BUG_AUDIT.md](docs/BUG_AUDIT.md) for root causes and verification.
+- "You have reached the edge of the lobby border!" every few seconds in the SMP: the warning did
+  not check the world, and everywhere outside the lobby's rectangle counted as past its edge.
+- Items given while in the lobby (reward vault, a staff /give) were overwritten when the survival
+  inventory came back. They are now handed back on top of it (overflow to the reward vault).
+
+- **Per-world visibility policies** (`VISIBILITY: SAME_WORLD | ALL_ONLINE`): lobby players see only
+  the lobby, FFA players only FFA, and spawn players everyone online, each in the world and the tab
+  list. Decided per viewer in one place, updated during the join event (no flash), after a world
+  change, after a LuckPerms change and on reload. `OTHER-WORLDS-VISIBILITY` for the survival worlds.
+- **Lobby command bypass for staff ranks** (`COMMAND-BYPASS`): OP, a permission list and LuckPerms
+  groups (owner, coowner, dev, manager by default, checked as real `group.<name>` membership). It
+  only lifts the allowlist; nobody gains commands.
+- **`/worldborder add` hint:** Minecraft's `/worldborder add 141` on a world without a border fails
+  with "cannot be bigger than 5.9999997E7 blocks wide" because `add` widens the current (maximum)
+  border. SmpPlugin now explains that and offers `/worldborder set 141` and `/border spawn set 141`.
+- **No sidebar in the lobby**: the player gets the server's own scoreboard (no blank sidebar) and
+  the normal one back on leaving.
+- **Lobby command allowlist** (`ALLOWED-COMMANDS`): aliases and `plugin:command` labels are resolved
+  to the real command, unknown commands are refused, and tab completion lists only allowed commands.
+- **The three worlds start as empty void** (`GENERATOR: VOID`) with a 5x5 stone platform at the
+  spawn, so you build the lobby, spawn and FFA yourself. The void generator is applied on every
+  load, so chunks first visited after a restart stay empty too.
+- **Points are set in their own dimension:** `/setspawn` and `/smpplugin setup setspawn` only work
+  in the `spawn` world, `/setlobby` only in the `lobby` world and `/ffaarena setpos` only in the
+  `ffa` world (while those worlds are managed). The refusal has a clickable `/smp world tp <world>`.
+  `/setspawn` and `/setlobby` also set that world's own spawn point.
+- **`/smp world status | info | setspawn | tp [player] <world> | reload`** (`smpplugin.admin.world`). A worlds.yml
+  with mistakes is reported and not applied. `/smp` is now an alias of `/smpplugin`.
+- The `lobby` world is the lobby of `/lobby` and of joining when no `/setlobby` location is set; the
+  `spawn` world is the spawn of `/spawn` when no `/setspawn` location is set.
+- Permissions `smpplugin.admin.world`, `smpplugin.world.bypass.commands`,
+  `smpplugin.world.bypass.build`, `smpplugin.world.seeall`.
+
+### Fixed
+- **Survival items were lost when a player logged out in the lobby.** The inventory saved on the
+  way into the lobby lived only in memory and was deleted on log-out (and lost on a restart). It is
+  now kept on disk until it is given back, and given back by whatever route the player leaves the
+  lobby.
+- **Ban, mute, kick and offence screens showed "# The text or value for ..."** again in 4.1.0. The
+  bundled messages are repaired, and existing `messages.yml`, `discord.yml`, `config.yml` and
+  `hide.yml` files are repaired on start-up (with a backup).
+
 ## 4.1.0 — 21 October 2026
 
 **Ranks above players' heads, and no limit on how much money a player can have.** Runs on the same versions as

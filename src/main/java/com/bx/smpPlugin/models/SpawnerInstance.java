@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.models;
 
 import org.bukkit.Material;
@@ -226,7 +227,6 @@ public class SpawnerInstance {
         this.storedXp = Math.max(0L, storedXp);
     }
 
-    /** Adds XP up to the cap, 0 or less means no cap. */
     public void addStoredXp(long amount, long cap) {
         if (amount <= 0L) {
             return;
@@ -238,7 +238,6 @@ public class SpawnerInstance {
         storedXp = cap > 0L ? Math.min(cap, target) : target;
     }
 
-    /** Every item this spawner has ever made, including what was sold, collected or capped. */
     public long getLifetimeItems() {
         return lifetimeItems;
     }
@@ -253,7 +252,6 @@ public class SpawnerInstance {
         }
     }
 
-    /** Money earned by selling this spawner's loot from its menu. */
     public double getLifetimeEarnings() {
         return lifetimeEarnings;
     }

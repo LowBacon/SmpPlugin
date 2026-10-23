@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip.bukkit;
 
 import com.bx.smpPlugin.coinflip.CoinFlipConfig;
@@ -16,20 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * The CoinFlip screen since 3.1: everything a player needs on one page.
- *
- * <ul>
- *   <li>The middle shows every open flip as the creator's head. Click one to arm it, click it again
- *       to join. Your own flips are marked; clicking one twice cancels it.</li>
- *   <li>The bottom row picks your side and creates a flip at one of the quick stakes (again: click
- *       to arm, click again to create), or at any amount through the sign.</li>
- *   <li>History, statistics, leaderboards, settings and the rules are one click away under "More".</li>
- * </ul>
- * The second click replaces the old review and confirm screens, so a flip takes two clicks
- * instead of four screens; the stake, pot, fee and payout are on the item before you click. The
- * service still checks every limit and balance on the server when the action runs.
- */
 public final class QuickMenu extends CoinFlipMenu {
 
     private static final int[] STAKE_SLOTS = {46, 47, 48, 50, 51};
@@ -59,7 +46,6 @@ public final class QuickMenu extends CoinFlipMenu {
         return armedSlot == slot && System.currentTimeMillis() - armedAt <= ARM_MILLIS;
     }
 
-    /** First click arms the slot and returns false; a second click within a few seconds returns true. */
     private boolean confirmClick(int slot) {
         if (armed(slot)) {
             armedSlot = -1;

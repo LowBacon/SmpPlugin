@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.commands;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -9,7 +10,6 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-/** Sets the protected lobby location that every player is teleported to on join. */
 public class SetLobbyCommand implements CommandExecutor {
 
     private static final String PERMISSION = "smpplugin.admin.lobby.setlobby";
@@ -32,10 +32,18 @@ public class SetLobbyCommand implements CommandExecutor {
             return true;
         }
 
+        var worlds = plugin.getWorldSystem();
+        if (worlds != null && worlds.refuseOutside(player, "lobby", "the lobby")) {
+            return true;
+        }
+
         Location location = player.getLocation();
         if (!plugin.getLobbyManager().setLobbyLocation(location)) {
             sender.sendMessage(ColorUtils.toComponent("&cThe lobby location could not be saved. Check the server console for details."));
             return true;
+        }
+        if (worlds != null && worlds.isWorld(location.getWorld(), "lobby")) {
+            worlds.setSpawn("lobby", location);
         }
 
         sender.sendMessage(ColorUtils.toComponent("&aLobby set to &f"

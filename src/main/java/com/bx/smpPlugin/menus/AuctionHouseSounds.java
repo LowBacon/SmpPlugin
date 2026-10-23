@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.menus;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -7,9 +8,6 @@ import org.bukkit.entity.Player;
 import java.util.Locale;
 import java.util.Map;
 
-/**
- * Dedicated Auction House sounds from {@code sounds.yml}, matching the Orders and Quick Buy pattern.
- */
 public final class AuctionHouseSounds {
 
     public static final String OPEN = "AUCTION_HOUSE.OPEN";

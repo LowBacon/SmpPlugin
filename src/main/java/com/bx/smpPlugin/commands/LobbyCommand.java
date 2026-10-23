@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.commands;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -14,11 +15,6 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-/**
- * Handles both /lobby [survival] and /smpplugin &lt;lobby|survival&gt; (registered as the same
- * executor for both command names, matching plugin.yml's documented usage for each), plus admin
- * subcommands under /lobby only: border [radius], reload, debug, help.
- */
 public final class LobbyCommand implements CommandExecutor, TabCompleter {
 
     private static final List<String> LOBBY_SUBCOMMANDS = List.of("survival", "border", "reload", "debug", "help");
@@ -152,7 +148,7 @@ public final class LobbyCommand implements CommandExecutor, TabCompleter {
                         "&cUsage: /lobby border <radius> | pos1 | pos2 - radius must be a number of at least 1."));
                 return true;
             }
-            if (radius < 1.0) {
+            if (!Double.isFinite(radius) || radius < 1.0) {
                 sender.sendMessage(ColorUtils.toComponent(
                         "&cUsage: /lobby border <radius> | pos1 | pos2 - radius must be a number of at least 1."));
                 return true;

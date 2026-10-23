@@ -1,9 +1,6 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.halloween;
 
-/**
- * A player's Trick or Treat knocks: how many today (by epoch day) and in the whole season. Stored as
- * {@code day;today;total}. Pure, so it can be tested.
- */
 public record KnockLog(long day, int today, int total) {
 
     public static final KnockLog NEW = new KnockLog(Long.MIN_VALUE, 0, 0);
@@ -24,12 +21,10 @@ public record KnockLog(long day, int today, int total) {
         return day + ";" + today + ";" + total;
     }
 
-    /** Knocks used on {@code epochDay}. */
     public int usedOn(long epochDay) {
         return epochDay == day ? today : 0;
     }
 
-    /** True when another knock fits in the daily limit ({@code limit <= 0}: no limit). */
     public boolean canKnock(long epochDay, int limit) {
         return limit <= 0 || usedOn(epochDay) < limit;
     }

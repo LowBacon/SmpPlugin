@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -15,13 +16,6 @@ import org.bukkit.inventory.ItemStack;
 import java.util.Map;
 import java.util.function.Predicate;
 
-/**
- * Builds and sends the server-wide announcements configured under SERVER-NOTIFICATIONS.
- *
- * <p>Join, leave and first-join text is handed back to PlayerJoinQuitListener rather than
- * broadcast from here, because that listener already decides who is allowed to see a join
- * line and the configured text has to travel the same route as the server's own.</p>
- */
 public class ServerNotificationManager {
 
     private static final String ROOT = "SERVER-NOTIFICATIONS.";
@@ -32,11 +26,6 @@ public class ServerNotificationManager {
         this.plugin = plugin;
     }
 
-    /**
-     * The join line for a player, or null when the server's own message should be relayed
-     * instead. A brand new player gets the first-join text when that is switched on, so
-     * nobody is announced twice.
-     */
     public String joinAnnouncement(Player player, boolean firstJoin) {
         if (firstJoin && isEnabled("FIRST-JOIN")) {
             return format(message("FIRST-JOIN", player), "{player}", publicName(player));
@@ -47,7 +36,6 @@ public class ServerNotificationManager {
         return format(message("JOIN", player), "{player}", publicName(player));
     }
 
-    /** The leave line for a player, or null to relay the server's own message. */
     public String leaveAnnouncement(Player player) {
         if (!isEnabled("LEAVE")) {
             return null;
@@ -130,7 +118,6 @@ public class ServerNotificationManager {
         );
     }
 
-    /** Players with Private Transactions on are left out of auction announcements. */
     private boolean isPrivate(Player player) {
         if (player == null || plugin.getPlayerDataManager() == null) {
             return false;
@@ -158,7 +145,6 @@ public class ServerNotificationManager {
         });
     }
 
-    /** Fills the placeholders in, treating a missing value as an empty one. */
     static String format(String message, String... replacements) {
         if (message == null || message.isBlank()) {
             return null;
@@ -223,13 +209,6 @@ public class ServerNotificationManager {
         return config().getString(ROOT + path + ".MESSAGE", "");
     }
 
-    /**
-     * The wording for one announcement, taking the player's rank into account.
-     *
-     * <p>An announcement may carry a BY-PERMISSION map of permission node to wording. The first
-     * node the player holds wins, so a server lists its highest rank first, and a player holding
-     * none of them falls back to the plain MESSAGE.</p>
-     */
     private String message(String path, Player player) {
         return resolveByPermission(
                 config().getConfigurationSection(ROOT + path + ".BY-PERMISSION"),
@@ -238,24 +217,6 @@ public class ServerNotificationManager {
         );
     }
 
-    /**
-     * Picks the wording for the first permission in the section that the player holds, falling
-     * back to {@code fallback} when the section is absent, empty, or matches nothing.
-     *
-     * <p>The section's own order decides the winner because there is no way to rank two pieces of
-     * wording against each other the way a home limit picks its highest number. Config order is
-     * the one ordering the admin can see and change, and Bukkit hands the keys back in the order
-     * the file lists them.</p>
-     *
-     * <p>The values are read deeply, exactly as the home limits are, because a permission node
-     * carries dots and Bukkit reads those as a path. A node written as one quoted key arrives as a
-     * tree of sections, so only a deep read hands back the whole node again; the sections it walks
-     * through on the way are not wording and are skipped.</p>
-     *
-     * <p>Matching is deliberately on the exact node rather than the usual inherited check: these
-     * maps are keyed by a server's own ranks, and a wildcard would otherwise match every entry and
-     * hand the top rank's wording to anybody holding it.</p>
-     */
     static String resolveByPermission(
             ConfigurationSection byPermission,
             String fallback,

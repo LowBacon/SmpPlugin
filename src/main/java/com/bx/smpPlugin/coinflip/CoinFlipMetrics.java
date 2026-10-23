@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip;
 
 import java.util.Map;
@@ -5,7 +6,6 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-/** Operational counters shown in /coinflipadmin status. Thread-safe; never persisted. */
 public final class CoinFlipMetrics {
 
     private final Map<String, AtomicLong> counters = new ConcurrentHashMap<>();
@@ -31,7 +31,6 @@ public final class CoinFlipMetrics {
         return value == null ? 0L : value.get();
     }
 
-    /** Sorted snapshot for display. */
     public Map<String, Long> snapshot() {
         Map<String, Long> snapshot = new TreeMap<>();
         counters.forEach((key, value) -> snapshot.put(key, value.get()));

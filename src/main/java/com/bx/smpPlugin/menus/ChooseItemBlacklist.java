@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.menus;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -10,20 +11,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-/**
- * Survival-unsuitable materials hidden by the Choose Item dialog API.
- *
- * <p>Built-in operator and unobtainable items are always excluded. Extra names from
- * {@code QUICK-BUY.CHOOSE-ITEM.BLACKLIST} are merged on top and may use {@code *} wildcards.
- */
 public final class ChooseItemBlacklist {
 
     public static final String CONFIG_PATH = "QUICK-BUY.CHOOSE-ITEM.BLACKLIST";
 
-    /**
-     * Exact Bukkit material names that are never offered by Choose Item.
-     * Family rules (command blocks, infested blocks, spawn eggs) are applied separately.
-     */
     public static final Set<String> BUILT_IN_NAMES = Set.of(
             "BEDROCK",
             "BARRIER",

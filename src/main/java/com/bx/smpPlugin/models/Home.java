@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.models;
 
 import org.bukkit.Location;
@@ -10,7 +11,6 @@ public class Home {
     private String name;
     private Location location;
     private long createdAt;
-    /** Material name shown for this home in the menus; blank means the default bed. */
     private String icon = "";
 
     public Home(UUID ownerUuid, String name, Location location) {

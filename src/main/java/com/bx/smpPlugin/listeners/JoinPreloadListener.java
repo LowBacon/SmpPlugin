@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.listeners;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -13,11 +14,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Reads a joining player's stats and homes while they are still logging in. That event runs off
- * the main thread, so by the time the join event fires the rows are already in memory and the
- * join itself never waits on the database. Anything not picked up within a minute is dropped.
- */
 public class JoinPreloadListener implements Listener {
 
     private static final long MAX_AGE_MS = 60_000L;
@@ -53,13 +49,11 @@ public class JoinPreloadListener implements Listener {
         }
     }
 
-    /** The stats row read at login, or null when there is none (new player or nothing preloaded). */
     public PlayerData takePlayerData(UUID uuid) {
         Preloaded entry = fresh(uuid);
         return entry == null ? null : entry.data();
     }
 
-    /** True when a login read happened, so a null {@link #takePlayerData} means a brand-new player. */
     public boolean hasPreloaded(UUID uuid) {
         return fresh(uuid) != null;
     }
@@ -69,7 +63,6 @@ public class JoinPreloadListener implements Listener {
         return entry == null ? null : entry.homes();
     }
 
-    /** Called once the join has used what it needs. */
     public void discard(UUID uuid) {
         preloaded.remove(uuid);
     }

@@ -1,44 +1,23 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.platform;
 
 import java.util.EnumSet;
 import java.util.Set;
 
-/**
- * Decides whether this artifact may run on a given platform and Minecraft version.
- *
- * <p>The artifact is compiled against the 1.21.11 API and declares {@code api-version: 1.21}, which
- * every 1.21.x server would accept, so this check is what keeps it off anything older than 1.21.11.
- * It also guards against the cases plugin.yml cannot express:</p>
- * <ul>
- *   <li>Folia: no Folia build has been tested, so the plugin refuses to run there.</li>
- *   <li>Versions newer than the tested one: allowed, but reported as untested.</li>
- * </ul>
- */
 public final class CompatibilityPolicy {
 
-    /** Minimum Minecraft version this artifact supports. Keep in sync with {@code minecraft.api.version} in pom.xml. */
     public static final MinecraftVersion MINIMUM = MinecraftVersion.parse("1.21.11");
 
-    /** Newest Minecraft version this artifact was built against. */
     public static final MinecraftVersion LATEST_TESTED = MinecraftVersion.parse("26.3");
 
-    /** Platforms this build targets. */
     private static final Set<ServerPlatform> TARGETS =
             EnumSet.of(ServerPlatform.PAPER, ServerPlatform.PURPUR, ServerPlatform.SPIGOT, ServerPlatform.CRAFTBUKKIT);
 
-    /**
-     * Targets on which this build has been booted and exercised (menus, teleports, transactions, shutdown).
-     * Empty until that verification is done and recorded in COMPATIBILITY.md; until then every target
-     * reports {@link Verdict#UNTESTED} instead of claiming support.
-     */
     private static final Set<ServerPlatform> RUNTIME_VERIFIED = EnumSet.noneOf(ServerPlatform.class);
 
     public enum Verdict {
-        /** Supported platform and the tested Minecraft version. */
         SUPPORTED,
-        /** Allowed to run, but this combination has not been tested. */
         UNTESTED,
-        /** Must not run. */
         REFUSED
     }
 

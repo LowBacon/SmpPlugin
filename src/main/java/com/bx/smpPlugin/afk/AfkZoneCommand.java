@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.afk;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -17,18 +18,6 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Staff command for building AFK zones:
- * <pre>
- * /afkzone pos1 | pos2                     mark two corners where you stand
- * /afkzone create &lt;name&gt; [radius]          new zone from the corners (or a square around you)
- * /afkzone setregion &lt;name&gt; [radius]       move an existing zone's area
- * /afkzone setspawn &lt;name&gt;                 where /afk drops players
- * /afkzone reward &lt;name&gt; &lt;shards&gt; &lt;time&gt;   e.g. reward main 1 1m
- * /afkzone rename &lt;name&gt; &lt;display name&gt;
- * /afkzone delete &lt;name&gt; | list | show | reload
- * </pre>
- */
 public class AfkZoneCommand implements CommandExecutor, TabCompleter {
 
     public static final String PERMISSION = "smpplugin.admin.afkzone";
@@ -159,7 +148,6 @@ public class AfkZoneCommand implements CommandExecutor, TabCompleter {
         send(player, "&7It pays &b1 shard &7every &f1m&7. Change it with &f/" + label + " reward " + id + " <shards> <time>&7.");
     }
 
-    /** A square when a radius is given, otherwise the pos1/pos2 selection. */
     private AfkZone.Region regionFrom(Player player, AfkManager afk, String[] args, String label) {
         if (args.length >= 3) {
             int radius;
@@ -245,7 +233,6 @@ public class AfkZoneCommand implements CommandExecutor, TabCompleter {
         send(sender, "&f/" + label + " delete <name> &7| &flist &7| &fshow &7| &freload");
     }
 
-    /** "60", "90s", "1m", "2m30s", "1h"; -1 when it does not parse. */
     static int parseSeconds(String input) {
         if (input == null || input.isBlank()) {
             return -1;

@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -90,13 +91,41 @@ public class FfaManager {
     private final Map<UUID, TransitionPlayerState> transitionStates = new HashMap<>();
     private final Map<UUID, TransitionTitleState> transitionTitles = new HashMap<>();
     private final Map<UUID, PendingRespawnState> pendingRespawns = new HashMap<>();
+    private final FfaRestoreStore restoreStore;
     private long tickCounter = 0L;
     private int autoRepairArenaCursor = 0;
 
     public FfaManager(SmpPlugin plugin) {
         this.plugin = plugin;
+        this.restoreStore = new FfaRestoreStore(plugin);
         ensureTables();
         reload();
+        loadOwedRestores();
+    }
+
+    private void loadOwedRestores() {
+        for (Map.Entry<UUID, FfaRestoreStore.Owed> entry : restoreStore.loadAll().entrySet()) {
+            FfaRestoreStore.Owed owed = entry.getValue();
+            if (owed.respawnLocation() != null) {
+                pendingRespawns.put(entry.getKey(), new PendingRespawnState(owed.snapshot(), owed.respawnLocation()));
+            } else {
+                pendingJoinSnapshots.put(entry.getKey(), owed.snapshot());
+            }
+        }
+    }
+
+    // Owed gear goes to disk as well as memory, and leaves both once it is given back.
+    private void putOwed(UUID uuid, FfaPlayerSnapshot snapshot) {
+        pendingJoinSnapshots.put(uuid, snapshot);
+        restoreStore.save(uuid, snapshot, null);
+    }
+
+    private FfaPlayerSnapshot takeOwed(UUID uuid) {
+        FfaPlayerSnapshot snapshot = pendingJoinSnapshots.remove(uuid);
+        if (snapshot != null) {
+            restoreStore.delete(uuid);
+        }
+        return snapshot;
     }
 
     public void reload() {
@@ -291,7 +320,6 @@ public class FfaManager {
         return statsCache.computeIfAbsent(uuid, this::loadStats);
     }
 
-    /** Forgets the cached copy so the next read comes from the database (after a player wipe). */
     public void forgetStats(UUID uuid) {
         if (uuid != null) {
             statsCache.remove(uuid);
@@ -570,23 +598,19 @@ public class FfaManager {
         }
 
         processPendingResets();
+        if (!secondPulse) {
+            return;
+        }
 
         for (FfaMatch match : new ArrayList<>(activeMatches.values())) {
-            if (match.getStatus() != FfaMatch.MatchStatus.ACTIVE || !secondPulse) {
-                continue;
-            }
-
-             if (match.hasCombatStarted()
+            if (match.getStatus() == FfaMatch.MatchStatus.ACTIVE
+                    && match.hasCombatStarted()
                     && !isCombatTagged(match.getPlayerOneUuid())
                     && !isCombatTagged(match.getPlayerTwoUuid())) {
                 finishMatch(match, "COMBAT_EXPIRED", null);
-                continue;
             }
         }
-
-        if (secondPulse) {
-            processAutoArenaRepairs();
-        }
+        processAutoArenaRepairs();
     }
 
     public void handleQuit(Player player) {
@@ -622,7 +646,14 @@ public class FfaManager {
             restoreTransitionState(player);
         }
 
-        FfaPlayerSnapshot snapshot = pendingJoinSnapshots.remove(uuid);
+        PendingRespawnState owedRespawn = pendingRespawns.get(uuid);
+        if (owedRespawn != null && !player.isDead()) {
+            pendingRespawns.remove(uuid);
+            restoreStore.delete(uuid);
+            restoreSnapshot(player, owedRespawn.snapshot());
+        }
+
+        FfaPlayerSnapshot snapshot = takeOwed(uuid);
         if (snapshot != null) {
             restoreSnapshot(player, snapshot);
             send(player, "&eʏᴏᴜʀ ꜰꜰᴀ ѕᴛᴀᴛᴇ ᴡᴀѕ ʀᴇѕᴛᴏʀᴇᴅ ᴀꜰᴛᴇʀ ʀᴇᴄᴏɴɴᴇᴄᴛɪɴɢ.");
@@ -756,8 +787,8 @@ public class FfaManager {
         activeMatches.put(matchId, match);
         activeMatchIds.put(firstUuid, matchId);
         activeMatchIds.put(secondUuid, matchId);
-        pendingJoinSnapshots.remove(firstUuid);
-        pendingJoinSnapshots.remove(secondUuid);
+        takeOwed(firstUuid);
+        takeOwed(secondUuid);
         pendingJoinLocations.remove(firstUuid);
         pendingJoinLocations.remove(secondUuid);
 
@@ -808,11 +839,13 @@ public class FfaManager {
         }
 
         PendingRespawnState state = pendingRespawns.remove(player.getUniqueId());
-        if (state == null || state.respawnLocation() == null || state.respawnLocation().getWorld() == null) {
+        if (state == null) {
             return false;
         }
-
-        event.setRespawnLocation(state.respawnLocation());
+        restoreStore.delete(player.getUniqueId());
+        if (state.respawnLocation() != null && state.respawnLocation().getWorld() != null) {
+            event.setRespawnLocation(state.respawnLocation());
+        }
         plugin.getSpigotScheduler().runEntity(player, () -> {
             if (!player.isOnline()) {
                 return;
@@ -916,7 +949,7 @@ public class FfaManager {
         ));
         reservedArenaIds.add(arena.getId());
         arena.setState(FfaArena.ArenaState.RESERVED);
-        pendingJoinSnapshots.remove(uuid);
+        takeOwed(uuid);
         pendingJoinLocations.remove(uuid);
 
         preparePlayerForMatch(player, waitingSpawn);
@@ -982,8 +1015,8 @@ public class FfaManager {
         activeMatches.put(matchId, match);
         activeMatchIds.put(first.getUniqueId(), matchId);
         activeMatchIds.put(second.getUniqueId(), matchId);
-        pendingJoinSnapshots.remove(first.getUniqueId());
-        pendingJoinSnapshots.remove(second.getUniqueId());
+        takeOwed(first.getUniqueId());
+        takeOwed(second.getUniqueId());
         pendingJoinLocations.remove(first.getUniqueId());
         pendingJoinLocations.remove(second.getUniqueId());
 
@@ -1079,8 +1112,8 @@ public class FfaManager {
         activeMatches.put(matchId, match);
         activeMatchIds.put(firstUuid, matchId);
         activeMatchIds.put(secondUuid, matchId);
-        pendingJoinSnapshots.remove(firstUuid);
-        pendingJoinSnapshots.remove(secondUuid);
+        takeOwed(firstUuid);
+        takeOwed(secondUuid);
         pendingJoinLocations.remove(firstUuid);
         pendingJoinLocations.remove(secondUuid);
 
@@ -1728,11 +1761,13 @@ public class FfaManager {
         }
 
         Location respawnLocation = resolveLobbyRespawnLocation(match, uuid);
-        if (respawnLocation == null || respawnLocation.getWorld() == null) {
-            return;
+        if (respawnLocation != null && respawnLocation.getWorld() == null) {
+            respawnLocation = null;
         }
-
+        // Without a lobby respawn spot the gear used to be dropped; the player now respawns
+        // wherever the server puts them and still gets it back.
         pendingRespawns.put(uuid, new PendingRespawnState(snapshot, respawnLocation));
+        restoreStore.save(uuid, snapshot, respawnLocation == null ? snapshot.getReturnLocation() : respawnLocation);
     }
 
     private boolean preserveRemainingParticipant(FfaMatch match,
@@ -1776,7 +1811,7 @@ public class FfaManager {
         ));
         reservedArenaIds.add(arena.getId());
         arena.setState(FfaArena.ArenaState.RESERVED);
-        pendingJoinSnapshots.remove(uuid);
+        takeOwed(uuid);
         pendingJoinLocations.remove(uuid);
         player.setNoDamageTicks(60);
         player.setFallDistance(0F);
@@ -1800,7 +1835,7 @@ public class FfaManager {
 
         Player player = Bukkit.getPlayer(uuid);
         if (player == null || !player.isOnline()) {
-            pendingJoinSnapshots.put(uuid, snapshot);
+            putOwed(uuid, snapshot);
             return;
         }
 
@@ -3223,7 +3258,7 @@ public class FfaManager {
         if (restorePlayerState && entry.snapshot() != null) {
             Player player = Bukkit.getPlayer(uuid);
             if (player == null || !player.isOnline()) {
-                pendingJoinSnapshots.put(uuid, entry.snapshot());
+                putOwed(uuid, entry.snapshot());
                 Location returnLocation = returnToSnapshotLocation
                         ? resolveWaitingExitLocation(entry)
                         : null;

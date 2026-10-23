@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.halloween;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -25,27 +26,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 
-/**
- * Everything around the Spooky Calendar during Halloween: candy (earned from treats, quests and the daily treat bag,
- * spent in the candy shop), candy milestones, season quests, the daily treat bag and the candy leaderboard.
- *
- * <p>Candy belongs to one season ({@code halloween.<year>.candy}) and is written at once on every change. Every
- * change of one player's candy runs under that player's lock, so two threads (a quest on the player's thread and a
- * staff command elsewhere) can never both read the old value. Rewards are handed over in the same step that marks
- * them given.
- */
 public final class HalloweenHub {
 
-    /** One thing in the candy shop. */
     public record ShopItem(String id, String name, String icon, long price, int limit, Reward reward,
                            List<String> description) {
     }
 
-    /** One row of the candy leaderboard. */
     public record Ranked(String name, long earned) {
     }
 
-    /** Why a purchase did not happen. */
     public enum Purchase { BOUGHT, NOT_RUNNING, UNKNOWN, NOT_ENOUGH, LIMIT, LOADING }
 
     private static final long LEADERBOARD_TTL_MILLIS = 60_000L;
@@ -101,10 +90,6 @@ public final class HalloweenHub {
         return CandyAccount.parse(store.get(uuid, section("candy")));
     }
 
-    /**
-     * Gives candy to an online player (with their rank's CANDY-BONUS-PERCENT when {@code withBonus}), then hands out
-     * any milestone it reaches. Returns the candy actually added.
-     */
     public long earn(Player player, long amount, boolean withBonus, String why) {
         UUID uuid = player.getUniqueId();
         if (amount <= 0L || !store.isLoaded(uuid)) {
@@ -140,7 +125,6 @@ public final class HalloweenHub {
         return added;
     }
 
-    /** Takes candy from an online player when they have enough. */
     public boolean spend(Player player, long amount) {
         UUID uuid = player.getUniqueId();
         if (!store.isLoaded(uuid)) {
@@ -153,7 +137,6 @@ public final class HalloweenHub {
         }
     }
 
-    /** Staff: sets any player's candy balance (online or not). Answers on the main thread with the new balance. */
     public void adjust(UUID uuid, java.util.function.LongUnaryOperator change, Consumer<Long> done) {
         String section = section("candy");
         if (store.isLoaded(uuid)) {
@@ -175,7 +158,6 @@ public final class HalloweenHub {
         });
     }
 
-    /** MILESTONES.&lt;candy earned&gt; sections, smallest first. */
     public Map<Long, ConfigurationSection> milestones() {
         Map<Long, ConfigurationSection> out = new TreeMap<>();
         ConfigurationSection section = config().getConfigurationSection("MILESTONES");
@@ -204,7 +186,6 @@ public final class HalloweenHub {
 
     // ------------------------------------------------------------------ quests
 
-    /** The quests, read again only after halloween.yml was reloaded (this runs on every block broken). */
     public List<Quest> quests() {
         FileConfiguration current = config();
         if (current != questsFrom) {
@@ -214,7 +195,6 @@ public final class HalloweenHub {
         return quests;
     }
 
-    /** {@link HalloweenManager#inSeason()}, worked out at most once a second for the busy listeners. */
     public boolean running() {
         long now = System.currentTimeMillis();
         if (now - runningAt > 1000L) {
@@ -228,10 +208,6 @@ public final class HalloweenHub {
         return QuestProgress.parse(store.get(uuid, section("quests")));
     }
 
-    /**
-     * Counts an action for every quest it fits. Progress is saved in batches (it changes on every block); finishing a
-     * quest is saved at once, together with its reward.
-     */
     public void track(Player player, QuestType type, String target, int amount) {
         UUID uuid = player.getUniqueId();
         if (!running() || !store.isLoaded(uuid)) {
@@ -297,7 +273,6 @@ public final class HalloweenHub {
         return last == null || !last.equals(Long.toString(todayEpochDay()));
     }
 
-    /** Opens today's treat bag: marked and paid in one step. Empty when it is not ready. */
     public Optional<List<String>> claimDailyBag(Player player) {
         UUID uuid = player.getUniqueId();
         Reward reward;
@@ -345,7 +320,6 @@ public final class HalloweenHub {
         return QuestProgress.parse(store.get(uuid, section("shop"))).counts().getOrDefault(id, 0);
     }
 
-    /** Buys one shop item: the candy and the purchase count change together, then the item is handed over. */
     public Purchase buy(Player player, String id) {
         UUID uuid = player.getUniqueId();
         if (!halloween.inSeason()) {
@@ -378,7 +352,6 @@ public final class HalloweenHub {
 
     // ------------------------------------------------------------------ leaderboard
 
-    /** The top candy earners of this season, at most a minute old. Answers on the main thread. */
     public void leaderboard(int size, Consumer<List<Ranked>> callback) {
         long year = halloween.seasonYear();
         long now = System.currentTimeMillis();

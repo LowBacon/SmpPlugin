@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.seasonal;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -22,19 +23,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 
-/**
- * The command of a season calendar (/advent, /halloween).
- *
- * <pre>
- * /&lt;cmd&gt;                         open it
- * /&lt;cmd&gt; edit                    choose the prizes in game                 (staff)
- * /&lt;cmd&gt; give &lt;player&gt; &lt;door&gt;    hand out a door's prize without opening it (staff)
- * /&lt;cmd&gt; reset &lt;player&gt; [door]   close a door (or every door) again       (staff)
- * /&lt;cmd&gt; test &lt;yyyy-MM-dd|off&gt;   test the calendar as if it were that day; only for you, nothing is given (staff)
- * /&lt;cmd&gt; stats                   players per door this season               (staff)
- * /&lt;cmd&gt; reload                  read the event file and the in-game prizes again (staff)
- * </pre>
- */
 public class CalendarCommand implements CommandExecutor, TabCompleter {
 
     private static final List<String> ADMIN_ACTIONS = List.of("edit", "give", "reset", "test", "stats", "reload");
@@ -83,7 +71,6 @@ public class CalendarCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
-    /** Sub-commands players may use (none here); return true when handled. */
     protected boolean handlePlayerAction(CommandSender sender, String[] args) {
         return false;
     }
@@ -202,7 +189,6 @@ public class CalendarCommand implements CommandExecutor, TabCompleter {
         }
     }
 
-    /** Extra first words players can tab-complete. */
     protected List<String> playerActions(CommandSender sender) {
         return List.of();
     }

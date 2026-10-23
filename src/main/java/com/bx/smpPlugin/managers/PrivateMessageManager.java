@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.utils.PermissionUtils;
@@ -134,7 +135,6 @@ public class PrivateMessageManager {
         return true;
     }
 
-    /** The received line suggests "/msg sender " when clicked, so answering is one click away. */
     private void deliverReceived(Player target, String received, String replyName) {
         if (replyName == null || replyName.isBlank()) {
             target.sendMessage(ColorUtils.toComponent(received, target));

@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.platform;
 
 import org.bukkit.configuration.ConfigurationSection;
@@ -9,30 +10,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Read-only inspection of Paper's native anti-Xray settings.
- *
- * <p>Paper keeps anti-Xray in {@code config/paper-world-defaults.yml} under
- * {@code anticheat.anti-xray}, with optional per-world overrides in {@code paper-world.yml}.
- * Changes there need a full server restart. This class never writes either file.</p>
- */
 public final class NativeAntiXrayInspector {
 
     static final String SECTION = "anticheat.anti-xray";
     static final String DEFAULTS_FILE = "paper-world-defaults.yml";
     static final String WORLD_FILE = "paper-world.yml";
 
-    /**
-     * Anti-Xray state for one world, after applying its override on top of the defaults.
-     *
-     * @param worldName       world name, or {@code "(defaults)"}
-     * @param enabled         whether anti-Xray is on
-     * @param engineMode      1, 2 or 3; 0 when unknown
-     * @param maxBlockHeight  highest Y covered; {@code Integer.MIN_VALUE} when unknown
-     * @param hiddenBlocks    number of configured hidden block types; -1 when unknown
-     * @param usePermission   whether {@code paper.antixray.bypass} is honoured
-     * @param hasWorldOverride whether a per-world file changed any anti-Xray value
-     */
     public record WorldStatus(
             String worldName,
             boolean enabled,
@@ -44,21 +27,12 @@ public final class NativeAntiXrayInspector {
     ) {
     }
 
-    /**
-     * @param defaultsFound whether {@code paper-world-defaults.yml} was found
-     * @param defaults      the values from the defaults file
-     * @param worlds        effective values for each loaded world
-     */
     public record Report(boolean defaultsFound, WorldStatus defaults, List<WorldStatus> worlds) {
     }
 
     private NativeAntiXrayInspector() {
     }
 
-    /**
-     * @param paperConfigDirectory directory holding {@code paper-world-defaults.yml}
-     * @param worldFolders         loaded world name → world folder
-     */
     public static Report inspect(File paperConfigDirectory, Map<String, File> worldFolders) {
         File defaultsFile = new File(paperConfigDirectory, DEFAULTS_FILE);
         YamlConfiguration defaultsYaml = defaultsFile.isFile() ? YamlConfiguration.loadConfiguration(defaultsFile) : null;
@@ -107,7 +81,6 @@ public final class NativeAntiXrayInspector {
         );
     }
 
-    /** Paper writes {@code default} in per-world files to mean "inherit"; treat that like a missing key. */
     private static Object value(String key, ConfigurationSection defaults, ConfigurationSection override) {
         if (override != null) {
             Object raw = override.get(key);

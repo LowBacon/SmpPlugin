@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin;
 
 import com.bx.smpPlugin.afk.AfkCommand;
@@ -6,10 +7,6 @@ import com.bx.smpPlugin.afk.AfkManager;
 import com.bx.smpPlugin.afk.AfkTask;
 import com.bx.smpPlugin.afk.AfkZoneCommand;
 import com.bx.smpPlugin.amethyst.*;
-import com.bx.smpPlugin.anticheat.AntiCheatCommand;
-import com.bx.smpPlugin.anticheat.AntiCheatListener;
-import com.bx.smpPlugin.anticheat.AntiCheatManager;
-import com.bx.smpPlugin.anticheat.AntiCheatPlayerListener;
 import com.bx.smpPlugin.api.EconomyExpansion;
 import com.bx.smpPlugin.api.EconomyLeaderboardExpansion;
 import com.bx.smpPlugin.api.EconomyRankExpansion;
@@ -65,6 +62,7 @@ public final class SmpPlugin extends JavaPlugin {
 
     // ── Managers ──────────────────────────────────────────────────────────────
     private ConfigManager configManager;
+    private com.bx.smpPlugin.worlds.WorldSystem worldSystem;
     private LanguageManager languageManager;
     private CurrencyManager currencyManager;
     private FeatureManager featureManager;
@@ -139,7 +137,7 @@ public final class SmpPlugin extends JavaPlugin {
     private ServerWipeManager serverWipeManager;
     private SpawnerManager spawnerManager;
     private AntiEspManager antiEspManager;
-    private AntiCheatManager antiCheatManager;
+    private com.bx.smpPlugin.hooks.TitanGuardBridge titanGuardBridge;
     private com.bx.smpPlugin.coinflip.bukkit.CoinFlipModule coinFlipModule;
     private SpawnStashManager spawnStashManager;
     private FakePlayerManager fakePlayerManager;
@@ -192,6 +190,9 @@ public final class SmpPlugin extends JavaPlugin {
         }
         languageManager = new LanguageManager(this);
         languageManager.load();
+        // The lobby, spawn and FFA worlds load first: the spawn and lobby read locations in them.
+        worldSystem = new com.bx.smpPlugin.worlds.WorldSystem(this);
+        worldSystem.start();
         crashProtectionManager = new CrashProtectionManager(this);
         currencyManager = new CurrencyManager(this);
         featureManager = new FeatureManager(this);
@@ -305,12 +306,6 @@ public final class SmpPlugin extends JavaPlugin {
         spawnerManager = new SpawnerManager(this);
         antiEspManager = new AntiEspManager(this);
         try {
-            antiCheatManager = new AntiCheatManager(this);
-        } catch (RuntimeException | LinkageError error) {
-            antiCheatManager = null;
-            getLogger().log(Level.SEVERE, "Could not start the anti-cheat; it is off for this session.", error);
-        }
-        try {
             coinFlipModule = new com.bx.smpPlugin.coinflip.bukkit.CoinFlipModule(this);
             coinFlipModule.start();
         } catch (RuntimeException | LinkageError error) {
@@ -414,7 +409,6 @@ public final class SmpPlugin extends JavaPlugin {
         getLogger().info("SmpPlugin enabled successfully.");
     }
 
-    /** Warns when plugin.yml in the running jar does not declare every node in the permission registry. */
     private void verifyPermissionRegistration() {
         List<String> missing = PermissionRegistry.all().stream()
                 .map(PermissionNode::node)
@@ -493,9 +487,6 @@ public final class SmpPlugin extends JavaPlugin {
         }
         if (antiEspManager != null) {
             antiEspManager.shutdown();
-        }
-        if (antiCheatManager != null) {
-            antiCheatManager.shutdown();
         }
         if (coinFlipModule != null) {
             coinFlipModule.shutdown();
@@ -580,6 +571,9 @@ public final class SmpPlugin extends JavaPlugin {
         if (databaseManager != null) {
             databaseManager.close();
         }
+        if (worldSystem != null) {
+            worldSystem.stop();
+        }
         getServer().getServicesManager().unregisterAll(this);
         getLogger().info("SmpPlugin disabled.");
     }
@@ -609,6 +603,8 @@ public final class SmpPlugin extends JavaPlugin {
     private void registerListeners() {
         PluginManager pm = getServer().getPluginManager();
         registerListener("PlayerContextListener", () -> new PlayerContextListener(this));
+        registerListener("WorldListener", () -> new com.bx.smpPlugin.worlds.WorldListener(this, worldSystem));
+        registerListener("WorldCommandGate", () -> new com.bx.smpPlugin.worlds.WorldCommandGate(this, worldSystem));
         joinPreloadListener = new com.bx.smpPlugin.listeners.JoinPreloadListener(this);
         registerListener("JoinPreloadListener", () -> joinPreloadListener);
         registerListener("PlayerJoinQuitListener", () -> new PlayerJoinQuitListener(this));
@@ -653,20 +649,14 @@ public final class SmpPlugin extends JavaPlugin {
         registerListener("AnvilModerationListener", () -> new AnvilModerationListener(this));
         registerListener("PlayerAdvancementDoneListener", () -> new PlayerAdvancementDoneListener(this));
         registerListener("ItemDropListener", () -> new ItemDropListener(this));
-        if (antiCheatManager != null) {
-            registerListener("AntiCheatListener", () -> new AntiCheatListener(antiCheatManager));
-            registerListener("AntiCheatPlayerListener", () -> new AntiCheatPlayerListener(this, antiCheatManager));
-            antiCheatManager.start();
-        }
+        // The anti-cheat is TitanGuard (a soft dependency, so it is already enabled here).
+        titanGuardBridge = new com.bx.smpPlugin.hooks.TitanGuardBridge(this);
+        titanGuardBridge.start();
         if (coinFlipModule != null) {
             registerListener("CoinFlipListener", () -> new com.bx.smpPlugin.coinflip.bukkit.CoinFlipListener(coinFlipModule));
         }
     }
 
-    /**
-     * Creates and registers one listener. A listener that fails to start (for example because the server
-     * API lacks something it uses) is logged and skipped, so one broken feature cannot disable the whole plugin.
-     */
     private void registerListener(String name, java.util.function.Supplier<org.bukkit.event.Listener> factory) {
         try {
             getServer().getPluginManager().registerEvents(factory.get(), this);
@@ -677,7 +667,6 @@ public final class SmpPlugin extends JavaPlugin {
         }
     }
 
-    /** Listeners that failed to start during this enable; shown by /smpplugin status. */
     public List<String> getFailedListeners() {
         return List.copyOf(failedListeners);
     }
@@ -718,7 +707,7 @@ public final class SmpPlugin extends JavaPlugin {
         // Spawn / AFK
         setExecutor("spawn", new SpawnCommand(this), FeatureManager.Feature.SPAWN);
         setExecutor("setspawn", new SetSpawnCommand(this), FeatureManager.Feature.SPAWN);
-        setExecutor("setlobby", new SetLobbyCommand(this));
+        setExecutor("setlobby", new SetLobbyCommand(this), FeatureManager.Feature.LOBBY);
         AfkCommand afkCommand = new AfkCommand(this);
         setExecutor("afk", afkCommand, FeatureManager.Feature.AFK);
         setTabCompleter("afk", afkCommand);
@@ -811,7 +800,7 @@ public final class SmpPlugin extends JavaPlugin {
         setExecutor("rtp", new RTPCommand(this), FeatureManager.Feature.RTP);
         setExecutor("rtpq", new RTPQueueCommand(this), FeatureManager.Feature.RTP);
         LobbyCommand lobbyCommand = new LobbyCommand(this);
-        setExecutor("lobby", lobbyCommand);
+        setExecutor("lobby", lobbyCommand, FeatureManager.Feature.LOBBY);
 
         // Stats / Leaderboard
         setExecutor("stats", new StatsCommand(this), FeatureManager.Feature.STATS);
@@ -966,9 +955,6 @@ public final class SmpPlugin extends JavaPlugin {
         setExecutor("amod", anvilModCommand);
         setTabCompleter("amod", anvilModCommand);
 
-        if (antiCheatManager != null) {
-            setExecutor("anticheat", new AntiCheatCommand(this, antiCheatManager), FeatureManager.Feature.ANTICHEAT);
-        }
         if (coinFlipModule != null) {
             setExecutor("coinflip", new com.bx.smpPlugin.coinflip.bukkit.CoinFlipCommand(coinFlipModule), FeatureManager.Feature.COINFLIP);
             com.bx.smpPlugin.coinflip.bukkit.CoinFlipAdminCommand coinFlipAdmin = new com.bx.smpPlugin.coinflip.bukkit.CoinFlipAdminCommand(coinFlipModule);
@@ -1161,7 +1147,6 @@ public final class SmpPlugin extends JavaPlugin {
         return decision.allowsEnable();
     }
 
-    /** True when this plugin was enabled earlier in the same JVM, i.e. after /reload or a plugin manager reload. */
     public boolean wasReloadedInProcess() {
         return reloadedInProcess;
     }
@@ -1186,6 +1171,10 @@ public final class SmpPlugin extends JavaPlugin {
             teleportManager.restoreAllRtpChunkThrottles();
         }
         configManager.reload();
+        if (worldSystem != null) {
+            java.util.List<String> worldProblems = worldSystem.reload();
+            worldProblems.forEach(problem -> getLogger().warning("worlds.yml not applied: " + problem));
+        }
         languageManager.reload();
         crashProtectionManager.reload();
         currencyManager.reload();
@@ -1233,10 +1222,6 @@ public final class SmpPlugin extends JavaPlugin {
         spawnerManager.reload();
         antiEspManager.reload();
         antiEspManager.refreshAllPlayers();
-        if (antiCheatManager != null) {
-            antiCheatManager.reload().ifPresent(problem ->
-                    getLogger().warning("anticheat.yml was not reloaded: " + problem));
-        }
         if (coinFlipModule != null) {
             coinFlipModule.reload().ifPresent(problem ->
                     getLogger().warning("CoinFlip configuration was not reloaded: " + problem));
@@ -1298,6 +1283,10 @@ public final class SmpPlugin extends JavaPlugin {
     }
 
     // ── Getters ───────────────────────────────────────────────────────────────
+
+    public com.bx.smpPlugin.worlds.WorldSystem getWorldSystem() {
+        return worldSystem;
+    }
 
     public ConfigManager getConfigManager() {
         return configManager;
@@ -1395,7 +1384,6 @@ public final class SmpPlugin extends JavaPlugin {
         return fakePlayerManager;
     }
 
-    /** The 3.0 features; null until the plugin has finished enabling. */
     public com.bx.smpPlugin.core.V3Module getV3Module() {
         return v3Module;
     }
@@ -1528,7 +1516,6 @@ public final class SmpPlugin extends JavaPlugin {
         return quickBuyBedrockManager;
     }
 
-    /** Opens the Bedrock Quick Buy catalogue form, or returns false when the player is on Java. */
     public boolean openQuickBuyBedrockCatalogue(Player player, int targetSlot) {
         if (quickBuyBedrockManager == null || player == null) {
             return false;
@@ -1548,7 +1535,6 @@ public final class SmpPlugin extends JavaPlugin {
         return playerSettingToggles;
     }
 
-    /** The dialog screens, or null on Spigot (and when the server cannot show dialogs). */
     public DialogGateway getDialogManager() {
         return dialogManager;
     }
@@ -1633,13 +1619,12 @@ public final class SmpPlugin extends JavaPlugin {
         return antiEspManager;
     }
 
-    /** Null when the anti-cheat failed to start. */
     public com.bx.smpPlugin.coinflip.bukkit.CoinFlipModule getCoinFlipModule() {
         return coinFlipModule;
     }
 
-    public AntiCheatManager getAntiCheatManager() {
-        return antiCheatManager;
+    public com.bx.smpPlugin.hooks.TitanGuardBridge getTitanGuardBridge() {
+        return titanGuardBridge;
     }
 
     public NetworkStatusManager getNetworkStatusManager() {
@@ -1680,6 +1665,8 @@ public final class SmpPlugin extends JavaPlugin {
 
     public void syncCommands() {
         syncCommandState("spawn", FeatureManager.Feature.SPAWN);
+        syncCommandState("lobby", FeatureManager.Feature.LOBBY);
+        syncCommandState("setlobby", FeatureManager.Feature.LOBBY);
         syncCommandState("afk", FeatureManager.Feature.AFK);
         syncCommandState("away", FeatureManager.Feature.AFK);
         syncCommandState("afkzone", FeatureManager.Feature.AFK);

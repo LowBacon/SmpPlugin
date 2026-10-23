@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -19,17 +20,8 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-/**
- * The settings the dialog interface exposes, as a table of read-and-cycle pairs.
- *
- * <p>The chest menu in {@code PlayerSettingsMenu} drives the same {@link PlayerData} flags
- * through its own switch; this table exists because two callers need the *display* text as well
- * — the dialog buttons and the {@code %economy_setting_*%} placeholders that label
- * them — and duplicating the formatting in both would let them drift apart on screen.
- */
 public final class PlayerSettingToggles {
 
-    /** One row of the table: how to read a setting and how to advance it. */
     private record Toggle(
             String label,
             Function<Context, String> status,
@@ -37,7 +29,6 @@ public final class PlayerSettingToggles {
     ) {
     }
 
-    /** Everything a toggle may need. Held together so the table entries stay one-liners. */
     public record Context(SmpPlugin plugin, Player player, PlayerData data) {
     }
 
@@ -56,7 +47,6 @@ public final class PlayerSettingToggles {
         register();
     }
 
-    /** Ids this service answers for, used by tab completion and the placeholder expansion. */
     public Set<String> ids() {
         return toggles.keySet();
     }
@@ -65,13 +55,11 @@ public final class PlayerSettingToggles {
         return id != null && toggles.containsKey(normalise(id));
     }
 
-    /** Human-readable name, used in the chat confirmation after a toggle. */
     public String label(String id) {
         Toggle toggle = toggles.get(normalise(id));
         return toggle == null ? null : toggle.label();
     }
 
-    /** Current value as a colourised string, or null when the id is unknown. */
     public String status(Player player, String id) {
         Toggle toggle = toggles.get(normalise(id));
         if (toggle == null || player == null) {
@@ -84,10 +72,6 @@ public final class PlayerSettingToggles {
         return toggle.status().apply(new Context(plugin, player, data));
     }
 
-    /**
-     * Advances a setting to its next value and returns the new display string, or null when the
-     * id is unknown. Two-state settings flip; the choice settings cycle through their options.
-     */
     public String cycle(Player player, String id) {
         Toggle toggle = toggles.get(normalise(id));
         if (toggle == null || player == null) {
@@ -102,11 +86,6 @@ public final class PlayerSettingToggles {
         return toggle.status().apply(context);
     }
 
-    /**
-     * Loads auction quick-buy/sell flags so General can paint ON/OFF on the first open instead
-     * of a frame of defaults. {@code whenReady} runs on the player's entity thread one tick
-     * later when the cache was empty and a value has arrived.
-     */
     public void prefetchAuction(Player player, Runnable whenReady) {
         if (plugin == null || player == null || plugin.getAuctionHouseManager() == null) {
             return;
@@ -155,7 +134,6 @@ public final class PlayerSettingToggles {
         toggles.put(normalise(id), new Toggle(label, status, cycle));
     }
 
-    /** Shorthand for the common case: a boolean on PlayerData with no side effect. */
     private void addFlag(
             String id,
             String label,
@@ -376,7 +354,6 @@ public final class PlayerSettingToggles {
                 "SETTINGS.DISABLE-PHANTOM-SPAWN-LIMIT-SECONDS"));
     }
 
-    /** Zero clears the deadline; a positive limit stamps one that many seconds out. */
     private long expiryFor(boolean spawningAllowed, String limitPath) {
         if (spawningAllowed || plugin == null || plugin.getConfigManager() == null) {
             return 0L;
@@ -392,7 +369,6 @@ public final class PlayerSettingToggles {
         context.player().kickPlayer(ColorUtils.colorize("&cThe setting has been changed. Please rejoin."));
     }
 
-    /** Team chat needs a team and the team chat permission, so it is not a plain flag. */
     private static void cycleTeamChat(Context context) {
         if (context.plugin() == null || context.plugin().getTeamManager() == null) {
             return;

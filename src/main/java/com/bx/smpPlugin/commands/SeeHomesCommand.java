@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.commands;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -19,7 +20,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
-/** /seehomes &lt;player&gt;: staff view of someone's homes, with click-to-teleport. */
 public class SeeHomesCommand implements CommandExecutor, TabCompleter {
 
     public static final String PERMISSION = "smpplugin.staff.seehomes";
@@ -30,7 +30,6 @@ public class SeeHomesCommand implements CommandExecutor, TabCompleter {
         this.plugin = plugin;
     }
 
-    /** The profile viewer already opens this menu, so its permission works here too. */
     public static boolean canSeeHomes(Permissible permissible) {
         return PermissionUtils.hasAny(permissible, PERMISSION, ProfileViewerManager.VIEW_PERMISSION);
     }

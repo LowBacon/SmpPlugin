@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip.bukkit;
 
 import com.bx.smpPlugin.coinflip.storage.CoinFlipDao;
@@ -9,7 +10,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
-/** Cached rankings; opening this menu never queries storage. Players who made their profile private are left out. */
 public final class LeaderboardMenu extends CoinFlipMenu {
 
     private static final Map<CoinFlipDao.Metric, String[]> INFO = Map.ofEntries(

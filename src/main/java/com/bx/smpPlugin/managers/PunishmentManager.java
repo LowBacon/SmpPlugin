@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.utils.PermissionUtils;
@@ -123,7 +124,6 @@ public class PunishmentManager {
         );
     }
 
-    /** Server-wide count, optionally narrowed to target or staff names containing {@code search}. */
     public int countAll(PunishmentQuery query, String search) {
         return plugin.getDatabaseManager().countAllPunishments(
                 query == null ? PunishmentQuery.defaultQuery() : query, search, System.currentTimeMillis());
@@ -238,7 +238,6 @@ public class PunishmentManager {
         return saved;
     }
 
-    /** The microphone gate reads a cache, so every change to a voice mute has to reach it. */
     private void refreshVoiceMute(UUID targetUuid) {
         if (plugin.getVoiceMuteManager() != null) {
             plugin.getVoiceMuteManager().refresh(targetUuid);

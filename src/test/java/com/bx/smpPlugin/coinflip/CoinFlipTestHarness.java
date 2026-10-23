@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip;
 
 import com.bx.smpPlugin.coinflip.storage.CoinFlipRepository;
@@ -31,10 +32,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
-/**
- * A CoinFlip service wired to a real SQLite file, a fake in-memory economy and a single-thread "server thread".
- * Tests call {@link #main(Callable)} to run code on that thread, exactly like the plugin does.
- */
 final class CoinFlipTestHarness implements AutoCloseable {
 
     final Path databaseFile;
@@ -63,7 +60,6 @@ final class CoinFlipTestHarness implements AutoCloseable {
         start();
     }
 
-    /** Starts (or restarts, after {@link #crash()}) the repository and service on the same database file. */
     void start() throws Exception {
         if (repository != null) {
             repository.shutdown(5);
@@ -76,7 +72,6 @@ final class CoinFlipTestHarness implements AutoCloseable {
         await(main(() -> service.recoverAtStartup()));
     }
 
-    /** Simulates a crash: the service and its memory vanish; only the database file remains. */
     void crash() {
         repository.shutdown(5);
     }
@@ -145,7 +140,6 @@ final class CoinFlipTestHarness implements AutoCloseable {
         return future.get(10, TimeUnit.SECONDS);
     }
 
-    /** Waits until every queued server-thread task and storage task has run. */
     void settleQueues() throws Exception {
         for (int i = 0; i < 20; i++) {
             main(() -> null);
@@ -162,10 +156,8 @@ final class CoinFlipTestHarness implements AutoCloseable {
         serverThread.shutdownNow();
     }
 
-    /** In-memory balances for online players, like the server economy. */
     static final class FakeEconomy implements EconomyGateway {
         final Map<UUID, Long> balances = new HashMap<>();
-        /** Grows with every change, like PlayerData's balance version. */
         final Map<UUID, Long> versions = new HashMap<>();
         final Set<UUID> online = new HashSet<>();
         volatile boolean failWithdrawals;
@@ -209,7 +201,6 @@ final class CoinFlipTestHarness implements AutoCloseable {
         }
     }
 
-    /** Records what players and staff would have been told. */
     static final class RecordingNotifier implements CoinFlipNotifier {
         final List<String> messages = Collections.synchronizedList(new ArrayList<>());
         final List<String> staff = Collections.synchronizedList(new ArrayList<>());
@@ -251,7 +242,6 @@ final class CoinFlipTestHarness implements AutoCloseable {
         }
     }
 
-    /** Returns queued results first, then alternates; outcome IDs are unique counters. */
     static final class ScriptedRandom implements RandomSource {
         final Deque<CoinSide> next = new ArrayDeque<>();
         private long counter;

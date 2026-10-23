@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.halloween;
 
 import java.time.LocalDate;
@@ -7,19 +8,10 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Locale;
 
-/**
- * The date rules of the Spooky Calendar, kept free of any server call so they can be tested.
- *
- * <p>Doors are numbered by their day of the month. A door is {@link DoorState#OPEN} when it may be
- * claimed now, {@link DoorState#LOCKED} before its day, {@link DoorState#MISSED} once it can no
- * longer be claimed, and {@link DoorState#CLAIMED} once opened.
- */
 public record CalendarRules(int month, int firstDay, int lastDay, Mode mode, boolean catchUp, int graceDays) {
 
     public enum Mode {
-        /** Door N opens on day N. */
         DAILY,
-        /** Every door opens on the last day. */
         ALL_ON_LAST_DAY;
 
         static Mode parse(String raw) {
@@ -47,7 +39,6 @@ public record CalendarRules(int month, int firstDay, int lastDay, Mode mode, boo
         return new CalendarRules(month, firstDay, lastDay, Mode.parse(mode), catchUp, graceDays);
     }
 
-    /** The last day of the season in that year, clamped to the length of the month. */
     public int lastDayIn(int year) {
         return Math.min(lastDay, YearMonth.of(year, month).lengthOfMonth());
     }
@@ -65,21 +56,15 @@ public record CalendarRules(int month, int firstDay, int lastDay, Mode mode, boo
         return LocalDate.of(year, month, firstDay);
     }
 
-    /** The last date a door can be claimed (the last day plus the grace days). */
     public LocalDate claimDeadline(int year) {
         return LocalDate.of(year, month, lastDayIn(year)).plusDays(graceDays);
     }
 
-    /** True from the first door's day to the claim deadline. */
     public boolean inSeason(LocalDate today) {
         int year = seasonYear(today);
         return !today.isBefore(seasonStart(year)) && !today.isAfter(claimDeadline(year));
     }
 
-    /**
-     * The year whose calendar applies today. Grace days can run into the next month (or, for a
-     * December season, the next year); dates inside them still belong to that season.
-     */
     public int seasonYear(LocalDate today) {
         int year = today.getYear();
         LocalDate lastYearsDeadline = claimDeadline(year - 1);
@@ -118,7 +103,6 @@ public record CalendarRules(int month, int firstDay, int lastDay, Mode mode, boo
                 : DoorState.MISSED;
     }
 
-    /** Seconds until a door opens, or 0 when it already has. */
     public long secondsUntilOpen(int door, ZonedDateTime now) {
         LocalDate today = now.toLocalDate();
         LocalDate opens = openDate(door, seasonYear(today));
@@ -129,7 +113,6 @@ public record CalendarRules(int month, int firstDay, int lastDay, Mode mode, boo
         return Math.max(0L, ChronoUnit.SECONDS.between(now, start));
     }
 
-    /** Seconds until the next season starts (0 while it is running). */
     public long secondsUntilSeason(ZonedDateTime now) {
         LocalDate today = now.toLocalDate();
         if (inSeason(today)) {
@@ -143,7 +126,6 @@ public record CalendarRules(int month, int firstDay, int lastDay, Mode mode, boo
         return Math.max(0L, ChronoUnit.SECONDS.between(now, start.atStartOfDay(now.getZone())));
     }
 
-    /** Seconds until the last day (Halloween itself), 0 on or after it. */
     public long secondsUntilLastDay(ZonedDateTime now) {
         LocalDate today = now.toLocalDate();
         int year = seasonYear(today);

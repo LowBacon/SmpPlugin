@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.amethyst;
 
 import com.bx.smpPlugin.utils.ColorUtils;
@@ -8,10 +9,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
-/**
- * Shop identity for a granted amethyst tool: the Shards Shop tooltip, without the price line,
- * and with a live {@code {time}} placeholder on the Self Destruct line.
- */
 public record AmethystToolAppearance(String name, List<String> loreTemplate, List<String> enchantments) {
 
     private static final Pattern PRICE_LINE = Pattern.compile(".*\\d.*shards.*", Pattern.CASE_INSENSITIVE);
@@ -50,10 +47,6 @@ public record AmethystToolAppearance(String name, List<String> loreTemplate, Lis
         return List.copyOf(owned);
     }
 
-    /**
-     * Shop lore as it should appear on a purchased item: same text, without the price line.
-     * Timed tools then replace Self Destruct durations with {@code {time}}.
-     */
     public static List<String> stripPriceLines(List<String> shopLore) {
         if (shopLore == null || shopLore.isEmpty()) {
             return List.of();

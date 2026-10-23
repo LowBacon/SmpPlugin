@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.halloween;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -29,7 +30,6 @@ import java.util.logging.Logger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** Candy, milestones, quests, the shop and the daily bag on a real SQLite store and economy, without a server. */
 class HalloweenHubTest {
 
     private static final UUID LUNA = UUID.fromString("60000000-0000-0000-0000-0000000000b1");

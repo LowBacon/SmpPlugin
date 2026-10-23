@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.storage;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -212,7 +213,6 @@ public final class ShopPreferenceRepository {
                     """));
         }
     }
-
 
     private Connection connection() throws SQLException {
         Connection current = connection;

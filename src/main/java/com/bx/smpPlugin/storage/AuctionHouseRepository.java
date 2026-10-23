@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.storage;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -18,6 +19,8 @@ import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -66,6 +69,10 @@ public final class AuctionHouseRepository {
     private final ItemCodec itemCodec;
     private final Logger logger;
     private final ExecutorService worker;
+    // Decoded listing items by id, reused by the next snapshot: a listing's item never changes, and
+    // decoding every listing ever made on each refresh grew with the server's whole sales history.
+    // Only touched on the single worker thread.
+    private Map<Long, ItemStack> listingItems = new HashMap<>();
     private volatile Connection connection;
     private volatile boolean closed;
 
@@ -137,16 +144,18 @@ public final class AuctionHouseRepository {
         return submit(() -> {
             resetStaleClaimLeases();
             List<AuctionListing> listings = new ArrayList<>();
+            Map<Long, ItemStack> seen = new HashMap<>();
             try (PreparedStatement statement = connection().prepareStatement(
                     "SELECT * FROM auction_listings ORDER BY id DESC");
                  ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
-                    AuctionListing listing = mapListing(resultSet);
+                    AuctionListing listing = mapListing(resultSet, seen);
                     if (listing != null) {
                         listings.add(listing);
                     }
                 }
             }
+            listingItems = seen;
 
             List<AuctionClaim> claims = new ArrayList<>();
             try (PreparedStatement statement = connection().prepareStatement(
@@ -736,9 +745,23 @@ public final class AuctionHouseRepository {
     }
 
     private AuctionListing mapListing(ResultSet resultSet) throws SQLException {
-        ItemStack item = deserializeItem(resultSet.getString("item_data"));
-        if (item == null || !isSafe(item, "auction listing #" + resultSet.getLong("id"))) {
-            return null;
+        return mapListing(resultSet, null);
+    }
+
+    private AuctionListing mapListing(ResultSet resultSet, Map<Long, ItemStack> seen) throws SQLException {
+        long id = resultSet.getLong("id");
+        ItemStack known = seen == null ? null : listingItems.get(id);
+        ItemStack item;
+        if (known != null) {
+            item = known.clone();
+        } else {
+            item = deserializeItem(resultSet.getString("item_data"));
+            if (item == null || !isSafe(item, "auction listing #" + id)) {
+                return null;
+            }
+        }
+        if (seen != null) {
+            seen.put(id, known != null ? known : item.clone());
         }
         String buyer = resultSet.getString("buyer_uuid");
         return new AuctionListing(

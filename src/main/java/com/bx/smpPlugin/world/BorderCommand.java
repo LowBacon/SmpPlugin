@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.world;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -14,21 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * /border: the spawn and lobby borders.
- *
- * <pre>
- * /border                                  both borders at a glance
- * /border &lt;spawn|lobby&gt;                    one border in detail
- * /border &lt;zone&gt; set &lt;size&gt; [here]         a square of that size; centred on the spawn / lobby point,
- *                                          or where you stand with "here". Turns the border on.
- * /border &lt;zone&gt; center                    move the centre to where you stand
- * /border &lt;zone&gt; warning &lt;blocks&gt; [seconds]
- * /border &lt;zone&gt; damage &lt;amount&gt; [buffer]
- * /border &lt;zone&gt; mode &lt;player|world&gt; [confirm]
- * /border &lt;zone&gt; on | off
- * </pre>
- */
 public final class BorderCommand implements CommandExecutor, TabCompleter {
 
     public static final String PERMISSION = "smpplugin.admin.border";
@@ -159,7 +145,6 @@ public final class BorderCommand implements CommandExecutor, TabCompleter {
         save(sender, changed, "&aMode set to &f" + mode.name().toLowerCase(Locale.ROOT) + "&a.");
     }
 
-    /** WORLD mode on the main world would end the survival world at the edge, so it needs "confirm". */
     private boolean allowedOnMainWorld(CommandSender sender, BorderZone zone, String[] args, int confirmIndex) {
         if (zone.mode() != BorderZone.Mode.WORLD || !BorderManager.isMainWorld(zone.world())) {
             return true;
@@ -177,7 +162,6 @@ public final class BorderCommand implements CommandExecutor, TabCompleter {
         return false;
     }
 
-    /** A first area for a zone that was never set: around the spawn point, or the lobby area. */
     private BorderZone defaultArea(CommandSender sender, BorderZone zone, boolean forSet) {
         if (zone.name().equals("lobby")) {
             if (plugin.getLobbyManager() == null || !plugin.getLobbyManager().hasLobbyLocation()) {

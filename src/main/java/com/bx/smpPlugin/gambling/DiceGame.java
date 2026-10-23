@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.gambling;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -29,26 +30,11 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
-/**
- * /dice: bet money on a dice roll against the house.
- *
- * <pre>
- * /dice                       the odds and how to play
- * /dice &lt;bet&gt; [high|low|1-6]  shows the bet, its chance and payout, with a Roll button
- * /dice roll [sides]          a roll just for fun, no money (also /roll)
- * </pre>
- *
- * The dice are rolled by the server (SecureRandom) and the bet is taken before the animation
- * starts; the animation only shows a result that is already decided. The result is settled exactly
- * once: when the animation ends, when the player leaves, or when the server stops, whichever
- * comes first. Until then the bet is held in {@link GamblingEscrow}, so a crash gives it back.
- */
 public final class DiceGame implements CommandExecutor, TabCompleter, Listener {
 
     public static final String PERMISSION = "smpplugin.dice";
     public static final String FUN_PERMISSION = "smpplugin.fun.games";
     private static final String BYPASS_COOLDOWN = "smpplugin.gambling.bypasscooldown";
-    /** Ticks after the roll command before each animation frame is shown. The last frame is the real result. */
     private static final int[] FRAME_TICKS = {1, 3, 5, 7, 10, 13, 17, 22, 28, 35};
 
     private record Pending(long stake, DiceOdds.Bet bet, long expiresAt) {
@@ -325,7 +311,6 @@ public final class DiceGame implements CommandExecutor, TabCompleter, Listener {
         plugin.getSpigotScheduler().runEntityLater(player, () -> settle(session, true), 12L);
     }
 
-    /** Pays the result (once). {@code tell}: also print the summary for the player. */
     private void settle(Session session, boolean tell) {
         if (session.settled) {
             return;
@@ -382,7 +367,6 @@ public final class DiceGame implements CommandExecutor, TabCompleter, Listener {
         }
     }
 
-    /** Settles every roll still in progress. Called while the plugin shuts down; nothing is scheduled. */
     void shutdown() {
         for (Session session : new ArrayList<>(sessions.values())) {
             settle(session, false);
@@ -450,7 +434,6 @@ public final class DiceGame implements CommandExecutor, TabCompleter, Listener {
         };
     }
 
-    /** An amount as the player would type it: 1500 or 12.5. */
     private static String plain(long cents) {
         return java.math.BigDecimal.valueOf(cents, 2).stripTrailingZeros().toPlainString();
     }

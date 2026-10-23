@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -13,27 +14,14 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 
-/**
- * Strict YAML syntax check for the plugin's data folder.
- *
- * <p>{@code YamlConfiguration.loadConfiguration} logs a parse error and returns an
- * <em>empty</em> configuration, so a single typo would silently reset prices, menus or
- * messages to their defaults. Reloads must call {@link #validateDirectory(File)} first and
- * keep the previous configuration when it reports any problem.</p>
- */
 public final class ConfigValidator {
 
-    /**
-     * @param file    the file that failed
-     * @param message the parser's explanation, including the line where available
-     */
     public record Problem(Path file, String message) {
         public String describe() {
             return file + ": " + message.replace('\n', ' ').replaceAll("\\s+", " ").trim();
         }
     }
 
-    /** Directories under the data folder that hold runtime data or backups rather than settings. */
     private static final List<String> SKIPPED_DIRECTORIES = List.of("data", "backups", "server-wipe-backups", "logs");
 
     private ConfigValidator() {
@@ -58,7 +46,6 @@ public final class ConfigValidator {
         return List.copyOf(problems);
     }
 
-    /** @return the parse error, or empty when the file is valid YAML */
     public static java.util.Optional<String> validateFile(Path path) {
         try {
             String content = Files.readString(path, StandardCharsets.UTF_8);

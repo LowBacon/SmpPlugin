@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.core;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -19,21 +20,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-/**
- * A prize: money, shards, items and console commands, in any mix.
- *
- * <p>Read from a config section:
- * <pre>
- * MONEY: 1000
- * SHARDS: 5
- * ITEMS:              # "MATERIAL", "MATERIAL:amount", or full items saved by the in-game editor
- *   - "GOLDEN_APPLE:3"
- * COMMANDS:           # run by the console; %player% is the player's name
- *   - "crate key give %player% vote 1"
- * DISPLAY:            # optional lines shown instead of the automatic summary
- *   - "&a$1,000 and a mystery key"
- * </pre>
- */
 public record Reward(double money, long shards, List<ItemStack> items, List<String> commands, List<String> display) {
 
     public static final Reward NONE = new Reward(0D, 0L, List.of(), List.of(), List.of());
@@ -61,7 +47,6 @@ public record Reward(double money, long shards, List<ItemStack> items, List<Stri
         return new Reward(money, Math.max(0L, newShards), items, commands, display);
     }
 
-    /** Adds two rewards together (used for streak bonuses). */
     public Reward plus(Reward other) {
         if (other == null || other.isEmpty()) {
             return this;
@@ -95,7 +80,6 @@ public record Reward(double money, long shards, List<ItemStack> items, List<Stri
         );
     }
 
-    /** Accepts an ItemStack saved by Bukkit, a map of one, or "MATERIAL[:amount]" (split into stacks). */
     @SuppressWarnings("unchecked")
     static List<ItemStack> parseItems(Object raw) {
         if (raw instanceof ItemStack stack) {
@@ -135,7 +119,6 @@ public record Reward(double money, long shards, List<ItemStack> items, List<Stri
         return stacks;
     }
 
-    /** Writes this reward into a config section (used by the in-game editors). */
     public void write(ConfigurationSection section) {
         section.set("MONEY", money > 0D ? money : null);
         section.set("SHARDS", shards > 0L ? shards : null);
@@ -144,15 +127,10 @@ public record Reward(double money, long shards, List<ItemStack> items, List<Stri
         section.set("DISPLAY", display.isEmpty() ? null : display);
     }
 
-    /**
-     * Hands the reward to an online player. Items that do not fit go to their reward vault (/claimitems). Must run
-     * on the player's thread.
-     */
     public void give(SmpPlugin plugin, Player player) {
         give(plugin, player, EconomyReason.REWARD, com.bx.smpPlugin.economy.EconomyContext.NONE);
     }
 
-    /** Like {@link #give(SmpPlugin, Player)}, recording the money under a reason and a note in the ledger. */
     public void give(SmpPlugin plugin, Player player, EconomyReason reason, com.bx.smpPlugin.economy.EconomyContext context) {
         if (player == null || !player.isOnline()) {
             return;
@@ -187,7 +165,6 @@ public record Reward(double money, long shards, List<ItemStack> items, List<Stri
         }
     }
 
-    /** Short lines describing the prize, for lore, chat and dialogs. */
     public List<String> describe(SmpPlugin plugin) {
         if (!display.isEmpty()) {
             return display;
@@ -219,7 +196,6 @@ public record Reward(double money, long shards, List<ItemStack> items, List<Stri
         return lines;
     }
 
-    /** The item shown for this prize in menus: the first item, else gold for money, else a chest. */
     public ItemStack icon() {
         if (!items.isEmpty()) {
             return items.get(0).clone();
@@ -248,7 +224,6 @@ public record Reward(double money, long shards, List<ItemStack> items, List<Stri
         return out.toString();
     }
 
-    /** Builds a menu item that previews this reward, drawn as the given material. */
     public ItemStack previewItem(SmpPlugin plugin, String name, List<String> extraLore, Material material) {
         List<String> lore = new ArrayList<>();
         for (String line : describe(plugin)) {
@@ -260,7 +235,6 @@ public record Reward(double money, long shards, List<ItemStack> items, List<Stri
         return ItemUtils.createItem(material, name, lore);
     }
 
-    /** Builds a menu item that previews this reward. */
     public ItemStack previewItem(SmpPlugin plugin, String name, List<String> extraLore) {
         List<String> lore = new ArrayList<>();
         for (String line : describe(plugin)) {

@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.dialogs;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -9,16 +10,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Typed reads over {@code dialog.yml}.
- *
- * <p>Every getter takes the dialog's root path so a screen never has to hard-code the layout of
- * the file, and every string goes through {@link #apply(String, Map)} so {@code %target%} style
- * tokens in labels, titles and action ids resolve the same way everywhere.
- */
 public final class DialogConfig {
 
-    /** A button as written in the config, before it becomes an Adventure action button. */
     public record ButtonSpec(String label, String tooltip, int width, String action, String command) {
 
         public boolean hasAction() {
@@ -30,7 +23,6 @@ public final class DialogConfig {
         }
     }
 
-    /** A text or dropdown input as written in the config. */
     public record InputSpec(
             String id,
             String label,
@@ -44,7 +36,6 @@ public final class DialogConfig {
         }
     }
 
-    /** One entry of a dropdown input. */
     public record OptionSpec(String id, String label, boolean isDefault) {
     }
 
@@ -62,15 +53,10 @@ public final class DialogConfig {
         return plugin.getConfigManager().getDialog();
     }
 
-    /** Master switch for the whole dialog interface. */
     public boolean isEnabled() {
         return DialogSupport.isAvailable() && config().getBoolean("ENABLED", true);
     }
 
-    /**
-     * Per-screen switch. A server owner can send one command back to its chest menu without
-     * losing the rest of the dialog interface.
-     */
     public boolean isScreenEnabled(String screen) {
         return isEnabled() && config().getBoolean("SCREENS." + screen, true);
     }
@@ -116,20 +102,14 @@ public final class DialogConfig {
         return clampWidth(config().getInt(path + ".BUTTON-WIDTH", fallback));
     }
 
-    /** Reads {@code <path>.BUTTONS}, dropping malformed entries rather than failing the screen. */
     public List<ButtonSpec> buttonsOf(String path, Map<String, String> tokens) {
         return buttons(path + ".BUTTONS", tokens, buttonWidth(path));
     }
 
-    /** Reads an arbitrary button list such as {@code ....BUTTONS-10}. */
     public List<ButtonSpec> buttons(String listPath, Map<String, String> tokens, int defaultWidth) {
         return buttonsFrom(config().getMapList(listPath), tokens, defaultWidth);
     }
 
-    /**
-     * Reads buttons out of a list already pulled from the config. Nested lists — a category's
-     * buttons, say — cannot be addressed by path, so they arrive here as raw maps.
-     */
     public List<ButtonSpec> buttonsFrom(List<?> raw, Map<String, String> tokens, int defaultWidth) {
         List<ButtonSpec> specs = new ArrayList<>();
         if (raw == null) {
@@ -161,7 +141,6 @@ public final class DialogConfig {
         );
     }
 
-    /** Reads {@code <path>.INPUTS}. */
     public List<InputSpec> inputs(String path, Map<String, String> tokens) {
         List<InputSpec> specs = new ArrayList<>();
         for (Map<?, ?> entry : config().getMapList(path + ".INPUTS")) {
@@ -200,7 +179,6 @@ public final class DialogConfig {
         return options;
     }
 
-    /** Replaces {@code %token%} occurrences; a null map leaves the text untouched. */
     public static String apply(String text, Map<String, String> tokens) {
         if (text == null || tokens == null || tokens.isEmpty() || text.indexOf('%') < 0) {
             return text;
@@ -212,7 +190,6 @@ public final class DialogConfig {
         return result;
     }
 
-    /** Convenience builder so screens can write {@code tokens("target", name)} inline. */
     public static Map<String, String> tokens(String... pairs) {
         Map<String, String> map = new LinkedHashMap<>();
         for (int index = 0; index + 1 < pairs.length; index += 2) {

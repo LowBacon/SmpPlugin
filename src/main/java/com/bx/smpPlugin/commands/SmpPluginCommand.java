@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.commands;
 
 import com.bx.smpPlugin.utils.PermissionUtils;
@@ -48,7 +49,6 @@ public class SmpPluginCommand implements CommandExecutor, TabCompleter {
     private static final String STATUS_PERMISSION = "smpplugin.admin.status";
     private static final String MAINTENANCE_PERMISSION = "smpplugin.admin.maintenance";
 
-    /** Root subcommand → permission that must be held to see it in tab completion. */
     private static final Map<String, String> ROOT_COMPLETIONS = rootCompletions();
     private static final List<String> SETUP_COMPLETIONS = List.of("status", "apply", "setspawn", "setafk", "commands");
     private static final List<String> COMMAND_CATEGORIES = List.of("all", "starter", "economy", "market", "pvp",
@@ -70,6 +70,7 @@ public class SmpPluginCommand implements CommandExecutor, TabCompleter {
         completions.put("setup", SETUP_PERMISSION);
         completions.put("features", FEATURES_PERMISSION);
         completions.put("maintenance", MAINTENANCE_PERMISSION);
+        completions.put("world", com.bx.smpPlugin.worlds.WorldSystem.ADMIN);
         return java.util.Collections.unmodifiableMap(completions);
     }
 
@@ -112,6 +113,11 @@ public class SmpPluginCommand implements CommandExecutor, TabCompleter {
             case "setup" -> handleSetup(sender, label, args);
             case "features" -> handleFeatures(sender, label, args);
             case "maintenance" -> handleMaintenance(sender, label, args);
+            case "world", "worlds" -> {
+                if (plugin.getWorldSystem() != null) {
+                    new com.bx.smpPlugin.worlds.WorldCommand(plugin, plugin.getWorldSystem()).handle(sender, label, args);
+                }
+            }
             default -> sendUsage(sender, label);
         }
         return true;
@@ -379,6 +385,9 @@ public class SmpPluginCommand implements CommandExecutor, TabCompleter {
         }
 
         Location location = player.getLocation();
+        if (spawn && plugin.getWorldSystem() != null && plugin.getWorldSystem().refuseOutside(player, "spawn", "the spawn")) {
+            return;
+        }
         if (spawn) {
             SpawnManager.SetupLocationResult result = plugin.getSpawnManager().setSpawnLocation(location);
             if (!result.success()) {
@@ -721,7 +730,6 @@ public class SmpPluginCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(ColorUtils.toComponent("&cᴜѕᴀɢᴇ: /" + label + " <version|status|reload|statswipe|optimize|setup|features|maintenance>"));
     }
 
-    /** /smpplugin version: what is installed, what it was built for, and whether a newer one is out. */
     private void handleVersion(CommandSender sender) {
         String version = plugin.getDescription().getVersion();
         com.bx.smpPlugin.platform.BuildInfo build = com.bx.smpPlugin.platform.BuildInfo.load(plugin.getClass().getClassLoader());
@@ -788,6 +796,10 @@ public class SmpPluginCommand implements CommandExecutor, TabCompleter {
 
         if (root.equals("features")) {
             return completeFeatures(args);
+        }
+
+        if ((root.equals("world") || root.equals("worlds")) && plugin.getWorldSystem() != null) {
+            return new com.bx.smpPlugin.worlds.WorldCommand(plugin, plugin.getWorldSystem()).complete(sender, args);
         }
 
         if (root.equals("maintenance")) {

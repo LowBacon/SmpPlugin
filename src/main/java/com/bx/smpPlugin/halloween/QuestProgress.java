@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.halloween;
 
 import java.util.Map;
@@ -5,10 +6,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-/**
- * How far a player is with each quest this season, and which quests are finished. Stored as
- * {@code id=count;id=done;...}. Pure, so it can be tested.
- */
 public record QuestProgress(Map<String, Integer> counts, Set<String> done) {
 
     public static final QuestProgress EMPTY = new QuestProgress(Map.of(), Set.of());
@@ -61,7 +58,6 @@ public record QuestProgress(Map<String, Integer> counts, Set<String> done) {
         return done.contains(id);
     }
 
-    /** Adds to a quest's count; once it reaches {@code goal} the quest is done (and stays done). */
     public QuestProgress add(String id, int amount, int goal) {
         if (done.contains(id) || amount <= 0) {
             return this;

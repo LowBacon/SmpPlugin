@@ -73,8 +73,32 @@ SETTINGS:
   HOME-PERMISSIONS: {}
   #   group.vip: 5
   #   group.mvp: 10
+  # Homes per rank. A rank counts when the player is in the LuckPerms group of that name, has the
+  # perks rank (smpplugin.rank.<name>) or the staff role (smpplugin.role.<name>); "op" is server
+  # operators. The highest one wins and nobody gets fewer than HOME-DEFAULT. Add or rename freely.
+  HOME-RANKS:
+    vip: 5
+    vipplus: 7
+    mvp: 8
+    mvpplus: 10
+    elite: 12
+    legend: 15
+    helper: 8
+    moderator: 12
+    admin: 20
+    developer: 20
+    dev: 20
+    manager: 25
+    coowner: 40
+    owner: 50
+    op: 50
   # The numerical value for Shards Per Kill. Available options: Any valid integer
   SHARDS-PER-KILL: 1
+  # Killing the same player again only pays shards after this many seconds (stops farming a
+  # second account). 0 pays every kill.
+  KILL-REWARD-SAME-VICTIM-COOLDOWN-SECONDS: 300
+  # No shards for a kill when both players connect from the same address.
+  KILL-REWARD-SKIP-SAME-IP: true
   # The text or value for Shards Kill Message. Available options: Any valid string text
   SHARDS-KILL-MESSAGE: '&#A303F9+{shards} Shard'
   # The decimal value for Money Per Default. Available options: Any decimal number
@@ -390,8 +414,7 @@ SHARDS:
         REWARD-MESSAGE: '&#A303F9You received %amount% Shard &7(Total: &#A303F9%total%&7)'
         # The text or value for Boosted Reward Message. Available options: Any valid string text
         BOOSTED-REWARD-MESSAGE: '&#A303F9You received %amount% Shards &7(&ax%multiplier%&7)
-          # The text or value for # The Text Or Mode For &7(Total. Available Options. Available options: Any valid string text
-          # The text or mode for &7(Total. Available options: Any string text &7(Total:
+          &7(Total:
           &#A303F9%total%&7)'
         # The text or value for Leave Message. Available options: Any valid string text
         LEAVE-MESSAGE: '&cShard reward cancelled &7(Left %cuboid% zone)'
@@ -428,10 +451,7 @@ SHARDS:
     RECEIVED: '&#A303F9You received %amount% Shard &8[Everywhere] &7(Total: &#A303F9%total%&7)'
     # The text or value for Received Boosted. Available options: Any valid string text
     RECEIVED-BOOSTED: '&#A303F9You received %amount% Shards &7(&ax%multiplier%&7)
-      # The text or value for # The Text Or Mode For &8[Everywhere] &7(Total. Available Options. Available options: Any valid string text
-      # The text or mode for &8[Everywhere] &7(Total. Available options: Any string
-      # The text or value for Text &8[Everywhere] &7(Total. Available options: Any valid string text
-      text &8[Everywhere] &7(Total: &#A303F9%total%&7)'
+      &8[Everywhere] &7(Total: &#A303F9%total%&7)'
     # Configuration section for Excluded Worlds.
     EXCLUDED-WORLDS:
     - duels
@@ -937,3 +957,11 @@ SERVER-NOTIFICATIONS:
       # The text or value for Message. Supports {player}, {seller}, {item}, {amount}, {price}
       # and {price_formatted}. Available options: Any valid string text
       MESSAGE: '&8[&6AH&8] &f{player} &7bought &e{amount}x {item} &7for &a{price_formatted}&7.'
+# Configuration section for Menu Animations.
+MENU-ANIMATIONS:
+  # Menus open with the frame first and the buttons sweeping in. Available options: true, false
+  ENABLED: true
+  # How fast the sweep runs, in rows per tick (1 slow, 6 almost instant). Available options: 1 to 6
+  SPEED: 2
+  # A soft page sound with the sweep. Available options: true, false
+  SOUND: true

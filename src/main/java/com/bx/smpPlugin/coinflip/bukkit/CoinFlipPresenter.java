@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip.bukkit;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -22,14 +23,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/** Chat, titles, sounds, broadcasts and menu refreshes for CoinFlip. Server thread only. */
 public final class CoinFlipPresenter implements CoinFlipNotifier {
 
     private final SmpPlugin plugin;
     private final CoinFlipModule module;
     private static final long REMATCH_WINDOW_MILLIS = 300_000L;
 
-    /** The last opponent and stake of a player, offered as a rematch for a few minutes. */
     public record Rematch(UUID opponent, String opponentName, long stakeCents, long atMillis) {
     }
 
@@ -50,7 +49,6 @@ public final class CoinFlipPresenter implements CoinFlipNotifier {
         }
     }
 
-    /** Sends a service outcome to the player who asked, with an error sound for refusals. */
     public void sendOutcome(UUID player, CoinFlipService.Outcome outcome) {
         Map<String, String> placeholders = new java.util.LinkedHashMap<>(outcome.placeholders());
         if ("invalid-amount".equals(outcome.messageKey()) && placeholders.containsKey("reason")) {
@@ -144,7 +142,6 @@ public final class CoinFlipPresenter implements CoinFlipNotifier {
         module.webhook().matchCompleted(match);
     }
 
-    /** A recent opponent to offer a rematch to, if any. */
     public java.util.Optional<Rematch> rematchFor(UUID player) {
         Rematch rematch = rematches.get(player);
         if (rematch == null || System.currentTimeMillis() - rematch.atMillis() > REMATCH_WINDOW_MILLIS) {
@@ -217,7 +214,6 @@ public final class CoinFlipPresenter implements CoinFlipNotifier {
         }
     }
 
-    /** Redraws open live menus once per tick at most, however many matches changed. */
     @Override
     public void matchesChanged() {
         if (refreshScheduled) {

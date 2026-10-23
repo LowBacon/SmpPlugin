@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.engagement;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -23,17 +24,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * /poll: staff ask a question, everyone votes with a click. A boss bar counts down and the result
- * is shown as a bar chart in chat.
- *
- * <pre>
- * /poll start 60 Best biome? | Desert | Jungle | Taiga
- * /poll vote 2        (what the chat buttons run)
- * /poll end           (finish early)
- * /poll               (see the question again)
- * </pre>
- */
 public final class Polls implements CommandExecutor, TabCompleter {
 
     public static final String VOTE_PERMISSION = "smpplugin.poll.vote";

@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.listeners;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -11,15 +12,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
-/**
- * Handles right-clicks on the configured SMP-entrance FancyNpcs NPC. Deliberately kept in its
- * own class, separate from {@link LobbyListener}: this class references FancyNpcs API classes
- * directly, and Bukkit resolves an @EventHandler method's parameter type when a Listener is
- * registered. If this code lived inside LobbyListener, registering LobbyListener on a server
- * that doesn't have FancyNpcs installed would throw NoClassDefFoundError and take the entire
- * lobby feature down with it. Keeping it separate means SmpPlugin only ever instantiates/
- * registers this class when FancyNpcs is actually present (see SmpPlugin#registerListeners).
- */
 public final class LobbyNpcListener implements Listener {
 
     private final SmpPlugin plugin;
@@ -74,7 +66,6 @@ public final class LobbyNpcListener implements Listener {
         }
     }
 
-    /** Ticks an actionbar "Teleporting in N..." countdown once per second for the delay period, then teleports. */
     private void runCountdown(Player player, FileConfiguration lobby, long delayTicks) {
         String template = lobby.getString("NPC.COUNTDOWN-ACTIONBAR", "");
         int totalSeconds = (int) (delayTicks / 20L);

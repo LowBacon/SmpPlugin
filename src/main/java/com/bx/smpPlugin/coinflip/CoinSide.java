@@ -1,9 +1,9 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip;
 
 import java.util.Locale;
 import java.util.Optional;
 
-/** The two faces of the coin. The side a player picks is a guess only; it never changes the odds. */
 public enum CoinSide {
     HEADS("Heads"),
     TAILS("Tails");

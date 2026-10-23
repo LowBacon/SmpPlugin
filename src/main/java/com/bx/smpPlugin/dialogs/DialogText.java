@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.dialogs;
 
 import com.bx.smpPlugin.utils.ColorUtils;
@@ -14,14 +15,6 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Turns the legacy colour strings the rest of the plugin speaks into the Adventure components
- * the dialog API wants.
- *
- * <p>{@link ColorUtils} already resolves PlaceholderAPI, MiniMessage and {@code &#RRGGBB} down to
- * section-sign text, including the {@code §x§R§R§G§G§B§B} hex form, so the serializer here is
- * configured to read that form back.
- */
 public final class DialogText {
 
     private static final LegacyComponentSerializer SERIALIZER = LegacyComponentSerializer.builder()
@@ -38,7 +31,6 @@ public final class DialogText {
     private DialogText() {
     }
 
-    /** Colourises and converts a single line, resolving placeholders against the viewer. */
     public static Component of(String raw, Player viewer) {
         if (raw == null || raw.isEmpty()) {
             return Component.empty();
@@ -107,7 +99,6 @@ public final class DialogText {
     private static final Key BLOCKS_ATLAS = Key.key("minecraft", "blocks");
     private static final Key GUI_ATLAS = Key.key("minecraft", "gui");
 
-    /** Builds an object component sprite for an item or sprite texture. */
     public static Component itemSprite(String raw) {
         if (raw == null || raw.isBlank()) {
             return null;
@@ -129,13 +120,6 @@ public final class DialogText {
         }
     }
 
-    /**
-     * Builds a head drawn with an explicit skin texture, for the things no atlas holds.
-     *
-     * <p>A mob texture lays its face out where a player skin keeps one, so pointing a head at
-     * {@code entity/creeper/creeper} draws a creeper face. The hat layer is left off because on a
-     * mob texture that region belongs to some other body part and would paint over the face.
-     */
     public static Component playerHead(String rawTexture) {
         if (rawTexture == null || rawTexture.isBlank()) {
             return null;
@@ -150,7 +134,6 @@ public final class DialogText {
         }
     }
 
-    /** A skin texture is a path under {@code textures/}, so it takes no {@code item/} prefix. */
     private static Key parseTextureKey(String raw) {
         String trimmed = raw.trim().toLowerCase(Locale.ROOT);
         int colon = trimmed.indexOf(':');
@@ -258,12 +241,10 @@ public final class DialogText {
         return 14;
     }
 
-    /** Same as {@link #of(String, Player)} but keeps a blank string as an empty component. */
     public static Component ofOrEmpty(String raw, Player viewer) {
         return raw == null || raw.isBlank() ? Component.empty() : of(raw, viewer);
     }
 
-    /** Converts a multi-line block, splitting on literal {@code \n} as well as real newlines. */
     public static List<Component> lines(String raw, Player viewer) {
         List<Component> out = new ArrayList<>();
         if (raw == null || raw.isEmpty()) {
@@ -275,7 +256,6 @@ public final class DialogText {
         return out;
     }
 
-    /** Joins several lines into one component separated by newlines, for button tooltips. */
     public static Component tooltip(String raw, Player viewer) {
         List<Component> lines = lines(raw, viewer);
         if (lines.isEmpty()) {
@@ -288,7 +268,6 @@ public final class DialogText {
         return result;
     }
 
-    /** Strips colour codes so a value can be compared or logged. */
     public static String plain(String raw) {
         return raw == null ? "" : ColorUtils.stripColorCodesAndPlaceholders(raw);
     }

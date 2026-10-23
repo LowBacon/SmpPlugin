@@ -1,9 +1,11 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.halloween;
 
 import com.bx.smpPlugin.SmpPlugin;
 import com.bx.smpPlugin.core.PlayerStore;
 import com.bx.smpPlugin.core.Text;
 import com.bx.smpPlugin.utils.ItemUtils;
+import com.bx.smpPlugin.worlds.SmpArrival;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
@@ -30,12 +32,6 @@ import org.bukkit.potion.PotionEffectType;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-/**
- * Halloween while the season runs: a greeting and door reminder on join, candy dropped by monsters (eat it for a
- * short boost), candy for the shop from monster kills, quest progress, and zombies and skeletons in pumpkin masks.
- * Each handler starts with a season test that is worked out at most once a second, so outside October they return
- * at once.
- */
 public final class HalloweenListener implements Listener {
 
     private static final String GREETED = "halloween.greeted";
@@ -68,26 +64,67 @@ public final class HalloweenListener implements Listener {
             if (!player.isOnline() || !halloween.inSeason()) {
                 return;
             }
+            // Not in the lobby: both wait until the player steps into the SMP.
+            SmpArrival.run(plugin, player, "halloween-greeting", () -> greet(player));
+            SmpArrival.run(plugin, player, "halloween-calendar", () -> remindCalendar(player));
+        }, 40L);
+    }
+
+    private void greet(Player player) {
+        if (!player.isOnline() || !halloween.inSeason()) {
+            return;
+        }
+        if (halloween.config().getBoolean("AMBIENCE.GREETING-ONCE-A-DAY", false)) {
             String today = halloween.now().toLocalDate().toString();
-            if (!today.equals(store.get(player.getUniqueId(), GREETED))) {
-                store.set(player.getUniqueId(), GREETED, today);
-                long untilHalloween = halloween.rules().secondsUntilLastDay(halloween.now());
-                Text.title(player, Text.get("HALLOWEEN.GREETING-TITLE", "&6&l🎃 Happy Halloween! 🎃"),
-                        untilHalloween > 0
-                                ? Text.get("HALLOWEEN.GREETING-COUNTDOWN", "&7Halloween in &f{time}", "{time}", Text.duration(untilHalloween))
-                                : Text.get("HALLOWEEN.GREETING-TODAY", "&5Tonight is the night..."),
-                        10, 60, 20);
-                player.playSound(player.getLocation(), Sound.ENTITY_WITCH_AMBIENT, 0.6F, 0.9F);
+            if (today.equals(store.get(player.getUniqueId(), GREETED))) {
+                return;
             }
-            int ready = halloween.claimableCount(player.getUniqueId());
-            if (ready > 0) {
-                Text.line(player, Text.prefix(),
-                        Text.get("HALLOWEEN.REMINDER", "&7You have &6{count} &7unopened door{s} in the Spooky Calendar! ",
-                                "{count}", Integer.toString(ready), "{s}", ready == 1 ? "" : "s"),
-                        Text.button(Text.get("HALLOWEEN.REMINDER-BUTTON", "&6&l[Open]"), "halloween",
-                                Text.get("HALLOWEEN.REMINDER-HOVER", "&7Click to open the calendar")));
+            store.set(player.getUniqueId(), GREETED, today);
+        }
+        int total = Math.max(4, Math.min(20, halloween.config().getInt("AMBIENCE.GREETING-SECONDS", 8))) * 20;
+        int fadeOut = 30;
+        String name = plugin.getHideManager() != null ? plugin.getHideManager().publicName(player) : player.getName();
+        String title = Text.get("HALLOWEEN.GREETING-TITLE", "&6&l🎃 Happy Halloween 🎃");
+        String welcome = Text.get("HALLOWEEN.GREETING-WELCOME", "&7Welcome to the SMP, &f{player}", "{player}", name);
+        long untilHalloween = halloween.rules().secondsUntilLastDay(halloween.now());
+        String countdown = untilHalloween > 0
+                ? Text.get("HALLOWEEN.GREETING-COUNTDOWN", "&7Halloween in &6{time}", "{time}", Text.duration(untilHalloween))
+                : Text.get("HALLOWEEN.GREETING-TODAY", "&5Tonight is the night...");
+
+        Text.title(player, title, "", 20, total, fadeOut);
+        player.playSound(player.getLocation(), Sound.ENTITY_WITCH_AMBIENT, 0.5F, 0.9F);
+        int welcomeAt = 30;
+        int countdownAt = total / 2 + 10;
+        greetStep(player, welcomeAt, () -> {
+            Text.title(player, title, welcome, 0, total - welcomeAt, fadeOut);
+            player.playSound(player.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_CHIME, 0.7F, 1.2F);
+        });
+        greetStep(player, countdownAt, () -> {
+            Text.title(player, title, countdown, 0, Math.max(20, total - countdownAt), fadeOut);
+            player.playSound(player.getLocation(), Sound.BLOCK_BELL_RESONATE, 0.35F, 1.5F);
+        });
+    }
+
+    private void greetStep(Player player, long delay, Runnable step) {
+        plugin.getSpigotScheduler().runEntityLater(player, () -> {
+            if (player.isOnline() && !SmpArrival.inLobby(plugin, player)) {
+                step.run();
             }
-        }, 60L);
+        }, delay);
+    }
+
+    private void remindCalendar(Player player) {
+        if (!player.isOnline() || !halloween.inSeason()) {
+            return;
+        }
+        int ready = halloween.claimableCount(player.getUniqueId());
+        if (ready > 0) {
+            Text.line(player, Text.prefix(),
+                    Text.get("HALLOWEEN.REMINDER", "&7You have &6{count} &7unopened door{s} in the Spooky Calendar! ",
+                            "{count}", Integer.toString(ready), "{s}", ready == 1 ? "" : "s"),
+                    Text.button(Text.get("HALLOWEEN.REMINDER-BUTTON", "&6&l[Open]"), "halloween",
+                            Text.get("HALLOWEEN.REMINDER-HOVER", "&7Click to open the calendar")));
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -163,7 +200,6 @@ public final class HalloweenListener implements Listener {
         equipment.setHelmetDropChance(0F);
     }
 
-    /** One Halloween Candy: a cookie marked so eating it gives a boost. */
     public ItemStack candy() {
         ItemStack candy = ItemUtils.createItem(Material.COOKIE, Text.get("HALLOWEEN.CANDY-NAME", "&6&lHalloween Candy"),
                 List.of(Text.get("HALLOWEEN.CANDY-LORE", "&7Eat it for a spooky surprise!")));

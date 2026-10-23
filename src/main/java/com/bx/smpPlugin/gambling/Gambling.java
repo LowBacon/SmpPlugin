@@ -1,11 +1,8 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.gambling;
 
 import com.bx.smpPlugin.SmpPlugin;
 
-/**
- * Starts and stops /dice and /roulette as one unit. On start, any bet a crash left in escrow is
- * given back first. On stop, every roll and round is settled (the database writer then saves it).
- */
 public final class Gambling {
 
     private final GamblingEscrow escrow;

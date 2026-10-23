@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip.bukkit;
 
 import org.bukkit.Material;
@@ -6,7 +7,6 @@ import org.bukkit.entity.Player;
 import java.util.List;
 import java.util.UUID;
 
-/** A plain yes/no screen for actions that cannot be undone. */
 public final class ConfirmMenu extends CoinFlipMenu {
 
     private final String question;

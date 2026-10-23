@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.models;
 
 import java.util.ArrayList;
@@ -5,12 +6,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-/**
- * Auction search words. A word has to appear in the item name, so {@code neth} matches
- * netherite and {@code boot} matches boots. An enchant abbreviation followed by a level,
- * as in {@code prot 4} or {@code prot4}, keeps items that have that enchant at that level
- * or higher.
- */
 public final class AuctionIntelligentSearch {
 
     public record EnchantNeed(String enchantKey, int minimumLevel) {

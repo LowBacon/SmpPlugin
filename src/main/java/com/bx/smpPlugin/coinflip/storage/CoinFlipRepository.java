@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip.storage;
 
 import java.sql.Connection;
@@ -11,20 +12,13 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * Runs CoinFlip storage work on one dedicated thread with its own connection, so the server thread never waits
- * for the database. Work is queued in a bounded queue: when it is full, new work fails immediately with
- * {@code BUSY} instead of piling up. Each {@link #transaction} commits or rolls back as a whole.
- */
 public final class CoinFlipRepository {
 
-    /** Work that runs inside one database transaction. */
     @FunctionalInterface
     public interface Work<T> {
         T run(CoinFlipDao dao) throws SQLException;
     }
 
-    /** Opens a connection; the plugin passes the shared database's dedicated-connection factory. */
     @FunctionalInterface
     public interface ConnectionFactory {
         Connection open() throws SQLException;
@@ -55,7 +49,6 @@ public final class CoinFlipRepository {
         });
     }
 
-    /** Opens the connection, creates or migrates the schema, and marks storage ready. */
     public CompletableFuture<Void> initialize() {
         return submit(true, dao -> {
             // CREATE TABLE IF NOT EXISTS never alters existing tables, so it is safe before the version check.
@@ -77,12 +70,10 @@ public final class CoinFlipRepository {
         return ready && !closed;
     }
 
-    /** Runs {@code work} in one transaction. Failure is reported as a {@link CoinFlipStorageException}. */
     public <T> CompletableFuture<T> transaction(Work<T> work) {
         return submit(false, work);
     }
 
-    /** Pending work in the queue. */
     public int queued() {
         return worker.getQueue().size();
     }
@@ -104,7 +95,6 @@ public final class CoinFlipRepository {
         return count == 0 ? 0D : totalNanos.get() / 1_000_000D / count;
     }
 
-    /** Stops accepting work, lets queued work finish (up to {@code waitSeconds}), then closes the connection. */
     public void shutdown(int waitSeconds) {
         closed = true;
         worker.shutdown();

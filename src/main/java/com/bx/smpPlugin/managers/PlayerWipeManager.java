@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.models.PlayerData;
@@ -17,22 +18,8 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 
-/**
- * Clears everything the plugin has stored about one player, in contrast to {@link StatsWipeManager}
- * which clears a single category across everybody. Moderation records — punishments, IP history,
- * freeze and staff-mode state — survive a player wipe, and so do world objects such as the
- * spawners they placed.
- *
- * <p>Every wipe writes what it removed to a backup file first, so
- * {@link PlayerUnwipeManager} can put the player back if the wipe turns out to have been a
- * mistake.
- */
 public class PlayerWipeManager {
 
-    /**
-     * The order the command prints wipe counts in. Every key here is produced by
-     * {@link DatabaseManager#previewPlayerWipe(UUID)}.
-     */
     public static final List<String> COUNT_KEYS = List.of(
             "stats",
             "homes",
@@ -103,10 +90,6 @@ public class PlayerWipeManager {
         return wipeInProgress.get();
     }
 
-    /**
-     * Finds the player an admin typed, online or not. Hidden players resolve by their real name so
-     * a disguise cannot dodge a wipe.
-     */
     public Target resolveTarget(String input) {
         if (input == null || input.isBlank()) {
             return null;
@@ -182,17 +165,12 @@ public class PlayerWipeManager {
         }
     }
 
-    /**
-     * Captures the player as they are now and writes it to disk before anything is deleted, so a
-     * wipe that fails partway through still leaves a complete copy to restore from.
-     */
     private File writeBackup(Target target, String actorName) throws SQLException, IOException {
         PlayerWipeArchive archive = plugin.getDatabaseManager()
                 .capturePlayerWipeArchive(target.uuid(), target.name(), actorName);
         return plugin.getPlayerUnwipeManager().write(archive);
     }
 
-    /** Removes the backup of a wipe that never happened, so it cannot be restored by mistake. */
     private void discardBackup(File backupFile) {
         if (backupFile != null && backupFile.exists() && !backupFile.delete()) {
             plugin.getLogger().warning("Could not remove the backup of a failed wipe: " + backupFile);
@@ -203,10 +181,6 @@ public class PlayerWipeManager {
         return plugin.getConfigManager().getConfig().getDouble("SETTINGS.MONEY-PER-DEFAULT", 1000.0);
     }
 
-    /**
-     * Drops anything still holding the player's old contents in memory, so nothing writes itself
-     * back over the rows the wipe is about to delete.
-     */
     private void discardOpenState(UUID playerUuid) {
         if (plugin.getEnderChestManager() != null) {
             plugin.getEnderChestManager().discardForPlayerWipe(playerUuid);
@@ -257,10 +231,6 @@ public class PlayerWipeManager {
         }
     }
 
-    /**
-     * Resets the in-memory copy of a player who is online, otherwise the next autosave would write
-     * their old totals straight back into the row that was just cleared.
-     */
     private void resetLiveData(UUID playerUuid) {
         PlayerData data = plugin.getPlayerDataManager().get(playerUuid);
         if (data == null) {

@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -121,7 +122,6 @@ public class DatabaseManager {
         return thread;
     });
     private DatabaseType databaseType = DatabaseType.SQLITE;
-    /** True once the schema is in place; false before, after a failed start and after close. */
     private volatile boolean ready;
     private MongoClient mongoClient;
     private MongoDatabase mongoDatabase;
@@ -163,7 +163,6 @@ public class DatabaseManager {
         }
     }
 
-    /** Hides credentials in connection strings: {@code scheme://user:secret@host} and {@code password=...}. */
     static String redact(String text) {
         if (text == null) {
             return null;
@@ -172,7 +171,6 @@ public class DatabaseManager {
                 .replaceAll("(?i)(password|pwd)=[^&;\\s]*", "$1=***");
     }
 
-    /** A copy of an exception chain with every message passed through {@link #redact}, keeping the stack traces. */
     static Throwable redacted(Throwable original, int depth) {
         if (original == null || depth > 8) {
             return null;
@@ -183,10 +181,6 @@ public class DatabaseManager {
         return copy;
     }
 
-    /**
-     * True when the database started and has not been closed. A cheap flag (no connection call), so the economy can
-     * check it before every change without waiting on the connection lock.
-     */
     public boolean isReady() {
         return ready && connection != null;
     }
@@ -1050,13 +1044,11 @@ public class DatabaseManager {
         return data;
     }
 
-    /** A long column that older tables (or test schemas) may not have yet; 0 when it is missing. */
     private static long optionalLong(ResultSet rs, String column) throws SQLException {
         Long value = optionalNullableLong(rs, column);
         return value == null ? 0L : value;
     }
 
-    /** A long column that may be missing or NULL; null in both cases. */
     private static Long optionalNullableLong(ResultSet rs, String column) throws SQLException {
         ResultSetMetaData meta = rs.getMetaData();
         for (int i = 1; i <= meta.getColumnCount(); i++) {
@@ -1466,14 +1458,12 @@ public class DatabaseManager {
         }
     }
 
-    /** Writes the row on the database thread so a join or a save never waits on disk. */
     public void savePlayerAsync(PlayerData data) {
         if (data != null) {
             executeAsync(() -> savePlayer(data));
         }
     }
 
-    /** Every column {@link #savePlayer} writes, in parameter order. */
     private static final List<String> PLAYER_SAVE_COLUMNS = List.of(
             "uuid", "username", "money", "shards", "kills", "deaths", "playtime_seconds", "blocks_placed",
             "blocks_broken", "mobs_killed", "kill_streak", "highest_kill_streak", "money_spent", "money_made",
@@ -1493,16 +1483,11 @@ public class DatabaseManager {
             "follow_alerts_enabled", "explosion_sounds_enabled", "display_donutplus_enabled",
             "combat_timer_enabled", "sell_shulkers_enabled", "private_transactions_enabled", "money_cents",
             "money_version");
-    /** Columns a save only overwrites when it carries a balance version at least as new as the stored one. */
     private static final Set<String> VERSIONED_MONEY_COLUMNS =
             Set.of("money", "money_cents", "money_spent", "money_made");
     private static final String SQLITE_PLAYER_UPSERT = playerUpsertSql(false);
     private static final String MYSQL_PLAYER_UPSERT = playerUpsertSql(true);
 
-    /**
-     * Insert-or-update of a player row. Unlike REPLACE it leaves columns it does not list alone, and it keeps a
-     * stored balance whose version is newer than the one being saved (written meanwhile by the economy).
-     */
     static String playerUpsertSql(boolean mySql) {
         StringBuilder sql = new StringBuilder("INSERT INTO players (")
                 .append(String.join(", ", PLAYER_SAVE_COLUMNS))
@@ -1826,7 +1811,8 @@ public class DatabaseManager {
         }
 
         int current = getCrateKeyAmount(uuid, crateId);
-        int newAmount = current + amount;
+        // Capped: an int overflow wrapped negative and was then stored as 0, wiping every key.
+        int newAmount = (int) Math.min(Integer.MAX_VALUE, (long) current + amount);
         if (setCrateKeyAmount(uuid, crateId, newAmount)) {
             return newAmount;
         }
@@ -2506,7 +2492,6 @@ public class DatabaseManager {
         return list;
     }
 
-    /** One page of a single log type, newest first. A null uuid reads every player's entries. */
     public List<PlayerLogEntry> getLogsByType(UUID uuid, String logType, int limit, int offset) {
         List<PlayerLogEntry> list = new ArrayList<>();
         String where = uuid == null ? "log_type = ?" : "player_uuid = ? AND log_type = ?";
@@ -3742,13 +3727,6 @@ public class DatabaseManager {
 
     private static final Map<String, Object> WIPE_STAT_RESETS = wipeStatResets();
 
-    /**
-     * The player columns a wipe resets, each beside the value it goes back to. Both wipes read this
-     * one map, and so do the backup and restore behind {@code /playerunwipe}, so a column added here
-     * cannot be reset by one wipe and missed by the other, or drop out of a backup and leave a
-     * restored player short. {@code money} and {@code money_cents} are the exception: they are
-     * overwritten with the configured starting balance rather than the placeholders below.
-     */
     private static Map<String, Object> wipeStatResets() {
         Map<String, Object> resets = new LinkedHashMap<>();
         resets.put("money", 0D);
@@ -3801,10 +3779,6 @@ public class DatabaseManager {
         return Collections.unmodifiableMap(groups);
     }
 
-    /**
-     * Counts everything a player wipe would clear for one player. Punishments, IP history and staff
-     * records are deliberately left out: they are moderation evidence rather than player progress.
-     */
     public PlayerWipePreview previewPlayerWipe(UUID playerUuid) {
         if (playerUuid == null) {
             return new PlayerWipePreview(Map.of());
@@ -3820,11 +3794,6 @@ public class DatabaseManager {
         return new PlayerWipePreview(Map.copyOf(counts));
     }
 
-    /**
-     * Clears one player's progress in a single transaction: their stored stats and balances go back
-     * to a fresh account, and every row they own in the per-player tables is deleted. Moderation
-     * records and world objects such as their spawners are left alone.
-     */
     public PlayerWipeResult resetForPlayerWipe(UUID playerUuid, double startingMoney) throws SQLException {
         Objects.requireNonNull(playerUuid, "playerUuid");
         if (connection == null || connection.isClosed()) {
@@ -3873,16 +3842,10 @@ public class DatabaseManager {
         }
     }
 
-    /** The count group a player wipe prints one table's rows under, so callers can label a restore. */
     public static String playerWipeGroup(String table) {
         return PLAYER_WIPE_GROUPS.get(table);
     }
 
-    /**
-     * Reads back every row a player wipe is about to delete, along with the player stats it is about
-     * to reset. Nothing is modified here: the caller writes the result to disk first, so a wipe that
-     * fails halfway leaves an unused backup rather than an unrecoverable player.
-     */
     public PlayerWipeArchive capturePlayerWipeArchive(UUID playerUuid, String playerName, String actorName)
             throws SQLException {
         Objects.requireNonNull(playerUuid, "playerUuid");
@@ -3913,11 +3876,6 @@ public class DatabaseManager {
         );
     }
 
-    /**
-     * Puts an archived player back in a single transaction. Every table a wipe touches is cleared for
-     * them first, so they land on the state the backup holds instead of a merge of that and whatever
-     * they picked up since. Rows belonging to anybody else are never read or written.
-     */
     public PlayerWipeResult restorePlayerWipeArchive(PlayerWipeArchive archive) throws SQLException {
         Objects.requireNonNull(archive, "archive");
         if (connection == null || connection.isClosed()) {
@@ -4044,12 +4002,6 @@ public class DatabaseManager {
         }
     }
 
-    /**
-     * Drops archived team memberships whose team is gone. Wiping a team leader disbands the team, so
-     * restoring the row unchanged would leave the player holding the only membership of a team that
-     * no longer exists — and because that row owns their primary key, it would block them from ever
-     * joining another one.
-     */
     private PlayerWipeArchive.TableRows withoutDisbandedTeams(PlayerWipeArchive.TableRows archived)
             throws SQLException {
         int nameIndex = archived.columns().indexOf("team_name");
@@ -4100,7 +4052,6 @@ public class DatabaseManager {
         return inserted;
     }
 
-    /** The {@code column = ?} list both wipes assign, in the order {@link #bindWipeStatResets} binds. */
     private String wipeStatAssignments() {
         StringJoiner assignments = new StringJoiner(", ");
         for (String column : WIPE_STAT_RESETS.keySet()) {
@@ -4109,11 +4060,6 @@ public class DatabaseManager {
         return assignments.toString();
     }
 
-    /**
-     * Binds every stat column back to the value a wipe resets it to, with {@code money} and
-     * {@code money_cents} taking the configured starting balance. Returns the next free parameter
-     * index, which a player wipe uses for the {@code WHERE uuid = ?} a server wipe does not have.
-     */
     private int bindWipeStatResets(PreparedStatement statement, double startingMoney) throws SQLException {
         long startingCents = Money.storedToCents(startingMoney);
         int index = 1;
@@ -4172,7 +4118,6 @@ public class DatabaseManager {
             statement.setString(index + 1, uuid);
         }
     }
-
 
     // â”€â”€ Cuboids â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -4575,7 +4520,6 @@ public class DatabaseManager {
         appendPunishmentQueryFilters(sql, parameters, query, now);
     }
 
-    /** Server-wide list: everyone's punishments, optionally narrowed to a player or staff name. */
     private void appendGlobalPunishmentFilters(StringBuilder sql,
                                                List<Object> parameters,
                                                String search,
@@ -5270,8 +5214,6 @@ public class DatabaseManager {
         return identifier != null && identifier.matches("[A-Za-z_][A-Za-z0-9_]*");
     }
 
-
-    /** Runs a database task on the background writer thread, after any tasks already queued. */
     public void executeAsync(Runnable task) {
         if (asyncExecutor.isShutdown()) {
             // Shutting down: run inline so the write is not lost.
@@ -5329,7 +5271,6 @@ public class DatabaseManager {
         return databaseType;
     }
 
-    /** True when the primary connection was opened and is still usable. */
     public boolean isConnected() {
         if (connection == null) {
             return false;

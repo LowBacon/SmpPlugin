@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.commands;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -291,7 +292,6 @@ public class TeamCommand implements CommandExecutor {
         }
     }
 
-    /** /team info [team]: a read-only roster anyone can open, your own team by default. */
     private void handleInfo(Player player, String[] args) {
         Team team = args.length >= 2
                 ? plugin.getTeamManager().getTeam(args[1])

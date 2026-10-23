@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.display.GuideCommandTestAccess;
@@ -17,7 +18,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** The 3.1 configuration changes: the simpler tab list footer, guide.yml, borders.yml and the new extras. */
 class V31ConfigTest {
 
     @Test

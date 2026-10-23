@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip;
 
 import java.math.BigDecimal;
@@ -6,29 +7,18 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 
-/**
- * Exact money arithmetic for CoinFlip. Amounts are whole cents in a {@code long}; the server economy keeps
- * two decimal places, so a cent is the smallest unit it can represent. Conversion to the economy's
- * {@code double} happens only at its boundary and is exact for every amount CoinFlip allows (below 2^53 cents).
- *
- * <p>For a standard match with stake {@code A} and fee rate {@code f}: pot = 2A, fee = floor(2A * f),
- * winner receives 2A - fee, winner's net result A - fee, loser loses A. The fee is the only currency removed.</p>
- */
 public final class StakeMath {
 
-    /** Largest stake CoinFlip will ever accept: one trillion coins. Keeps the pot far below 2^53 cents. */
     public static final long HARD_MAX_STAKE_CENTS = 100_000_000_000_000L;
     public static final int MAX_FEE_BASIS_POINTS = 5_000;
 
     private StakeMath() {
     }
 
-    /** Why a typed amount was rejected. */
     public enum ParseError {
         EMPTY, MALFORMED, NEGATIVE, TOO_MANY_DECIMALS, TOO_LARGE, ZERO
     }
 
-    /** Either an amount in cents or the reason it was rejected. */
     public record ParseResult(long cents, ParseError error) {
         public boolean ok() {
             return error == null;
@@ -43,11 +33,6 @@ public final class StakeMath {
         }
     }
 
-    /**
-     * Parses a player-typed amount. Accepts digits with optional thousands separators (comma, space,
-     * underscore, apostrophe), at most two decimals, and an optional k / m / b suffix ("2.5k" = 2500).
-     * Rejects negative numbers, scientific notation, NaN/Infinity and anything that would overflow.
-     */
     public static ParseResult parse(String input) {
         if (input == null) {
             return ParseResult.fail(ParseError.EMPTY);
@@ -94,7 +79,6 @@ public final class StakeMath {
         return Math.multiplyExact(stakeCents, 2L);
     }
 
-    /** Fee on the pot, rounded down to a whole cent so players are never charged more than the stated rate. */
     public static long fee(long potCents, int basisPoints) {
         if (basisPoints <= 0) {
             return 0L;
@@ -107,20 +91,14 @@ public final class StakeMath {
         return pot - fee(pot, basisPoints);
     }
 
-    /** What the winner gains relative to their own stake. */
     public static long winnerNet(long stakeCents, int basisPoints) {
         return payout(stakeCents, basisPoints) - stakeCents;
     }
 
-    /** Converts cents to the economy's two-decimal double; exact below 2^53 cents. */
     public static double toEconomy(long cents) {
         return BigDecimal.valueOf(cents, 2).doubleValue();
     }
 
-    /**
-     * Converts an economy balance to whole cents, rounding down so a balance is never overstated. Amounts beyond
-     * the largest balance read as {@code Long.MAX_VALUE} cents.
-     */
     public static long fromEconomy(double amount) {
         if (!Double.isFinite(amount) || amount <= 0D) {
             return 0L;
@@ -129,14 +107,12 @@ public final class StakeMath {
         return cents.compareTo(BigDecimal.valueOf(Long.MAX_VALUE)) >= 0 ? Long.MAX_VALUE : cents.longValueExact();
     }
 
-    /** "1,234" or "1,234.50". */
     public static String format(long cents) {
         DecimalFormat format = new DecimalFormat(cents % 100L == 0L ? "#,##0" : "#,##0.00",
                 DecimalFormatSymbols.getInstance(Locale.ROOT));
         return format.format(BigDecimal.valueOf(cents, 2));
     }
 
-    /** "1.2k", "3.5M" for tight spaces such as item names. */
     public static String compact(long cents) {
         double value = cents / 100D;
         String[] units = {"", "k", "M", "B", "T"};
@@ -153,7 +129,6 @@ public final class StakeMath {
         return number + units[unit];
     }
 
-    /** Basis points as a percentage string, "2.5%". */
     public static String percent(int basisPoints) {
         return BigDecimal.valueOf(basisPoints, 2).stripTrailingZeros().toPlainString() + "%";
     }

@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -16,10 +17,6 @@ import java.util.UUID;
 public class LeaderboardManager {
 
     private static final long CACHE_TTL_MS = 2_000L;
-    /**
-     * How long offline players' rows are reused. Online players are always merged in fresh; an admin
-     * edit to an offline player shows up within this window, or at once after invalidateAll().
-     */
     private static final long STORED_ROWS_TTL_MS = 30_000L;
 
     public enum LeaderboardType {
@@ -58,14 +55,8 @@ public class LeaderboardManager {
 
     private final SmpPlugin plugin;
     private final Map<LeaderboardType, CachedLeaderboard> leaderboardCache = new java.util.concurrent.ConcurrentHashMap<>();
-    /**
-     * One read of the players table shared by every leaderboard type, instead of one read each. It is reloaded on
-     * the database thread; until a reload finishes the last rows keep being shown, so no caller (a placeholder on
-     * the main thread, /baltop) ever waits for a full table read.
-     */
     private volatile CachedLeaderboard storedRows;
     private final java.util.concurrent.atomic.AtomicBoolean reloading = new java.util.concurrent.atomic.AtomicBoolean();
-    /** Bumped by every invalidation, so a reload that started before one does not count as fresh. */
     private final java.util.concurrent.atomic.AtomicLong generation = new java.util.concurrent.atomic.AtomicLong();
     private volatile long loadedGeneration = -1L;
 
@@ -164,7 +155,6 @@ public class LeaderboardManager {
         return numericValue(type, data);
     }
 
-    /** After an edit that may have touched an offline player's row: re-read the table (in the background). */
     public void invalidate(LeaderboardType type) {
         if (type != null) {
             leaderboardCache.remove(type);
@@ -172,7 +162,6 @@ public class LeaderboardManager {
         generation.incrementAndGet();
     }
 
-    /** After a change to an online player only: their live copy is merged in, so no re-read is needed. */
     public void invalidateLive(LeaderboardType type) {
         if (type != null) {
             leaderboardCache.remove(type);
@@ -184,7 +173,6 @@ public class LeaderboardManager {
         generation.incrementAndGet();
     }
 
-    /** Starts the first read of the players table, so the first /baltop already has every player. */
     public void warmUp() {
         requestReload();
     }

@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip;
 
 import org.junit.jupiter.api.Test;
@@ -13,7 +14,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** End-to-end money flows against a real SQLite database, a fake economy and a single "server thread". */
 class CoinFlipServiceTest {
 
     @TempDir

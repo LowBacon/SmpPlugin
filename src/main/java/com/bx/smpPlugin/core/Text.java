@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.core;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -12,14 +13,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-/**
- * Messages for the 3.0 features.
- *
- * <p>Every line has its default written next to the code that sends it, and can be changed in
- * {@code messages.yml} under {@code V3.<key>} (or in a language file under {@code MESSAGES.V3.<key>}).
- * Placeholders are written {@code {name}}. Clickable lines use the Bungee chat API, which both
- * Paper and Spigot ship, so the same code runs in both jars.
- */
 public final class Text {
 
     private Text() {
@@ -29,7 +22,6 @@ public final class Text {
         return SmpPlugin.getInstance();
     }
 
-    /** The configured text for {@code V3.<key>}, with placeholders filled in. */
     public static String get(String key, String fallback, String... placeholders) {
         SmpPlugin plugin = plugin();
         String raw = plugin == null || plugin.getConfigManager() == null
@@ -38,7 +30,6 @@ public final class Text {
         return fill(raw == null ? fallback : raw, placeholders);
     }
 
-    /** Replaces {@code {key}} pairs given as key, value, key, value... */
     public static String fill(String text, String... placeholders) {
         if (text == null) {
             return "";
@@ -54,12 +45,10 @@ public final class Text {
         return get("PREFIX", "&#FF9A1F✦ &r");
     }
 
-    /** Sends a configured message with the 3.0 prefix. Blank messages are skipped. */
     public static void send(CommandSender to, String key, String fallback, String... placeholders) {
         raw(to, prefix() + get(key, fallback, placeholders));
     }
 
-    /** Sends text as given (colour codes translated), without the prefix. */
     public static void raw(CommandSender to, String legacy) {
         if (to == null || legacy == null || legacy.isBlank() || legacy.equals(prefix())) {
             return;
@@ -88,11 +77,6 @@ public final class Text {
         }
     }
 
-    /**
-     * Turns text with section-sign colour codes (including the {@code §x§r§r§g§g§b§b} hex form)
-     * into chat components. Unlike Bungee's own parser it never turns words with dots in them
-     * (permission nodes, domain-like names) into web links.
-     */
     public static BaseComponent[] components(String colored) {
         java.util.List<BaseComponent> out = new java.util.ArrayList<>();
         StringBuilder buffer = new StringBuilder();
@@ -167,7 +151,6 @@ public final class Text {
         }
     }
 
-    /** A piece of chat that runs a command when clicked and explains itself on hover. */
     public static BaseComponent[] button(String label, String command, String hover) {
         TextComponent component = new TextComponent(components(color(label)));
         if (command != null && !command.isBlank()) {
@@ -181,7 +164,6 @@ public final class Text {
         return new BaseComponent[]{component};
     }
 
-    /** Like {@link #button}, but clicking puts the command in the chat box for the player to finish. */
     public static BaseComponent[] suggest(String label, String command, String hover) {
         TextComponent component = new TextComponent(components(color(label)));
         if (command != null && !command.isBlank()) {
@@ -195,7 +177,6 @@ public final class Text {
         return new BaseComponent[]{component};
     }
 
-    /** Sends a line made of plain text and buttons, e.g. {@code line(p, "Ready! ", button(...))}. */
     public static void line(CommandSender to, Object... parts) {
         ComponentBuilder builder = new ComponentBuilder();
         for (Object part : parts) {
@@ -215,7 +196,6 @@ public final class Text {
         }
     }
 
-    /** A sound by its Bukkit name (BLOCK_NOTE_BLOCK_CHIME), or null when the server does not know it. */
     @SuppressWarnings({"deprecation", "removal"})
     public static org.bukkit.Sound sound(String name) {
         if (name == null || name.isBlank()) {
@@ -228,7 +208,6 @@ public final class Text {
         }
     }
 
-    /** A particle by its Bukkit name (HEART, FIREWORK), or null when the server does not know it. */
     public static org.bukkit.Particle particle(String name) {
         if (name == null || name.isBlank()) {
             return null;
@@ -240,7 +219,6 @@ public final class Text {
         }
     }
 
-    /** Formats a duration in seconds as "2d 4h", "3h 12m", "4m 10s" or "9s". */
     public static String duration(long seconds) {
         long s = Math.max(0L, seconds);
         long days = s / 86_400L;
@@ -259,7 +237,6 @@ public final class Text {
         return secs + "s";
     }
 
-    /** A text progress bar such as {@code &a■■■■&7■■■■■■}. */
     public static String bar(double fraction, int length, String done, String left) {
         double clamped = Math.max(0D, Math.min(1D, fraction));
         int filled = (int) Math.round(clamped * length);

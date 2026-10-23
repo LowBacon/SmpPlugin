@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -207,15 +208,19 @@ public class FriendsManager {
             }
         }
 
-        plugin.getSpigotScheduler().runEntityLater(player, () -> {
-            if (!player.isOnline()) return;
-            if (onlineFollowed.isEmpty()) {
-                player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage("FRIENDS.NO_ONLINE_FOLLOWED"), player));
-            } else {
-                String names = String.join("&7, &f", onlineFollowed);
-                player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage("FRIENDS.ONLINE_FOLLOWED", "{players}", names), player));
-            }
-        }, 20L); // 1 second delay
+        if (following.isEmpty()) {
+            return; // Follows nobody: "none of the players you follow are online" says nothing.
+        }
+        plugin.getSpigotScheduler().runEntityLater(player, () -> com.bx.smpPlugin.worlds.SmpArrival.run(plugin, player,
+                "friends", () -> {
+                    if (!player.isOnline()) return;
+                    if (onlineFollowed.isEmpty()) {
+                        player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage("FRIENDS.NO_ONLINE_FOLLOWED"), player));
+                    } else {
+                        String names = String.join("&7, &f", onlineFollowed);
+                        player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage("FRIENDS.ONLINE_FOLLOWED", "{players}", names), player));
+                    }
+                }), 20L); // 1 second delay
     }
 
     public void handleQuit(Player player) {

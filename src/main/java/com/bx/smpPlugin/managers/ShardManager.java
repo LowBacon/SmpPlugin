@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.utils.PermissionUtils;
@@ -169,6 +170,40 @@ public class ShardManager {
                     .replace("{amount_formatted}", plugin.getCurrencyManager().formatShards(amount));
             PlayerSettingUtils.sendActionBar(plugin, player, msg);
         }
+    }
+
+    // Shards for a kill are new currency, so killing a second account over and over printed it.
+    // The same victim pays again only after the cooldown, and never when both players share an
+    // address (SETTINGS.KILL-REWARD-SAME-VICTIM-COOLDOWN-SECONDS, SETTINGS.KILL-REWARD-SKIP-SAME-IP).
+    private final java.util.Map<String, Long> lastKillRewards = new java.util.concurrent.ConcurrentHashMap<>();
+
+    public boolean mayRewardKill(Player killer, Player victim) {
+        FileConfiguration config = plugin.getConfigManager().getConfig();
+        long cooldownMillis = Math.max(0L, config.getLong("SETTINGS.KILL-REWARD-SAME-VICTIM-COOLDOWN-SECONDS", 300L)) * 1000L;
+        boolean sameAddress = config.getBoolean("SETTINGS.KILL-REWARD-SKIP-SAME-IP", true) && sameAddress(killer, victim);
+        String pair = killer.getUniqueId() + ">" + victim.getUniqueId();
+        long now = System.currentTimeMillis();
+        if (!killRewardAllowed(lastKillRewards.get(pair), now, cooldownMillis, sameAddress)) {
+            return false;
+        }
+        if (lastKillRewards.size() > 2048) {
+            lastKillRewards.values().removeIf(at -> now - at >= cooldownMillis);
+        }
+        lastKillRewards.put(pair, now);
+        return true;
+    }
+
+    public static boolean killRewardAllowed(Long lastRewardMillis, long now, long cooldownMillis, boolean sameAddress) {
+        if (sameAddress) {
+            return false;
+        }
+        return lastRewardMillis == null || now - lastRewardMillis >= cooldownMillis;
+    }
+
+    private static boolean sameAddress(Player first, Player second) {
+        java.net.InetSocketAddress a = first.getAddress();
+        java.net.InetSocketAddress b = second.getAddress();
+        return a != null && b != null && a.getAddress() != null && a.getAddress().equals(b.getAddress());
     }
 
     public long rollKillReward() {

@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.dialogs;
 
 import net.kyori.adventure.audience.Audience;
@@ -9,15 +10,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Runtime gate for the 1.21.6+ dialog screens.
- *
- * <p>The plugin compiles against the Spigot API, so every reference to
- * {@code io.papermc.paper.*} lives inside this package and nothing outside it may touch a
- * dialog class without asking here first. On Spigot, or on a Paper build older than 1.21.6,
- * {@link #isAvailable()} returns false and callers fall back to the chest menus. Because the
- * check happens before any dialog class is named, the JVM never has to load one.
- */
 public final class DialogSupport {
 
     private static final boolean AVAILABLE = probe();
@@ -40,15 +32,10 @@ public final class DialogSupport {
         }
     }
 
-    /** True when this server can render dialogs. */
     public static boolean isAvailable() {
         return AVAILABLE;
     }
 
-    /**
-     * Sends a dialog to a player. Returns false when the server cannot render dialogs, so the
-     * caller can open its chest menu instead.
-     */
     public static boolean show(Player player, DialogLike dialog) {
         if (!AVAILABLE || player == null || dialog == null || !player.isOnline()) {
             return false;
@@ -68,7 +55,6 @@ public final class DialogSupport {
         }
     }
 
-    /** Closes whatever dialog the player currently has open. */
     public static void close(Player player) {
         if (player != null) {
             OPEN_DIALOGS.remove(player.getUniqueId());
@@ -82,32 +68,20 @@ public final class DialogSupport {
         }
     }
 
-    /** Drops the "this player has a dialog open" mark, used on quit. */
     public static void forget(UUID playerId) {
         if (playerId != null) {
             OPEN_DIALOGS.remove(playerId);
         }
     }
 
-    /**
-     * True while {@link #show} is closing a chest so a dialog can replace it.
-     * Menu ESC-back must ignore that close or Your Orders reopens under the dialog.
-     */
     public static boolean isClosingInventoryForDialog(UUID playerId) {
         return playerId != null && CLOSING_FOR_DIALOG.contains(playerId);
     }
 
-    /**
-     * True when the open view is a real container that would sit under the dialog.
-     *
-     * <p>The player's own screen is {@code CRAFTING} in survival and {@code CREATIVE} in creative.
-     * Closing either of those is a trip back to the world, which recenters the cursor.
-     */
     static boolean shouldCloseOpenInventory(InventoryType type) {
         return type != null && shouldCloseOpenInventory(type.name());
     }
 
-    /** Same rule as {@link #shouldCloseOpenInventory(InventoryType)}, keyed by the enum name. */
     static boolean shouldCloseOpenInventory(String typeName) {
         if (typeName == null || typeName.isBlank()) {
             return false;

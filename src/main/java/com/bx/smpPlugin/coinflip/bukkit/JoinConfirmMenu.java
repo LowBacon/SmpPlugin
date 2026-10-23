@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip.bukkit;
 
 import com.bx.smpPlugin.coinflip.CoinFlipMatch;
@@ -11,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/** Shows the exact terms of one match before joining; also used to accept a private challenge. */
 public final class JoinConfirmMenu extends CoinFlipMenu {
 
     private final String matchId;

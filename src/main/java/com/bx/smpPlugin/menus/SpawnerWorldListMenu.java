@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.menus;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -17,13 +18,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * /spawners: the staff overview. Only worlds that actually have spawners are listed (not every duel
- * arena), with server-wide totals on top.
- */
 public class SpawnerWorldListMenu extends BaseMenu {
 
-    /** The inside of rows 1 to 3, so up to 21 worlds fit. */
     private static final int[] WORLD_SLOTS = {
             10, 11, 12, 13, 14, 15, 16,
             19, 20, 21, 22, 23, 24, 25,

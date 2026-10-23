@@ -1,13 +1,8 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.extras;
 
 import java.util.Locale;
 
-/**
- * A tiny calculator for /calc: numbers, + - * / % ^, brackets, unary minus, and sqrt, abs, round,
- * floor, ceil, min, max, pi, e. It parses by hand (no script engine), so a player can never run code.
- * "x" and "×" mean multiply and "÷" divide, so a stack count like "64x9" works. Commas are thousands
- * separators ("1,000"); min and max take two values separated by ";", e.g. max(3;7).
- */
 public final class Calculator {
 
     private final String input;
@@ -17,7 +12,6 @@ public final class Calculator {
         this.input = input.toLowerCase(Locale.ROOT).replace('×', '*').replace('÷', '/').replace(",", "");
     }
 
-    /** Evaluates an expression or throws IllegalArgumentException with a short reason. */
     public static double evaluate(String expression) {
         if (expression == null || expression.isBlank() || expression.length() > 200) {
             throw new IllegalArgumentException("empty or too long");
@@ -34,7 +28,6 @@ public final class Calculator {
         return value;
     }
 
-    /** Formats a result without a trailing ".0" and with at most 6 decimals. */
     public static String format(double value) {
         if (value == Math.rint(value) && Math.abs(value) < 1e15) {
             return String.format(Locale.ROOT, "%,d", (long) value);

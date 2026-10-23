@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -16,7 +17,8 @@ public final class PlayerVisibilityManager {
         PLAYER_SETTING,
         DUEL,
         FFA,
-        STAFF_VANISH
+        STAFF_VANISH,
+        WORLD
     }
 
     private final SmpPlugin plugin;
@@ -104,6 +106,14 @@ public final class PlayerVisibilityManager {
         return reasons != null && !reasons.isEmpty();
     }
 
+    public boolean hasReason(Player viewer, Player target, Reason reason) {
+        if (!valid(viewer, target) || reason == null) {
+            return false;
+        }
+        EnumSet<Reason> reasons = hiddenReasons.get(new VisibilityKey(viewer.getUniqueId(), target.getUniqueId()));
+        return reasons != null && reasons.contains(reason);
+    }
+
     public void clearPlayer(UUID playerId) {
         if (playerId == null) {
             return;
@@ -117,7 +127,7 @@ public final class PlayerVisibilityManager {
     }
 
     private void apply(Player viewer, Player target) {
-        plugin.getSpigotScheduler().runEntity(viewer, () -> {
+        Runnable update = () -> {
             if (!valid(viewer, target)) {
                 return;
             }
@@ -126,7 +136,14 @@ public final class PlayerVisibilityManager {
             } else {
                 viewer.showPlayer(plugin, target);
             }
-        });
+        };
+        // On the main thread it happens now: deferring it a tick let a joining player's tab entry
+        // reach players who should not see them, and left a moment where both states mixed.
+        if (Bukkit.isPrimaryThread() && !plugin.getSpigotScheduler().isFolia()) {
+            update.run();
+        } else {
+            plugin.getSpigotScheduler().runEntity(viewer, update);
+        }
     }
 
     private boolean valid(Player viewer, Player target) {

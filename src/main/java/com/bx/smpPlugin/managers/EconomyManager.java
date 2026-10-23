@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -30,23 +31,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 
-/**
- * The one service that changes money balances. Every change is computed in whole cents, checked against the
- * balance limit (none unless ECONOMY.MAX-BALANCE sets one), and written to the {@code economy_ledger} together
- * with the new balance:
- *
- * <ul>
- *   <li><b>Online players</b> (and players whose quit save is still queued): the balance changes in memory at once
- *       and the new balance plus its ledger row are written by the database writer in one transaction, normally
- *       within milliseconds. Writes carry a balance version, so they can arrive in any order without an older
- *       balance overwriting a newer one.</li>
- *   <li><b>Offline players</b>: the change is one database transaction (read, compare-and-set on the balance
- *       version, ledger row), retried when another server changed the same row first. Nothing is held in memory,
- *       so two changes can never overwrite each other.</li>
- * </ul>
- *
- * <p>When the database is not ready no money moves at all ({@link EconomyFailureReason#STORAGE_UNAVAILABLE}).</p>
- */
 public class EconomyManager {
 
     private static final int OFFLINE_ATTEMPTS = 5;
@@ -58,7 +42,6 @@ public class EconomyManager {
         }
     }
 
-    /** One page of a player's ledger, newest first, with the names of the other players in it. */
     public record HistoryPage(UUID player, int page, int pageSize, int total, List<LedgerEntry> entries,
                               Map<UUID, String> names) {
         public int pages() {
@@ -71,14 +54,11 @@ public class EconomyManager {
         }
     }
 
-    /** Money moved per reason since a point in time, and the money supply now. */
     public record EconomyStats(long sinceMillis, List<EconomyStore.ReasonTotal> totals,
                                EconomyStore.MoneySupply supply) {
     }
 
-    /** The /pay rules from ECONOMY.PAY. {@code maxCents} 0 means no limit. */
     public record PayRules(long minCents, long maxCents, double taxPercent, long cooldownMillis) {
-        /** Tax on a payment, always leaving the recipient at least one cent. */
         public long taxFor(long cents) {
             return Math.min(Money.percentOf(cents, taxPercent), Math.max(0L, cents - 1L));
         }
@@ -86,11 +66,9 @@ public class EconomyManager {
 
     private enum Op { DEPOSIT, WITHDRAW, SET }
 
-    /** One balance change inside a transaction. */
     private record Leg(UUID uuid, String nameHint, Op op, long cents, boolean createIfMissing, UUID counterparty) {
     }
 
-    /** What a leg did. */
     private record LegResult(UUID uuid, String name, long beforeCents, long afterCents, long version, boolean online) {
     }
 
@@ -114,11 +92,9 @@ public class EconomyManager {
         }
     }
 
-    /** A live (in-memory) leg after planning: the data it changes and the balance before. */
     private record LiveLeg(int index, PlayerData data, long beforeCents, long afterCents) {
     }
 
-    /** Signals that an offline row changed between reading and writing; the transaction is retried. */
     private static final class ConcurrentChange extends RuntimeException {
         ConcurrentChange() {
             super(null, null, false, false);
@@ -126,7 +102,6 @@ public class EconomyManager {
     }
 
     private final SmpPlugin plugin;
-    /** Highest balance version an offline change wrote per player, so a login that read the row earlier re-reads it. */
     private final Map<UUID, Long> offlineVersions = new ConcurrentHashMap<>();
     private final AtomicLong pendingWrites = new AtomicLong();
     private final AtomicLong failedWrites = new AtomicLong();
@@ -148,7 +123,6 @@ public class EconomyManager {
         return new PayRules(min, max, Double.isFinite(tax) ? tax : 0D, cooldown);
     }
 
-    /** Milliseconds until this player may send another payment; 0 when they may now. */
     public long payCooldownRemaining(UUID player) {
         long cooldown = payRules().cooldownMillis();
         Long last = player == null ? null : lastPayment.get(player);
@@ -163,7 +137,6 @@ public class EconomyManager {
         return remaining;
     }
 
-    /** Starts the payment cooldown. Kept across relogs; expired entries are dropped as the map grows. */
     public void markPayment(UUID player) {
         long cooldown = payRules().cooldownMillis();
         if (player == null || cooldown <= 0L) {
@@ -236,7 +209,6 @@ public class EconomyManager {
         return resolveAccount(uuid) != null;
     }
 
-    /** Creates a row with the starting balance for a player who has none. True when the account exists afterwards. */
     public boolean createPlayerAccount(OfflinePlayer player) {
         if (player == null) {
             return false;
@@ -266,7 +238,6 @@ public class EconomyManager {
         return Money.toUnits(getBalanceCents(uuid));
     }
 
-    /** The balance in whole cents; 0 for unknown players. Reads the database for offline players. */
     public long getBalanceCents(UUID uuid) {
         if (uuid == null) {
             return 0L;
@@ -298,17 +269,12 @@ public class EconomyManager {
         return cents.isPresent() && getBalanceCents(uuid) >= cents.getAsLong();
     }
 
-    /**
-     * ECONOMY.MAX-BALANCE in cents: deposits may not take a balance above it. 0 (the default) means no limit, which
-     * leaves only the largest balance there is, {@link Money#MAX_CENTS}.
-     */
     public long maxBalanceCents() {
         double configured = plugin.getConfigManager().getConfig().getDouble("ECONOMY.MAX-BALANCE", 0D);
         OptionalLong cents = Money.toCents(configured);
         return cents.isEmpty() || cents.getAsLong() <= 0L ? Money.MAX_CENTS : cents.getAsLong();
     }
 
-    /** True when money may move: the database started and is still open. */
     public boolean isStorageReady() {
         DatabaseManager database = plugin.getDatabaseManager();
         return database != null && database.isReady();
@@ -433,10 +399,6 @@ public class EconomyManager {
         return transfer(senderUuid, senderName, recipientUuid, recipientName, amount, 0L, reason, EconomyContext.NONE);
     }
 
-    /**
-     * Moves {@code amount} from the sender; the recipient receives it minus {@code taxCents}, which leaves the
-     * economy. Both balances change in one transaction or not at all.
-     */
     public EconomyTransferResult transfer(
             UUID senderUuid,
             String senderName,
@@ -505,7 +467,6 @@ public class EconomyManager {
 
     // ------------------------------------------------------------------ history and statistics
 
-    /** Reads one page of a player's ledger on the database thread and answers on the main thread. */
     public void history(UUID player, int page, int pageSize, Consumer<HistoryPage> callback) {
         int size = Math.max(1, Math.min(45, pageSize));
         int safePage = Math.max(1, page);
@@ -536,7 +497,6 @@ public class EconomyManager {
         });
     }
 
-    /** Totals per reason since {@code sinceMillis} and the money supply, answered on the main thread. */
     public void stats(long sinceMillis, Consumer<EconomyStats> callback) {
         if (!isStorageReady()) {
             callback.accept(new EconomyStats(sinceMillis, List.of(), new EconomyStore.MoneySupply(0L, 0D)));
@@ -557,7 +517,6 @@ public class EconomyManager {
         });
     }
 
-    /** Deletes ledger rows older than ECONOMY.LEDGER.RETENTION-DAYS (0 keeps everything). Runs in the background. */
     public void pruneLedger() {
         int days = plugin.getConfigManager().getConfig().getInt("ECONOMY.LEDGER.RETENTION-DAYS", 0);
         if (days <= 0 || !isStorageReady()) {
@@ -576,28 +535,23 @@ public class EconomyManager {
         });
     }
 
-    /** Balance writes queued on the database thread right now. */
     public long pendingWrites() {
         return pendingWrites.get();
     }
 
-    /** Balance writes that failed after retries since start-up (the balances stay in memory and save on quit). */
     public long failedWrites() {
         return failedWrites.get();
     }
 
-    /** Times a stored balance was found newer than the live one (another server or tool wrote it). */
     public long versionConflicts() {
         return versionConflicts.get();
     }
 
-    /** The newest balance version an offline change wrote for this player since start-up, or 0. */
     public long offlineVersion(UUID uuid) {
         Long version = uuid == null ? null : offlineVersions.get(uuid);
         return version == null ? 0L : version;
     }
 
-    /** Called once a joining player's row has been read after their last offline change. */
     public void forgetOfflineVersion(UUID uuid) {
         if (uuid != null) {
             offlineVersions.remove(uuid);
@@ -660,7 +614,6 @@ public class EconomyManager {
         return outcome;
     }
 
-    /** Every account is in memory: change them under their locks, then queue one write with the ledger rows. */
     private Outcome executeLive(List<Leg> legs, List<PlayerData> live, EconomyReason reason, EconomyContext context,
                                 long max) {
         List<Integer> order = lockOrder(legs);
@@ -694,11 +647,6 @@ public class EconomyManager {
         });
     }
 
-    /**
-     * At least one account is offline: one database transaction changes the offline rows (compare-and-set on
-     * their version), writes the new balances of the in-memory accounts and the ledger rows. If it fails, the
-     * in-memory balances are put back.
-     */
     private Outcome executeWithDatabase(List<Leg> legs, List<PlayerData> live, EconomyReason reason,
                                         EconomyContext context, long max) {
         for (int attempt = 1; attempt <= OFFLINE_ATTEMPTS; attempt++) {
@@ -832,7 +780,6 @@ public class EconomyManager {
         };
     }
 
-    /** Leg indexes in a fixed order (by player id), so two transactions never lock the same players in reverse. */
     private static List<Integer> lockOrder(List<Leg> legs) {
         List<Integer> order = new ArrayList<>();
         for (int i = 0; i < legs.size(); i++) {
@@ -878,7 +825,6 @@ public class EconomyManager {
         return entries;
     }
 
-    /** Queues the new balances and their ledger rows on the database writer, in one transaction. */
     private void writeLiveInBackground(List<Leg> legs, List<PlayerData> datas, List<PlayerData.MoneyState> states,
                                        List<LedgerEntry> entries, EconomyContext.SqlStep step) {
         pendingWrites.incrementAndGet();
@@ -921,10 +867,6 @@ public class EconomyManager {
         });
     }
 
-    /**
-     * Writes an in-memory balance. If the stored balance turned out to be newer (written by another server or a
-     * tool), the in-memory balance, which is what the player sees, is kept and written with a version above it.
-     */
     private void writeLiveState(Connection connection, UUID uuid, PlayerData data, PlayerData.MoneyState state)
             throws SQLException {
         EconomyStore.BalanceSnapshot snapshot = snapshot(uuid, state);
@@ -965,7 +907,6 @@ public class EconomyManager {
         return created;
     }
 
-    /** The in-memory copy of a player's data, or null when they are offline and fully saved. */
     private PlayerData liveData(UUID uuid) {
         PlayerDataManager players = plugin.getPlayerDataManager();
         PlayerData data = players.get(uuid);
@@ -1038,7 +979,6 @@ public class EconomyManager {
         return plugin.getCurrencyManager().formatMoney(Money.toUnits(cents));
     }
 
-    /** Writes a /logs line. The text is built inside the guard: a log line must never undo or block a money movement. */
     private void log(UUID uuid, String name, String type, Supplier<String> detail) {
         try {
             plugin.getPlayerLogsManager().log(uuid, name, "Economy", type, detail.get());

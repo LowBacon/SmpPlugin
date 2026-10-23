@@ -1,11 +1,8 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.tasks;
 
 import com.bx.smpPlugin.SmpPlugin;
 
-/**
- * Checks every 30 seconds whether the farming meta rotation timer has expired and, if so,
- * moves the meta on to the next item in the rotation.
- */
 public class FarmingMetaTask implements Runnable {
 
     private final SmpPlugin plugin;

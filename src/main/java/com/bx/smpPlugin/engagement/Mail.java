@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.engagement;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -35,11 +36,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
-/**
- * /mail: leave a short message for a player, online or not. The inbox lives in the database
- * (table v3_mail); every read and write happens on the database thread and answers come back
- * on the player's thread. Players are told about unread mail when they join.
- */
 public final class Mail implements CommandExecutor, TabCompleter, Listener {
 
     public static final String PERMISSION = "smpplugin.mail";
@@ -268,14 +264,15 @@ public final class Mail implements CommandExecutor, TabCompleter, Listener {
             if (unread <= 0) {
                 return;
             }
-            plugin.getSpigotScheduler().runEntityLater(player, () -> {
-                if (player.isOnline()) {
-                    Text.line(player, Text.prefix(),
-                            Text.get("MAIL.UNREAD", "&7You have &e{count} &7unread mail. ", "{count}", Integer.toString(unread)),
-                            Text.button(Text.get("MAIL.READ-BUTTON", "&e&l[Read]"), "mail read",
-                                    Text.get("MAIL.READ-HOVER", "&7Open your mailbox")));
-                }
-            }, 100L);
+            plugin.getSpigotScheduler().runEntityLater(player, () -> com.bx.smpPlugin.worlds.SmpArrival.run(plugin, player,
+                    "mail", () -> {
+                        if (player.isOnline()) {
+                            Text.line(player, Text.prefix(),
+                                    Text.get("MAIL.UNREAD", "&7You have &e{count} &7unread mail. ", "{count}", Integer.toString(unread)),
+                                    Text.button(Text.get("MAIL.READ-BUTTON", "&e&l[Read]"), "mail read",
+                                            Text.get("MAIL.READ-HOVER", "&7Open your mailbox")));
+                        }
+                    }), 100L);
         });
     }
 

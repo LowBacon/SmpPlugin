@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.menus;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -34,6 +35,9 @@ public final class AuctionHouseListingMenu extends BaseMenu {
         AuctionListing listing = plugin.getAuctionHouseManager().getListing(listingId);
         if (listing == null || listing.sellerUuid().equals(player.getUniqueId())) {
             new AuctionYourItemsMenu(plugin).open(player);
+            return;
+        }
+        if (plugin.getDialogManager() != null && plugin.getDialogManager().openAuctionPurchase(player, listingId)) {
             return;
         }
         new ConfirmPurchaseGui(

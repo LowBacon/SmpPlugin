@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip.bukkit;
 
 import com.bx.smpPlugin.coinflip.CoinFlipConfig;
@@ -13,10 +14,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
-/**
- * Cached rankings. All categories are refreshed together in one storage task every few minutes; menus only read
- * the cache, so opening a leaderboard never runs a query. Ties are broken in SQL by matches played, then UUID.
- */
 public final class CoinFlipLeaderboards {
 
     private final CoinFlipRepository repository;
@@ -48,7 +45,6 @@ public final class CoinFlipLeaderboards {
         }
     }
 
-    /** Starts a refresh unless one is running. Safe to call from any thread. */
     public CompletableFuture<Void> refresh() {
         if (refreshing || !repository.isReady()) {
             return CompletableFuture.completedFuture(null);

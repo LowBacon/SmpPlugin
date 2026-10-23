@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.commands;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -125,6 +126,9 @@ public final class AuctionHouseCommand implements CommandExecutor, TabCompleter 
     }
 
     private void handleSell(Player player, String[] args) {
+        if (args.length < 2 && plugin.getDialogManager() != null && plugin.getDialogManager().openAuctionSell(player)) {
+            return;
+        }
         if (args.length < 2) {
             AuctionHouseSounds.fail(player, plugin);
             send(player, "AUCTION_HOUSE.SELL_USAGE", "&cUsage: /ah sell <price>");

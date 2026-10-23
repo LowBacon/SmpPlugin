@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.utils.PermissionUtils;
@@ -346,7 +347,6 @@ public class CrateManager {
         return deleted;
     }
 
-
     public boolean hasAccess(Player player, CrateDefinition crate) {
         if (player == null || crate == null || !crate.enabled()) {
             return false;
@@ -431,11 +431,6 @@ public class CrateManager {
         return startOpening(player, crateId, true);
     }
 
-    /**
-     * Starts a crate session. With {@code requireKey} false the menu opens without a key —
-     * the key is still checked and consumed at claim time ({@code claimSelectedReward}), so
-     * keyless browsing cannot grant rewards.
-     */
     public OpenResult startOpening(Player player, String crateId, boolean requireKey) {
         CrateDefinition crate = getCrate(crateId);
         if (crate == null) {

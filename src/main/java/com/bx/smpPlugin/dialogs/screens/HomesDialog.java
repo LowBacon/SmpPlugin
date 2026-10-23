@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.dialogs.screens;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -19,13 +20,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-/**
- * Homes, as the grid of slots DonutSMP shows: filled homes first, then the empty slots the
- * player has earned, then the locked ones.
- *
- * <p>Homes are addressed by their index in the created-at ordering rather than by name, because
- * a resource location cannot carry an arbitrary home name.
- */
 public final class HomesDialog extends DialogScreen {
 
     private static final String LIST = "HOMES_DIALOG";
@@ -133,10 +127,6 @@ public final class HomesDialog extends DialogScreen {
         return show(player, screen.build());
     }
 
-    /**
-     * What a locked slot says. LOCKED-TOOLTIP is the default; LOCKED-TOOLTIP-<n> overrides it for
-     * the slots that unlock at the n-th tier, so each rank can be named.
-     */
     String lockedTooltip(int index, int[] tiers, Map<String, String> tokens) {
         String fallback = config.string(LIST + ".LOCKED-TOOLTIP", "&7Get a higher rank for more home slots", tokens);
         for (int tier = 0; tiers != null && tier < tiers.length; tier++) {
@@ -441,7 +431,6 @@ public final class HomesDialog extends DialogScreen {
         openManage(player, index);
     }
 
-    /** Items whose name contains the query; nothing typed lists every item, in registry order. */
     private List<Material> searchIcons(String query, int limit) {
         List<Material> results = new ArrayList<>();
         String needle = query == null ? "" : query.trim().toUpperCase(Locale.ROOT).replace(' ', '_');
@@ -485,15 +474,6 @@ public final class HomesDialog extends DialogScreen {
         return home.hasIcon() ? home.getIcon() : "WHITE_BED";
     }
 
-    /**
-     * The tag that draws a home's icon inside a button label, or blank when there is none.
-     *
-     * <p>An icon is stored as a material name, and pointing a sprite straight at
-     * {@code item/<material>} only works for the items that own a flat texture. A bed is a model,
-     * a slab borrows its plank, a head is not in any atlas at all; {@link QuickBuyItemDialog}
-     * already maps every material onto something the client can draw, so both pickers agree on
-     * what an item looks like. A material this server no longer knows comes back blank.
-     */
     private String iconTagOf(Home home) {
         Material material = Material.matchMaterial(iconOf(home).toUpperCase(Locale.ROOT));
         return material == null ? "" : QuickBuyItemDialog.getSpriteTag(material);

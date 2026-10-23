@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.menus;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -187,6 +188,10 @@ public final class AuctionHouseBrowseMenu extends BaseMenu {
                             purchase(player, listing, current);
                         } else {
                             AuctionHouseSounds.play(player, plugin, AuctionHouseSounds.CONFIRM);
+                            if (plugin.getDialogManager() != null
+                                    && plugin.getDialogManager().openAuctionPurchase(player, listing.id())) {
+                                return;
+                            }
                             navigate(player, () -> new ConfirmPurchaseGui(plugin, listing, current).open(player));
                         }
                     })

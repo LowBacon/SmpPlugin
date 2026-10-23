@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.commands;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -17,7 +18,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
-/** /chatlog [player]: browse logged public and team chat. */
 public class ChatLogCommand implements CommandExecutor, TabCompleter {
 
     public static final String PERMISSION = "smpplugin.admin.chatlog";

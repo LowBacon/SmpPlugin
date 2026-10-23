@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip.bukkit;
 
 import com.bx.smpPlugin.coinflip.AnimationPreset;
@@ -14,7 +15,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
 
-/** Personal settings: presentation, notifications, privacy, quick confirm, and self-exclusion. */
 public final class SettingsMenu extends CoinFlipMenu {
 
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(ZoneId.systemDefault());

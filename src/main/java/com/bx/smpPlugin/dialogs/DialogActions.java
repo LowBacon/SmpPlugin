@@ -1,23 +1,16 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.dialogs;
 
 import net.kyori.adventure.key.Key;
 
 import java.util.Locale;
 
-/**
- * Builds and validates the namespaced ids behind every dialog button.
- *
- * <p>A dialog action id is a vanilla resource location, so only {@code [a-z0-9._-]} survives in
- * the value. Screens embed their arguments in the id itself ({@code pay_target_<uuid>}), which
- * keeps the routing table flat and lets the config address a button that does not exist yet.
- */
 public final class DialogActions {
 
     public static final String NAMESPACE = "smpplugin";
 
     // Screens
     public static final String MAIN_MENU = "main_menu";
-    /** A COMMAND button on the generated pause-screen copy; the suffix is its index. */
     public static final String MAIN_COMMAND = "menucmd_";
     public static final String SETTINGS = "settings";
     public static final String SETTINGS_CATEGORY = "settings_category_";
@@ -38,7 +31,6 @@ public final class DialogActions {
     public static final String LEADERBOARDS_MENU = "leaderboards_menu";
     public static final String LEADERBOARD_CATEGORY = "lb_category_";
     public static final String LEADERBOARD_FULL = "lb_full_";
-    /** The main menu button says "homes"; the back buttons say "homes_menu". Both open it. */
     public static final String HOMES = "homes";
     public static final String HOMES_MENU = "homes_menu";
     public static final String HOMES_PAGE = "homes_page_";
@@ -73,10 +65,12 @@ public final class DialogActions {
     public static final String TPA_TARGET = "tpa_target_";
     public static final String TPA_TO = "tpa_to_";
     public static final String TPA_HERE = "tpa_here_";
+    public static final String TPA_REQUESTS = "tpa_requests";
+    public static final String AH_BUY = "ah_buy_";
+    public static final String AH_BACK = "ah_back";
     public static final String RTP_QUEUE = "rtp_queue";
     public static final String RTP_QUEUE_ACCEPT = "rtp_queue_accept";
     public static final String RTP_QUEUE_DENY = "rtp_queue_deny";
-    /** A COMMAND button: the suffix is a session id, not the command itself. */
     public static final String RUN_COMMAND = "run_";
     public static final String TOGGLE = "toggle_";
     public static final String CLOSE = "close";
@@ -122,11 +116,9 @@ public final class DialogActions {
     public static final String AMETHYST_TIME_CUSTOM = "amy_time_custom";
     public static final String AMETHYST_TIME_CUSTOM_GO = "amy_time_go";
 
-
     private DialogActions() {
     }
 
-    /** Builds a key inside the plugin namespace, sanitising the value first. */
     public static Key of(String value) {
         String sanitised = sanitise(value);
         return sanitised.isEmpty() ? null : Key.key(NAMESPACE, sanitised);
@@ -136,10 +128,6 @@ public final class DialogActions {
         return of(prefix + sanitise(suffix));
     }
 
-    /**
-     * Parses an id written in the config. A bare value is assumed to be ours; a value with a
-     * namespace keeps it, so an operator can point a button at another plugin's dialog handler.
-     */
     public static Key key(String configured) {
         if (configured == null || configured.isBlank()) {
             return null;
@@ -161,17 +149,14 @@ public final class DialogActions {
         }
     }
 
-    /** True when the key belongs to this plugin and so should be routed internally. */
     public static boolean isOurs(Key key) {
         return key != null && NAMESPACE.equals(key.namespace());
     }
 
-    /** Strips the prefix off a dynamic action id, e.g. {@code pay_target_<uuid>}. */
     public static String argument(String value, String prefix) {
         return value != null && value.startsWith(prefix) ? value.substring(prefix.length()) : null;
     }
 
-    /** Reduces arbitrary text to the characters a resource location value allows. */
     public static String sanitise(String value) {
         if (value == null) {
             return "";

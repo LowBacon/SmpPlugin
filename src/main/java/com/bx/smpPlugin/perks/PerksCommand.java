@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.perks;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -23,10 +24,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
-/**
- * /perks: every rank and what it adds, with the player's own rank marked. /perks &lt;rank&gt; shows one rank in chat;
- * /perks check &lt;player&gt; (staff) shows which rank an online player gets and why.
- */
 public final class PerksCommand implements CommandExecutor, TabCompleter {
 
     public static final String PERMISSION = "smpplugin.perks";
@@ -142,7 +139,6 @@ public final class PerksCommand implements CommandExecutor, TabCompleter {
         return options.stream().filter(option -> option.toLowerCase(Locale.ROOT).startsWith(lower)).toList();
     }
 
-    /** Ranks from the highest priority down; the viewer's own rank glows. */
     private final class PerksMenu extends BaseMenu {
 
         private static final int INFO_SLOT = 4;

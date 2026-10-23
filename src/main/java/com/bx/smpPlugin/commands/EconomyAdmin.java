@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.commands;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -15,10 +16,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-/**
- * Staff balance changes, shared by /eco and the older /addmoney, /removemoney and /setmoney. Each change is
- * recorded in the ledger with the staff member's name as the actor and an optional note.
- */
 final class EconomyAdmin {
 
     enum Action { GIVE, TAKE, SET, RESET }
@@ -29,9 +26,6 @@ final class EconomyAdmin {
         this.plugin = plugin;
     }
 
-    /**
-     * Runs one change. {@code amountText} is ignored for RESET (the balance goes back to SETTINGS.MONEY-PER-DEFAULT).
-     */
     void run(CommandSender sender, Action action, String target, String amountText, String note) {
         double amount;
         if (action == Action.RESET) {

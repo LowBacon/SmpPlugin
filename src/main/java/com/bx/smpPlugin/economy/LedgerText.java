@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.economy;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -10,10 +11,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.Map;
 
-/**
- * How ledger rows read in /transactions and /eco history. Reason names can be changed in messages.yml under
- * {@code V3.ECONOMY.REASON.<REASON>}.
- */
 public final class LedgerText {
 
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("MMM d HH:mm", Locale.ENGLISH);
@@ -55,14 +52,12 @@ public final class LedgerText {
     private LedgerText() {
     }
 
-    /** The readable name of a ledger reason. */
     public static String reason(String reason) {
         String key = reason == null ? "UNKNOWN" : reason;
         String fallback = REASONS.getOrDefault(key, key.toLowerCase(Locale.ROOT).replace('_', ' '));
         return Text.get("ECONOMY.REASON." + key, fallback);
     }
 
-    /** One coloured line for a ledger row. */
     public static String line(SmpPlugin plugin, LedgerEntry entry, EconomyManager.HistoryPage page) {
         boolean credit = entry.amountCents() >= 0L;
         String amount = (credit ? "&a+" : "&c-")

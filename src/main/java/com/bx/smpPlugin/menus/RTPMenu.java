@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.menus;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -15,10 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * The /rtp world picker: one button per world. The last lore line says whether you can go now,
- * and it refreshes every second so a cooldown counts down while the menu is open.
- */
 public class RTPMenu extends BaseMenu {
 
     private enum Status { READY, COOLDOWN, LOCKED, RUNNING }

@@ -1,13 +1,9 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.tasks;
 
 import com.bx.smpPlugin.SmpPlugin;
 import org.bukkit.entity.Player;
 
-/**
- * The once-a-second sweep behind both RTP cuboids: the countdown zone that teleports whoever
- * stands still in it, and the matchmaking cuboid that puts whoever walks in on the RTP queue.
- * They share one pass over the player list rather than running a timer each.
- */
 public class RTPZoneTask implements Runnable {
 
     private final SmpPlugin plugin;

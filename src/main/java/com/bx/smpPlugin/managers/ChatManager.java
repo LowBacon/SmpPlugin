@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.utils.PermissionUtils;
@@ -56,10 +57,6 @@ public class ChatManager {
                 config().getString(LEGACY_FORMAT_PATH, DEFAULT_CHAT_FORMAT));
     }
 
-    /**
-     * How the role prefix is written into %prefix% in chat, e.g. "{prefix}&8>> ". Only used when the
-     * player has a prefix, so players without a rank do not get a stray separator.
-     */
     public String getChatPrefixFormat() {
         return config().getString(CHAT_ROOT + ".PREFIX-FORMAT", "{prefix}");
     }
@@ -285,7 +282,6 @@ public class ChatManager {
         return isChatLoggingEnabled() && config().getBoolean(CHAT_ROOT + ".LOGGING.TEAM-MESSAGES", true);
     }
 
-    /** Stores one public chat line for /chatlog. Runs on the database thread. */
     public void logPublicChat(Player player, String rawMessage) {
         if (player == null || rawMessage == null || rawMessage.isBlank() || !isPublicChatLoggingEnabled()) {
             return;
@@ -307,10 +303,6 @@ public class ChatManager {
         return config().getBoolean(CHAT_ROOT + ".MENTIONS.ENABLED", true);
     }
 
-    /**
-     * The message as {@code mentioned} should see it: their name lit up in the mention colour, then
-     * back to the speaker's own message colour. Returns the message unchanged when they are not in it.
-     */
     public String highlightMention(Player speaker, String rawMessage, String mentionedName) {
         String highlight = ColorUtils.colorize(config().getString(CHAT_ROOT + ".MENTIONS.COLOR", "&e&l"));
         String messageColor = resolveMessageColor(speaker);

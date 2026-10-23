@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.listeners;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -38,15 +39,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.vehicle.VehicleEnterEvent;
 
-/**
- * The lobby's event handling: teleports players into the lobby on join, saves their SMP
- * location on the way out, enforces the square border via a direct move/teleport clamp, and
- * blocks every world-modifying interaction inside the lobby per lobby.yml's PROTECTION section.
- *
- * Runs alongside, not instead of, the existing maintenance-mode / maintenance-location-restore
- * logic in {@link PlayerJoinQuitListener} - see onJoin() below for how the two are kept from
- * fighting over where a joining player ends up.
- */
 public final class LobbyListener implements Listener {
 
     private final SmpPlugin plugin;
@@ -61,6 +53,11 @@ public final class LobbyListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent event) {
+        if (!plugin.getLobbyManager().isLobbyActive()) {
+            Player joined = event.getPlayer();
+            plugin.getSpigotScheduler().runEntityLater(joined, () -> plugin.getLobbyManager().releaseFromLobby(joined), 2L);
+            return;
+        }
         if (!plugin.getConfigManager().getLobby().getBoolean("JOIN.ENABLED", true)) {
             return;
         }
@@ -102,11 +99,14 @@ public final class LobbyListener implements Listener {
     public void onQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
         plugin.getLobbyManager().saveSmpLocationIfOutsideLobby(player);
-        
-        // Clean up saved inventory on logout to prevent inventory duplication
-        // Only clear if they're currently in the lobby, otherwise they'll lose their items
-        if (plugin.getLobbyManager().isInLobby(player)) {
-            plugin.getLobbyManager().clearSavedInventory(player.getUniqueId());
+        // The saved survival inventory stays in memory and on disk. Dropping the memory copy here
+        // lost it when the player rejoined before its file write had run.
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPreLogin(org.bukkit.event.player.AsyncPlayerPreLoginEvent event) {
+        if (event.getLoginResult() == org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result.ALLOWED) {
+            plugin.getLobbyManager().preloadSavedInventory(event.getUniqueId());
         }
     }
 
@@ -127,7 +127,7 @@ public final class LobbyListener implements Listener {
             return; // Pure look-around / vertical-only change - nothing to check.
         }
         Player player = event.getPlayer();
-        if (bypassesBorder(player)) {
+        if (bypassesBorder(player) || !plugin.getLobbyManager().isLobbyWorld(to.getWorld())) {
             return;
         }
 
@@ -354,7 +354,6 @@ public final class LobbyListener implements Listener {
         // The visible border (/border lobby) is synced by world.BorderManager; nothing to do here
         // beyond what the move/teleport handlers already cover.
     }
-
 
     private boolean isContainer(Material material) {
         String name = material.name();

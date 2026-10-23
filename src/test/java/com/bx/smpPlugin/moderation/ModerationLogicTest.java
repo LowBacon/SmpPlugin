@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.moderation;
 
 import com.bx.smpPlugin.permissions.PermissionCategory;
@@ -34,6 +35,10 @@ class ModerationLogicTest {
     void noRoleGrantsSecurityBypasses() {
         for (String role : PermissionRegistry.ROLES) {
             for (String node : PermsCommand.expand(role)) {
+                if (node.startsWith("titanguard.")) {
+                    assertFalse(node.startsWith("titanguard.bypass"), role + " grants " + node);
+                    continue;
+                }
                 PermissionNode found = PermissionRegistry.find(node).orElseThrow();
                 assertFalse(found.category() == PermissionCategory.SECURITY_BYPASS, role + " grants " + node);
             }

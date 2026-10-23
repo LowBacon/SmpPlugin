@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -370,10 +371,6 @@ public class EnderChestManager {
         return true;
     }
 
-    /**
-     * Drops one player's Ender Chest state without saving it, so a player wipe of their stored items
-     * is not undone by an open session writing itself back afterwards.
-     */
     public void discardForPlayerWipe(UUID ownerUuid) {
         if (ownerUuid == null) {
             return;

@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import org.bukkit.ChatColor;
@@ -24,7 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** Name tags above heads: one team per player with their rank prefix, on every scoreboard players look at. */
 class NametagManagerTest {
 
     private static final UUID OWNER = UUID.fromString("70000000-0000-0000-0000-0000000000c1");
@@ -203,7 +203,6 @@ class NametagManagerTest {
                 });
     }
 
-    /** A scoreboard that keeps its teams in memory. */
     private static final class FakeBoard {
         final Map<String, FakeTeam> teams = new LinkedHashMap<>();
         private Scoreboard proxy;
@@ -254,7 +253,6 @@ class NametagManagerTest {
         }
     }
 
-    /** A team with the parts a name tag uses; an entry is in one team per board, as in Minecraft. */
     private static final class FakeTeam {
         final FakeBoard board;
         final String name;

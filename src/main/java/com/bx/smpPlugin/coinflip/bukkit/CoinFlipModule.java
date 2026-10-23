@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip.bukkit;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -24,10 +25,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.logging.Level;
 
-/**
- * Starts, reloads and stops CoinFlip. Owns the configuration snapshot, the storage worker, the service, the
- * presentation layer and the few repeating tasks (expiry sweep, leaderboard refresh, history retention).
- */
 public final class CoinFlipModule implements CoinFlipModuleView {
 
     public static final String PERM_USE = "smpplugin.coinflip.use";
@@ -64,7 +61,6 @@ public final class CoinFlipModule implements CoinFlipModuleView {
         this.plugin = plugin;
     }
 
-    /** Loads configuration and starts storage; wagering opens once recovery has finished. */
     public void start() {
         saveDefault(CONFIG_FILE);
         saveDefault(MESSAGES_FILE);
@@ -120,10 +116,6 @@ public final class CoinFlipModule implements CoinFlipModuleView {
         animator.start();
     }
 
-    /**
-     * Re-reads coinflip.yml and coinflip-messages.yml. A YAML syntax error keeps the running settings. Active matches,
-     * tasks and storage are untouched; settings marked (restart) in the file apply after a restart.
-     */
     public Optional<String> reload() {
         for (String file : new String[]{CONFIG_FILE, MESSAGES_FILE}) {
             Optional<String> problem = ConfigValidator.validateFile(new File(plugin.getDataFolder(), file).toPath());

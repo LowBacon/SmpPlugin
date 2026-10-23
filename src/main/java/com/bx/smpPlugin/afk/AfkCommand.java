@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.afk;
 
 import com.bx.smpPlugin.SmpPlugin;
@@ -12,10 +13,6 @@ import org.bukkit.entity.Player;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * {@code /afk [zone]}: go to an AFK zone (a menu when there are several).
- * {@code /away}: set or clear your AFK status where you stand.
- */
 public class AfkCommand implements CommandExecutor, TabCompleter {
 
     private final SmpPlugin plugin;

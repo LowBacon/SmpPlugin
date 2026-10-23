@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.enderchest;
 
 import org.bukkit.inventory.Inventory;

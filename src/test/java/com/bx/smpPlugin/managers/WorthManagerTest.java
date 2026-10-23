@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.managers;
 
 import com.bx.smpPlugin.testsupport.ServerApiCondition;
@@ -58,8 +59,6 @@ class WorthManagerTest {
         org.bukkit.inventory.ItemStack sword = new org.bukkit.inventory.ItemStack(org.bukkit.Material.DIAMOND_SWORD);
         org.bukkit.enchantments.Enchantment sharpness = testEnchantment(org.bukkit.NamespacedKey.minecraft("sharpness"));
         sword.addUnsafeEnchantment(sharpness, 5);
-
-
 
         WorthResult result = worthManager.resolveWorth(sword);
         assertEquals(1550.0, result.totalWorth());
@@ -202,10 +201,6 @@ class WorthManagerTest {
         );
     }
 
-    /**
-     * Enchantment is an abstract class whose abstract methods differ between the Paper and Spigot APIs,
-     * so a hand-written subclass only compiles against one of them. WorthManager only reads the key.
-     */
     private static org.bukkit.enchantments.Enchantment testEnchantment(org.bukkit.NamespacedKey key) {
         // Subclass mocking: no bytecode retransformation (which fails on the Spigot API under Java 25) and no agent.
         org.bukkit.enchantments.Enchantment enchantment = org.mockito.Mockito.mock(

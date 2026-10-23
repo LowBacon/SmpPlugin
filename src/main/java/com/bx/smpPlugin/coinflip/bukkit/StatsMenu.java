@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip.bukkit;
 
 import com.bx.smpPlugin.coinflip.CoinFlipStats;
@@ -14,15 +15,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
-/**
- * A player's statistics. Loaded off the server thread. Other players' statistics are shown only when their profile
- * is public, or to staff with the inspect permission.
- */
 public final class StatsMenu extends CoinFlipMenu {
 
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault());
 
-    /** Stats plus this week's and this month's totals. */
     private record Loaded(CoinFlipStats stats, long weekPlayed, long weekNet, long monthPlayed, long monthNet) {
     }
 

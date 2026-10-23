@@ -1,10 +1,8 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.tasks;
 
 import com.bx.smpPlugin.SmpPlugin;
 
-/**
- * Checks every second if it's time for key-all.
- */
 public class KeyAllTask implements Runnable {
 
     private final SmpPlugin plugin;

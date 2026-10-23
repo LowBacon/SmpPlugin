@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip.bukkit;
 
 import org.bukkit.Bukkit;
@@ -10,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/** Pick an online player to challenge. Players who turned invitations off, or who ignore the viewer, are not offered. */
 public final class ChallengeMenu extends CoinFlipMenu {
 
     private final int page;
@@ -77,7 +77,6 @@ public final class ChallengeMenu extends CoinFlipMenu {
         }
     }
 
-    /** Whether the viewer may challenge {@code target}: invitations on and not ignoring the viewer. */
     private boolean challengeable(Player target) {
         if (!module.service().preferences(target.getUniqueId()).inviteNotifications()) {
             return false;

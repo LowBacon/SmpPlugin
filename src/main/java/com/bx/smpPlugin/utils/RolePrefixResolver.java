@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.utils;
 
 import org.bukkit.Bukkit;
@@ -8,7 +9,6 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import java.lang.reflect.Method;
 import java.util.UUID;
 
-/** Resolves the role prefix supplied by LuckPerms/EssentialsX through PAPI or Vault. */
 public final class RolePrefixResolver {
 
     private static final String[] PLACEHOLDERS = {

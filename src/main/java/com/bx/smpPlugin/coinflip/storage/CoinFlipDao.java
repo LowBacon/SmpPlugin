@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.coinflip.storage;
 
 import com.bx.smpPlugin.coinflip.Achievement;
@@ -23,25 +24,17 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Every SQL statement CoinFlip runs. All statements are prepared, every query is bounded, and every state change
- * is a compare-and-set that throws {@link CoinFlipStorageException.Reason#CONFLICT} when the row was not in the
- * expected state. Used only on the storage worker thread, inside the transaction the repository opened.
- */
 public final class CoinFlipDao {
 
     static final int SCHEMA_VERSION = 1;
 
-    /** One leaderboard row. */
     public record RankRow(UUID playerId, String playerName, long value, long played) {
     }
 
-    /** History filter for paginated match history. */
     public enum HistoryFilter {
         ALL, WINS, LOSSES, CANCELLED
     }
 
-    /** Leaderboard metrics. Win rate requires a minimum number of matches. */
     public enum Metric {
         WINS("wins"), PLAYED("played"), WIN_RATE("wins"), GROSS_PAYOUT("gross_payout_cents"),
         NET_PROFIT("net_cents"), LARGEST_PAYOUT("largest_payout_cents"), BEST_STREAK("best_streak"),
@@ -181,7 +174,6 @@ public final class CoinFlipDao {
         }
     }
 
-    /** Moves a match between durable states; throws CONFLICT when it is no longer in {@code from}. */
     public void moveMatch(String id, MatchState from, MatchState to, long endedAt, String reason) throws SQLException {
         try (PreparedStatement statement = prepare("UPDATE coinflip_matches SET state = ?, ended_at = CASE WHEN ? > 0 "
                 + "THEN ? ELSE ended_at END, end_reason = CASE WHEN ? IS NULL THEN end_reason ELSE ? END "
@@ -215,7 +207,6 @@ public final class CoinFlipDao {
         }
     }
 
-    /** Stores the one and only outcome. The {@code outcome IS NULL} guard makes a second write impossible. */
     public void lockOutcome(String id, CoinSide outcome, String outcomeId, UUID winner, long joinedAt) throws SQLException {
         try (PreparedStatement statement = prepare("UPDATE coinflip_matches SET state = 'LOCKED', outcome = ?, outcome_id = ?, "
                 + "winner_uuid = ?, joined_at = ? WHERE id = ? AND state = 'JOINING' AND outcome IS NULL")) {
@@ -278,7 +269,6 @@ public final class CoinFlipDao {
         return matches;
     }
 
-    /** Completed matches the player took part in that ended at or after {@code since}. */
     public List<CoinFlipMatch> completedSince(UUID player, long since) throws SQLException {
         List<CoinFlipMatch> matches = new ArrayList<>();
         try (PreparedStatement statement = prepare("SELECT * FROM coinflip_matches WHERE state = 'COMPLETED' AND ended_at >= ? "
@@ -305,7 +295,6 @@ public final class CoinFlipDao {
         }
     }
 
-    /** Stakes applied minus refunds applied since {@code since}. */
     public long stakedSince(UUID player, long since) throws SQLException {
         try (PreparedStatement statement = prepare("SELECT kind, SUM(amount_cents) FROM coinflip_transactions WHERE player_uuid = ? "
                 + "AND state IN ('APPLIED','PENDING_CLAIM') AND kind IN ('STAKE','REFUND') AND created_at >= ? GROUP BY kind")) {
@@ -466,10 +455,6 @@ public final class CoinFlipDao {
 
     // ── Balances ─────────────────────────────────────────────────────────────────
 
-    /**
-     * Writes the player's balance as it stands in memory right after a CoinFlip change, in the same database
-     * transaction as the journal row, so the change and its record become durable together.
-     */
     public void writeBalance(UUID player, EconomyGateway.StoredBalance balance) throws SQLException {
         // Only a newer version is written, so this can never put back an older balance that another writer
         // (the economy's own database writer, a quit save) has already replaced.
@@ -600,7 +585,6 @@ public final class CoinFlipDao {
         }
     }
 
-    /** A player who has CoinFlip statistics, found by name (case-insensitive). */
     public Optional<RankRow> findPlayerByName(String name) throws SQLException {
         try (PreparedStatement statement = prepare("SELECT player_uuid, player_name, played, played FROM coinflip_stats "
                 + "WHERE LOWER(player_name) = LOWER(?) ORDER BY last_match_at DESC LIMIT 1")) {
@@ -612,7 +596,6 @@ public final class CoinFlipDao {
         }
     }
 
-    /** This player's matches played and net result in one period, e.g. "W2026-41". */
     public long[] periodTotals(UUID player, String period) throws SQLException {
         try (PreparedStatement statement = prepare("SELECT played, net_cents FROM coinflip_periods WHERE player_uuid = ? AND period = ?")) {
             statement.setString(1, player.toString());
@@ -640,10 +623,6 @@ public final class CoinFlipDao {
         }
     }
 
-    /**
-     * Top players for a metric. Ties are broken by fewer matches played (for totals) and then by UUID, so the
-     * order is stable between refreshes. Hidden profiles are excluded.
-     */
     public List<RankRow> leaderboard(Metric metric, String period, int limit, int minMatchesForRate) throws SQLException {
         String sql;
         if (metric.periodic()) {
@@ -678,7 +657,6 @@ public final class CoinFlipDao {
 
     // ── Achievements ─────────────────────────────────────────────────────────────
 
-    /** Inserts the achievement unless the player already has it. Returns true only for a new unlock. */
     public boolean unlock(UUID player, Achievement achievement, long at) throws SQLException {
         try (PreparedStatement check = prepare("SELECT 1 FROM coinflip_achievements WHERE player_uuid = ? AND achievement = ?")) {
             check.setString(1, player.toString());
@@ -746,7 +724,6 @@ public final class CoinFlipDao {
 
     // ── Audit ────────────────────────────────────────────────────────────────────
 
-    /** One row in the append-only audit trail. */
     public record AuditRow(String id, long at, String actor, String action, String matchId, String detail) {
     }
 
@@ -785,10 +762,6 @@ public final class CoinFlipDao {
 
     // ── Retention ────────────────────────────────────────────────────────────────
 
-    /**
-     * Deletes finished matches older than {@code cutoff} whose every transaction is settled (applied or void).
-     * Matches with a pending claim or an unknown transaction are never deleted.
-     */
     public int pruneHistory(long cutoff) throws SQLException {
         String settled = "SELECT m.id FROM coinflip_matches m WHERE m.state IN ('COMPLETED','CANCELLED','EXPIRED') AND m.ended_at > 0 "
                 + "AND m.ended_at < ? AND NOT EXISTS (SELECT 1 FROM coinflip_transactions t WHERE t.match_id = m.id "

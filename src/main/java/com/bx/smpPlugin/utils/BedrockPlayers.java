@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.utils;
 
 import org.bukkit.entity.Player;
@@ -5,9 +6,6 @@ import org.bukkit.entity.Player;
 import java.lang.reflect.Method;
 import java.util.UUID;
 
-/**
- * Detects a Bedrock connection without loading Floodgate or Geyser until one of them is installed.
- */
 public final class BedrockPlayers {
 
     private static volatile boolean floodgateAbsent;

@@ -1,11 +1,9 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.tasks;
 
 import com.bx.smpPlugin.SmpPlugin;
 import com.bx.smpPlugin.managers.OptimizationManager;
 
-/**
- * Updates all player scoreboards every 2 ticks (~10x/sec).
- */
 public class ScoreboardTask implements Runnable {
 
     private final SmpPlugin plugin;

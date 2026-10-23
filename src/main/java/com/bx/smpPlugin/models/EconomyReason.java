@@ -1,3 +1,4 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.models;
 
 public enum EconomyReason {
@@ -23,22 +24,13 @@ public enum EconomyReason {
     COINFLIP_STAKE,
     COINFLIP_PAYOUT,
     COINFLIP_REFUND,
-    /** Daily rewards, the Halloween calendar, challenges, chat games and other 3.0 prizes. */
     REWARD,
-    /** A /dice or /roulette bet taken from the player. */
     GAMBLE_STAKE,
-    /** /dice or /roulette winnings. */
     GAMBLE_PAYOUT,
-    /** A /dice or /roulette bet given back (tie, cancelled round, recovery after a crash). */
     GAMBLE_REFUND,
-    /** Money a crate gave. */
     CRATE_REWARD,
-    /** Another plugin paid the player through Vault. */
     VAULT_DEPOSIT,
-    /** Another plugin charged the player through Vault. */
     VAULT_WITHDRAW,
-    /** /eco reset: the balance was put back to the starting amount. */
     ADMIN_RESET,
-    /** A seasonal event (calendar, Trick or Treat, event milestones). */
     EVENT_REWARD
 }

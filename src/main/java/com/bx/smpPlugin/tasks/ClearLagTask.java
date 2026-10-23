@@ -1,10 +1,8 @@
+// SmpPlugin by LowBacon
 package com.bx.smpPlugin.tasks;
 
 import com.bx.smpPlugin.SmpPlugin;
 
-/**
- * Runs every N minutes. Broadcasts countdown warnings then clears entities.
- */
 public class ClearLagTask implements Runnable {
 
     private static final int[] WARN_AT = {60, 30, 15, 10, 5, 4, 3, 2, 1};

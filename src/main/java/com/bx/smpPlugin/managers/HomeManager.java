@@ -70,40 +70,162 @@ public class HomeManager {
         return getHomes(uuid).size();
     }
 
+    public static final int UNLIMITED = Integer.MAX_VALUE;
+    public static final String UNLIMITED_PERMISSION = "smpplugin.homes.unlimited";
+
+    // One rank's homes: MIN to start with, one more per playtime step up to MAX, or no limit at all.
+    record HomeTier(int min, int max, boolean unlimited) {
+
+        int homesFor(long playtimeSeconds, long secondsPerExtra) {
+            if (unlimited) {
+                return UNLIMITED;
+            }
+            long extra = secondsPerExtra <= 0L ? max - min : playtimeSeconds / secondsPerExtra;
+            return (int) Math.max(min, Math.min(max, min + Math.max(0L, extra)));
+        }
+
+        static HomeTier read(org.bukkit.configuration.ConfigurationSection section, String key) {
+            if (section.isInt(key)) {
+                int fixed = Math.max(1, section.getInt(key));
+                return new HomeTier(fixed, fixed, false);
+            }
+            org.bukkit.configuration.ConfigurationSection tier = section.getConfigurationSection(key);
+            if (tier == null) {
+                return null;
+            }
+            if (tier.getBoolean("UNLIMITED", false)) {
+                return new HomeTier(UNLIMITED, UNLIMITED, true);
+            }
+            int min = Math.max(1, tier.getInt("MIN", 1));
+            int max = Math.max(min, tier.getInt("MAX", min));
+            return new HomeTier(min, max, false);
+        }
+    }
+
     public int getMaxHomes(Player player) {
-        int defaultHomes = Math.max(1, plugin.getConfigManager().getConfig().getInt("SETTINGS.HOME-DEFAULT", 5));
+        if (PermissionUtils.hasExact(player, UNLIMITED_PERMISSION)) {
+            return UNLIMITED;
+        }
+        org.bukkit.configuration.file.FileConfiguration config = plugin.getConfigManager().getConfig();
+        int best = Math.max(1, config.getInt("SETTINGS.HOME-DEFAULT", 1));
+
+        // Rank tiers (HOME-LIMITS): the best tier the player qualifies for wins.
+        org.bukkit.configuration.ConfigurationSection limits = limitsSection();
+        if (limits != null) {
+            long playtime = playtimeSeconds(player);
+            long step = playtimeStepSeconds();
+            for (String rank : limits.getKeys(false)) {
+                if (!qualifies(player, rank)) {
+                    continue;
+                }
+                HomeTier tier = HomeTier.read(limits, rank);
+                if (tier == null) {
+                    continue;
+                }
+                int homes = tier.homesFor(playtime, step);
+                if (homes == UNLIMITED) {
+                    return UNLIMITED;
+                }
+                best = Math.max(best, homes);
+            }
+        }
+
+        // Numbered permissions still work: smpplugin.homes.<n> and smpplugin.homes.page.<n>.
         int homesByAmountPermission = PermissionUtils.resolveHighestExactNumberedPermission(
                 player, "smpplugin.homes.", MAX_PERMISSION_VALUE);
         int pagesByPermission = PermissionUtils.resolveHighestExactNumberedPermission(
                 player, "smpplugin.homes.page.", MAX_PERMISSION_VALUE);
-        int homesByPagePermission = pagesByPermission * HOMES_PER_PAGE;
-        int permissionHomes = Math.max(homesByAmountPermission, homesByPagePermission);
+        best = Math.max(best, Math.max(homesByAmountPermission, pagesByPermission * HOMES_PER_PAGE));
 
-        // Rank tiers from config.yml, e.g. "group.vip: 10", so ranks need no numbered nodes.
-        org.bukkit.configuration.ConfigurationSection tiers = plugin.getConfigManager().getConfig()
-                .getConfigurationSection("SETTINGS.HOME-PERMISSIONS");
+        // Older settings, still read so existing servers keep what they gave: HOME-PERMISSIONS
+        // (permission node: homes) and HOME-RANKS (rank: homes).
+        org.bukkit.configuration.ConfigurationSection tiers = config.getConfigurationSection("SETTINGS.HOME-PERMISSIONS");
         if (tiers != null) {
             for (String node : tiers.getKeys(true)) {
                 if (tiers.isInt(node) && PermissionUtils.hasExact(player, node)) {
-                    permissionHomes = Math.max(permissionHomes, Math.min(MAX_PERMISSION_VALUE, tiers.getInt(node)));
+                    best = Math.max(best, Math.min(MAX_PERMISSION_VALUE, tiers.getInt(node)));
                 }
             }
         }
-
-        // Ranks by name: a LuckPerms group, a perks rank (smpplugin.rank.<name>) or a staff role
-        // (smpplugin.role.<name>); "op" is server operators. The highest a player has wins.
-        org.bukkit.configuration.ConfigurationSection ranks = plugin.getConfigManager().getConfig()
-                .getConfigurationSection("SETTINGS.HOME-RANKS");
+        org.bukkit.configuration.ConfigurationSection ranks = config.getConfigurationSection("SETTINGS.HOME-RANKS");
         if (ranks != null) {
             for (String rank : ranks.getKeys(false)) {
                 if (ranks.isInt(rank) && hasRank(player, rank)) {
-                    permissionHomes = Math.max(permissionHomes, Math.min(MAX_PERMISSION_VALUE, ranks.getInt(rank)));
+                    best = Math.max(best, Math.min(MAX_PERMISSION_VALUE, ranks.getInt(rank)));
                 }
             }
         }
+        return best;
+    }
 
-        // A rank never gives fewer homes than everyone gets.
-        return Math.max(defaultHomes, permissionHomes);
+    public boolean isUnlimited(Player player) {
+        return getMaxHomes(player) == UNLIMITED;
+    }
+
+    // "12" or "unlimited", for messages and menus.
+    public String formatLimit(Player player) {
+        int max = getMaxHomes(player);
+        return max == UNLIMITED ? "unlimited" : Integer.toString(max);
+    }
+
+    // Home slots a menu shows: the limit, or for unlimited players their homes plus a free page.
+    public int visibleHomeSlots(Player player) {
+        int max = getMaxHomes(player);
+        if (max != UNLIMITED) {
+            return max;
+        }
+        int used = getHomeCount(player.getUniqueId());
+        return (used / HOMES_PER_PAGE + 1) * HOMES_PER_PAGE;
+    }
+
+    // Seconds of playtime until the next home unlocks, or -1 when no more will.
+    public long secondsUntilNextHome(Player player) {
+        org.bukkit.configuration.ConfigurationSection limits = limitsSection();
+        long step = playtimeStepSeconds();
+        if (limits == null || step <= 0L) {
+            return -1L;
+        }
+        int current = getMaxHomes(player);
+        if (current == UNLIMITED) {
+            return -1L;
+        }
+        long playtime = playtimeSeconds(player);
+        for (String rank : limits.getKeys(false)) {
+            if (!qualifies(player, rank)) {
+                continue;
+            }
+            HomeTier tier = HomeTier.read(limits, rank);
+            if (tier != null && !tier.unlimited() && tier.homesFor(playtime, step) == current && current < tier.max()) {
+                return step - (playtime % step);
+            }
+        }
+        return -1L;
+    }
+
+    private static boolean qualifies(Player player, String rank) {
+        return rank.equalsIgnoreCase("default") || hasRank(player, rank);
+    }
+
+    // HOME-LIMITS from config.yml, or the bundled one while an older config.yml has none.
+    private org.bukkit.configuration.ConfigurationSection limitsSection() {
+        org.bukkit.configuration.file.FileConfiguration config = plugin.getConfigManager().getConfig();
+        org.bukkit.configuration.ConfigurationSection own = config.getConfigurationSection("SETTINGS.HOME-LIMITS");
+        if (own != null && !own.getKeys(false).isEmpty()) {
+            return own;
+        }
+        return config.getDefaults() == null ? null : config.getDefaults().getConfigurationSection("SETTINGS.HOME-LIMITS");
+    }
+
+    private long playtimeStepSeconds() {
+        String raw = plugin.getConfigManager().getConfig().getString("SETTINGS.HOME-PLAYTIME-PER-EXTRA", "10h");
+        Long millis = OffenseManager.parseDurationToMillis(raw);
+        return millis == null ? 0L : millis / 1000L;
+    }
+
+    private long playtimeSeconds(Player player) {
+        com.bx.smpPlugin.models.PlayerData data = plugin.getPlayerDataManager() == null ? null
+                : plugin.getPlayerDataManager().get(player);
+        return data == null ? 0L : Math.max(0L, data.getPlaytimeSeconds());
     }
 
     static boolean hasRank(Player player, String rank) {
@@ -134,7 +256,7 @@ public class HomeManager {
     }
 
     public int getMaxHomePages(Player player) {
-        int maxHomes = getMaxHomes(player);
+        int maxHomes = visibleHomeSlots(player);
         return Math.max(1, (int) Math.ceil(maxHomes / (double) HOMES_PER_PAGE));
     }
 
@@ -204,8 +326,12 @@ public class HomeManager {
     public boolean deleteHome(UUID uuid, String name) {
         List<Home> homes = cache.get(uuid);
         if (homes == null) return false;
-        boolean removed = homes.removeIf(h -> h.getName().equalsIgnoreCase(name));
-        if (removed) deleteAsync(uuid, name);
+        // The database matches names exactly, so delete the name as it was saved ("Base", not "base"),
+        // or the home came back after a restart.
+        Home stored = getHome(uuid, name);
+        if (stored == null) return false;
+        boolean removed = homes.remove(stored);
+        if (removed) deleteAsync(uuid, stored.getName());
         return removed;
     }
 

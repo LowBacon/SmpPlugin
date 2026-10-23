@@ -6,7 +6,7 @@
 # Purpur. On Spigot, or when a screen is turned off below, the command opens the
 # chest menu from menus.yml instead, so this file is safe on every server.
 #
-# Screens in this version: /settings, /homes, /stats, /tpa, the TPA request pop-up,
+# Screens in this version: /settings, /homes, /stats, /tpa, the TPA request pop-up (off by default),
 # the Auction House purchase and sell screens, the /rtpq confirmation and the
 # Quick Buy item picker in the Auction House.
 #
@@ -40,6 +40,9 @@ SCREENS:
   # /tpa and /tpahere without a name: online players with heads, a name box and your
   # waiting requests. Also the Accept / Deny pop-up when a request arrives.
   TPA: true
+  # The pop-up a player gets for an incoming /tpa or /tpahere. Off: the DonutSMP-style confirm
+  # menu opens instead (TPA-CONFIRM-MENU in menus.yml), as on UltimateDonutSMP.
+  TPA-REQUEST: false
   # Auction House: buying shows the item, seller, price and time left; /ah sell without
   # a price asks for one next to the item in your hand.
   AUCTION-HOUSE: true

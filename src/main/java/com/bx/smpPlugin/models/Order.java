@@ -49,6 +49,13 @@ public record Order(
         return Math.max(0, requestedQuantity - deliveredQuantity);
     }
 
+    public boolean visibleInYourOrders(boolean hasUnclaimedItemClaims) {
+        if (hasUnclaimedItemClaims) {
+            return true;
+        }
+        return active() && remainingQuantity() > 0;
+    }
+
     public long secondsRemaining(long nowMillis) {
         return Math.max(0L, (expiresAt - nowMillis) / 1000L);
     }

@@ -516,6 +516,13 @@ public final class QuickBuyItemDialog extends DialogScreen {
         return "&f" + itemName + "\n" + lore;
     }
 
+    // The orders picker: every item Quick Buy offers, minus the built-in unsuitable ones and extras.
+    public static List<Material> getSelectableMaterials(SmpPlugin plugin, String query, java.util.Collection<String> extras) {
+        return QuickBuyCatalog.getSelectableMaterials(plugin, query).stream()
+                .filter(material -> !ChooseItemBlacklist.isBlacklisted(material, extras))
+                .toList();
+    }
+
     public List<Material> getSelectableMaterials(String query) {
         return QuickBuyCatalog.getSelectableMaterials(plugin, query);
     }

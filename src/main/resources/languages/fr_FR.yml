@@ -1,77 +1,84 @@
 META:
   NAME: "Français"
 ORDERS:
-  DISABLED: "&cles commandes sont désactivées."
-  RELOADED: "&aconfiguration des commandes rechargée."
-  ORDER_NOT_FOUND: '&ccette commande n''eXiste plus.'
-  ORDER_NOT_ACTIVE: '&ccette commande n''est plus active.'
-  CANNOT_DELIVER_OWN: '&cvous ne pouvez pas livrer votre propre commande.'
-  NO_MATCHING_ITEMS: "&caucun objet correspondant trouvé."
-  ORDER_FULL: "&ccette commande est déjà remplie."
-  DELIVERY_SUCCESS: "&avous avez livré &e{Quantity} {item}&a et reçu &a{payout}&a."
-  CANCELLED: "&ecommande #{order_id} annulée. le séQuestre restant peut être récupéré."
-  BATCH_COLLECTED: "&a{claims} réclamations récupérées ({items} objets, remboursement {refund}). &c{failed} échecs."
+  DISABLED: "&cLes commandes sont désactivées."
+  RELOADED: "&aConfiguration des commandes rechargée."
+  ORDER_NOT_FOUND: '&cCette commande n''existe plus.'
+  ORDER_NOT_ACTIVE: '&cCette commande n''est plus active.'
+  CANNOT_DELIVER_OWN: '&cVous ne pouvez pas livrer votre propre commande.'
+  NO_MATCHING_ITEMS: "&cAucun objet correspondant trouvé."
+  ORDER_FULL: "&cCette commande est déjà remplie."
+  DELIVERY_SUCCESS: "&aVous avez livré &e{quantity} {item}&a et reçu &a{payout}&a."
+  CANCELLED: "&eCommande #{order_id} annulée. le séquestre restant peut être récupéré."
+  BATCH_COLLECTED: "&a{claims} Réclamations récupérées ({items} objets, remboursement
+    {refund}). &c{failed} échecs."
+  BATCH_DROPPED: "&a{claims} Réclamations déposées ({items} objets). &c{failed} échecs."
   GUI:
     MAIN:
-      TITLE: "&8Commandes"
+      TITLE: "Orders (Page {page})"
     MY_ORDERS:
-      TITLE: "&8Commandes -> Mes Commandes"
+      TITLE: "Orders -> Your Orders"
     SELECT_ITEM:
-      TITLE: "&8Commandes -> Choisir Un Objet"
+      TITLE: "&8Commandes -> choisir un objet"
     SEARCH_ITEM:
-      TITLE: "&8Commandes -> Rechercher"
+      TITLE: "&8Commandes -> rechercher"
     INVENTORY_ITEM:
-      TITLE: "&8Commandes -> Choisir Un Objet"
+      TITLE: "&8Commandes -> choisir un objet"
     NEW_ORDER:
-      TITLE: "&8Commandes -> Nouvelle Commande"
+      TITLE: "&8Commandes -> nouvelle commande"
     EDIT_ORDER:
-      TITLE: "&8Commandes -> Modifier"
+      TITLE: "Orders -> Edit Order"
     DEPOSIT:
-      TITLE: "&8Commandes -> Livrer Des Objets"
+      TITLE: "Orders -> Deliver Items"
     CONFIRM:
-      TITLE: "&8Commandes -> Confirmer La Livraison"
+      TITLE: "&8Commandes -> confirmer la livraison"
     DELETE:
-      TITLE: "&8Commandes -> Annuler"
+      TITLE: "Orders -> Cancel Order"
     COLLECT:
-      TITLE: "&8Commandes -> RéCupéRer"
+      TITLE: "&8Commandes -> récupérer"
+      DROP_ALL:
+        NAME: "&eTout déposer"
+        LORE:
+        - "&fDépose chaque objet en attente à tes pieds"
   BEDROCK:
     MAIN:
-      TITLE: commandes
-      CONTENT: parcourir les commandes ouvertes.
-      SEARCHING: 'recherche : {Query}'
+      TITLE: Commandes
+      CONTENT: Parcourir les commandes ouvertes.
+      SEARCHING: 'Recherche : {query}'
     MY:
-      TITLE: mes commandes
-      CONTENT: "sélectionnez une commande à gérer."
+      TITLE: Mes commandes
+      CONTENT: "Sélectionnez une commande à gérer."
     COLLECT:
-      TITLE: "récupérer"
-      CONTENT: "réclamations en attente : {count}"
+      TITLE: "Récupérer"
+      CONTENT: "Réclamations en attente : {count}"
     SEARCH:
-      TITLE: rechercher des commandes
-      INPUT: "objet, propriétaire ou catégorie"
+      TITLE: Rechercher des commandes
+      INPUT: "Objet, propriétaire ou catégorie"
     ITEMS:
-      TITLE: choisir un objet
-      CONTENT: "choisissez l'objet à commander."
+      TITLE: Choisir un objet
+      CONTENT: "Choisissez l'objet à commander."
     NEW:
-      TITLE: nouvelle commande
+      TITLE: Nouvelle commande
       AMOUNT: "Quantité"
-      PRICE: priX unitaire
+      PRICE: Prix unitaire
     DELIVERY:
-      TITLE: livrer des objets
-      AMOUNT: "Quantité (maX. {maX})"
+      TITLE: Livrer des objets
+      AMOUNT: "Quantité (max. {max})"
     CANCEL:
-      TITLE: annuler la commande
-      CONTENT: "annuler la commande #{id} ? le séQuestre restant sera remboursé."
+      TITLE: Annuler la commande
+      CONTENT: "Annuler la commande #{id} ? le séquestre restant sera remboursé."
     BUTTON:
-      SEARCH: rechercher
-      NEW: nouvelle commande
-      MY: mes commandes
-      COLLECT: "récupérer"
-      BACK: retour
-      COLLECT_ALL: "tout récupérer"
-      DROP_ITEMS: "déposer les objets"
-      COLLECT_ORDER: "récupérer cette commande"
-      CANCEL_ORDER: annuler la commande
-      CONFIRM: confirmer
+      SEARCH: Rechercher
+      NEW: Nouvelle commande
+      MY: Mes commandes
+      COLLECT: "Récupérer"
+      BACK: Retour
+      COLLECT_ALL: "Tout récupérer"
+      DROP_ITEMS: "Déposer les objets"
+      COLLECT_ORDER: "Récupérer cette commande"
+      DROP_ORDER: "Déposer cette commande"
+      CANCEL_ORDER: Annuler la commande
+      CONFIRM: Confirmer
 COMMON:
   ENABLED: "activé"
   DISABLED: "désactivé"
@@ -1480,6 +1487,10 @@ CONFIG:
       RELOAD-SUCCESS: "&aFREEZE CONFIG RELOADED."
   ORDERS:
     GUI:
+      CANCEL_ORDER:
+        TITLE: Orders -> Cancel Order
+      DELIVERY_DEPOSIT:
+        TITLE: Orders -> Deliver Items
       MAIN:
         TITLE: "&8Orders"
       MY_ORDERS:
@@ -1759,6 +1770,26 @@ CONFIG:
       sounds:
         click: {}
 MESSAGES:
+  COMMAND-HELP:
+    DISABLED: '&cHelp is turned off on this server.'
+    UNKNOWN: '&cThere is no help for &f{input}&c. Try &f/help &cto see the categories.'
+    HEADER: '&8&m------&r &b&lHelp &8&m------'
+    EMPTY: '&7There are no commands you can use right now.'
+    CATEGORY-LINE: '&b{title} &8({count}) &7- {description}'
+    CATEGORY-HOVER: '&7Click to see the {title} commands'
+    OVERVIEW-FOOTER: '&7Use &f/help <category> &7or &f/help <command>&7.'
+    CATEGORY-EMPTY: '&7You have no &f{title} &7commands.'
+    CATEGORY-HEADER: '&8&m------&r &b&l{title} &7({page}/{pages}) &8&m------'
+    COMMAND-LINE: '&f/{command} &8- &7{description}'
+    COMMAND-HOVER: "&f{usage}\n&7Click to type it"
+    COMMAND-HEADER: '&8&m------&r &b&l/{command} &8&m------'
+    COMMAND-USAGE: '&7Usage: &f{usage}'
+    COMMAND-ALIASES: '&7Also: &f{aliases}'
+    COMMAND-DISABLED: '&cThis command is turned off on this server.'
+    COMMAND-PERMISSION: '&7Permission: &f{permission}'
+    PAGE-HINT: '&7More: &f/help {category} {next}'
+    PREVIOUS: '&b« Previous'
+    NEXT: '&bNext »'
   AUCTION_HOUSE:
     PLAYERS_ONLY: "&cONLY PLAYERS CAN USE THIS COMMAND."
     NO_PERMISSION: '&cyou cannot use that auction house action.'
@@ -1909,6 +1940,7 @@ MESSAGES:
     PM-ENABLED: "&aPRIVATE MESSAGES ARE NOW ENABLED"
     PM-DISABLED: "&cPRIVATE MESSAGES ARE NOW DISABLED"
   TPAUTO:
+    ACTION-BAR: '&fYou have tpauto on.'
     ENABLED: "&7YOU TURNED ON TPAUTO."
     DISABLED: "&7YOU TURNED OFF TPAUTO."
   TPAHEREAUTO:
@@ -2094,14 +2126,6 @@ MESSAGES:
     TARGET-DISABLED-PAYMENTS: "&cTHE TARGET PLAYER HAS THE PAYMENTS DISABLED."
     SUCCESS-SENDER: "&7YOU PAID &b{player} &#A303F9{amount}&7 SHARDS."
     SUCCESS-RECEIVER: "&7YOU RECEIVED &#A303F9{amount}&7 SHARDS FROM &b{player}&7."
-  FINDPLAYER:
-    AFK: "&7{player}'S IN THE &#A303F9AFK"
-    RTP_ZONE: "&7{player}'S IN THE &cRTPZONE"
-    SPAWN: "&7{player}'S IN THE &bSPAWN"
-    OVERWORLD: "&7{player}'S IN THE &bOVERWORLD &7(&b{biome}&7)"
-    NETHER: "&7{player}'S IN THE &bNETHER &7(&b{biome}&7)"
-    THE_END: "&7{player}'S IN THE &bTHE END &7(&b{biome}&7)"
-    UNKNOWN: "&7{player}'S IN THE &b{world}"
   PUNISHMENTS:
     PLAYER-ONLY: "&cONLY PLAYERS CAN USE THIS COMMAND."
     NO-PERMISSION: '&cyou do not have permission to view punishment history.'
@@ -3475,7 +3499,6 @@ BUILTIN:
   c77190ba5e78d1b8df80: "&cusage : /cuboid créer <name>"
   4d29a2b8774a78044eff: "&cusage : /cuboid supprimer <name>"
   83fad9e4e4da8171c3eb: "&cusage : /delhome <name>"
-  0875240f77275dbdbbbd: "&cusage : /findplayer <player>"
   9693c86bc206fc68b182: "&cusage : /kick <player> [raison]"
   692da4ab36c472e22f6a: "&cusage : /mute <player> [raison]"
   6c88c5573a74036340c6: "&cusage : /pardon <player> [raison]"

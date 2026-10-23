@@ -406,6 +406,9 @@ public final class SmpPlugin extends JavaPlugin {
         syncCommands();
         verifyPermissionRegistration();
         logCapabilitySummary();
+        if (tpaManager != null) {
+            tpaManager.startTpautoReminder();
+        }
         getLogger().info("SmpPlugin enabled successfully.");
     }
 
@@ -447,6 +450,9 @@ public final class SmpPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (tpaManager != null) {
+            tpaManager.stopTpautoReminder();
+        }
         if (nametagManager != null) {
             // The main scoreboard is saved with the world; the name tag teams must not be.
             nametagManager.shutdown();
@@ -902,7 +908,6 @@ public final class SmpPlugin extends JavaPlugin {
         // Misc toggles
         setExecutor("nightvision", new NightVisionCommand(this), FeatureManager.Feature.NIGHT_VISION);
         setExecutor("phantom", new PhantomCommand(this), FeatureManager.Feature.PHANTOM);
-        setExecutor("findplayer", new FindPlayerCommand(this), FeatureManager.Feature.FIND_PLAYER);
         setExecutor("settings", new SettingsCommand(this), FeatureManager.Feature.SETTINGS);
 
         // Social / info

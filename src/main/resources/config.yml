@@ -66,32 +66,34 @@ SETTINGS:
   - MATERIAL: COOKED_BEEF
     # The numerical value for Amount. Available options: Any valid integer
     AMOUNT: 16
-  # The numerical value for Home Default. Available options: Any valid integer
+  # The fewest homes anyone gets. HOME-LIMITS below usually gives more.
   HOME-DEFAULT: 2
   # Extra homes by permission, so ranks need no numbered nodes. The highest one a player has wins.
   # smpplugin.homes.<number> and smpplugin.homes.page.<pages> still work too.
   HOME-PERMISSIONS: {}
   #   group.vip: 5
   #   group.mvp: 10
-  # Homes per rank. A rank counts when the player is in the LuckPerms group of that name, has the
-  # perks rank (smpplugin.rank.<name>) or the staff role (smpplugin.role.<name>); "op" is server
-  # operators. The highest one wins and nobody gets fewer than HOME-DEFAULT. Add or rename freely.
-  HOME-RANKS:
-    vip: 5
-    vipplus: 7
-    mvp: 8
-    mvpplus: 10
-    elite: 12
-    legend: 15
-    helper: 8
-    moderator: 12
-    admin: 20
-    developer: 20
-    dev: 20
-    manager: 25
-    coowner: 40
-    owner: 50
-    op: 50
+  # Homes per rank. Each rank starts with MIN homes and gets one more for every
+  # HOME-PLAYTIME-PER-EXTRA of playtime, up to MAX. UNLIMITED: true means no limit at all.
+  # A rank counts when the player is in the LuckPerms group of that name, has the perks rank
+  # (smpplugin.rank.<name>) or the staff role (smpplugin.role.<name>); "default" is everyone and
+  # "op" is server operators. The best rank a player has wins. Add, rename or remove ranks freely.
+  # smpplugin.homes.unlimited and smpplugin.homes.<number> still work on top of this.
+  HOME-PLAYTIME-PER-EXTRA: 10h
+  HOME-LIMITS:
+    default: {MIN: 3, MAX: 5}
+    vip: {MIN: 5, MAX: 10}
+    vipplus: {MIN: 10, MAX: 20}
+    helperjr: {MIN: 10, MAX: 20}
+    helper: {MIN: 15, MAX: 25}
+    moderator: {MIN: 20, MAX: 30}
+    admin: {MIN: 30, MAX: 50}
+    developer: {UNLIMITED: true}
+    dev: {UNLIMITED: true}
+    manager: {UNLIMITED: true}
+    coowner: {UNLIMITED: true}
+    owner: {UNLIMITED: true}
+    op: {UNLIMITED: true}
   # The numerical value for Shards Per Kill. Available options: Any valid integer
   SHARDS-PER-KILL: 1
   # Killing the same player again only pays shards after this many seconds (stops farming a
@@ -922,8 +924,6 @@ COMMANDS:
   TPA: true
   # Determines whether Tpauto is enabled or disabled. Available options: true, false
   TPAUTO: true
-  # Determines whether Findplayer is enabled or disabled. Available options: true, false
-  FINDPLAYER: true
   # Determines whether Crate is enabled or disabled. Available options: true, false
   CRATE: true
   # Determines whether Shardpay is enabled or disabled. Available options: true, false

@@ -50,7 +50,7 @@ public final class HomesDialog extends DialogScreen {
 
     private boolean open(Player player, int page) {
         List<Home> homes = sortedHomes(player);
-        int maxHomes = plugin.getHomeManager().getMaxHomes(player);
+        int maxHomes = plugin.getHomeManager().visibleHomeSlots(player);
         int[] tiers = tiers();
         int tierIndex = Math.max(0, Math.min(page, tiers.length - 1));
         int totalSlots = Math.max(config.integer(LIST + ".TOTAL-SLOTS", 90), homes.size());

@@ -198,6 +198,8 @@ PRIVATE-MESSAGE:
 TPAUTO:
   # The text or value for Enabled. Available options: Any valid string text
   ENABLED: '&7You turned on tpauto.'
+  # Shown above the hotbar while tpauto is on (it turns off when you die).
+  ACTION-BAR: '&fYou have tpauto on.'
   # The text or value for Disabled. Available options: Any valid string text
   DISABLED: '&7You turned off tpauto.'
 # Configuration section for Tpahereauto.
@@ -589,21 +591,6 @@ SHARD_PAY:
   SUCCESS-SENDER: '&7You paid &b{player} &#A303F9{amount}&7 shards.'
   # The text or value for Success Receiver. Available options: Any valid string text
   SUCCESS-RECEIVER: '&7You received &#A303F9{amount}&7 shards from &b{player}&7.'
-FINDPLAYER:
-  # The text or value for Afk. Available options: Any valid string text
-  AFK: '&7{player}''s in the &#A303F9afk'
-  # The text or value for Rtp Zone. Available options: Any valid string text
-  RTP_ZONE: '&7{player}''s in the &crtpzone'
-  # The text or value for Spawn. Available options: Any valid string text
-  SPAWN: '&7{player}''s in the &bspawn'
-  # The text or value for Overworld. Available options: Any valid string text
-  OVERWORLD: '&7{player}''s in the &boverworld &7(&b{biome}&7)'
-  # The text or value for Nether. Available options: Any valid string text
-  NETHER: '&7{player}''s in the &bnether &7(&b{biome}&7)'
-  # The text or value for The End. Available options: Any valid string text
-  THE_END: '&7{player}''s in the &bthe end &7(&b{biome}&7)'
-  # The text or value for Unknown. Available options: Any valid string text
-  UNKNOWN: '&7{player}''s in the &b{world}'
 # Configuration section for Punishments.
 PUNISHMENTS:
   # The text or value for Player Only. Available options: Any valid string text
@@ -1172,3 +1159,26 @@ ALTS:
   KNOWN_IPS: '&7Known IPs: &f%ips%'
   # The text or value for Entry. Available options: Any valid string text
   ENTRY: '&8- &e%player% &7[%status%&7] &fshared: %ips%'
+
+# /help in chat (when the help menu in menus.yml has no buttons, or with /help <category|command>).
+# Only commands the reader can use and that are switched on are listed.
+COMMAND-HELP:
+  DISABLED: '&cHelp is turned off on this server.'
+  UNKNOWN: '&cThere is no help for &f{input}&c. Try &f/help &cto see the categories.'
+  HEADER: '&8&m------&r &b&lHelp &8&m------'
+  EMPTY: '&7There are no commands you can use right now.'
+  CATEGORY-LINE: '&b{title} &8({count}) &7- {description}'
+  CATEGORY-HOVER: '&7Click to see the {title} commands'
+  OVERVIEW-FOOTER: '&7Use &f/help <category> &7or &f/help <command>&7.'
+  CATEGORY-EMPTY: '&7You have no &f{title} &7commands.'
+  CATEGORY-HEADER: '&8&m------&r &b&l{title} &7({page}/{pages}) &8&m------'
+  COMMAND-LINE: '&f/{command} &8- &7{description}'
+  COMMAND-HOVER: "&f{usage}\n&7Click to type it"
+  COMMAND-HEADER: '&8&m------&r &b&l/{command} &8&m------'
+  COMMAND-USAGE: '&7Usage: &f{usage}'
+  COMMAND-ALIASES: '&7Also: &f{aliases}'
+  COMMAND-DISABLED: '&cThis command is turned off on this server.'
+  COMMAND-PERMISSION: '&7Permission: &f{permission}'
+  PAGE-HINT: '&7More: &f/help {category} {next}'
+  PREVIOUS: '&b« Previous'
+  NEXT: '&bNext »'

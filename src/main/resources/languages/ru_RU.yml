@@ -8,37 +8,43 @@ ORDERS:
   CANNOT_DELIVER_OWN: "&cНельзя доставлять предметы в собственный заказ."
   NO_MATCHING_ITEMS: "&cПодходящие предметы не найдены."
   ORDER_FULL: "&cЭтот заказ уже выполнен."
-  DELIVERY_SUCCESS: "&aДоставлено &e{Quantity} {item}&a, получено &a{payout}&a."
-  CANCELLED: "&eЗаказ #{order_id} отменён. Остаток депозита доступен для получения."
-  BATCH_COLLECTED: "&aПолучено заявок: {claims} ({items} предметов, возврат {refund}). &cОшибок: {failed}."
+  DELIVERY_SUCCESS: "&aДоставлено &e{quantity} {item}&a, получено &a{payout}&a."
+  CANCELLED: "&eЗаказ #{order_id} отменён. остаток депозита доступен для получения."
+  BATCH_COLLECTED: "&aПолучено заявок: {claims} ({items} предметов, возврат {refund}).
+    &cошибок: {failed}."
+  BATCH_DROPPED: "&aВыброшено заявок: {claims} ({items} предметов). &cошибок: {failed}."
   GUI:
     MAIN:
-      TITLE: "&8Заказы"
+      TITLE: "Orders (Page {page})"
     MY_ORDERS:
-      TITLE: "&8Заказы -> Мои заказы"
+      TITLE: "Orders -> Your Orders"
     SELECT_ITEM:
-      TITLE: "&8Заказы -> Выбор предмета"
+      TITLE: "&8Заказы -> выбор предмета"
     SEARCH_ITEM:
-      TITLE: "&8Заказы -> Поиск предмета"
+      TITLE: "&8Заказы -> поиск предмета"
     INVENTORY_ITEM:
-      TITLE: "&8Заказы -> Выбор предмета"
+      TITLE: "&8Заказы -> выбор предмета"
     NEW_ORDER:
-      TITLE: "&8Заказы -> Новый заказ"
+      TITLE: "&8Заказы -> новый заказ"
     EDIT_ORDER:
-      TITLE: "&8Заказы -> Изменить заказ"
+      TITLE: "Orders -> Edit Order"
     DEPOSIT:
-      TITLE: "&8Заказы -> Доставка предметов"
+      TITLE: "Orders -> Deliver Items"
     CONFIRM:
-      TITLE: "&8Заказы -> Подтвердить доставку"
+      TITLE: "&8Заказы -> подтвердить доставку"
     DELETE:
-      TITLE: "&8Заказы -> Отменить заказ"
+      TITLE: "Orders -> Cancel Order"
     COLLECT:
-      TITLE: "&8Заказы -> Получить"
+      TITLE: "&8Заказы -> получить"
+      DROP_ALL:
+        NAME: "&eВыбросить всё"
+        LORE:
+        - "&fВыбросить все ожидающие предметы к ногам"
   BEDROCK:
     MAIN:
       TITLE: "Заказы"
       CONTENT: "Просмотр открытых заказов."
-      SEARCHING: "Поиск: {Query}"
+      SEARCHING: "Поиск: {query}"
     MY:
       TITLE: "Мои заказы"
       CONTENT: "Выберите заказ для управления."
@@ -57,10 +63,10 @@ ORDERS:
       PRICE: "Цена за предмет"
     DELIVERY:
       TITLE: "Доставка предметов"
-      AMOUNT: "Количество (макс. {maX})"
+      AMOUNT: "Количество (макс. {max})"
     CANCEL:
       TITLE: "Отменить заказ"
-      CONTENT: "Отменить заказ #{id}? Остаток депозита будет возвращён."
+      CONTENT: "Отменить заказ #{id}? остаток депозита будет возвращён."
     BUTTON:
       SEARCH: "Поиск"
       NEW: "Новый заказ"
@@ -70,6 +76,7 @@ ORDERS:
       COLLECT_ALL: "Получить всё"
       DROP_ITEMS: "Выбросить предметы"
       COLLECT_ORDER: "Получить этот заказ"
+      DROP_ORDER: "Выбросить этот заказ"
       CANCEL_ORDER: "Отменить заказ"
       CONFIRM: "Подтвердить"
 COMMON:
@@ -1480,6 +1487,10 @@ CONFIG:
       RELOAD-SUCCESS: "&aFREEZE CONFIG RELOADED."
   ORDERS:
     GUI:
+      CANCEL_ORDER:
+        TITLE: Orders -> Cancel Order
+      DELIVERY_DEPOSIT:
+        TITLE: Orders -> Deliver Items
       MAIN:
         TITLE: "&8Orders"
       MY_ORDERS:
@@ -1759,6 +1770,26 @@ CONFIG:
       sounds:
         click: {}
 MESSAGES:
+  COMMAND-HELP:
+    DISABLED: '&cHelp is turned off on this server.'
+    UNKNOWN: '&cThere is no help for &f{input}&c. Try &f/help &cto see the categories.'
+    HEADER: '&8&m------&r &b&lHelp &8&m------'
+    EMPTY: '&7There are no commands you can use right now.'
+    CATEGORY-LINE: '&b{title} &8({count}) &7- {description}'
+    CATEGORY-HOVER: '&7Click to see the {title} commands'
+    OVERVIEW-FOOTER: '&7Use &f/help <category> &7or &f/help <command>&7.'
+    CATEGORY-EMPTY: '&7You have no &f{title} &7commands.'
+    CATEGORY-HEADER: '&8&m------&r &b&l{title} &7({page}/{pages}) &8&m------'
+    COMMAND-LINE: '&f/{command} &8- &7{description}'
+    COMMAND-HOVER: "&f{usage}\n&7Click to type it"
+    COMMAND-HEADER: '&8&m------&r &b&l/{command} &8&m------'
+    COMMAND-USAGE: '&7Usage: &f{usage}'
+    COMMAND-ALIASES: '&7Also: &f{aliases}'
+    COMMAND-DISABLED: '&cThis command is turned off on this server.'
+    COMMAND-PERMISSION: '&7Permission: &f{permission}'
+    PAGE-HINT: '&7More: &f/help {category} {next}'
+    PREVIOUS: '&b« Previous'
+    NEXT: '&bNext »'
   AUCTION_HOUSE:
     PLAYERS_ONLY: "&cONLY PLAYERS CAN USE THIS COMMAND."
     NO_PERMISSION: '&cyou cannot use that auction house action.'
@@ -1909,6 +1940,7 @@ MESSAGES:
     PM-ENABLED: "&aPRIVATE MESSAGES ARE NOW ENABLED"
     PM-DISABLED: "&cPRIVATE MESSAGES ARE NOW DISABLED"
   TPAUTO:
+    ACTION-BAR: '&fYou have tpauto on.'
     ENABLED: "&7YOU TURNED ON TPAUTO."
     DISABLED: "&7YOU TURNED OFF TPAUTO."
   TPAHEREAUTO:
@@ -2094,14 +2126,6 @@ MESSAGES:
     TARGET-DISABLED-PAYMENTS: "&cTHE TARGET PLAYER HAS THE PAYMENTS DISABLED."
     SUCCESS-SENDER: "&7YOU PAID &b{player} &#A303F9{amount} &7 SHARDS."
     SUCCESS-RECEIVER: "&7YOU RECEIVED &#A303F9{amount} &7 SHARDS FROM &b{player}&7."
-  FINDPLAYER:
-    AFK: "&7{player} IN THE &#A303F9AFK"
-    RTP_ZONE: "&7{player} IN THE &cRTPZONE"
-    SPAWN: "&7{player} IN THE &bSPAWN"
-    OVERWORLD: "&7{player} в IN THE &bOVERWORLD &7(&b{biome}&7)"
-    NETHER: "&7{player} в IN THE &bNETHER &7(&b{biome}&7)"
-    THE_END: "&7{player} IN THE &bTHE END &7(&b{biome}&7)"
-    UNKNOWN: "&7{player} в THE &b{world}"
   PUNISHMENTS:
     PLAYER-ONLY: "&cONLY PLAYERS CAN USE THIS COMMAND."
     NO-PERMISSION: '&cyou do not have permission to view punishment history.'
@@ -3519,7 +3543,6 @@ BUILTIN:
   c77190ba5e78d1b8df80: "&cusage: /cuboid создать <name>"
   4d29a2b8774a78044eff: "&cusage: /cuboid удалить <name>"
   83fad9e4e4da8171c3eb: '&cusage: /delhome <name>'
-  0875240f77275dbdbbbd: '&cusage: /findplayer <player>'
   9693c86bc206fc68b182: "&cusage: /kick <player> [причина]"
   692da4ab36c472e22f6a: "&cusage: /mute <player> [причина]"
   6c88c5573a74036340c6: "&cusage: /pardon <player> [причина]"

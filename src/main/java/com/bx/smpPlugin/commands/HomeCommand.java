@@ -55,15 +55,17 @@ public class HomeCommand implements CommandExecutor {
             }
             boolean exists = homes.getHome(player.getUniqueId(), name) != null;
             if (!exists && !homes.canSetHome(player)) {
+                long next = homes.secondsUntilNextHome(player);
                 player.sendMessage(ColorUtils.toComponent("&cYou've used all your homes &7("
-                        + homes.getHomeCount(player.getUniqueId()) + "/" + homes.getMaxHomes(player)
-                        + ")&c. Delete one with &f/delhome <name>&c."));
+                        + homes.getHomeCount(player.getUniqueId()) + "/" + homes.formatLimit(player)
+                        + ")&c. Delete one with &f/delhome <name>&c."
+                        + (next > 0L ? " &7Another home unlocks after &f" + com.bx.smpPlugin.core.Text.duration(next) + " &7more playtime." : "")));
                 return true;
             }
             if (homes.setHome(player, name)) {
                 player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage("HOME.SET")
                         + " &8(&f" + name + "&8, &7" + homes.getHomeCount(player.getUniqueId()) + "/"
-                        + homes.getMaxHomes(player) + "&8)"));
+                        + homes.formatLimit(player) + "&8)"));
             }
             return true;
         }

@@ -33,11 +33,14 @@ import com.bx.smpPlugin.models.PlayerData;
 import com.bx.smpPlugin.utils.ColorUtils;
 import com.bx.smpPlugin.utils.ItemSerializationUtils;
 import com.bx.smpPlugin.utils.NumberUtils;
+import com.bx.smpPlugin.utils.SoundUtils;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.ShulkerBox;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -47,6 +50,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionType;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.util.Vector;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
@@ -133,9 +137,10 @@ public class OrdersManager {
 
     public enum DeliveryMode {
         DEPOSIT_GUI,
+        DIRECT,
         AUTO_SCAN;
 
-        private static DeliveryMode fromConfig(String rawValue) {
+        public static DeliveryMode fromConfig(String rawValue) {
             if (rawValue == null || rawValue.isBlank()) {
                 return DEPOSIT_GUI;
             }
@@ -274,8 +279,8 @@ public class OrdersManager {
     private final Set<UUID> activeTransactions = new HashSet<>();
     private final Map<UUID, Long> lastClickTimes = new HashMap<>();
     private final Map<UUID, NewOrderSession> pendingCreations = new HashMap<>();
-    private final Map<UUID, PendingSearchInput> pendingSearchInputs = new HashMap<>();
-    private final Map<UUID, PendingOrderEdit> pendingEdits = new HashMap<>();
+    private final Map<UUID, PendingSearchInput> pendingSearchInputs = new ConcurrentHashMap<>();
+    private final Map<UUID, PendingOrderEdit> pendingEdits = new ConcurrentHashMap<>();
     private final Map<String, List<OrderCatalogEntry>> catalogByCategory = new LinkedHashMap<>();
     private final List<String> categoryOrder = new ArrayList<>();
     private final Map<UUID, OrderUiState> uiStates = new ConcurrentHashMap<>();
@@ -468,7 +473,7 @@ public class OrdersManager {
                                             )) {
                                                 player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessageOrDefault(
                                                         "ORDERS.AUTO_CLAIM_REFUND",
-                                                        "&a[ᴏʀᴅᴇʀѕ] ᴀᴜᴛᴏᴍᴀᴛɪᴄᴀʟʟʏ ᴄʟᴀɪᴍᴇᴅ ʀᴇꜰᴜɴᴅ ᴏꜰ &f{amount}&a.",
+                                                        "&a[Orders] Automatically claimed refund of &f{amount}&a.",
                                                         "{amount}", plugin.getCurrencyManager().formatMoney(claim.moneyAmount())
                                                 )));
                                             }
@@ -509,7 +514,7 @@ public class OrdersManager {
                                                 )) {
                                                     player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessageOrDefault(
                                                             "ORDERS.AUTO_CLAIM_ITEM",
-                                                            "&a[ᴏʀᴅᴇʀѕ] ᴀᴜᴛᴏᴍᴀᴛɪᴄᴀʟʟʏ ᴄʟᴀɪᴍᴇᴅ ᴄᴏᴍᴘʟᴇᴛᴇᴅ ᴏʀᴅᴇʀ ɪᴛᴇᴍ: &f{item}&a x{amount}.",
+                                                            "&a[Orders] Automatically claimed completed order item: &f{item}&a x{amount}.",
                                                             "{item}", claim.item().getType().name(),
                                                             "{amount}", String.valueOf(claim.item().getAmount())
                                                     )));
@@ -529,8 +534,16 @@ public class OrdersManager {
     }
 
     public String getBrowseTitle() {
-        return plugin.getLanguageManager().text("ORDERS.GUI.MAIN.TITLE", null,
-                config().getString("GUI.MAIN.TITLE", "&8ᴏʀᴅᴇʀѕ"));
+        return getBrowseTitle(1);
+    }
+
+    public String getBrowseTitle(int page) {
+        return plugin.getLanguageManager().text(
+                "ORDERS.GUI.MAIN.TITLE",
+                null,
+                config().getString("GUI.MAIN.TITLE", "Orders (Page {page})"),
+                "{page}", String.valueOf(Math.max(1, page))
+        );
     }
 
     public int getBrowseSize() {
@@ -543,7 +556,7 @@ public class OrdersManager {
 
     public String getMyOrdersTitle() {
         return plugin.getLanguageManager().text("ORDERS.GUI.MY_ORDERS.TITLE", null,
-                config().getString("GUI.MY_ORDERS.TITLE", "&8ᴏʀᴅᴇʀѕ -> ᴍʏ ᴏʀᴅᴇʀѕ"));
+                config().getString("GUI.MY_ORDERS.TITLE", "Orders -> Your Orders"));
     }
 
     public int getMyOrdersSize() {
@@ -556,7 +569,7 @@ public class OrdersManager {
 
     public String getCollectTitle() {
         return plugin.getLanguageManager().text("ORDERS.GUI.COLLECT.TITLE", null,
-                config().getString("GUI.COLLECT.TITLE", "&8ᴏʀᴅᴇʀѕ -> ᴄᴏʟʟᴇᴄᴛ"));
+                config().getString("GUI.COLLECT.TITLE", "&8Orders -> Collect"));
     }
 
     public int getCollectSize() {
@@ -569,7 +582,7 @@ public class OrdersManager {
 
     public String getSelectItemTitle() {
         return plugin.getLanguageManager().text("ORDERS.GUI.SELECT_ITEM.TITLE", null,
-                config().getString("GUI.SELECT_ITEM.TITLE", "&8ᴏʀᴅᴇʀѕ -> ѕᴇʟᴇᴄᴛ ɪᴛᴇᴍ"));
+                config().getString("GUI.SELECT_ITEM.TITLE", "&8Orders -> Select item"));
     }
 
     public int getSelectItemSize() {
@@ -584,7 +597,7 @@ public class OrdersManager {
     public String getSearchItemTitle(String query) {
         String safeQuery = query == null ? "" : query;
         return plugin.getLanguageManager().text("ORDERS.GUI.SEARCH_ITEM.TITLE", null,
-                config().getString("GUI.SEARCH_ITEM.TITLE", "&8ᴏʀᴅᴇʀѕ -> ѕᴇᴀʀᴄʜ ɪᴛᴇᴍ"),
+                config().getString("GUI.SEARCH_ITEM.TITLE", "&8Orders -> Search item"),
                 "{query}", safeQuery);
     }
 
@@ -599,7 +612,7 @@ public class OrdersManager {
 
     public String getInventoryItemTitle() {
         return plugin.getLanguageManager().text("ORDERS.GUI.INVENTORY_ITEM.TITLE", null,
-                config().getString("GUI.INVENTORY_ITEM.TITLE", "&8ᴏʀᴅᴇʀѕ -> ᴄʜᴏᴏѕᴇ ɪᴛᴇᴍ"));
+                config().getString("GUI.INVENTORY_ITEM.TITLE", "&8Orders -> Choose item"));
     }
 
     public int getInventoryItemSize() {
@@ -608,7 +621,7 @@ public class OrdersManager {
 
     public String getNewOrderTitle() {
         return plugin.getLanguageManager().text("ORDERS.GUI.NEW_ORDER.TITLE", null,
-                config().getString("GUI.NEW_ORDER.TITLE", "&8ᴏʀᴅᴇʀѕ -> ɴᴇᴡ ᴏʀᴅᴇʀ"));
+                config().getString("GUI.NEW_ORDER.TITLE", "&8Orders -> New order"));
     }
 
     public int getNewOrderSize() {
@@ -617,7 +630,7 @@ public class OrdersManager {
 
     public String getEditOrderTitle(long orderId) {
         return plugin.getLanguageManager().text("ORDERS.GUI.EDIT_ORDER.TITLE", null,
-                config().getString("GUI.EDIT_ORDER.TITLE", "&8ᴏʀᴅᴇʀѕ -> ᴇᴅɪᴛ ᴏʀᴅᴇʀ"),
+                config().getString("GUI.EDIT_ORDER.TITLE", "Orders -> Edit Order"),
                 "{order_id}", String.valueOf(orderId));
     }
 
@@ -627,12 +640,22 @@ public class OrdersManager {
 
     public String getDeliverTitle(long orderId) {
         return plugin.getLanguageManager().text("ORDERS.GUI.CONFIRM.TITLE", null,
-                config().getString("GUI.DELIVER_CONFIRM.TITLE", "&8ᴏʀᴅᴇʀѕ -> ᴅᴇʟɪᴠᴇʀ"),
+                config().getString("GUI.DELIVER_CONFIRM.TITLE", "&8Orders -> Deliver"),
                 "{order_id}", String.valueOf(orderId));
     }
 
     public int getDeliverSize() {
         return normalizeSize(config().getInt("GUI.DELIVER_CONFIRM.SIZE", 27));
+    }
+
+    public String getCancelOrderTitle(long orderId) {
+        return plugin.getLanguageManager().text("ORDERS.GUI.DELETE.TITLE", null,
+                config().getString("GUI.CANCEL_ORDER.TITLE", "Orders -> Cancel Order"),
+                "{order_id}", String.valueOf(orderId));
+    }
+
+    public int getCancelOrderSize() {
+        return normalizeSize(config().getInt("GUI.CANCEL_ORDER.SIZE", 27));
     }
 
     public OrderSort getDefaultSort() {
@@ -713,10 +736,9 @@ public class OrdersManager {
         }
         if (sorts.isEmpty()) {
             sorts.addAll(List.of(
+                    OrderSort.MOST_MONEY_PER_ITEM,
                     OrderSort.MOST_PAID,
-                    OrderSort.MOST_DELIVERED,
-                    OrderSort.RECENTLY_LISTED,
-                    OrderSort.MOST_MONEY_PER_ITEM
+                    OrderSort.RECENTLY_LISTED
             ));
         }
         return List.copyOf(sorts);
@@ -878,6 +900,23 @@ public class OrdersManager {
         lastClickTimes.put(uuid, System.currentTimeMillis());
     }
 
+
+
+
+
+
+
+    public org.bukkit.configuration.ConfigurationSection getSignConfig(String key) {
+        if (key == null) {
+            return null;
+        }
+        org.bukkit.configuration.ConfigurationSection config = plugin.getConfigManager().getOrdersConfig().getConfigurationSection(key);
+        if (config != null) {
+            return config;
+        }
+        return plugin.getConfigManager().getOrdersConfig().getConfigurationSection("ORDERS." + key);
+    }
+
     public void promptOrderSearchInput(Player player) {
         if (player == null) {
             return;
@@ -888,7 +927,7 @@ public class OrdersManager {
         pendingSearchInputs.put(player.getUniqueId(), PendingSearchInput.newOrder());
         player.closeInventory();
 
-        org.bukkit.configuration.ConfigurationSection configSection = plugin.getConfigManager().getOrdersConfig().getConfigurationSection("SEARCH_SIGN");
+        org.bukkit.configuration.ConfigurationSection configSection = getSignConfig("SEARCH_SIGN");
         SignInputUtil.openFromConfig(plugin, player, configSection, text -> {
             if (text == null || text.isBlank() || text.equalsIgnoreCase("cancel")) {
                 pendingSearchInputs.remove(player.getUniqueId());
@@ -905,10 +944,13 @@ public class OrdersManager {
         }
         player.closeInventory();
 
-        org.bukkit.configuration.ConfigurationSection configSection = plugin.getConfigManager().getOrdersConfig().getConfigurationSection("SEARCH_SIGN");
+        org.bukkit.configuration.ConfigurationSection configSection = getSignConfig("SEARCH_SIGN");
         SignInputUtil.openFromConfig(plugin, player, configSection, text -> {
             String query = (text == null || text.isBlank() || text.equalsIgnoreCase("cancel")) ? "" : text.trim();
             plugin.getSpigotScheduler().runEntity(player, () -> {
+                if (!query.isEmpty()) {
+                    playSound(player, "ORDERS.SEARCH");
+                }
                 if (isMyOrders) {
                     new com.bx.smpPlugin.menus.OrdersMyOrdersMenu(plugin, 1, sortMode, query).open(player);
                 } else {
@@ -935,7 +977,7 @@ public class OrdersManager {
         pendingSearchInputs.put(player.getUniqueId(), PendingSearchInput.editOrder(orderId, navigation));
         player.closeInventory();
 
-        org.bukkit.configuration.ConfigurationSection configSection = plugin.getConfigManager().getOrdersConfig().getConfigurationSection("SEARCH_SIGN");
+        org.bukkit.configuration.ConfigurationSection configSection = getSignConfig("SEARCH_SIGN");
         SignInputUtil.openFromConfig(plugin, player, configSection, text -> {
             if (text == null || text.isBlank() || text.equalsIgnoreCase("cancel")) {
                 pendingSearchInputs.remove(player.getUniqueId());
@@ -996,7 +1038,36 @@ public class OrdersManager {
         return pendingCreations.computeIfAbsent(uuid, k -> new NewOrderSession(null, "ALL"));
     }
 
+    public void playSound(Player player, String path) {
+        if (player == null || plugin.getConfigManager() == null) {
+            return;
+        }
+        SoundUtils.play(player, plugin.getConfigManager().getSound(path));
+    }
+
+    public void playNotificationSound(UUID playerUuid, String path) {
+        if (playerUuid == null) {
+            return;
+        }
+        Player player = org.bukkit.Bukkit.getPlayer(playerUuid);
+        if (player == null || !player.isOnline() || plugin.getConfigManager() == null) {
+            return;
+        }
+        SoundUtils.play(
+                plugin,
+                player,
+                plugin.getConfigManager().getSound(path),
+                PlayerSettingUtils.SoundChannel.NOTIFICATION
+        );
+    }
+
     public void openNewOrderMenu(Player player) {
+        if (player == null) {
+            return;
+        }
+        if (plugin.getDialogManager() != null && plugin.getDialogManager().openOrdersChooseItem(player)) {
+            return;
+        }
         new OrdersNewMenu(plugin).open(player);
     }
 
@@ -1113,7 +1184,11 @@ public class OrdersManager {
         plugin.getDatabaseManager().savePlayer(ownerData);
         pendingCreations.remove(player.getUniqueId());
         publishOrderEvent("CREATE", orderId);
-        return new CreateOrderResult(true, null, getOrder(orderId), creationFee);
+        Order created = getOrder(orderId);
+        if (plugin.getServerNotificationManager() != null) {
+            plugin.getServerNotificationManager().announceOrderCreated(player, created);
+        }
+        return new CreateOrderResult(true, null, created, creationFee);
     }
 
     public boolean selectOrderItem(
@@ -1142,7 +1217,7 @@ public class OrdersManager {
             ItemStack displayItem = result.order() == null ? item : result.order().requestedItem();
             player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessageOrDefault(
                     "ORDERS.EDIT_ITEM_UPDATED",
-                    "&aᴏʀᴅᴇʀ #{order_id} ɪᴛᴇᴍ ᴜᴘᴅᴀᴛᴇᴅ ᴛᴏ &f{item}&a.",
+                    "&aOrder #{order_id} item updated to &f{item}&a.",
                     "{order_id}", String.valueOf(editOrderId),
                     "{item}", describeItem(displayItem)
             )));
@@ -1175,13 +1250,13 @@ public class OrdersManager {
         pendingEdits.put(player.getUniqueId(), pendingEdit);
         player.closeInventory();
 
-        org.bukkit.configuration.ConfigurationSection config = plugin.getConfigManager().getOrdersConfig().getConfigurationSection("AMOUNT_SIGN");
+        org.bukkit.configuration.ConfigurationSection config = getSignConfig("AMOUNT_SIGN");
         SignInputUtil.openFromConfig(plugin, player, config, text -> {
             if (text == null || text.isBlank() || text.equalsIgnoreCase("cancel")) {
                 pendingEdits.remove(player.getUniqueId());
                 player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessageOrDefault(
                         "ORDERS.EDIT_CANCELLED",
-                        "&7ᴏʀᴅᴇʀ ᴇᴅɪᴛ ᴄᴀɴᴄᴇʟʟᴇᴅ."
+                        "&7Order edit cancelled."
                 )));
                 openEditOrderMenu(player, orderId, navigation);
             } else {
@@ -1212,13 +1287,13 @@ public class OrdersManager {
         pendingEdits.put(player.getUniqueId(), pendingEdit);
         player.closeInventory();
 
-        org.bukkit.configuration.ConfigurationSection config = plugin.getConfigManager().getOrdersConfig().getConfigurationSection("PRICE_SIGN");
+        org.bukkit.configuration.ConfigurationSection config = getSignConfig("PRICE_SIGN");
         SignInputUtil.openFromConfig(plugin, player, config, text -> {
             if (text == null || text.isBlank() || text.equalsIgnoreCase("cancel")) {
                 pendingEdits.remove(player.getUniqueId());
                 player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessageOrDefault(
                         "ORDERS.EDIT_CANCELLED",
-                        "&7ᴏʀᴅᴇʀ ᴇᴅɪᴛ ᴄᴀɴᴄᴇʟʟᴇᴅ."
+                        "&7Order edit cancelled."
                 )));
                 openEditOrderMenu(player, orderId, navigation);
             } else {
@@ -1312,30 +1387,34 @@ public class OrdersManager {
     public String resolveEditFailureMessage(EditOrderResult result) {
         EditFailureReason reason = result == null ? EditFailureReason.DATABASE_ERROR : result.reason();
         return switch (reason) {
-            case DISABLED -> plugin.getConfigManager().getMessageOrDefault("ORDERS.DISABLED", "&cᴏʀᴅᴇʀѕ ɪѕ ᴅɪѕᴀʙʟᴇᴅ.");
-            case ORDER_NOT_FOUND -> plugin.getConfigManager().getMessageOrDefault("ORDERS.ORDER_NOT_FOUND", "&cᴛʜᴀᴛ ᴏʀᴅᴇʀ ɴᴏ ʟᴏɴɢᴇʀ ᴇxɪѕᴛѕ.");
-            case NOT_OWNER -> plugin.getConfigManager().getMessageOrDefault("ORDERS.NOT_YOUR_ORDER", "&cᴛʜᴀᴛ ᴏʀᴅᴇʀ ᴅᴏᴇѕ ɴᴏᴛ ʙᴇʟᴏɴɢ ᴛᴏ ʏᴏᴜ.");
-            case NOT_ACTIVE -> plugin.getConfigManager().getMessageOrDefault("ORDERS.ORDER_NOT_ACTIVE", "&cᴛʜᴀᴛ ᴏʀᴅᴇʀ ɪѕ ɴᴏ ʟᴏɴɢᴇʀ ᴀᴄᴛɪᴠᴇ.");
-            case ALREADY_DELIVERED -> plugin.getConfigManager().getMessageOrDefault("ORDERS.EDIT_LOCKED", "&cᴛʜɪѕ ᴏʀᴅᴇʀ ᴀʟʀᴇᴀᴅʏ ʜᴀѕ ᴅᴇʟɪᴠᴇʀɪᴇѕ, ѕᴏ ɪᴛ ᴄᴀɴɴᴏᴛ ʙᴇ ᴇᴅɪᴛᴇᴅ.");
-            case INVALID_ITEM -> plugin.getConfigManager().getMessageOrDefault("ORDERS.ITEM_BLOCKED", "&cᴛʜᴀᴛ ɪᴛᴇᴍ ᴄᴀɴɴᴏᴛ ʙᴇ ᴏʀᴅᴇʀᴇᴅ.");
-            case INVALID_QUANTITY -> plugin.getConfigManager().getMessageOrDefault("ORDERS.INVALID_QUANTITY", "&cɪɴᴠᴀʟɪᴅ ǫᴜᴀɴᴛɪᴛʏ.");
-            case INVALID_PRICE -> plugin.getConfigManager().getMessageOrDefault("ORDERS.INVALID_PRICE", "&cɪɴᴠᴀʟɪᴅ ᴘʀɪᴄᴇ.");
+            case DISABLED -> plugin.getConfigManager().getMessageOrDefault("ORDERS.DISABLED", "&cOrders is disabled.");
+            case ORDER_NOT_FOUND -> plugin.getConfigManager().getMessageOrDefault("ORDERS.ORDER_NOT_FOUND", "&cThat order no longer exists.");
+            case NOT_OWNER -> plugin.getConfigManager().getMessageOrDefault("ORDERS.NOT_YOUR_ORDER", "&cThat order does not belong to you.");
+            case NOT_ACTIVE -> plugin.getConfigManager().getMessageOrDefault("ORDERS.ORDER_NOT_ACTIVE", "&cThat order is no longer active.");
+            case ALREADY_DELIVERED -> plugin.getConfigManager().getMessageOrDefault("ORDERS.EDIT_LOCKED", "&cThis order already has deliveries, so it cannot be edited.");
+            case INVALID_ITEM -> plugin.getConfigManager().getMessageOrDefault("ORDERS.ITEM_BLOCKED", "&cThat item cannot be ordered.");
+            case INVALID_QUANTITY -> plugin.getConfigManager().getMessageOrDefault("ORDERS.INVALID_QUANTITY", "&cInvalid quantity.");
+            case INVALID_PRICE -> plugin.getConfigManager().getMessageOrDefault("ORDERS.INVALID_PRICE", "&cInvalid price.");
             case PRICE_OUT_OF_RANGE -> plugin.getConfigManager().getMessageOrDefault(
                     "ORDERS.PRICE_OUT_OF_RANGE",
-                    "&cᴘʀɪᴄᴇ ᴇᴀᴄʜ ᴍᴜѕᴛ ʙᴇ ʙᴇᴛᴡᴇᴇɴ &f{min_formatted}&c ᴀɴᴅ &f{max_formatted}&c.",
+                    "&cPrice each must be between &f{min_formatted}&c and &f{max_formatted}&c.",
                     "{min}", NumberUtils.format(getMinPriceEach()),
                     "{min_formatted}", plugin.getCurrencyManager().formatMoney(getMinPriceEach()),
+                    "${min}", plugin.getCurrencyManager().formatMoney(getMinPriceEach()),
                     "{max}", NumberUtils.format(getMaxPriceEach()),
-                    "{max_formatted}", plugin.getCurrencyManager().formatMoney(getMaxPriceEach())
+                    "{max_formatted}", plugin.getCurrencyManager().formatMoney(getMaxPriceEach()),
+                    "${max}", plugin.getCurrencyManager().formatMoney(getMaxPriceEach())
             );
             case TOTAL_TOO_HIGH -> plugin.getConfigManager().getMessageOrDefault(
                     "ORDERS.TOTAL_TOO_HIGH",
-                    "&cᴛᴏᴛᴀʟ ᴏʀᴅᴇʀ ʙᴜᴅɢᴇᴛ ᴄᴀɴɴᴏᴛ ᴇxᴄᴇᴇᴅ &f{max_formatted}&c.",
-                    "{max_formatted}", plugin.getCurrencyManager().formatMoney(getMaxTotalBudget())
+                    "&cTotal order budget cannot exceed &f{max_formatted}&c.",
+                    "{max}", NumberUtils.format(getMaxTotalBudget()),
+                    "{max_formatted}", plugin.getCurrencyManager().formatMoney(getMaxTotalBudget()),
+                    "${max}", plugin.getCurrencyManager().formatMoney(getMaxTotalBudget())
             );
-            case NO_MONEY -> plugin.getConfigManager().getMessageOrDefault("ORDERS.NOT_ENOUGH_MONEY", "&cʏᴏᴜ ᴅᴏ ɴᴏᴛ ʜᴀᴠᴇ ᴇɴᴏᴜɢʜ ᴍᴏɴᴇʏ ꜰᴏʀ ᴛʜᴀᴛ ᴄʜᴀɴɢᴇ.");
-            case NO_PLAYER_DATA -> "&cyour player data could not be loaded.";
-            case DATABASE_ERROR -> "&corders could not update that order right now.";
+            case NO_MONEY -> plugin.getConfigManager().getMessageOrDefault("ORDERS.NOT_ENOUGH_MONEY", "&cYou do not have enough money for that change.");
+            case NO_PLAYER_DATA -> "&cYour player data could not be loaded.";
+            case DATABASE_ERROR -> "&cOrders could not update that order right now.";
         };
     }
 
@@ -1416,7 +1495,7 @@ public class OrdersManager {
             pendingCreations.remove(uuid);
             player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessageOrDefault(
                     "ORDERS.INPUT_CANCELLED",
-                    "&7ᴏʀᴅᴇʀ ᴄʀᴇᴀᴛɪᴏɴ ᴄᴀɴᴄᴇʟʟᴇᴅ."
+                    "&7Order creation cancelled."
             )));
             if (pendingSearch != null && pendingSearch.editOrderId() > 0L) {
                 openEditOrderMenu(player, pendingSearch.editOrderId(), pendingSearch.navigation());
@@ -1427,9 +1506,10 @@ public class OrdersManager {
         }
 
         if (input.isBlank()) {
+            playSound(player, "ORDERS.FAIL");
             player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessageOrDefault(
                     "ORDERS.SEARCH_EMPTY",
-                    "&cᴛʏᴘᴇ ᴀɴ ɪᴛᴇᴍ ᴏʀ ᴄᴀᴛᴇɢᴏʀʏ ɴᴀᴍᴇ ᴛᴏ ѕᴇᴀʀᴄʜ."
+                    "&cType an item or category name to search."
             )));
             if (pendingSearch != null && pendingSearch.editOrderId() > 0L) {
                 promptEditOrderSearchInput(player, pendingSearch.editOrderId(), pendingSearch.navigation());
@@ -1440,6 +1520,7 @@ public class OrdersManager {
         }
 
         pendingSearchInputs.remove(uuid);
+        playSound(player, "ORDERS.SEARCH");
         if (pendingSearch != null && pendingSearch.editOrderId() > 0L) {
             new OrdersSearchItemMenu(plugin, input, 1, pendingSearch.editOrderId(), pendingSearch.navigation()).open(player);
         } else {
@@ -1452,7 +1533,7 @@ public class OrdersManager {
             pendingEdits.remove(player.getUniqueId());
             player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessageOrDefault(
                     "ORDERS.EDIT_CANCELLED",
-                    "&7ᴏʀᴅᴇʀ ᴇᴅɪᴛ ᴄᴀɴᴄᴇʟʟᴇᴅ."
+                    "&7Order edit cancelled."
             )));
             openEditOrderMenu(player, pendingEdit.orderId(), pendingEdit.navigation());
             return;
@@ -1475,7 +1556,7 @@ public class OrdersManager {
         } catch (RuntimeException exception) {
             player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessageOrDefault(
                     "ORDERS.INVALID_QUANTITY",
-                    "&cɪɴᴠᴀʟɪᴅ ǫᴜᴀɴᴛɪᴛʏ. ᴜѕᴇ ᴀ ᴡʜᴏʟᴇ ɴᴜᴍʙᴇʀ ɢʀᴇᴀᴛᴇʀ ᴛʜᴀɴ 0."
+                    "&cInvalid quantity. Use a whole number greater than 0."
             )));
             Order order = getOrder(pendingEdit.orderId());
             if (order != null) {
@@ -1495,7 +1576,7 @@ public class OrdersManager {
         } catch (NumberFormatException exception) {
             player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessageOrDefault(
                     "ORDERS.INVALID_PRICE",
-                    "&cɪɴᴠᴀʟɪᴅ ᴘʀɪᴄᴇ ꜰᴏʀᴍᴀᴛ. ᴜѕᴇ ɴᴜᴍʙᴇʀѕ ʟɪᴋᴇ 100, 5ᴋ, ᴏʀ 1.5ᴍ."
+                    "&cInvalid price format. Use numbers like 100, 5k, or 1.5m."
             )));
             Order order = getOrder(pendingEdit.orderId());
             if (order != null) {
@@ -1521,7 +1602,7 @@ public class OrdersManager {
             pendingEdits.remove(player.getUniqueId());
             player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessageOrDefault(
                     "ORDERS.EDIT_UPDATED",
-                    "&aᴏʀᴅᴇʀ #{order_id} ᴜᴘᴅᴀᴛᴇᴅ. ɴᴇᴡ ʙᴜᴅɢᴇᴛ: {budget_formatted}.",
+                    "&aOrder #{order_id} updated. New budget: {budget_formatted}.",
                     "{order_id}", String.valueOf(updatedOrder.id()),
                     "{budget}", NumberUtils.format(updatedOrder.totalBudget()),
                     "{budget_formatted}", plugin.getCurrencyManager().formatMoney(updatedOrder.totalBudget())
@@ -1979,6 +2060,8 @@ public class OrdersManager {
         return EditFailureReason.DATABASE_ERROR;
     }
 
+
+
     private void resendEditQuantityPrompt(Player player, Order order) {
         PendingOrderEdit pendingEdit = pendingEdits.get(player.getUniqueId());
         if (pendingEdit == null) {
@@ -1986,17 +2069,17 @@ public class OrdersManager {
         }
         player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessageOrDefault(
                 "ORDERS.PROMPT_EDIT_QUANTITY",
-                "&7ᴇɴᴛᴇʀ ᴛʜᴇ ɴᴇᴡ ǫᴜᴀɴᴛɪᴛʏ ꜰᴏʀ ᴏʀᴅᴇʀ &f#{order_id}&7. ᴄᴜʀʀᴇɴᴛ: &e{quantity}&7. ᴛʏᴘᴇ &cᴄᴀɴᴄᴇʟ&7 ᴛᴏ ᴀʙᴏʀᴛ.",
+                "&7Enter the new quantity for order &f#{order_id}&7. Current: &e{quantity}&7. Type &ccancel&7 to abort.",
                 "{order_id}", String.valueOf(order.id()),
                 "{quantity}", String.valueOf(order.requestedQuantity())
         )));
-        org.bukkit.configuration.ConfigurationSection config = plugin.getConfigManager().getOrdersConfig().getConfigurationSection("AMOUNT_SIGN");
+        org.bukkit.configuration.ConfigurationSection config = getSignConfig("AMOUNT_SIGN");
         SignInputUtil.openFromConfig(plugin, player, config, text -> {
             if (text == null || text.isBlank() || text.equalsIgnoreCase("cancel")) {
                 pendingEdits.remove(player.getUniqueId());
                 player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessageOrDefault(
                         "ORDERS.EDIT_CANCELLED",
-                        "&7ᴏʀᴅᴇʀ ᴇᴅɪᴛ ᴄᴀɴᴄᴇʟʟᴇᴅ."
+                        "&7Order edit cancelled."
                 )));
                 openEditOrderMenu(player, order.id(), pendingEdit.navigation());
             } else {
@@ -2012,18 +2095,18 @@ public class OrdersManager {
         }
         player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessageOrDefault(
                 "ORDERS.PROMPT_EDIT_PRICE",
-                "&7ᴇɴᴛᴇʀ ᴛʜᴇ ɴᴇᴡ ᴘʀɪᴄᴇ ᴇᴀᴄʜ ꜰᴏʀ ᴏʀᴅᴇʀ &f#{order_id}&7. ᴄᴜʀʀᴇɴᴛ: {price_formatted}&7. ᴛʏᴘᴇ &cᴄᴀɴᴄᴇʟ&7 ᴛᴏ ᴀʙᴏʀᴛ.",
+                "&7Enter the new price each for order &f#{order_id}&7. Current: {price_formatted}&7. Type &ccancel&7 to abort.",
                 "{order_id}", String.valueOf(order.id()),
                 "{price}", NumberUtils.format(order.priceEach()),
                 "{price_formatted}", plugin.getCurrencyManager().formatMoney(order.priceEach())
         )));
-        org.bukkit.configuration.ConfigurationSection config = plugin.getConfigManager().getOrdersConfig().getConfigurationSection("PRICE_SIGN");
+        org.bukkit.configuration.ConfigurationSection config = getSignConfig("PRICE_SIGN");
         SignInputUtil.openFromConfig(plugin, player, config, text -> {
             if (text == null || text.isBlank() || text.equalsIgnoreCase("cancel")) {
                 pendingEdits.remove(player.getUniqueId());
                 player.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessageOrDefault(
                         "ORDERS.EDIT_CANCELLED",
-                        "&7ᴏʀᴅᴇʀ ᴇᴅɪᴛ ᴄᴀɴᴄᴇʟʟᴇᴅ."
+                        "&7Order edit cancelled."
                 )));
                 openEditOrderMenu(player, order.id(), pendingEdit.navigation());
             } else {
@@ -2059,6 +2142,14 @@ public class OrdersManager {
                 effectiveNavigation.categoryFilter()
         ).open(player);
     }
+
+
+
+
+
+
+
+
 
     private FileConfiguration config() {
         return plugin.getConfigManager().getOrders();
@@ -2101,13 +2192,14 @@ public class OrdersManager {
     public List<Order> getOrdersForOwner(UUID ownerUuid, OrderSort sortMode) {
         List<Order> orders = new ArrayList<>();
 
+        Set<Long> collectableOrderIds = getUnclaimedItemClaimOrderIds(ownerUuid);
         try (PreparedStatement ps = connection().prepareStatement(
                 "select * from orders where owner_uuid = ? order by created_at desc, id desc")) {
             ps.setString(1, ownerUuid.toString());
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Order order = mapOrder(rs);
-                    if (order != null) {
+                    if (order != null && order.visibleInYourOrders(collectableOrderIds.contains(order.id()))) {
                         orders.add(order);
                     }
                 }
@@ -2118,6 +2210,17 @@ public class OrdersManager {
 
         orders.sort(resolveComparator(sortMode));
         return orders;
+    }
+
+    public boolean visibleInYourOrders(UUID ownerUuid, Order order) {
+        if (order == null || ownerUuid == null || !ownerUuid.equals(order.ownerUuid())) {
+            return false;
+        }
+        return order.visibleInYourOrders(hasUnclaimedItemClaims(ownerUuid, order.id()));
+    }
+
+    public boolean hasUnclaimedItemClaims(UUID ownerUuid, long orderId) {
+        return getUnclaimedClaims(ownerUuid, orderId).stream().anyMatch(OrderCollectionClaim::itemClaim);
     }
 
     public List<OrderCollectionClaim> getUnclaimedClaims(UUID ownerUuid) {
@@ -2401,7 +2504,15 @@ public class OrdersManager {
                 delivererData.addMoneyMade(payout);
                 plugin.getDatabaseManager().savePlayer(delivererData);
                 publishOrderEvent("DELIVER", liveOrder.id());
-                return new DeliverOrderResult(true, null, getOrder(liveOrder.id()), quantity, payout);
+                Order delivered = getOrder(liveOrder.id());
+                // Announce only once the order is full, so a run of partial deliveries stays quiet.
+                if (delivered != null && delivered.filled() && plugin.getServerNotificationManager() != null) {
+                    plugin.getServerNotificationManager().announceOrderCompleted(player, delivered);
+                }
+                if (delivered != null) {
+                    playNotificationSound(delivered.ownerUuid(), "ORDERS.DELIVERED");
+                }
+                return new DeliverOrderResult(true, null, delivered, quantity, payout);
             } finally {
                 releaseNetworkOrderLock(networkLock);
             }
@@ -2469,8 +2580,23 @@ public class OrdersManager {
             return new CancelOrderResult(false, CancelFailureReason.NOT_ACTIVE, order);
         }
 
-        if (!closeOrderAndCreateRefundClaim(order, OrderStatus.CANCELLED, System.currentTimeMillis())) {
+        double refund = roundCurrency(order.escrowRemaining());
+        long closedAt = System.currentTimeMillis();
+        if (!closeActiveOrder(order, OrderStatus.CANCELLED, closedAt, false)) {
             return new CancelOrderResult(false, CancelFailureReason.DATABASE_ERROR, order);
+        }
+
+        if (refund > EPSILON) {
+            PlayerData ownerData = getPlayerData(player);
+            var depositResult = ownerData == null
+                    ? null
+                    : plugin.getEconomyManager().deposit(player, refund, EconomyReason.ORDER_REFUND);
+            if (depositResult == null || !depositResult.success()) {
+                insertRefundClaim(order.ownerUuid(), order.id(), refund, closedAt);
+            } else {
+                ownerData.setMoneySpent(Math.max(0D, ownerData.getMoneySpent() - refund));
+                plugin.getDatabaseManager().savePlayer(ownerData);
+            }
         }
 
         publishOrderEvent("CANCEL", orderId);
@@ -2603,7 +2729,7 @@ public class OrdersManager {
             return false;
         }
         try {
-            player.getWorld().dropItemNaturally(player.getLocation(), claim.item().clone());
+            dropClaimItemAtPlayer(player, claim.item());
             incrementCollectedQuantity(claim.orderId(), claim.item().getAmount());
             publishOrderEvent("CLAIM", claim.orderId());
             return true;
@@ -2612,6 +2738,36 @@ public class OrdersManager {
             plugin.getLogger().log(Level.WARNING, "Failed to drop order claim " + claim.id(), exception);
             return false;
         }
+    }
+
+    static void dropClaimItemAtPlayer(Player player, ItemStack item) {
+        if (player == null || item == null || item.getType().isAir()) {
+            return;
+        }
+        Location dropSpot = claimDropLocation(player);
+        if (dropSpot.getWorld() == null) {
+            throw new IllegalStateException("Player has no world");
+        }
+        Item dropped = dropSpot.getWorld().dropItem(dropSpot, item.clone());
+        dropped.setVelocity(new Vector(0, 0, 0));
+    }
+
+    static Location claimDropLocation(Player player) {
+        Location eye = player.getEyeLocation();
+        Vector direction = eye.getDirection();
+        if (direction.lengthSquared() < 1.0E-6D) {
+            direction = player.getLocation().getDirection();
+        }
+        return claimDropLocation(eye, direction);
+    }
+
+    static Location claimDropLocation(Location eye, Vector direction) {
+        Vector normalized = direction.clone();
+        if (normalized.lengthSquared() < 1.0E-6D) {
+            normalized = new Vector(0, 0, 1);
+        }
+        normalized.normalize();
+        return eye.clone().add(normalized.multiply(1.5D));
     }
 
     public synchronized int expireOrders() {
@@ -2769,7 +2925,7 @@ public class OrdersManager {
         return hours * 60L * 60L * 1000L;
     }
 
-    private int getMaxActiveOrders(Player player) {
+    public int getMaxActiveOrders(Player player) {
         int defaultValue = Math.max(1, config().getInt("SETTINGS.MAX_ACTIVE_ORDERS_DEFAULT", 5));
         ConfigurationSection limitsSection = config().getConfigurationSection("SETTINGS.MAX_ACTIVE_ORDERS_BY_PERMISSION");
         if (limitsSection == null || player == null) {
@@ -2783,7 +2939,47 @@ public class OrdersManager {
             }
             resolved = Math.max(resolved, limitsSection.getInt(permission, defaultValue));
         }
+        resolved = Math.max(resolved, PermissionUtils.resolveHighestExactNumberedPermission(
+                player,
+                "smpplugin.orders.limit.",
+                90
+        ));
+        if (hasDonutPlusPlus(player)) {
+            resolved = Math.max(resolved, 90);
+        } else if (hasDonutPlus(player)) {
+            resolved = Math.max(resolved, 45);
+        }
         return resolved;
+    }
+
+    public int getMyOrdersVisibleSlots(Player player) {
+        int max = getMaxActiveOrders(player);
+        int freeSlots = Math.max(1, Math.min(45, config().getInt("GUI.MY_ORDERS.VISIBLE_SLOTS", 18)));
+        int donutPlusSlots = Math.max(freeSlots, Math.min(45, config().getInt("GUI.MY_ORDERS.DONUT_PLUS_SLOTS", 45)));
+        if (hasDonutPlus(player) || hasDonutPlusPlus(player)) {
+            return donutPlusSlots;
+        }
+        return Math.min(45, Math.max(freeSlots, max));
+    }
+
+    public int getMyOrdersPlusPageSlots() {
+        return Math.max(0, Math.min(45, config().getInt("GUI.MY_ORDERS.PLUS_PAGE_SLOTS", 45)));
+    }
+
+    public boolean hasDonutPlus(Player player) {
+        return player != null && (PermissionUtils.hasExact(player, "smpplugin.donutplus")
+                || PermissionUtils.hasExact(player, "donutplus"));
+    }
+
+    public boolean hasDonutPlusPlus(Player player) {
+        return player != null && (PermissionUtils.hasExact(player, "smpplugin.donutplusplus")
+                || PermissionUtils.hasExact(player, "donutplusplus")
+                || PermissionUtils.hasExact(player, "smpplugin.donutplusplusplus")
+                || PermissionUtils.hasExact(player, "donutplusplusplus"));
+    }
+
+    public boolean canOrderMaterial(Material material) {
+        return isOrderable(material);
     }
 
     private long getClickCooldownMillis() {
@@ -3167,6 +3363,10 @@ public class OrdersManager {
     }
 
     private boolean closeOrderAndCreateRefundClaim(Order order, OrderStatus nextStatus, long closedAt) {
+        return closeActiveOrder(order, nextStatus, closedAt, true);
+    }
+
+    private boolean closeActiveOrder(Order order, OrderStatus nextStatus, long closedAt, boolean createRefundClaim) {
         Connection conn = connection();
         boolean originalAutoCommit = true;
         try {
@@ -3180,30 +3380,20 @@ public class OrdersManager {
             conn.setAutoCommit(false);
             try {
                 try (PreparedStatement updateOrder = conn.prepareStatement(
-                        "update orders set status = ?, closed_at = ? where id = ? and status = ?")) {
+                        "update orders set status = ?, closed_at = ?, escrow_remaining = ? where id = ? and status = ?")) {
                     updateOrder.setString(1, nextStatus.name());
                     updateOrder.setLong(2, closedAt);
-                    updateOrder.setLong(3, order.id());
-                    updateOrder.setString(4, OrderStatus.ACTIVE.name());
+                    updateOrder.setDouble(3, createRefundClaim ? order.escrowRemaining() : 0D);
+                    updateOrder.setLong(4, order.id());
+                    updateOrder.setString(5, OrderStatus.ACTIVE.name());
                     if (updateOrder.executeUpdate() != 1) {
                         conn.rollback();
                         return false;
                     }
                 }
 
-                if (order.escrowRemaining() > EPSILON) {
-                    try (PreparedStatement insertClaim = conn.prepareStatement(
-                            "insert into order_claims (owner_uuid, order_id, claim_type, item_data, money_amount, created_at, claimed_at) " +
-                                    "values (?,?,?,?,?,?,?)")) {
-                        insertClaim.setString(1, order.ownerUuid().toString());
-                        insertClaim.setLong(2, order.id());
-                        insertClaim.setString(3, OrderCollectionClaim.ClaimType.REFUND.name());
-                        insertClaim.setNull(4, Types.VARCHAR);
-                        insertClaim.setDouble(5, roundCurrency(order.escrowRemaining()));
-                        insertClaim.setLong(6, closedAt);
-                        insertClaim.setLong(7, 0L);
-                        insertClaim.executeUpdate();
-                    }
+                if (createRefundClaim && order.escrowRemaining() > EPSILON) {
+                    insertRefundClaim(conn, order.ownerUuid(), order.id(), roundCurrency(order.escrowRemaining()), closedAt);
                 }
 
                 conn.commit();
@@ -3211,6 +3401,9 @@ public class OrdersManager {
                 Player owner = org.bukkit.Bukkit.getPlayer(order.ownerUuid());
                 if (owner != null && owner.isOnline()) {
                     processAutoClaims(owner);
+                }
+                if (nextStatus == OrderStatus.EXPIRED) {
+                    playNotificationSound(order.ownerUuid(), "ORDERS.EXPIRE");
                 }
                 return true;
             } catch (Exception e) {
@@ -3230,6 +3423,50 @@ public class OrdersManager {
         } catch (Exception e) {
             plugin.getLogger().log(Level.WARNING, "Failed to close order " + order.id(), e);
             return false;
+        }
+    }
+
+    private Set<Long> getUnclaimedItemClaimOrderIds(UUID ownerUuid) {
+        Set<Long> orderIds = new HashSet<>();
+        if (ownerUuid == null) {
+            return orderIds;
+        }
+        try (PreparedStatement ps = connection().prepareStatement(
+                "select distinct order_id from order_claims where owner_uuid = ? and claimed_at = 0 and claim_type = ?")) {
+            ps.setString(1, ownerUuid.toString());
+            ps.setString(2, OrderCollectionClaim.ClaimType.ITEM.name());
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    orderIds.add(rs.getLong("order_id"));
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.WARNING, "Failed to load unclaimed item claim order ids", e);
+        }
+        return orderIds;
+    }
+
+    private void insertRefundClaim(UUID ownerUuid, long orderId, double amount, long createdAt) {
+        try {
+            insertRefundClaim(connection(), ownerUuid, orderId, amount, createdAt);
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.WARNING, "Failed to store fallback order refund claim for order " + orderId, e);
+        }
+    }
+
+    private void insertRefundClaim(Connection conn, UUID ownerUuid, long orderId, double amount, long createdAt)
+            throws SQLException {
+        try (PreparedStatement insertClaim = conn.prepareStatement(
+                "insert into order_claims (owner_uuid, order_id, claim_type, item_data, money_amount, created_at, claimed_at) " +
+                        "values (?,?,?,?,?,?,?)")) {
+            insertClaim.setString(1, ownerUuid.toString());
+            insertClaim.setLong(2, orderId);
+            insertClaim.setString(3, OrderCollectionClaim.ClaimType.REFUND.name());
+            insertClaim.setNull(4, Types.VARCHAR);
+            insertClaim.setDouble(5, amount);
+            insertClaim.setLong(6, createdAt);
+            insertClaim.setLong(7, 0L);
+            insertClaim.executeUpdate();
         }
     }
 

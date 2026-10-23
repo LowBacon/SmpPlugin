@@ -531,12 +531,6 @@ commands:
   phantom:
     description: Toggle phantom spawning
     usage: /phantom
-  findplayer:
-    description: See which dimension and biome an online player is in
-    usage: /findplayer <player>
-    aliases:
-    - fp
-    permission: smpplugin.findplayer
   settings:
     description: Open player settings
     usage: /settings
@@ -561,8 +555,8 @@ commands:
     description: Read the server safety book, or give it to a player
     usage: /safety [reload|add <player>|give <player>]
   help:
-    description: View help
-    usage: /help
+    description: Help with every command you can use, by category
+    usage: /help [category|command] [page]
   servers:
     description: View network server status
     usage: /servers
@@ -703,21 +697,12 @@ commands:
     permission: smpplugin.challenges
     aliases:
     - challenge
-  poll:
-    description: Vote in (or start) a poll
-    usage: /poll [vote <n>|start <seconds> <question> | <a> | <b>|end]
-    permission: smpplugin.poll.vote
   giveaway:
     description: Join (or host) a giveaway
     usage: /giveaway [join|start [seconds]|money <amount> [seconds] [winners]|cancel]
     permission: smpplugin.giveaway.join
     aliases:
     - ga
-  chatgame:
-    description: See the current chat game, or start one
-    usage: /chatgame [start [type]|stop]
-    aliases:
-    - chatgames
   announcer:
     description: Manage the automatic announcements
     usage: /announcer [list|send <n>|toggle]
@@ -768,20 +753,10 @@ commands:
     description: Poke a player
     usage: /poke <player>
     permission: smpplugin.fun.emotes
-  wave:
-    description: Wave at everyone
-    usage: /wave
-    permission: smpplugin.fun.emotes
   cheer:
     description: Cheer!
     usage: /cheer
     permission: smpplugin.fun.emotes
-  rps:
-    description: Rock, paper, scissors against the server
-    usage: /rps <rock|paper|scissors>
-    permission: smpplugin.fun.games
-    aliases:
-    - rockpaperscissors
   rate:
     description: Let the server rate anything out of 10
     usage: /rate <anything>
@@ -1118,8 +1093,6 @@ permissions:
       smpplugin.admin.maintenance.bypass: true
       smpplugin.admin.playerwipe: true
       smpplugin.admin.playerunwipe: true
-      smpplugin.staff.poll: true
-      smpplugin.staff.chatgame: true
       smpplugin.staff.countdown: true
       smpplugin.staff.speed: true
       smpplugin.staff.whois: true
@@ -1189,9 +1162,6 @@ permissions:
   smpplugin.afk.away:
     description: 'Mark yourself AFK where you stand with /away.'
     default: true
-  smpplugin.findplayer:
-    description: 'See which dimension and biome another online player is in with /findplayer.'
-    default: true
   smpplugin.friends:
     description: 'Use /friends to add, remove and follow friends.'
     default: true
@@ -1222,6 +1192,9 @@ permissions:
   smpplugin.auctionhouse.my:
     description: 'View your own Auction House listings.'
     default: true
+  smpplugin.homes.unlimited:
+    description: 'Set as many homes as you like (also given by HOME-LIMITS ranks marked UNLIMITED).'
+    default: false
   smpplugin.auctionhouse.fastbuy:
     description: 'Allow the quick-purchase setting that skips the Auction House buy confirmation.'
     default: false
@@ -1734,9 +1707,6 @@ permissions:
   smpplugin.challenges:
     description: 'See and finish the daily challenges with /challenges.'
     default: true
-  smpplugin.poll.vote:
-    description: 'Vote in polls started by staff.'
-    default: true
   smpplugin.giveaway.join:
     description: 'Join giveaways started by staff.'
     default: true
@@ -1744,10 +1714,10 @@ permissions:
     description: 'Send and read /mail, including to offline players.'
     default: true
   smpplugin.fun.emotes:
-    description: 'Use /slap, /highfive, /poke, /wave and /cheer.'
+    description: 'Use /slap, /highfive, /poke and /cheer.'
     default: true
   smpplugin.fun.games:
-    description: 'Use /rps, /rate and /dice roll.'
+    description: 'Use /rate and /dice roll.'
     default: true
   smpplugin.fun.sit:
     description: 'Sit down where you stand with /sit.'
@@ -1829,12 +1799,6 @@ permissions:
     default: false
   smpplugin.glow:
     description: 'Toggle a glowing outline with /glow.'
-    default: false
-  smpplugin.staff.poll:
-    description: 'Start and end polls with /poll.'
-    default: false
-  smpplugin.staff.chatgame:
-    description: 'Start and stop chat games with /chatgame.'
     default: false
   smpplugin.staff.countdown:
     description: 'Show a server-wide countdown with /countdown.'
@@ -2108,8 +2072,6 @@ permissions:
       smpplugin.staff.punishments.tempmute: true
       smpplugin.staff.chat.clear: true
       smpplugin.staff.whois: true
-      smpplugin.staff.poll: true
-      smpplugin.staff.chatgame: true
       smpplugin.staff.countdown: true
   smpplugin.role.moderator:
     description: 'Moderator role: everything a helper has, plus staff mode, vanish, freeze, bans, mutes, invsee and spy.'
@@ -2171,6 +2133,7 @@ permissions:
       smpplugin.role.admin: true
       smpplugin.giveaway.manage: true
       smpplugin.chat.color: true
+      smpplugin.homes.unlimited: true
       smpplugin.auctionhouse.fastbuy: true
       smpplugin.auctionhouse.fastsell: true
       smpplugin.donutplus: true

@@ -1,212 +1,167 @@
 META:
   NAME: Deutsch
 ORDERS:
-  DISABLED: '&cbestellungen sind derzeit deaktiviert.'
-  NO_ADMIN_PERMISSION: '&cdu darfst bestellungen nicht neu laden.'
-  RELOADED: '&abestellkonfiguration neu geladen.'
-  ORDER_NOT_FOUND: '&cdiese bestellung eXistiert nicht mehr.'
-  ORDER_NOT_ACTIVE: '&cdiese bestellung ist nicht mehr aktiv.'
-  CANNOT_DELIVER_OWN: '&cdu kannst deine eigene bestellung nicht beliefern.'
-  NO_MATCHING_ITEMS: "&ckeine passenden gegenstände gefunden."
-  ORDER_FULL: "&cdiese bestellung ist bereits erfüllt."
-  DELIVERY_FAILED: '&clieferung fehlgeschlagen.'
-  DELIVERY_FAILED_ECONOMY: '&cdie auszahlung der lieferung ist fehlgeschlagen.'
-  DELIVERY_SUCCESS: '&a&e{Quantity} {item}&a geliefert und &a{payout}&a erhalten.'
-  CANCELLED: '&ebestellung #{order_id} storniert. das restliche treuhandguthaben kann abgeholt werden.'
-  BATCH_COLLECTED: "&a{claims} ansprüche abgeholt ({items} gegenstände, {refund} rückzahlung). &c{failed} fehlgeschlagen."
+  DISABLED: '&cBestellungen sind derzeit deaktiviert.'
+  NO_ADMIN_PERMISSION: '&cDu darfst bestellungen nicht neu laden.'
+  RELOADED: '&aBestellkonfiguration neu geladen.'
+  ORDER_NOT_FOUND: '&cDiese bestellung existiert nicht mehr.'
+  ORDER_NOT_ACTIVE: '&cDiese bestellung ist nicht mehr aktiv.'
+  CANNOT_DELIVER_OWN: '&cDu kannst deine eigene bestellung nicht beliefern.'
+  NO_MATCHING_ITEMS: "&cKeine passenden gegenstände gefunden."
+  ORDER_FULL: "&cDiese bestellung ist bereits erfüllt."
+  DELIVERY_FAILED: '&cLieferung fehlgeschlagen.'
+  DELIVERY_FAILED_ECONOMY: '&cDie auszahlung der lieferung ist fehlgeschlagen.'
+  DELIVERY_SUCCESS: '&a&e{quantity} {item}&a Geliefert und &a{payout}&a erhalten.'
+  CANCELLED: '&eBestellung #{order_id} storniert. das restliche treuhandguthaben kann
+    abgeholt werden.'
+  BATCH_COLLECTED: "&a{claims} Ansprüche abgeholt ({items} gegenstände, {refund} rückzahlung).
+    &c{failed} fehlgeschlagen."
+  BATCH_DROPPED: "&a{claims} Ansprüche abgelegt ({items} gegenstände). &c{failed} fehlgeschlagen."
   GUI:
     BACK:
-      NAME: "&cZurüCk"
-      LORE: "&7ZUM VORHERIGEN MENü ZURüCKKEHREN."
+      NAME: "&cZurück"
+      LORE: "&7Zum vorherigen menü zurückkehren."
     ITEM:
-      CATEGORY: "KATEGORIE"
-      SELECT: "&eKLICKEN ZUM AUSWäHLEN"
+      CATEGORY: "Kategorie"
+      SELECT: "&eKlicken zum auswählen"
     MAIN:
-      TITLE: "&8Bestellungen"
-      PREV:
-        NAME: "&aZurüCk"
-        LORE:
-          - "&fSEITE {page} öFFNEN"
-      NEXT:
-        NAME: "&aWeiter"
-        LORE:
-          - "&fSEITE {page} öFFNEN"
-      SORT:
-        NAME: "&aSortieren"
-      FILTER:
-        NAME: "&aFilter"
-      REFRESH:
-        NAME: "&aAktualisieren"
-        LORE:
-          - "&fBESTELLüBERSICHT NEU LADEN"
-      SEARCH:
-        NAME: "&aSuchen"
-        LORE:
-          - "&7AKTUELL: &f{Query}"
-          - ''
-          - "&eLINKSKLICK &fZUM SUCHEN"
-          - "&eRECHTSKLICK &fZUM LöSCHEN"
-      MY_ORDERS:
-        NAME: "&aDeine Bestellungen"
-        LORE:
-          - "&fBESTELLUNGEN VERWALTEN"
-      COLLECT:
-        NAME: "&aAbholen"
-        LORE:
-          - "&fGEGENSTäNDE UND RüCKZAHLUNGEN ABHOLEN"
-      EMPTY:
-        NAME: "&cKeine Aktiven Bestellungen"
-        LORE:
-          - "&7KEINE BESTELLUNG PASST ZU DIESER ANSICHT."
+      TITLE: "Orders (Page {page})"
     MY_ORDERS:
-      TITLE: "&8Bestellungen -> Meine Bestellungen"
-      BACK:
-        NAME: "&cZurüCk"
-        LORE:
-          - "&fZU AKTIVEN BESTELLUNGEN"
+      TITLE: "Orders -> Your Orders"
       NEW:
-        NAME: "&aNeue Bestellung"
+        NAME: "&aNeue bestellung"
         LORE:
-          - "&fEINE NEUE BESTELLUNG ERSTELLEN"
-      EMPTY:
-        NAME: "&cNoch Keine Bestellungen"
-        LORE:
-          - "&7ERSTELLE DEINE ERSTE BESTELLUNG."
+        - "&fEine neue bestellung erstellen"
     SELECT_ITEM:
-      TITLE: "&8Bestellungen -> Gegenstand WäHlen"
+      TITLE: "&8Bestellungen -> gegenstand wählen"
     SEARCH_ITEM:
-      TITLE: "&8Bestellungen -> Gegenstand Suchen"
+      TITLE: "&8Bestellungen -> gegenstand suchen"
     INVENTORY_ITEM:
-      TITLE: "&8Bestellungen -> Gegenstand WäHlen"
+      TITLE: "&8Bestellungen -> gegenstand wählen"
     NEW_ORDER:
-      TITLE: "&8Bestellungen -> Neue Bestellung"
+      TITLE: "&8Bestellungen -> neue bestellung"
     EDIT_ORDER:
-      TITLE: "&8Bestellungen -> Bearbeiten"
+      TITLE: "Orders -> Edit Order"
     DEPOSIT:
-      TITLE: "&8Bestellungen -> GegenstäNde Liefern"
-      CONFIRM:
-        NAME: "&aLieferung PrüFen"
-        LORE:
-          - "&fLEGE PASSENDE GEGENSTäNDE HINEIN."
-          - "&7VERBLEIBEND: &f{remaining}"
-          - "&7STüCKPREIS: &f{price_each}"
-          - ''
-          - "&eKLICKEN ZUM PRüFEN"
+      TITLE: "Orders -> Deliver Items"
     CONFIRM:
-      TITLE: "&8Bestellungen -> Lieferung BestäTigen"
+      TITLE: "&8Bestellungen -> lieferung bestätigen"
       CANCEL:
         NAME: "&cAbbrechen"
         LORE:
-          - "&fOHNE LIEFERUNG ZURüCKKEHREN"
+        - "&fOhne lieferung zurückkehren"
       CONFIRM:
-        NAME: "&aBestäTigen"
+        NAME: "&aBestätigen"
         LORE:
-          - "&f{amount} GEGENSTäNDE LIEFERN"
-          - "&7DU ERHäLTST {receive}"
+        - "&f{amount} Gegenstände liefern"
+        - "&7Du erhältst {receive}"
       SUMMARY:
-        NAME: "&fBestellung Von {owner}"
+        NAME: "&fBestellung von {owner}"
         LORE:
-          - "&7GEGENSTAND: &f{item}"
-          - "&7MENGE: &f{amount}"
-          - "&7AUSZAHLUNG: &a{receive}"
-          - "&7DANACH VERBLEIBEND: &f{remaining}"
+        - "&7Gegenstand: &f{item}"
+        - "&7Menge: &f{amount}"
+        - "&7Auszahlung: &a{receive}"
+        - "&7Danach verbleibend: &f{remaining}"
     DELETE:
-      TITLE: "&8Bestellungen -> Stornieren"
+      TITLE: "Orders -> Cancel Order"
       BACK:
-        NAME: "&cZurüCk"
+        NAME: "&fAbbrechen"
         LORE:
-          - "&fOHNE STORNIERUNG ZURüCKKEHREN"
+        - "&7&oKlicken zum zurückkehren"
       CONFIRM:
-        NAME: "&aBestäTigen"
+        NAME: "&fBestätigen"
         LORE:
-          - "&fDIESE BESTELLUNG STORNIEREN"
-          - "&7RESTGUTHABEN WIRD ZUR RüCKZAHLUNG"
+        - "&7&oKlicken zum stornieren"
     COLLECT:
-      TITLE: "&8Bestellungen -> Abholen"
+      TITLE: "&8Bestellungen -> abholen"
       COLLECT_PAGE:
-        NAME: "&aSeite Abholen"
+        NAME: "&aSeite abholen"
         LORE:
-          - "&fALLE ANSPRüCHE DIESER SEITE ABHOLEN"
+        - "&fAlle ansprüche dieser seite abholen"
       DROP_PAGE:
-        NAME: "&eSeite Ablegen"
+        NAME: "&eSeite ablegen"
         LORE:
-          - "&fGEGENSTäNDE SICHER VOR DIR ABLEGEN"
+        - "&fGegenstände sicher vor dir ablegen"
+      DROP_ALL:
+        NAME: "&eAlles ablegen"
+        LORE:
+        - "&fAlle ausstehenden Gegenstände vor dir ablegen"
     ORDER_ITEM:
-      NAME: "&aBestellung Von {owner}"
+      NAME: "&f{item}"
       LORE:
-        - '&f{item}'
-        - "&a{price_each} &fPRO STüCK"
-        - ''
-        - "&e{delivered}&7/&a{reQuested} &7GELIEFERT"
-        - "&e{paid}&7/&a{total} &7BEZAHLT"
-        - ''
-        - "&fKLICKEN FüR DETAILS"
+      - "&a{requested} &fAngefragt"
+      - ''
+      - "&a{price_each} &fje Stück"
+      - "&a{delivered}/{requested} &fGeliefert"
+      - ''
+      - "&7{time} Bis die Bestellung abläuft"
     CLAIM:
-      REFUND_NAME: "&aTREUHANDRüCKZAHLUNG"
+      REFUND_NAME: "&aTreuhandrückzahlung"
       REFUND_LORE:
-        - "&7BETRAG: &f{amount}"
-        - "&7BESTELLUNG: &f#{order_id}"
-        - ''
-        - "&eKLICKEN ZUM ABHOLEN"
+      - "&7Betrag: &f{amount}"
+      - "&7Bestellung: &f#{order_id}"
+      - ''
+      - "&eKlicken zum abholen"
       ITEM_LORE:
-        - "&7BESTELLUNG: &f#{order_id}"
-        - "&7ERSTELLT VOR: &f{age}"
-        - ''
-        - "&eKLICKEN ZUM ABHOLEN"
-    REQUIRED_ENCHANTMENTS: "&bBENöTIGTE VERZAUBERUNGEN:"
+      - "&7Bestellung: &f#{order_id}"
+      - "&7Erstellt vor: &f{age}"
+      - ''
+      - "&eKlicken zum abholen"
+    REQUIRED_ENCHANTMENTS: "&bBenötigte verzauberungen:"
   BEDROCK:
     MAIN:
-      TITLE: bestellungen
-      CONTENT: offene bestellungen anzeigen.
-      SEARCHING: 'suche: {Query}'
+      TITLE: Bestellungen
+      CONTENT: Offene bestellungen anzeigen.
+      SEARCHING: 'Suche: {query}'
     MY:
-      TITLE: meine bestellungen
-      CONTENT: "wähle eine bestellung zum verwalten."
+      TITLE: Meine bestellungen
+      CONTENT: "Wähle eine bestellung zum verwalten."
     COLLECT:
-      TITLE: abholen
-      CONTENT: "offene ansprüche: {count}"
+      TITLE: Abholen
+      CONTENT: "Offene ansprüche: {count}"
     SEARCH:
-      TITLE: bestellungen suchen
-      INPUT: gegenstand, besitzer oder kategorie
+      TITLE: Bestellungen suchen
+      INPUT: Gegenstand, besitzer oder kategorie
     ITEM_SEARCH:
-      TITLE: "gegenstände suchen"
+      TITLE: "Gegenstände suchen"
     ITEMS:
-      TITLE: "gegenstand wählen"
-      CONTENT: "wähle den gewünschten gegenstand."
+      TITLE: "Gegenstand wählen"
+      CONTENT: "Wähle den gewünschten gegenstand."
     NEW:
-      TITLE: neue bestellung
-      AMOUNT: menge
-      PRICE: "preis pro stück"
-      SUCCESS: bestellung erstellt.
-      FAILED: 'bestellung konnte nicht erstellt werden: {reason}'
+      TITLE: Neue bestellung
+      AMOUNT: Menge
+      PRICE: "Preis pro stück"
+      SUCCESS: Bestellung erstellt.
+      FAILED: 'Bestellung konnte nicht erstellt werden: {reason}'
     DELIVERY:
-      TITLE: "gegenstände liefern"
-      AMOUNT: menge (maX. {maX})
-      SUCCESS: "{amount} gegenstände für {payout} geliefert."
-      FAILED: 'lieferung fehlgeschlagen: {reason}'
+      TITLE: "Gegenstände liefern"
+      AMOUNT: Menge (max. {max})
+      SUCCESS: "{amount} Gegenstände für {payout} geliefert."
+      FAILED: 'Lieferung fehlgeschlagen: {reason}'
     ORDER:
-      TITLE: 'bestellung #{id}'
-      BUTTON: "#{id} {item} X{remaining}\n{price} pro stück - {owner}"
+      TITLE: 'Bestellung #{id}'
+      BUTTON: "#{id} {item} X{remaining}\n{price} Pro stück - {owner}"
     CANCEL:
-      TITLE: bestellung stornieren
-      CONTENT: "bestellung #{id} stornieren? das restguthaben wird rückerstattet."
-      SUCCESS: bestellung storniert.
-      FAILED: bestellung konnte nicht storniert werden.
+      TITLE: Bestellung stornieren
+      CONTENT: "Bestellung #{id} stornieren? das restguthaben wird rückerstattet."
+      SUCCESS: Bestellung storniert.
+      FAILED: Bestellung konnte nicht storniert werden.
     CLAIM:
-      REFUND: "rückzahlung #{order}: {amount}"
-      ITEM: 'bestellung #{order}: {item}'
-    INVALID_NUMBER: "gib eine gültige zahl ein."
+      REFUND: "Rückzahlung #{order}: {amount}"
+      ITEM: 'Bestellung #{order}: {item}'
+    INVALID_NUMBER: "Gib eine gültige zahl ein."
     BUTTON:
-      SEARCH: suchen
-      NEW: neue bestellung
-      MY: meine bestellungen
-      COLLECT: abholen
-      BACK: "zurück"
-      COLLECT_ALL: alles abholen
-      DROP_ITEMS: "gegenstände ablegen"
-      COLLECT_ORDER: diese bestellung abholen
-      CANCEL_ORDER: bestellung stornieren
-      CONFIRM: "bestätigen"
+      SEARCH: Suchen
+      NEW: Neue bestellung
+      MY: Meine bestellungen
+      COLLECT: Abholen
+      BACK: "Zurück"
+      COLLECT_ALL: Alles abholen
+      DROP_ITEMS: "Gegenstände ablegen"
+      COLLECT_ORDER: Diese bestellung abholen
+      DROP_ORDER: Diese bestellung ablegen
+      CANCEL_ORDER: Bestellung stornieren
+      CONFIRM: "Bestätigen"
 COMMON:
   ENABLED: aktiviert
   DISABLED: deaktiviert
@@ -1615,6 +1570,10 @@ CONFIG:
       RELOAD-SUCCESS: "&aFREEZE CONFIG RELOADED."
   ORDERS:
     GUI:
+      CANCEL_ORDER:
+        TITLE: Orders -> Cancel Order
+      DELIVERY_DEPOSIT:
+        TITLE: Orders -> Deliver Items
       MAIN:
         TITLE: "&8Orders"
       MY_ORDERS:
@@ -1894,6 +1853,26 @@ CONFIG:
       sounds:
         click: {}
 MESSAGES:
+  COMMAND-HELP:
+    DISABLED: '&cHelp is turned off on this server.'
+    UNKNOWN: '&cThere is no help for &f{input}&c. Try &f/help &cto see the categories.'
+    HEADER: '&8&m------&r &b&lHelp &8&m------'
+    EMPTY: '&7There are no commands you can use right now.'
+    CATEGORY-LINE: '&b{title} &8({count}) &7- {description}'
+    CATEGORY-HOVER: '&7Click to see the {title} commands'
+    OVERVIEW-FOOTER: '&7Use &f/help <category> &7or &f/help <command>&7.'
+    CATEGORY-EMPTY: '&7You have no &f{title} &7commands.'
+    CATEGORY-HEADER: '&8&m------&r &b&l{title} &7({page}/{pages}) &8&m------'
+    COMMAND-LINE: '&f/{command} &8- &7{description}'
+    COMMAND-HOVER: "&f{usage}\n&7Click to type it"
+    COMMAND-HEADER: '&8&m------&r &b&l/{command} &8&m------'
+    COMMAND-USAGE: '&7Usage: &f{usage}'
+    COMMAND-ALIASES: '&7Also: &f{aliases}'
+    COMMAND-DISABLED: '&cThis command is turned off on this server.'
+    COMMAND-PERMISSION: '&7Permission: &f{permission}'
+    PAGE-HINT: '&7More: &f/help {category} {next}'
+    PREVIOUS: '&b« Previous'
+    NEXT: '&bNext »'
   AUCTION_HOUSE:
     PLAYERS_ONLY: "&cONLY PLAYERS CAN USE THIS COMMAND."
     NO_PERMISSION: '&cyou cannot use that auction house action.'
@@ -2044,6 +2023,7 @@ MESSAGES:
     PM-ENABLED: "&aPRIVATE MESSAGES ARE NOW ENABLED"
     PM-DISABLED: "&cPRIVATE MESSAGES ARE NOW DISABLED"
   TPAUTO:
+    ACTION-BAR: '&fYou have tpauto on.'
     ENABLED: "&7YOU TURNED ON TPAUTO."
     DISABLED: "&7YOU TURNED OFF TPAUTO."
   TPAHEREAUTO:
@@ -2229,14 +2209,6 @@ MESSAGES:
     TARGET-DISABLED-PAYMENTS: "&cTHE TARGET PLAYER HAS THE PAYMENTS DISABLED."
     SUCCESS-SENDER: "&7YOU PAID &b{player} &#A303F9{amount}&7 SHARDS."
     SUCCESS-RECEIVER: "&7YOU RECEIVED &#A303F9{amount}&7 SHARDS FROM &b{player}&7."
-  FINDPLAYER:
-    AFK: "&7{player}'S IN THE &#A303F9AFK"
-    RTP_ZONE: "&7{player}'S IN THE &cRTPZONE"
-    SPAWN: "&7{player}'S IN THE &bSPAWN"
-    OVERWORLD: "&7{player}'S IN THE &bOVERWORLD &7(&b{biome}&7)"
-    NETHER: "&7{player}'S IN THE &bNETHER &7(&b{biome}&7)"
-    THE_END: "&7{player}'S IN THE &bTHE END &7(&b{biome}&7)"
-    UNKNOWN: "&7{player}'S IN THE &b{world}"
   PUNISHMENTS:
     PLAYER-ONLY: "&cONLY PLAYERS CAN USE THIS COMMAND."
     NO-PERMISSION: '&cyou do not have permission to view punishment history.'
@@ -3654,7 +3626,6 @@ BUILTIN:
   c77190ba5e78d1b8df80: '&cusage: /cuboid erstellen <name>'
   4d29a2b8774a78044eff: "&cusage: /cuboid löschen <name>"
   83fad9e4e4da8171c3eb: '&cusage: /delhome <name>'
-  0875240f77275dbdbbbd: '&cusage: /findplayer <player>'
   9693c86bc206fc68b182: '&cusage: /kick <player> [grund]'
   692da4ab36c472e22f6a: '&cusage: /mute <player> [grund]'
   6c88c5573a74036340c6: '&cusage: /pardon <player> [grund]'

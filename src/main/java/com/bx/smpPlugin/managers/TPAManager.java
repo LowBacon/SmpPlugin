@@ -8,6 +8,7 @@ import com.bx.smpPlugin.utils.SoundUtils;
 import com.bx.smpPlugin.utils.PlayerSettingUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -40,6 +41,8 @@ public class TPAManager {
     private final Map<UUID, Deque<QueuedTpaRequest>> manualTpaHereQueues = new ConcurrentHashMap<>();
     private final Set<UUID> autoTpaWorkers = ConcurrentHashMap.newKeySet();
     private final Set<UUID> autoTpaHereWorkers = ConcurrentHashMap.newKeySet();
+    private final Set<UUID> tpautoReminderVisible = ConcurrentHashMap.newKeySet();
+    private BukkitTask tpautoReminderTask;
 
     public TPAManager(SmpPlugin plugin) {
         this.plugin = plugin;
@@ -50,11 +53,25 @@ public class TPAManager {
             return false;
         }
 
+        if (isBlockedByDuel(requester) || isBlockedByDuel(target)) {
+            if (requester != null) {
+                requester.sendMessage(ColorUtils.toComponent("&cyou cannot use TPA during a duel."));
+            }
+            return false;
+        }
+
         return storePendingRequest(new TpaRequest(requester.getUniqueId(), target.getUniqueId(), false, false));
     }
 
     public boolean sendTPAHere(Player requester, Player target) {
         if (!target.isOnline()) {
+            return false;
+        }
+
+        if (isBlockedByDuel(requester) || isBlockedByDuel(target)) {
+            if (requester != null) {
+                requester.sendMessage(ColorUtils.toComponent("&cyou cannot use TPA during a duel."));
+            }
             return false;
         }
 
@@ -425,10 +442,10 @@ public class TPAManager {
         scheduleExpiry(request);
 
         target.sendMessage(ColorUtils.toComponent(
-                "&7ᴀᴜᴛᴏ-ᴀᴄᴄᴇᴘᴛɪɴɢ &b/tpa&7 ʀᴇǫᴜᴇѕᴛ ꜰʀᴏᴍ &f" + publicName(requester) + "&7."
+                "&7Auto-accepting &b/tpa&7 request from &f" + publicName(requester) + "&7."
         ));
         requester.sendMessage(ColorUtils.toComponent(
-                "&7" + publicName(target) + " ʜᴀѕ &aᴛᴘᴀ ᴀᴜᴛᴏ-ᴀᴄᴄᴇᴘᴛ&7 ᴇɴᴀʙʟᴇᴅ. ʏᴏᴜʀ &b/tpa&7 ʀᴇǫᴜᴇѕᴛ ɪѕ ʙᴇɪɴɢ ᴘʀᴏᴄᴇѕѕᴇᴅ."
+                "&7" + publicName(target) + " has &aTPA auto-accept&7 enabled. Your &b/tpa&7 request is being processed."
         ));
 
         plugin.getSpigotScheduler().runEntity(target, () ->
@@ -487,10 +504,10 @@ public class TPAManager {
         scheduleExpiry(request);
 
         target.sendMessage(ColorUtils.toComponent(
-                "&7ᴀᴜᴛᴏ-ᴀᴄᴄᴇᴘᴛɪɴɢ &b/tpahere&7 ʀᴇǫᴜᴇѕᴛ ꜰʀᴏᴍ &f" + publicName(requester) + "&7."
+                "&7Auto-accepting &b/tpahere&7 request from &f" + publicName(requester) + "&7."
         ));
         requester.sendMessage(ColorUtils.toComponent(
-                "&7" + publicName(target) + " ʜᴀѕ &aᴛᴘᴀʜᴇʀᴇ ᴀᴜᴛᴏ-ᴀᴄᴄᴇᴘᴛ&7 ᴇɴᴀʙʟᴇᴅ. ʏᴏᴜʀ &b/tpahere&7 ʀᴇǫᴜᴇѕᴛ ɪѕ ʙᴇɪɴɢ ᴘʀᴏᴄᴇѕѕᴇᴅ."
+                "&7" + publicName(target) + " has &aTPAHere auto-accept&7 enabled. Your &b/tpahere&7 request is being processed."
         ));
 
         plugin.getSpigotScheduler().runEntity(target, () ->
@@ -543,7 +560,7 @@ public class TPAManager {
         String targetName = target != null ? publicName(target) : "this player";
         String requestType = request.tpaHere() ? "/tpahere" : "/tpa";
         requester.sendMessage(ColorUtils.toComponent(
-                "&7ʏᴏᴜʀ &b" + requestType + "&7 ʀᴇǫᴜᴇѕᴛ ᴛᴏ &f" + targetName + "&7 ᴡᴀѕ ᴄʟᴇᴀʀᴇᴅ ʙᴇᴄᴀᴜѕᴇ " + reason
+                "&7Your &b" + requestType + "&7 request to &f" + targetName + "&7 was cleared because " + reason
         ));
     }
 
@@ -573,14 +590,29 @@ public class TPAManager {
         String autoName = tpaHere ? "tpahere auto-accept" : "tpa auto-accept";
 
         target.sendMessage(ColorUtils.toComponent(
-                "&7ᴀᴜᴛᴏ-ᴀᴄᴄᴇᴘᴛɪɴɢ ᴘᴇɴᴅɪɴɢ &b" + requestType + "&7 ʀᴇǫᴜᴇѕᴛ ꜰʀᴏᴍ &f" + publicName(requester) + "&7."
+                "&7Auto-accepting pending &b" + requestType + "&7 request from &f" + publicName(requester) + "&7."
         ));
         requester.sendMessage(ColorUtils.toComponent(
-                "&7" + publicName(target) + " ʜᴀѕ &a" + autoName + "&7 ᴇɴᴀʙʟᴇᴅ. ʏᴏᴜʀ &b" + requestType + "&7 ʀᴇǫᴜᴇѕᴛ ɪѕ ʙᴇɪɴɢ ᴘʀᴏᴄᴇѕѕᴇᴅ."
+                "&7" + publicName(target) + " has &a" + autoName + "&7 enabled. Your &b" + requestType + "&7 request is being processed."
         ));
 
         plugin.getSpigotScheduler().runEntity(target, () -> target.performCommand(command));
         return true;
+    }
+
+    private boolean isBlockedByDuel(Player player) {
+        if (player == null) {
+            return false;
+        }
+        UUID uuid = player.getUniqueId();
+        return plugin.getDuelManager() != null && (plugin.getDuelManager().isInDuel(uuid) || plugin.getDuelManager().isTransitioning(uuid));
+    }
+
+    private boolean isBlockedByCombat(Player player) {
+        if (player == null || plugin.getCombatManager() == null) {
+            return false;
+        }
+        return plugin.getCombatManager().isInCombat(player.getUniqueId());
     }
 
     private boolean acceptRequest(Player target, TpaRequest request) {
@@ -591,12 +623,37 @@ public class TPAManager {
 
         Player requester = Bukkit.getPlayer(request.requester());
         if (requester == null || !requester.isOnline()) {
-            target.sendMessage(ColorUtils.toComponent("&cʀᴇǫᴜᴇѕᴛᴇʀ ɪѕ ɴᴏ ʟᴏɴɢᴇʀ ᴏɴʟɪɴᴇ."));
+            target.sendMessage(ColorUtils.toComponent("&cRequester is no longer online."));
+            return false;
+        }
+
+        if (isBlockedByDuel(target) || isBlockedByDuel(requester)) {
+            target.sendMessage(ColorUtils.toComponent("&cyou cannot use TPA during a duel."));
+            requester.sendMessage(ColorUtils.toComponent("&cyou cannot use TPA during a duel."));
+            return false;
+        }
+
+        boolean targetCombat = isBlockedByCombat(target);
+        boolean requesterCombat = isBlockedByCombat(requester);
+        if (targetCombat || requesterCombat) {
+            String blockMsg = plugin.getCombatManager() != null
+                    ? plugin.getCombatManager().getBlockMessage()
+                    : "&cyou can't use this command in your current status.";
+            if (targetCombat) {
+                target.sendMessage(ColorUtils.toComponent(blockMsg));
+            } else {
+                target.sendMessage(ColorUtils.toComponent("&cThat player is currently in combat."));
+            }
+            if (requesterCombat) {
+                requester.sendMessage(ColorUtils.toComponent(blockMsg));
+            } else {
+                requester.sendMessage(ColorUtils.toComponent("&cThat player is currently in combat."));
+            }
             return false;
         }
 
         if (request.tpaHere()) {
-            plugin.getTeleportManager().queue(target, requester.getLocation(), "TPA", null);
+            plugin.getTeleportManager().queue(target, requester.getLocation(), "TPAHERE", null);
             target.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage("TPA.ACCEPTED-HERE",
                     "{player}", publicName(requester))));
             requester.sendMessage(ColorUtils.toComponent(plugin.getConfigManager().getMessage("TPA.YOUR-REQUEST-HERE-ACCEPTED",
@@ -671,6 +728,88 @@ public class TPAManager {
         if (queue.isEmpty()) {
             manualQueueMap(tpaHere).remove(targetUuid);
         }
+    }
+
+    public void startTpautoReminder() {
+        if (tpautoReminderTask != null) {
+            return;
+        }
+        tpautoReminderTask = plugin.getSpigotScheduler().runGlobalTimer(this::refreshTpautoReminders, 20L, 20L);
+    }
+
+    public void stopTpautoReminder() {
+        if (tpautoReminderTask != null) {
+            tpautoReminderTask.cancel();
+            tpautoReminderTask = null;
+        }
+        tpautoReminderVisible.clear();
+    }
+
+    public void disableTpautoOnDeath(Player player) {
+        if (player == null || plugin.getPlayerDataManager() == null) {
+            return;
+        }
+        PlayerData data = plugin.getPlayerDataManager().get(player);
+        if (!disableTpauto(data)) {
+            return;
+        }
+        tpautoReminderVisible.remove(player.getUniqueId());
+        PlayerSettingUtils.clearActionBar(player);
+        String message = plugin.getConfigManager().getMessage("TPAUTO.DISABLED");
+        if (message != null && !message.isBlank() && !message.startsWith("&cMissing message:")) {
+            player.sendMessage(ColorUtils.toComponent(message));
+        }
+    }
+
+    static boolean disableTpauto(PlayerData data) {
+        if (data == null || !data.isTpauto()) {
+            return false;
+        }
+        data.setTpauto(false);
+        return true;
+    }
+
+    static boolean showTpautoReminder(boolean enabled, boolean actionBarBusy) {
+        return enabled && !actionBarBusy;
+    }
+
+    private void refreshTpautoReminders() {
+        if (plugin.getFeatureManager() != null
+                && !plugin.getFeatureManager().isEnabled(FeatureManager.Feature.TPA_AUTO)) {
+            return;
+        }
+        plugin.getSpigotScheduler().forEachOnlinePlayer(this::refreshTpautoReminder);
+    }
+
+    private void refreshTpautoReminder(Player player) {
+        UUID playerId = player.getUniqueId();
+        PlayerData data = plugin.getPlayerDataManager() == null
+                ? null
+                : plugin.getPlayerDataManager().get(player);
+        boolean enabled = data != null && data.isTpauto();
+        if (!showTpautoReminder(enabled, actionBarBusy(player))) {
+            if (!enabled && tpautoReminderVisible.remove(playerId)) {
+                PlayerSettingUtils.clearActionBar(player);
+            }
+            return;
+        }
+        String text = plugin.getConfigManager().getMessage("TPAUTO.ACTION-BAR");
+        if (text == null || text.isBlank() || text.startsWith("&cMissing message:")) {
+            text = "&fYou have tpauto on.";
+        }
+        PlayerSettingUtils.sendActionBar(plugin, player, text);
+        tpautoReminderVisible.add(playerId);
+    }
+
+    private boolean actionBarBusy(Player player) {
+        UUID playerId = player.getUniqueId();
+        if (plugin.getCombatManager() != null && plugin.getCombatManager().isInCombat(playerId)) {
+            return true;
+        }
+        if (plugin.getTeleportManager() != null && plugin.getTeleportManager().hasPendingWarmup(playerId)) {
+            return true;
+        }
+        return plugin.getRtpQueueManager() != null && plugin.getRtpQueueManager().isInQueue(playerId);
     }
 
     private boolean isExpired(QueuedTpaRequest request) {

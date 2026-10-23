@@ -535,10 +535,10 @@ public class SmpPluginCommand implements CommandExecutor, TabCompleter {
                     "ah", "orders", "billford", "bounty", "crate", "crates", "keys", "spawner"
             );
             case "community" -> List.of(
-                    "halloween", "trickortreat", "daily", "challenges", "poll", "giveaway", "chatgame", "mail", "guide"
+                    "halloween", "trickortreat", "daily", "challenges", "giveaway", "mail", "guide"
             );
             case "fun" -> List.of(
-                    "slap", "highfive", "poke", "wave", "cheer", "dice", "roulette", "coinflip", "rps", "rate",
+                    "slap", "highfive", "poke", "cheer", "dice", "roulette", "coinflip", "rate",
                     "firework", "sit"
             );
             case "utility" -> List.of(
@@ -553,7 +553,7 @@ public class SmpPluginCommand implements CommandExecutor, TabCompleter {
                     "staffmode", "stafflist", "staffchat", "helpop", "report", "freeze", "fly",
                     "heal", "feed", "gamemode", "randomteleport", "teleport", "alts", "vanish",
                     "invsee", "profileviewer", "punishments", "ban", "tempban", "mute", "tempmute",
-                    "warn", "kick", "blacklist", "unban", "unmute", "unblacklist", "findplayer", "rename",
+                    "warn", "kick", "blacklist", "unban", "unmute", "unblacklist", "rename",
                     "whois", "socialspy", "commandspy", "speed", "countdown"
             );
             case "admin" -> List.of(

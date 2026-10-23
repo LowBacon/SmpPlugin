@@ -44,7 +44,6 @@ public class FeatureManager {
         STATS("STATS", "stats", "stats, ping, and playtime commands.", "PLAYER_HEAD", "STATS"),
         TPA("TPA", "tpa", "teleport request commands and confirm menu.", "ENDER_PEARL", "TPA"),
         TPA_AUTO("TPA_AUTO", "tpa auto", "tpa auto-accept commands.", "REDSTONE_TORCH", "TPAUTO"),
-        FIND_PLAYER("FIND_PLAYER", "find player", "staff find player command.", "SPYGLASS", "FINDPLAYER"),
         CRATES("CRATES", "crates", "crate commands, menus, key-all, and visual effects.", "TRIPWIRE_HOOK", "CRATE"),
         RULES("RULES", "rules", "rules command and rules menu.", "BOOKSHELF", "RULES"),
         HELP("HELP", "help", "help command and server info menu.", "KNOWLEDGE_BOOK", "HELP"),
@@ -83,7 +82,7 @@ public class FeatureManager {
         PERKS("PERKS", "rank perks", "VIP, VIP+ and other rank perks from perks.yml (/perks).", "NETHER_STAR", null),
         DAILY_REWARDS("DAILY_REWARDS", "daily rewards", "/daily login rewards with a 7-day streak.", "CHEST_MINECART", null),
         CHALLENGES("CHALLENGES", "challenges", "/challenges: three new daily goals for everyone.", "TARGET", null),
-        EVENTS("EVENTS", "events", "polls, giveaways, chat games and countdowns.", "FIREWORK_ROCKET", null),
+        EVENTS("EVENTS", "events", "giveaways and countdowns.", "FIREWORK_ROCKET", null),
         ANNOUNCER("ANNOUNCER", "announcer", "rotating automatic announcements.", "BELL", null),
         MAIL("MAIL", "mail", "/mail for players who are offline.", "PAPER", null),
         FUN("FUN", "fun commands", "emotes, rock paper scissors, rate, sit and fireworks.", "CAKE", null),
@@ -227,7 +226,6 @@ public class FeatureManager {
             case "portalmanager" -> new Feature[]{Feature.PORTALS};
             case "nightvision" -> new Feature[]{Feature.NIGHT_VISION};
             case "phantom" -> new Feature[]{Feature.PHANTOM};
-            case "findplayer" -> new Feature[]{Feature.FIND_PLAYER};
             case "settings" -> new Feature[]{Feature.SETTINGS};
             case "discord", "twitter", "store", "social" -> new Feature[]{Feature.SOCIAL};
             case "rules" -> new Feature[]{Feature.RULES};
@@ -247,10 +245,10 @@ public class FeatureManager {
             case "perks" -> new Feature[]{Feature.PERKS};
             case "daily" -> new Feature[]{Feature.DAILY_REWARDS};
             case "challenges" -> new Feature[]{Feature.CHALLENGES};
-            case "poll", "giveaway", "chatgame", "countdown" -> new Feature[]{Feature.EVENTS};
+            case "giveaway", "countdown" -> new Feature[]{Feature.EVENTS};
             case "announcer" -> new Feature[]{Feature.ANNOUNCER};
             case "mail" -> new Feature[]{Feature.MAIL};
-            case "slap", "highfive", "wave", "poke", "cheer", "rps", "firework", "rate", "sit" -> new Feature[]{Feature.FUN};
+            case "slap", "highfive", "poke", "cheer", "firework", "rate", "sit" -> new Feature[]{Feature.FUN};
             case "dice", "roulette" -> new Feature[]{Feature.GAMBLING};
             case "guide" -> new Feature[]{Feature.GUIDE};
             case "border" -> new Feature[]{Feature.BORDERS};

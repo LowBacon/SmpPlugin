@@ -1,6 +1,54 @@
 # Changelog
 
-## 4.2.0 — unreleased
+## 4.3.0 — unreleased
+
+**Commands cleaned up, a real `/help`, UltimateDonutSMP's TPA and Orders, and rank-based homes.**
+Full list of commands: [docs/commands.md](docs/commands.md) (generated from `plugin.yml`).
+
+### Removed
+- **`/wave`, `/findplayer` (`/fp`), `/chatgame` (`/chatgames`), `/poll` and `/rps`
+  (`/rockpaperscissors`)**: their commands, code, permissions (`smpplugin.findplayer`,
+  `smpplugin.poll.vote`, `smpplugin.staff.poll`, `smpplugin.staff.chatgame`), the `FINDPLAYER`
+  feature switch, the `CHAT-GAMES` and `POLLS` sections of `extras.yml`, the wave emote, their
+  messages, translations and guide entry. `/giveaway`, `/countdown`, the announcer and the other
+  emotes are unchanged. (`/hug` was already removed in 3.1.) Old keys left in an existing
+  `config.yml` or `extras.yml` are ignored.
+
+### Added
+- **`/help` by category:** `/help` still opens the help menu when it has buttons; `/help <category>`
+  (general, travel, chat, social, economy, market, rewards, stats, pvp, games, utility, settings,
+  staff, admin) lists commands eight to a page with clickable pages, and `/help <command>` (or an
+  alias) shows the usage, aliases and whether it is switched off. Only commands that are switched on
+  and that the reader may use are listed, so staff and admin commands never show for players.
+  Text is in `messages.yml` under `COMMAND-HELP`. Tab completion offers categories and commands.
+- **Homes by rank** (`HOME-LIMITS` in config.yml): every rank starts with `MIN` homes and gets one
+  more per `HOME-PLAYTIME-PER-EXTRA` (10 hours) of playtime, up to `MAX`. Out of the box: players
+  3-5, VIP 5-10, VIP+ 10-20, helpers 15-25, moderators 20-30, admins 30-50; Developer, Manager,
+  Co-Owner, Owner and operators have unlimited homes (as does `smpplugin.homes.unlimited`).
+  Old `HOME-DEFAULT`, `HOME-RANKS` and `smpplugin.homes.<n>` settings still count; the best one
+  wins. A full home list now says when the next home unlocks.
+- **TPA from UltimateDonutSMP:** the full confirm menu again (cancel, the requester's world,
+  their head, region and ping, confirm; all set in `menus.yml` `TPA-CONFIRM-MENU`), requests
+  blocked during duels and combat for both players, `/tpahere` teleports labelled as TPAHERE, a
+  reminder above the hotbar while tpauto is on (`TPAUTO.ACTION-BAR`), tpauto switched off when you
+  die, and click-to-accept in chat on Paper. The request pop-up dialog is now optional
+  (`dialog.yml` `SCREENS.TPA-REQUEST`, off) so the confirm menu is the default again; the `/tpa`
+  player picker stays.
+- **Orders from UltimateDonutSMP:** the newer Orders menus (pages, filter, shard shop, info,
+  search and your-orders buttons, a cancel-order screen, locked extra slots), the item-picker dialog
+  on Paper, sounds, a `DIRECT` delivery mode and safer shared state. The database is unchanged, so
+  every order, delivery and claim is kept. `orders.yml` has the new `GUI` layout; an older file
+  keeps working and missing keys use the defaults.
+- **`docs/commands.md`**, generated from `plugin.yml` with each command's category, usage,
+  aliases, permission, default access and feature switch, and checked by a test.
+
+### Fixed
+- **Deleted homes came back after a restart** when the name was typed in a different case
+  (`/delhome Base` for a home saved as `base`): the database delete now uses the saved name.
+- Orders: an item claim delivered to a player who logged out in the same moment is handed back to
+  the claim list (kept from 4.2 through the Orders update).
+
+## 4.2.0
 
 **The lobby, spawn and FFA as three real worlds, each with its own rules.** See
 [docs/worlds.md](docs/worlds.md).

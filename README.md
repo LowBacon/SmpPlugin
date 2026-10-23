@@ -63,8 +63,8 @@ Instead of running a small army of plugins just to make an SMP function, SmpPlug
 | 🎃 **Spooky Calendar** | `/halloween`: a door for every day of October with a spinning reveal. Choose the prizes in game with `/halloween edit`. Trick or Treat, candy drops and pumpkin-headed mobs during the season. |
 | 🎁 **Daily rewards** | `/daily`: a 7-day streak with a big day-7 reward and weekly bonuses. |
 | 🎯 **Daily challenges** | `/challenges`: three goals a day for everyone, paid out automatically. |
-| 🎉 **Live events** | `/poll`, `/giveaway`, automatic chat games, `/countdown`, a rotating announcer and `/mail`. |
-| 😄 **Fun** | `/slap` `/highfive` `/poke` `/wave` `/cheer` `/dice` `/rps` `/rate` `/firework` `/sit` |
+| 🎉 **Live events** | `/giveaway`, `/countdown`, a rotating announcer and `/mail`. |
+| 😄 **Fun** | `/slap` `/highfive` `/poke` `/cheer` `/dice` `/rate` `/firework` `/sit` |
 | 🧰 **Utilities** | `/craft` `/anvil` `/grindstone` `/stonecutter` `/loom` `/smithing` `/cartography` `/back` `/near` `/seen` `/coords` `/ptime` `/pweather` `/repair` `/skull` `/lore` `/glow` `/online` `/uptime` `/calc` `/suicide` |
 | 🛡️ **Staff** | Roles `smpplugin.role.helper` / `moderator` / `admin` / `manager` / `developer` / `coowner` / `owner`, `/perms`, `/whois`, `/socialspy`, `/commandspy`, `/broadcast`, `/day` `/night` `/sun` `/rain` `/thunder`, `/smite`, `/butcher`, `/spawnmob`, `/more`, `/speed`, `/performance`, `/spook` |
 | 📊 **Simpler /stats** | Your own stats in three lines, with Search Player and Leaderboards buttons. |

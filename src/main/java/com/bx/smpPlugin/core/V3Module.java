@@ -7,13 +7,11 @@ import com.bx.smpPlugin.halloween.HalloweenListener;
 import com.bx.smpPlugin.halloween.HalloweenManager;
 import com.bx.smpPlugin.halloween.TrickOrTreatCommand;
 import com.bx.smpPlugin.engagement.Announcer;
-import com.bx.smpPlugin.engagement.ChatGames;
 import com.bx.smpPlugin.engagement.Challenges;
 import com.bx.smpPlugin.engagement.DailyRewards;
 import com.bx.smpPlugin.engagement.Giveaways;
 import com.bx.smpPlugin.engagement.Mail;
 import com.bx.smpPlugin.engagement.PendingItems;
-import com.bx.smpPlugin.engagement.Polls;
 import com.bx.smpPlugin.extras.ExtrasListener;
 import com.bx.smpPlugin.extras.FunCommands;
 import com.bx.smpPlugin.extras.UtilityCommands;
@@ -60,8 +58,8 @@ public final class V3Module implements Listener {
     private com.bx.smpPlugin.world.BorderManager borders;
 
     public static final List<String> COMMANDS = List.of(
-            "halloween", "trickortreat", "advent", "daily", "challenges", "poll", "giveaway", "chatgame", "announcer", "mail",
-            "slap", "highfive", "poke", "wave", "cheer", "dice", "roulette", "rps", "rate", "firework", "sit",
+            "halloween", "trickortreat", "advent", "daily", "challenges", "giveaway", "announcer", "mail",
+            "slap", "highfive", "poke", "cheer", "dice", "roulette", "rate", "firework", "sit",
             "craft", "anvil", "grindstone", "stonecutter", "loom", "smithing", "cartography", "back", "near",
             "seen", "coords", "suicide", "ptime", "pweather", "repair", "skull", "lore", "glow", "online", "uptime", "calc",
             "perms", "broadcast", "day", "night", "sun", "rain", "thunder", "smite", "butcher", "spawnmob", "more",
@@ -213,17 +211,9 @@ public final class V3Module implements Listener {
         });
 
         part("Events", () -> {
-            Polls polls = new Polls(plugin);
-            register("poll", polls, polls, Feature.EVENTS);
-            onShutdown(polls::shutdown);
             Giveaways giveaways = new Giveaways(plugin);
             register("giveaway", giveaways, giveaways, Feature.EVENTS);
             onShutdown(giveaways::shutdown);
-            ChatGames chatGames = new ChatGames(plugin);
-            register("chatgame", chatGames, chatGames, Feature.EVENTS);
-            listen(chatGames);
-            task(plugin.getSpigotScheduler().runGlobalTimer(chatGames::autoTick, 1200L, 1200L));
-            onShutdown(chatGames::stop);
         });
 
         part("Announcer", () -> {
@@ -240,7 +230,7 @@ public final class V3Module implements Listener {
 
         part("Fun commands", () -> {
             FunCommands fun = new FunCommands(plugin);
-            for (String name : List.of("slap", "highfive", "poke", "wave", "cheer", "rps", "rate", "firework", "sit")) {
+            for (String name : List.of("slap", "highfive", "poke", "cheer", "rate", "firework", "sit")) {
                 register(name, fun, fun, Feature.FUN);
             }
             task(plugin.getSpigotScheduler().runGlobalTimer(fun::cleanSeats, 20L, 20L));

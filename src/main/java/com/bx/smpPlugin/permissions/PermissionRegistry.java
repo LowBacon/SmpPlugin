@@ -70,8 +70,6 @@ public final class PermissionRegistry {
         node("smpplugin.chat.color", "Keep colour codes typed into /msg and staff chat.", PermissionCategory.PERK,
                 List.of(), "New in 2.0.0-alpha.5. Without it the codes are removed.");
         player("smpplugin.afk.away", "Mark yourself AFK where you stand with /away.", "New in 2.0.0-alpha.5.");
-        player("smpplugin.findplayer", "See which dimension and biome another online player is in with /findplayer.",
-                "New in 2.0. /findplayer had no permission check in 1.5; default true keeps that behaviour.");
         player("smpplugin.friends", "Use /friends to add, remove and follow friends.",
                 "Declared in 2.0 with default true. It was undeclared in 1.5, which made it op-only unless granted.");
         player("smpplugin.lobby", "Use /lobby and /lobby survival.",
@@ -94,6 +92,8 @@ public final class PermissionRegistry {
                 "Declared in 2.0 with default true; previously undeclared (op-only unless granted).");
 
         // ── Rank perks (default false) ──────────────────────────────────────────────
+        perk("smpplugin.homes.unlimited", "Set as many homes as you like (also given by HOME-LIMITS ranks marked UNLIMITED).",
+                "New in 4.3.");
         perk("smpplugin.auctionhouse.fastbuy", "Allow the quick-purchase setting that skips the Auction House buy confirmation.",
                 "Declared in 2.0; previously undeclared (op-only unless granted).");
         perk("smpplugin.auctionhouse.fastsell", "Allow the quick-sell setting for Auction House listings.",
@@ -336,11 +336,10 @@ public final class PermissionRegistry {
         player("smpplugin.halloween.trickortreat", "Knock for a treat (or a harmless trick) with /trickortreat during the Halloween season.", "New in 3.0.");
         player("smpplugin.daily", "Claim the daily reward and keep a streak with /daily.", "New in 3.0.");
         player("smpplugin.challenges", "See and finish the daily challenges with /challenges.", "New in 3.0.");
-        player("smpplugin.poll.vote", "Vote in polls started by staff.", "New in 3.0.");
         player("smpplugin.giveaway.join", "Join giveaways started by staff.", "New in 3.0.");
         player("smpplugin.mail", "Send and read /mail, including to offline players.", "New in 3.0.");
-        player("smpplugin.fun.emotes", "Use /slap, /highfive, /poke, /wave and /cheer.", "New in 3.0; /hug removed in 3.1.");
-        player("smpplugin.fun.games", "Use /rps, /rate and /dice roll.", "New in 3.0; /8ball removed in 3.1.");
+        player("smpplugin.fun.emotes", "Use /slap, /highfive, /poke and /cheer.", "New in 3.0; /hug removed in 3.1, /wave in 4.3.");
+        player("smpplugin.fun.games", "Use /rate and /dice roll.", "New in 3.0; /8ball removed in 3.1, /rps in 4.3.");
         player("smpplugin.fun.sit", "Sit down where you stand with /sit.", "New in 3.0.");
         player("smpplugin.back", "Return to where you were before your last teleport with /back.", "New in 3.0.");
         player("smpplugin.seen", "See when a player was last online with /seen.", "New in 3.0.");
@@ -368,8 +367,6 @@ public final class PermissionRegistry {
         perk("smpplugin.skull", "Get a player's head with /skull.", "New in 3.0.");
         perk("smpplugin.lore", "Edit the lore of the item in your hand with /lore.", "New in 3.0.");
         perk("smpplugin.glow", "Toggle a glowing outline with /glow.", "New in 3.0.");
-        staff("smpplugin.staff.poll", "Start and end polls with /poll.", "New in 3.0.");
-        staff("smpplugin.staff.chatgame", "Start and stop chat games with /chatgame.", "New in 3.0.");
         staff("smpplugin.staff.countdown", "Show a server-wide countdown with /countdown.", "New in 3.0.");
         staff("smpplugin.staff.speed", "Change walk and fly speed with /speed.", "New in 3.0.");
         staff("smpplugin.staff.whois", "Look up a player's details with /whois (the IP also needs smpplugin.staff.alts).", "New in 3.0.");
@@ -477,7 +474,7 @@ public final class PermissionRegistry {
                 "smpplugin.staff.alerts.receive", "smpplugin.staff.mode.stafflist", "smpplugin.staff.punishments.view",
                 "smpplugin.staff.punishments.warn", "smpplugin.staff.punishments.kick", "smpplugin.staff.punishments.tempmute",
                 "smpplugin.staff.chat.clear", "smpplugin.staff.whois",
-                "smpplugin.staff.poll", "smpplugin.staff.chatgame", "smpplugin.staff.countdown");
+                "smpplugin.staff.countdown");
         role(ROLE_HELPER, "Helper role: staff chat, reports, warn, kick, temp-mute, /whois and events.", helper);
         List<String> moderator = new ArrayList<>(List.of(ROLE_HELPER,
                 "smpplugin.staff.mode", "smpplugin.staff.mode.vanish", "smpplugin.staff.mode.seevanished",

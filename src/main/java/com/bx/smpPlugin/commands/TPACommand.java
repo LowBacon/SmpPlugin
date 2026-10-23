@@ -6,6 +6,7 @@ import com.bx.smpPlugin.managers.TPAManager;
 import com.bx.smpPlugin.menus.TpaConfirmMenu;
 import com.bx.smpPlugin.menus.TpaQueueMenu;
 import com.bx.smpPlugin.models.PlayerData;
+import com.bx.smpPlugin.utils.CommandLabelUtils;
 import com.bx.smpPlugin.utils.ColorUtils;
 import com.bx.smpPlugin.utils.PlayerSettingUtils;
 import com.bx.smpPlugin.utils.SoundUtils;
@@ -30,11 +31,11 @@ public class TPACommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("ᴘʟᴀʏᴇʀ ᴏɴʟʏ.");
+            sender.sendMessage("Player only.");
             return true;
         }
 
-        String sub = label.toLowerCase();
+        String sub = CommandLabelUtils.normalizeLabel(label, command);
         switch (sub) {
             case "tpa" -> handleTpa(player, args);
             case "tpahere" -> handleTpaHere(player, args);
@@ -51,6 +52,11 @@ public class TPACommand implements CommandExecutor {
     }
 
     private void handleTpa(Player player, String[] args) {
+        if (plugin.getCombatManager() != null && plugin.getCombatManager().isInCombat(player.getUniqueId())) {
+            send(player, plugin.getCombatManager().getBlockMessage());
+            return;
+        }
+
         if (args.length == 0) {
             if (plugin.getDialogManager() != null && plugin.getDialogManager().openTpaPicker(player)) {
                 return;
@@ -61,8 +67,13 @@ public class TPACommand implements CommandExecutor {
 
         Player target = plugin.getHideManager().findOnlinePlayer(player, args[0]);
         if (target == null || target.equals(player)) {
-            send(player, target == null ? "&cᴘʟᴀʏᴇʀ ɴᴏᴛ ᴏɴʟɪɴᴇ."
+            send(player, target == null ? "&cPlayer not online."
                     : plugin.getConfigManager().getMessage("TPA.CANNOT-INVITE-YOURSELF"));
+            return;
+        }
+
+        if (plugin.getCombatManager() != null && plugin.getCombatManager().isInCombat(target.getUniqueId())) {
+            send(player, "&c" + target.getName() + " is currently in combat.");
             return;
         }
 
@@ -75,7 +86,7 @@ public class TPACommand implements CommandExecutor {
             plugin.getSpigotScheduler().runEntity(player, () -> {
                 plugin.getTeleportManager().queue(player, target.getLocation(), "TPA", null);
                 send(player, plugin.getConfigManager().getMessage("TPA.YOUR-REQUEST-ACCEPTED", "{player}", target.getName()));
-                target.sendMessage(ColorUtils.toComponent("&7ᴀᴜᴛᴏ-ᴀᴄᴄᴇᴘᴛᴇᴅ ᴛᴇʟᴇᴘᴏʀᴛ ʀᴇǫᴜᴇѕᴛ ꜰʀᴏᴍ &b" + player.getName() + "&7."));
+                target.sendMessage(ColorUtils.toComponent("&7Auto-accepted teleport request from &b" + player.getName() + "&7."));
             });
             return;
         }
@@ -91,8 +102,8 @@ public class TPACommand implements CommandExecutor {
                 }
 
                 send(player, plugin.getConfigManager().getMessage("TPA.INVITE-SENT", "{player}", publicName(target)));
-                send(player, "&7ʏᴏᴜʀ /tpa ʀᴇǫᴜᴇѕᴛ ᴡᴀѕ ѕᴛᴏʀᴇᴅ ɪɴ &b" + publicName(target)
-                        + "&7'ѕ ǫᴜᴇᴜᴇ &8(#" + queuePosition + "&8).");
+                send(player, "&7Your /tpa request was stored in &b" + publicName(target)
+                        + "&7's queue &8(#" + queuePosition + "&8).");
                 playNotification(player, "TPA.REQUEST-SENT");
                 return;
             } else if (choice == com.bx.smpPlugin.models.ThreeChoice.FRIENDS_FOLLOWED) {
@@ -113,8 +124,8 @@ public class TPACommand implements CommandExecutor {
 
             send(player, plugin.getConfigManager().getMessage("TPA.INVITE-SENT", "{player}", publicName(target)));
             if (queuePosition > 1) {
-                send(player, "&7ʏᴏᴜʀ /tpa ʀᴇǫᴜᴇѕᴛ ᴡᴀѕ ѕᴛᴏʀᴇᴅ ɪɴ &b" + publicName(target)
-                        + "&7'ѕ ᴀᴜᴛᴏ-ᴀᴄᴄᴇᴘᴛ ǫᴜᴇᴜᴇ &8(#" + queuePosition + "&8).");
+                send(player, "&7Your /tpa request was stored in &b" + publicName(target)
+                        + "&7's auto-accept queue &8(#" + queuePosition + "&8).");
             }
             playNotification(player, "TPA.REQUEST-SENT");
             plugin.getTPAManager().processQueuedAutoRequests(target.getUniqueId());
@@ -131,6 +142,11 @@ public class TPACommand implements CommandExecutor {
     }
 
     private void handleTpaHere(Player player, String[] args) {
+        if (plugin.getCombatManager() != null && plugin.getCombatManager().isInCombat(player.getUniqueId())) {
+            send(player, plugin.getCombatManager().getBlockMessage());
+            return;
+        }
+
         if (args.length == 0) {
             if (plugin.getDialogManager() != null && plugin.getDialogManager().openTpaPicker(player)) {
                 return;
@@ -141,8 +157,13 @@ public class TPACommand implements CommandExecutor {
 
         Player target = plugin.getHideManager().findOnlinePlayer(player, args[0]);
         if (target == null || target.equals(player)) {
-            send(player, target == null ? "&cᴘʟᴀʏᴇʀ ɴᴏᴛ ᴏɴʟɪɴᴇ."
+            send(player, target == null ? "&cPlayer not online."
                     : plugin.getConfigManager().getMessage("TPA.CANNOT-INVITE-YOURSELF"));
+            return;
+        }
+
+        if (plugin.getCombatManager() != null && plugin.getCombatManager().isInCombat(target.getUniqueId())) {
+            send(player, "&c" + target.getName() + " is currently in combat.");
             return;
         }
 
@@ -153,9 +174,9 @@ public class TPACommand implements CommandExecutor {
 
         if (plugin.getFriendsManager() != null && plugin.getFriendsManager().isTpaAutoAcceptEnabled(player.getUniqueId(), target.getUniqueId())) {
             plugin.getSpigotScheduler().runEntity(target, () -> {
-                plugin.getTeleportManager().queue(target, player.getLocation(), "TPA", null);
+                plugin.getTeleportManager().queue(target, player.getLocation(), "TPAHERE", null);
                 send(player, plugin.getConfigManager().getMessage("TPA.YOUR-REQUEST-HERE-ACCEPTED", "{player}", target.getName()));
-                target.sendMessage(ColorUtils.toComponent("&7ᴀᴜᴛᴏ-ᴀᴄᴄᴇᴘᴛᴇᴅ ᴛᴇʟᴇᴘᴏʀᴛ ʀᴇǫᴜᴇѕᴛ ꜰʀᴏᴍ &b" + player.getName() + "&7."));
+                target.sendMessage(ColorUtils.toComponent("&7Auto-accepted teleport request from &b" + player.getName() + "&7."));
             });
             return;
         }
@@ -171,8 +192,8 @@ public class TPACommand implements CommandExecutor {
                 }
 
                 send(player, plugin.getConfigManager().getMessage("TPA.INVITE-HERE-SENT", "{player}", publicName(target)));
-                send(player, "&7ʏᴏᴜʀ /tpahere ʀᴇǫᴜᴇѕᴛ ᴡᴀѕ ᴀᴅᴅᴇᴅ ᴛᴏ &b" + publicName(target)
-                        + "&7'ѕ ǫᴜᴇᴜᴇ &8(#" + queuePosition + "&8).");
+                send(player, "&7Your /tpahere request was added to &b" + publicName(target)
+                        + "&7's queue &8(#" + queuePosition + "&8).");
                 playNotification(player, "TPA.REQUEST-SENT");
                 return;
             } else if (choice == com.bx.smpPlugin.models.ThreeChoice.FRIENDS_FOLLOWED) {
@@ -193,8 +214,8 @@ public class TPACommand implements CommandExecutor {
 
             send(player, plugin.getConfigManager().getMessage("TPA.INVITE-HERE-SENT", "{player}", publicName(target)));
             if (queuePosition > 1) {
-                send(player, "&7ʏᴏᴜʀ /tpahere ʀᴇǫᴜᴇѕᴛ ᴡᴀѕ ᴀᴅᴅᴇᴅ ᴛᴏ &b" + publicName(target)
-                        + "&7'ѕ ᴀᴜᴛᴏ-ᴀᴄᴄᴇᴘᴛ ǫᴜᴇᴜᴇ &8(#" + queuePosition + "&8).");
+                send(player, "&7Your /tpahere request was added to &b" + publicName(target)
+                        + "&7's auto-accept queue &8(#" + queuePosition + "&8).");
             }
             playNotification(player, "TPA.REQUEST-SENT");
             plugin.getTPAManager().processQueuedAutoRequests(target.getUniqueId());
@@ -211,6 +232,11 @@ public class TPACommand implements CommandExecutor {
     }
 
     private void handleAccept(Player player, String[] args) {
+        if (plugin.getCombatManager() != null && plugin.getCombatManager().isInCombat(player.getUniqueId())) {
+            send(player, plugin.getCombatManager().getBlockMessage());
+            return;
+        }
+
         TPAManager.TpaRequest request = plugin.getTPAManager().getRequest(player.getUniqueId());
         if (request == null) {
             send(player, plugin.getConfigManager().getMessage("TPA.NO-REQUEST",
@@ -229,14 +255,14 @@ public class TPACommand implements CommandExecutor {
 
         TPAManager.TpaRequest request = plugin.getTPAManager().getRequest(player.getUniqueId());
         plugin.getTPAManager().removeRequest(player.getUniqueId());
-        send(player, "&7ᴛᴘᴀ ʀᴇǫᴜᴇѕᴛ ᴅᴇɴɪᴇᴅ.");
+        send(player, "&7TPA request denied.");
         if (request == null) {
             return;
         }
 
         Player requester = Bukkit.getPlayer(request.requester());
         if (requester != null) {
-            requester.sendMessage(ColorUtils.toComponent("&7ʏᴏᴜʀ ᴛᴇʟᴇᴘᴏʀᴛ ʀᴇǫᴜᴇѕᴛ ᴡᴀѕ ᴅᴇɴɪᴇᴅ."));
+            requester.sendMessage(ColorUtils.toComponent("&7Your teleport request was denied."));
         }
     }
 
@@ -265,10 +291,8 @@ public class TPACommand implements CommandExecutor {
                 playNotification(target, "TPA.REQUEST-RECEIVED");
 
                 String messagePath = tpaHere ? "TPA.REQUEST-HERE-RECEIVED" : "TPA.REQUEST-RECEIVED";
-                TextComponent requestMsg = ColorUtils.toBaseComponent(
-                        plugin.getConfigManager().getMessage(messagePath, "{player}", requesterDisplayName));
-                requestMsg.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tpaccept " + requesterName));
-                target.spigot().sendMessage(requestMsg);
+                String message = plugin.getConfigManager().getMessage(messagePath, "{player}", requesterDisplayName);
+                sendClickableAccept(target, message, requesterUuid, requesterName, tpaHere);
 
                 if (shouldOpenTpaConfirmMenu(target)) {
                     plugin.getSpigotScheduler().runEntityLater(target,
@@ -277,6 +301,40 @@ public class TPACommand implements CommandExecutor {
                 }
             }
         });
+    }
+
+    private void sendClickableAccept(
+            Player target,
+            String message,
+            UUID requesterUuid,
+            String requesterName,
+            boolean tpaHere
+    ) {
+        boolean sent = plugin.getDialogManager() != null && plugin.getDialogManager().sendClickAction(
+                target,
+                message,
+                "&eClick to accept",
+                clicker -> acceptFromChat(clicker, requesterUuid, tpaHere)
+        );
+        if (sent) {
+            return;
+        }
+        TextComponent requestMsg = ColorUtils.toBaseComponent(message);
+        requestMsg.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tpaccept " + requesterName));
+        target.spigot().sendMessage(requestMsg);
+    }
+
+    private void acceptFromChat(Player clicker, UUID requesterUuid, boolean tpaHere) {
+        if (plugin.getCombatManager() != null && plugin.getCombatManager().isInCombat(clicker.getUniqueId())) {
+            clicker.sendMessage(ColorUtils.toComponent(plugin.getCombatManager().getBlockMessage()));
+            return;
+        }
+        TPAManager.TpaRequest request = plugin.getTPAManager().getRequest(clicker.getUniqueId());
+        if (request == null || !request.requester().equals(requesterUuid) || request.tpaHere() != tpaHere) {
+            return;
+        }
+        clicker.closeInventory();
+        plugin.getTPAManager().acceptPendingRequest(clicker);
     }
 
     private void playNotification(Player player, String path) {
@@ -289,6 +347,9 @@ public class TPACommand implements CommandExecutor {
     }
 
     private boolean shouldOpenTpaConfirmMenu(Player target) {
+        if (plugin.getCombatManager() != null && plugin.getCombatManager().isInCombat(target.getUniqueId())) {
+            return false;
+        }
         PlayerData currentTargetData = plugin.getPlayerDataManager().get(target);
         return currentTargetData == null || currentTargetData.isTpaConfirmMenuEnabled();
     }

@@ -1,214 +1,164 @@
 META:
   NAME: Bahasa Indonesia
 ORDERS:
-  DISABLED: '&corders sedang dinonaktifkan.'
-  NO_ADMIN_PERMISSION: '&ckamu tidak memiliki izin untuk memuat ulang orders.'
-  RELOADED: '&akonfigurasi orders dimuat ulang.'
-  ORDER_NOT_FOUND: '&corder tersebut sudah tidak ada.'
-  ORDER_NOT_ACTIVE: '&corder tersebut sudah tidak aktif.'
-  CANNOT_DELIVER_OWN: '&ckamu tidak dapat mengirim ke order milikmu sendiri.'
-  NO_MATCHING_ITEMS: '&ctidak ada item yang cocok.'
-  ORDER_FULL: '&corder tersebut sudah terpenuhi.'
-  DELIVERY_FAILED: '&cpengiriman gagal.'
-  DELIVERY_FAILED_ECONOMY: '&ctransaksi pembayaran pengiriman gagal.'
-  DELIVERY_SUCCESS: '&aberhasil mengirim &e{Quantity} {item}&a dan menerima &a{payout}&a.'
-  CANCELLED: '&eorder #{order_id} dibatalkan. sisa escrow siap dikoleksi.'
-  BATCH_COLLECTED: '&amengoleksi {claims} klaim ({items} item, refund {refund}). &c{failed} gagal.'
+  DISABLED: '&cOrders sedang dinonaktifkan.'
+  NO_ADMIN_PERMISSION: '&cKamu tidak memiliki izin untuk memuat ulang orders.'
+  RELOADED: '&aKonfigurasi orders dimuat ulang.'
+  ORDER_NOT_FOUND: '&cOrder tersebut sudah tidak ada.'
+  ORDER_NOT_ACTIVE: '&cOrder tersebut sudah tidak aktif.'
+  CANNOT_DELIVER_OWN: '&cKamu tidak dapat mengirim ke order milikmu sendiri.'
+  NO_MATCHING_ITEMS: '&cTidak ada item yang cocok.'
+  ORDER_FULL: '&cOrder tersebut sudah terpenuhi.'
+  DELIVERY_FAILED: '&cPengiriman gagal.'
+  DELIVERY_FAILED_ECONOMY: '&cTransaksi pembayaran pengiriman gagal.'
+  DELIVERY_SUCCESS: '&aBerhasil mengirim &e{quantity} {item}&a dan menerima &a{payout}&a.'
+  CANCELLED: '&eOrder #{order_id} dibatalkan. sisa escrow siap dikoleksi.'
+  BATCH_COLLECTED: '&aMengoleksi {claims} klaim ({items} item, refund {refund}). &c{failed}
+    gagal.'
+  BATCH_DROPPED: '&aMenjatuhkan {claims} klaim ({items} item). &c{failed} gagal.'
   GUI:
     BACK:
       NAME: "&cKembali"
-      LORE: "&7KEMBALI KE MENU SEBELUMNYA."
+      LORE: "&7Kembali ke menu sebelumnya."
     ITEM:
-      CATEGORY: "KATEGORI"
-      SELECT: "&eKLIK UNTUK MEMILIH"
+      CATEGORY: "Kategori"
+      SELECT: "&eKlik untuk memilih"
     MAIN:
-      TITLE: "&8Orders"
-      PREV:
-        NAME: "&aSebelumnya"
-        LORE:
-          - "&fBUKA HALAMAN {page}"
-      NEXT:
-        NAME: "&aBerikutnya"
-        LORE:
-          - "&fBUKA HALAMAN {page}"
-      SORT:
-        NAME: "&aUrutkan"
-      FILTER:
-        NAME: "&aFilter"
-      REFRESH:
-        NAME: "&aMuat Ulang"
-        LORE:
-          - "&fMUAT ULANG PAPAN ORDER"
-      SEARCH:
-        NAME: "&aCari"
-        LORE:
-          - "&7SAAT INI: &f{Query}"
-          - ''
-          - "&eKLIK KIRI &fUNTUK MENCARI"
-          - "&eKLIK KANAN &fUNTUK MENGHAPUS"
-      MY_ORDERS:
-        NAME: "&aOrder Kamu"
-        LORE:
-          - "&fKELOLA ORDER KAMU"
-      COLLECT:
-        NAME: "&aKoleksi"
-        LORE:
-          - "&fAMBIL ITEM DAN REFUND"
-      EMPTY:
-        NAME: "&cTidak Ada Order Aktif"
-        LORE:
-          - "&7TIDAK ADA ORDER YANG COCOK."
+      TITLE: "Orders (Page {page})"
     MY_ORDERS:
-      TITLE: "&8Orders -> Order Saya"
-      BACK:
-        NAME: "&cKembali"
-        LORE:
-          - "&fKEMBALI KE ORDER AKTIF"
-      NEW:
-        NAME: "&aOrder Baru"
-        LORE:
-          - "&fBUAT ORDER BARU"
-      EMPTY:
-        NAME: "&cBelum Ada Order"
-        LORE:
-          - "&7BUAT ORDER PERTAMAMU."
-    SELECT_ITEM:
-      TITLE: "&8Orders -> Pilih Item"
-    SEARCH_ITEM:
-      TITLE: "&8Orders -> Cari Item"
-    INVENTORY_ITEM:
-      TITLE: "&8Orders -> Pilih Item"
-    NEW_ORDER:
-      TITLE: "&8Orders -> Order Baru"
+      TITLE: "Orders -> Your Orders"
     EDIT_ORDER:
-      TITLE: "&8Orders -> Edit Order"
+      TITLE: "Orders -> Edit Order"
     DEPOSIT:
-      TITLE: "&8Orders -> Kirim Item"
-      CONFIRM:
-        NAME: "&aTinjau Pengiriman"
-        LORE:
-          - "&fMASUKKAN ITEM YANG COCOK."
-          - "&7TERSISA: &f{remaining}"
-          - "&7HARGA PER ITEM: &f{price_each}"
-          - ''
-          - "&eKLIK UNTUK MENINJAU"
+      TITLE: "Orders -> Deliver Items"
+    SELECT_ITEM:
+      TITLE: "&8Orders -> pilih item"
+    SEARCH_ITEM:
+      TITLE: "&8Orders -> cari item"
+    INVENTORY_ITEM:
+      TITLE: "&8Orders -> pilih item"
+    NEW_ORDER:
+      TITLE: "&8Orders -> order baru"
     CONFIRM:
-      TITLE: "&8Orders -> Konfirmasi Pengiriman"
+      TITLE: "&8Orders -> konfirmasi pengiriman"
       CANCEL:
         NAME: "&cBatal"
         LORE:
-          - "&fKEMBALI TANPA MENGIRIM"
+        - "&fKembali tanpa mengirim"
       CONFIRM:
         NAME: "&aKonfirmasi"
         LORE:
-          - "&fKIRIM {amount} ITEM"
-          - "&7KAMU MENERIMA {receive}"
+        - "&fKirim {amount} item"
+        - "&7Kamu menerima {receive}"
       SUMMARY:
-        NAME: "&fOrder Milik {owner}"
+        NAME: "&fOrder milik {owner}"
         LORE:
-          - "&7ITEM: &f{item}"
-          - "&7JUMLAH: &f{amount}"
-          - "&7TERIMA: &a{receive}"
-          - "&7SISA SETELAHNYA: &f{remaining}"
+        - "&7Item: &f{item}"
+        - "&7Jumlah: &f{amount}"
+        - "&7Terima: &a{receive}"
+        - "&7Sisa setelahnya: &f{remaining}"
     DELETE:
-      TITLE: "&8Orders -> Batalkan Order"
+      TITLE: "Orders -> Cancel Order"
       BACK:
-        NAME: "&cKembali"
+        NAME: "&fBatal"
         LORE:
-          - "&fKEMBALI TANPA MEMBATALKAN"
+        - "&7&oKlik untuk kembali"
       CONFIRM:
-        NAME: "&aKonfirmasi"
+        NAME: "&fKonfirmasi"
         LORE:
-          - "&fBATALKAN ORDER INI"
-          - "&7SISA ESCROW MENJADI KLAIM REFUND"
+        - "&7&oKlik untuk batalkan order"
     COLLECT:
-      TITLE: "&8Orders -> Koleksi"
+      TITLE: "&8Orders -> koleksi"
       COLLECT_PAGE:
-        NAME: "&aKoleksi Halaman"
+        NAME: "&aKoleksi halaman"
         LORE:
-          - "&fAMBIL SEMUA KLAIM PADA HALAMAN INI"
+        - "&fAmbil semua klaim pada halaman ini"
       DROP_PAGE:
-        NAME: "&eJatuhkan Halaman"
+        NAME: "&eJatuhkan halaman"
         LORE:
-          - "&fJATUHKAN KLAIM ITEM DENGAN AMAN"
+        - "&fJatuhkan klaim item dengan aman"
+      DROP_ALL:
+        NAME: "&eJatuhkan semua"
+        LORE:
+        - "&fJatuhkan semua klaim item di kakimu"
     ORDER_ITEM:
-      NAME: "&aOrder Milik {owner}"
+      NAME: "&f{item}"
       LORE:
-        - '&f{item}'
-        - "&a{price_each} &fPER ITEM"
-        - ''
-        - "&e{delivered}&7/&a{reQuested} &7TERKIRIM"
-        - "&e{paid}&7/&a{total} &7DIBAYAR"
-        - ''
-        - "&fKLIK UNTUK DETAIL"
+      - "&a{requested} &fdiminta"
+      - ''
+      - "&a{price_each} &fmasing-masing"
+      - "&a{delivered}/{requested} &fTerkirim"
+      - ''
+      - "&7{time} Sampai order berakhir"
     CLAIM:
-      REFUND_NAME: "&aREFUND ESCROW"
+      REFUND_NAME: "&aRefund escrow"
       REFUND_LORE:
-        - "&7JUMLAH: &f{amount}"
-        - "&7ORDER: &f#{order_id}"
-        - ''
-        - "&eKLIK UNTUK MENGAMBIL"
+      - "&7Jumlah: &f{amount}"
+      - "&7Order: &f#{order_id}"
+      - ''
+      - "&eKlik untuk mengambil"
       ITEM_LORE:
-        - "&7ORDER: &f#{order_id}"
-        - "&7DIBUAT: &f{age} LALU"
-        - ''
-        - "&eKLIK UNTUK MENGAMBIL"
-    REQUIRED_ENCHANTMENTS: "&bENCHANTMENT WAJIB:"
+      - "&7Order: &f#{order_id}"
+      - "&7Dibuat: &f{age} lalu"
+      - ''
+      - "&eKlik untuk mengambil"
+    REQUIRED_ENCHANTMENTS: "&bEnchantment wajib:"
   BEDROCK:
     MAIN:
-      TITLE: orders
-      CONTENT: lihat order yang masih terbuka.
-      SEARCHING: 'pencarian: {Query}'
+      TITLE: Orders
+      CONTENT: Lihat order yang masih terbuka.
+      SEARCHING: 'Pencarian: {query}'
     MY:
-      TITLE: order saya
-      CONTENT: pilih order untuk dikelola.
+      TITLE: Order saya
+      CONTENT: Pilih order untuk dikelola.
     COLLECT:
-      TITLE: koleksi
-      CONTENT: 'klaim tertunda: {count}'
+      TITLE: Koleksi
+      CONTENT: 'Klaim tertunda: {count}'
     SEARCH:
-      TITLE: cari order
-      INPUT: item, pemilik, atau kategori
+      TITLE: Cari order
+      INPUT: Item, pemilik, atau kategori
     ITEM_SEARCH:
-      TITLE: cari item
+      TITLE: Cari item
     ITEMS:
-      TITLE: pilih item
-      CONTENT: pilih item yang ingin dipesan.
+      TITLE: Pilih item
+      CONTENT: Pilih item yang ingin dipesan.
     NEW:
-      TITLE: order baru
-      AMOUNT: jumlah
-      PRICE: harga per item
-      SUCCESS: order berhasil dibuat.
-      FAILED: 'order gagal dibuat: {reason}'
+      TITLE: Order baru
+      AMOUNT: Jumlah
+      PRICE: Harga per item
+      SUCCESS: Order berhasil dibuat.
+      FAILED: 'Order gagal dibuat: {reason}'
     DELIVERY:
-      TITLE: kirim item
-      AMOUNT: jumlah (maks {maX})
-      SUCCESS: berhasil mengirim {amount} item senilai {payout}.
-      FAILED: 'pengiriman gagal: {reason}'
+      TITLE: Kirim item
+      AMOUNT: Jumlah (maks {max})
+      SUCCESS: Berhasil mengirim {amount} item senilai {payout}.
+      FAILED: 'Pengiriman gagal: {reason}'
     ORDER:
-      TITLE: 'order #{id}'
+      TITLE: 'Order #{id}'
       BUTTON: '#{id} {item} X{remaining}
 
-        {price} per item - {owner}'
+        {price} Per item - {owner}'
     CANCEL:
-      TITLE: batalkan order
-      CONTENT: 'batalkan order #{id}? sisa escrow akan menjadi klaim refund.'
-      SUCCESS: order dibatalkan.
-      FAILED: order tidak dapat dibatalkan.
+      TITLE: Batalkan order
+      CONTENT: 'Batalkan order #{id}? sisa escrow akan menjadi klaim refund.'
+      SUCCESS: Order dibatalkan.
+      FAILED: Order tidak dapat dibatalkan.
     CLAIM:
-      REFUND: 'refund #{order}: {amount}'
-      ITEM: 'order #{order}: {item}'
-    INVALID_NUMBER: masukkan angka yang valid.
+      REFUND: 'Refund #{order}: {amount}'
+      ITEM: 'Order #{order}: {item}'
+    INVALID_NUMBER: Masukkan angka yang valid.
     BUTTON:
-      SEARCH: cari
-      NEW: order baru
-      MY: order saya
-      COLLECT: koleksi
-      BACK: kembali
-      COLLECT_ALL: koleksi semua
-      DROP_ITEMS: jatuhkan item
-      COLLECT_ORDER: koleksi order ini
-      CANCEL_ORDER: batalkan order
-      CONFIRM: konfirmasi
+      SEARCH: Cari
+      NEW: Order baru
+      MY: Order saya
+      COLLECT: Koleksi
+      BACK: Kembali
+      COLLECT_ALL: Koleksi semua
+      DROP_ITEMS: Jatuhkan item
+      COLLECT_ORDER: Koleksi order ini
+      DROP_ORDER: Jatuhkan order ini
+      CANCEL_ORDER: Batalkan order
+      CONFIRM: Konfirmasi
 COMMON:
   ENABLED: diaktifkan
   DISABLED: dengan disabilitas
@@ -1617,6 +1567,10 @@ CONFIG:
       RELOAD-SUCCESS: "&aFREEZE CONFIG RELOADED."
   ORDERS:
     GUI:
+      CANCEL_ORDER:
+        TITLE: Orders -> Cancel Order
+      DELIVERY_DEPOSIT:
+        TITLE: Orders -> Deliver Items
       MAIN:
         TITLE: "&8Orders"
       MY_ORDERS:
@@ -1896,6 +1850,26 @@ CONFIG:
       sounds:
         click: {}
 MESSAGES:
+  COMMAND-HELP:
+    DISABLED: '&cHelp is turned off on this server.'
+    UNKNOWN: '&cThere is no help for &f{input}&c. Try &f/help &cto see the categories.'
+    HEADER: '&8&m------&r &b&lHelp &8&m------'
+    EMPTY: '&7There are no commands you can use right now.'
+    CATEGORY-LINE: '&b{title} &8({count}) &7- {description}'
+    CATEGORY-HOVER: '&7Click to see the {title} commands'
+    OVERVIEW-FOOTER: '&7Use &f/help <category> &7or &f/help <command>&7.'
+    CATEGORY-EMPTY: '&7You have no &f{title} &7commands.'
+    CATEGORY-HEADER: '&8&m------&r &b&l{title} &7({page}/{pages}) &8&m------'
+    COMMAND-LINE: '&f/{command} &8- &7{description}'
+    COMMAND-HOVER: "&f{usage}\n&7Click to type it"
+    COMMAND-HEADER: '&8&m------&r &b&l/{command} &8&m------'
+    COMMAND-USAGE: '&7Usage: &f{usage}'
+    COMMAND-ALIASES: '&7Also: &f{aliases}'
+    COMMAND-DISABLED: '&cThis command is turned off on this server.'
+    COMMAND-PERMISSION: '&7Permission: &f{permission}'
+    PAGE-HINT: '&7More: &f/help {category} {next}'
+    PREVIOUS: '&b« Previous'
+    NEXT: '&bNext »'
   AUCTION_HOUSE:
     PLAYERS_ONLY: "&cONLY PLAYERS CAN USE THIS COMMAND."
     NO_PERMISSION: '&cyou cannot use that auction house action.'
@@ -2046,6 +2020,7 @@ MESSAGES:
     PM-ENABLED: "&aPRIVATE MESSAGES ARE NOW ENABLED"
     PM-DISABLED: "&cPRIVATE MESSAGES ARE NOW DISABLED"
   TPAUTO:
+    ACTION-BAR: '&fYou have tpauto on.'
     ENABLED: "&7YOU TURNED ON TPAUTO."
     DISABLED: "&7YOU TURNED OFF TPAUTO."
   TPAHEREAUTO:
@@ -2231,14 +2206,6 @@ MESSAGES:
     TARGET-DISABLED-PAYMENTS: "&cTHE TARGET PLAYER HAS THE PAYMENTS DISABLED."
     SUCCESS-SENDER: "&7YOU PAID &b{player} &#A303F9{amount}&7 SHARDS."
     SUCCESS-RECEIVER: "&7YOU RECEIVED &#A303F9{amount}&7 SHARDS FROM &b{player}&7."
-  FINDPLAYER:
-    AFK: "&7{player}'S IN THE &#A303F9AFK"
-    RTP_ZONE: "&7{player}'S IN THE &cRTPZONE"
-    SPAWN: "&7{player}'S IN THE &bSPAWN"
-    OVERWORLD: "&7{player}'S IN THE &bOVERWORLD &7(&b{biome}&7)"
-    NETHER: "&7{player}'S IN THE &bNETHER &7(&b{biome}&7)"
-    THE_END: "&7{player}'S IN THE &bTHE END &7(&b{biome}&7)"
-    UNKNOWN: '&7{player} &b{world}'
   PUNISHMENTS:
     PLAYER-ONLY: "&cONLY PLAYERS CAN USE THIS COMMAND."
     NO-PERMISSION: '&cyou do not have permission to view punishment history.'
@@ -3656,7 +3623,6 @@ BUILTIN:
   c77190ba5e78d1b8df80: '&cusage: /cuboid buat <name>'
   4d29a2b8774a78044eff: '&cusage: /cuboid hapus <name>'
   83fad9e4e4da8171c3eb: '&cusage: /delhome <name>'
-  0875240f77275dbdbbbd: '&cusage: /findplayer <player>'
   9693c86bc206fc68b182: '&cusage: /kick <player> [alasan]'
   692da4ab36c472e22f6a: '&cusage: /mute <player> [alasan]'
   6c88c5573a74036340c6: '&cusage: /pardon <player> [alasan]'

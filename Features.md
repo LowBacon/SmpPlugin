@@ -91,13 +91,10 @@ disable itself. See [COMPATIBILITY.md](COMPATIBILITY.md).
   - automatic payouts every 30 seconds, plus `ALL-DONE-BONUS`
 
 ### 🎉 Events
-- **`/poll start <seconds> <question> | <a> | <b>`:** clickable votes, a boss bar and a bar-chart result.
 - **`/giveaway start [seconds]`:** gives away the held item.
 - **`/giveaway money <amount> [seconds] [winners]`:** gives away money that is created for it.
 - Since 3.1 only senior staff can start or cancel giveaways: ops, `smpplugin.giveaway.manage` (the manager,
   developer, co-owner and owner roles) and members of the `GIVEAWAYS.MANAGER-GROUPS` groups. Anyone can join.
-- **Chat games:** UNSCRAMBLE, MATH, TYPE and TRIVIA. They start every `INTERVAL-MINUTES` when
-  `MIN-PLAYERS` are online, or with `/chatgame start [type]`.
 - **Announcer:** `ANNOUNCER.MESSAGES` rotate every `INTERVAL-SECONDS`. `/announcer list|send|toggle`.
 - **`/countdown <seconds> [what]`:** titles and a boss bar for everyone.
 - **`/mail send|read|clear`:**
@@ -106,10 +103,10 @@ disable itself. See [COMPATIBILITY.md](COMPATIBILITY.md).
   - muted players cannot send mail
 
 ### 😄 Fun and 🧰 utilities
-- **Emotes** (`EMOTES.LIST`): slap, highfive, poke, wave and cheer, each with a message,
+- **Emotes** (`EMOTES.LIST`): slap, highfive, poke and cheer, each with a message,
   particle, sound and optional push. They are seen by `NEARBY` players or the whole `SERVER`.
 - **Games and extras:**
-  - `/dice roll [sides]`, `/rps`, `/rate` (betting with `/dice` is in 3.1 below)
+  - `/dice roll [sides]`, `/rate` (betting with `/dice` is in 3.1 below)
   - `/firework` never damages anyone
   - `/sit` (sneak to stand)
 - **Workstations:** `/craft`, `/anvil`, `/grindstone`, `/stonecutter`, `/loom`, `/smithing` and
@@ -225,7 +222,6 @@ Everything is configured in `afk.yml`.
 
 ### Other
 - `/randomteleport` (`/randomtp`): teleport to a random online player *(staff)*
-- `/findplayer <player>` (`/fp`): find a player's location *(staff)*
 
 ---
 
@@ -725,7 +721,7 @@ Set in `database.yml`:
 | `halloween.yml` | The Halloween hub, Spooky Calendar, Trick or Treat, candy, quests, candy shop and milestones |
 | `advent.yml` | The Advent Calendar, its streak bonuses and completion prize |
 | `perks.yml` | Ranks (VIP, VIP+ …) and what each one adds |
-| `extras.yml` | Daily rewards, challenges, polls, giveaways, chat games, dice, roulette, mail and other 3.0 extras |
+| `extras.yml` | Daily rewards, challenges, giveaways, dice, roulette, mail and other 3.0 extras |
 | `guide.yml`, `borders.yml` | `/guide` pages; spawn and lobby borders |
 
 ---
@@ -775,7 +771,7 @@ until a Folia 26.3 build exists and the modules are verified there.
   actions or security bypasses, which must be granted individually.
 - `smpplugin.staff.mode`: opens staff mode only; each tool has its own node.
 - Player features default to everyone (messaging, ignore, helpop, report, Ender Chest, lobby, friends,
-  findplayer, Auction House actions, safety book).
+  Auction House actions, safety book).
 - Upgrading from 1.5: [docs/permissions-migration-and-luckperms.md](docs/permissions-migration-and-luckperms.md).
 
 ---

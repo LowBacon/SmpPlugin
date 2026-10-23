@@ -22,6 +22,11 @@ public enum OrderSort {
     }
 
     public String displayName() {
-        return name().replace('_', ' ');
+        return switch (this) {
+            case MOST_PAID -> "Most Paid";
+            case MOST_DELIVERED -> "Most Delivered";
+            case RECENTLY_LISTED -> "Recently Listed";
+            case MOST_MONEY_PER_ITEM -> "Most Per Item";
+        };
     }
 }

@@ -21,9 +21,11 @@ class OrdersConfigurationTest {
         assertEquals(2304, orders.getInt("DELIVERY.MAX_DELIVER_PER_TRANSACTION"));
         assertEquals(54, orders.getInt("GUI.MAIN.SIZE"));
         assertEquals(45, orders.getInt("GUI.MAIN.ITEMS_PER_PAGE"));
-        assertEquals(27, orders.getInt("GUI.MY_ORDERS.SIZE"));
-        assertEquals(26, orders.getInt("GUI.MY_ORDERS.BUTTONS.NEW.SLOT"));
-        assertEquals(35, orders.getInt("GUI.DELIVERY_DEPOSIT.BUTTONS.CONFIRM.SLOT"));
+        // UltimateDonutSMP layout since 4.3.
+        assertEquals(54, orders.getInt("GUI.MY_ORDERS.SIZE"));
+        assertEquals(18, orders.getInt("GUI.MY_ORDERS.VISIBLE_SLOTS"));
+        assertEquals(4, orders.getInt("GUI.MY_ORDERS.BUTTONS.NEW.SLOT"));
+        assertEquals(36, orders.getInt("GUI.DELIVERY_DEPOSIT.SIZE"));
         assertTrue(orders.getBoolean("BEDROCK.ENABLED"));
         assertTrue(orders.getBoolean("NETWORK.ENABLED"));
         assertEquals("finnish-smp:orders", orders.getString("NETWORK.REDIS_CHANNEL"));

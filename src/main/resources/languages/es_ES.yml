@@ -1,77 +1,85 @@
 META:
   NAME: "Español (España)"
 ORDERS:
-  DISABLED: "&clos pedidos están desactivados."
-  RELOADED: "&aconfiguración de pedidos recargada."
-  ORDER_NOT_FOUND: '&cese pedido ya no eXiste.'
-  ORDER_NOT_ACTIVE: "&cese pedido ya no está activo."
-  CANNOT_DELIVER_OWN: '&cno puedes entregar a tu propio pedido.'
-  NO_MATCHING_ITEMS: '&cno se encontraron objetos compatibles.'
-  ORDER_FULL: "&cese pedido ya está completo."
-  DELIVERY_SUCCESS: '&aentregaste &e{Quantity} {item}&a y recibiste &a{payout}&a.'
-  CANCELLED: "&epedido #{order_id} cancelado. el depósito restante está listo para cobrar."
-  BATCH_COLLECTED: '&ase cobraron {claims} reclamaciones ({items} objetos, reembolso {refund}). &c{failed} fallaron.'
+  DISABLED: "&cLos pedidos están desactivados."
+  RELOADED: "&aConfiguración de pedidos recargada."
+  ORDER_NOT_FOUND: '&cEse pedido ya no existe.'
+  ORDER_NOT_ACTIVE: "&cEse pedido ya no está activo."
+  CANNOT_DELIVER_OWN: '&cNo puedes entregar a tu propio pedido.'
+  NO_MATCHING_ITEMS: '&cNo se encontraron objetos compatibles.'
+  ORDER_FULL: "&cEse pedido ya está completo."
+  DELIVERY_SUCCESS: '&aEntregaste &e{quantity} {item}&a y recibiste &a{payout}&a.'
+  CANCELLED: "&ePedido #{order_id} cancelado. el depósito restante está listo para
+    cobrar."
+  BATCH_COLLECTED: '&aSe cobraron {claims} reclamaciones ({items} objetos, reembolso
+    {refund}). &c{failed} fallaron.'
+  BATCH_DROPPED: '&aSe soltaron {claims} reclamaciones ({items} objetos). &c{failed} fallaron.'
   GUI:
     MAIN:
-      TITLE: "&8Pedidos"
+      TITLE: "Orders (Page {page})"
     MY_ORDERS:
-      TITLE: "&8Pedidos -> Mis Pedidos"
+      TITLE: "Orders -> Your Orders"
     SELECT_ITEM:
-      TITLE: "&8Pedidos -> Elegir Objeto"
+      TITLE: "&8Pedidos -> elegir objeto"
     SEARCH_ITEM:
-      TITLE: "&8Pedidos -> Buscar Objeto"
+      TITLE: "&8Pedidos -> buscar objeto"
     INVENTORY_ITEM:
-      TITLE: "&8Pedidos -> Elegir Objeto"
+      TITLE: "&8Pedidos -> elegir objeto"
     NEW_ORDER:
-      TITLE: "&8Pedidos -> Nuevo Pedido"
+      TITLE: "&8Pedidos -> nuevo pedido"
     EDIT_ORDER:
-      TITLE: "&8Pedidos -> Editar Pedido"
+      TITLE: "Orders -> Edit Order"
     DEPOSIT:
-      TITLE: "&8Pedidos -> Entregar Objetos"
+      TITLE: "Orders -> Deliver Items"
     CONFIRM:
-      TITLE: "&8Pedidos -> Confirmar Entrega"
+      TITLE: "&8Pedidos -> confirmar entrega"
     DELETE:
-      TITLE: "&8Pedidos -> Cancelar Pedido"
+      TITLE: "Orders -> Cancel Order"
     COLLECT:
-      TITLE: "&8Pedidos -> Cobrar"
+      TITLE: "&8Pedidos -> cobrar"
+      DROP_ALL:
+        NAME: "&eSoltar todo"
+        LORE:
+        - "&fSuelta cada objeto pendiente a tus pies"
   BEDROCK:
     MAIN:
-      TITLE: pedidos
-      CONTENT: eXplora los pedidos abiertos.
-      SEARCHING: "búsQueda: {Query}"
+      TITLE: Pedidos
+      CONTENT: Explora los pedidos abiertos.
+      SEARCHING: "Búsqueda: {query}"
     MY:
-      TITLE: mis pedidos
-      CONTENT: selecciona un pedido para gestionarlo.
+      TITLE: Mis pedidos
+      CONTENT: Selecciona un pedido para gestionarlo.
     COLLECT:
-      TITLE: cobrar
-      CONTENT: 'reclamaciones pendientes: {count}'
+      TITLE: Cobrar
+      CONTENT: 'Reclamaciones pendientes: {count}'
     SEARCH:
-      TITLE: buscar pedidos
-      INPUT: "objeto, propietario o categoría"
+      TITLE: Buscar pedidos
+      INPUT: "Objeto, propietario o categoría"
     ITEMS:
-      TITLE: elegir objeto
-      CONTENT: elige el objeto Que Quieres pedir.
+      TITLE: Elegir objeto
+      CONTENT: Elige el objeto que quieres pedir.
     NEW:
-      TITLE: nuevo pedido
-      AMOUNT: cantidad
-      PRICE: precio por unidad
+      TITLE: Nuevo pedido
+      AMOUNT: Cantidad
+      PRICE: Precio por unidad
     DELIVERY:
-      TITLE: entregar objetos
-      AMOUNT: "cantidad (máX. {maX})"
+      TITLE: Entregar objetos
+      AMOUNT: "Cantidad (máx. {max})"
     CANCEL:
-      TITLE: cancelar pedido
-      CONTENT: "¿cancelar el pedido #{id}? el depósito restante se devolverá."
+      TITLE: Cancelar pedido
+      CONTENT: "¿Cancelar el pedido #{id}? el depósito restante se devolverá."
     BUTTON:
-      SEARCH: buscar
-      NEW: nuevo pedido
-      MY: mis pedidos
-      COLLECT: cobrar
-      BACK: volver
-      COLLECT_ALL: cobrar todo
-      DROP_ITEMS: soltar objetos
-      COLLECT_ORDER: cobrar este pedido
-      CANCEL_ORDER: cancelar pedido
-      CONFIRM: confirmar
+      SEARCH: Buscar
+      NEW: Nuevo pedido
+      MY: Mis pedidos
+      COLLECT: Cobrar
+      BACK: Volver
+      COLLECT_ALL: Cobrar todo
+      DROP_ITEMS: Soltar objetos
+      COLLECT_ORDER: Cobrar este pedido
+      DROP_ORDER: Soltar este pedido
+      CANCEL_ORDER: Cancelar pedido
+      CONFIRM: Confirmar
 COMMON:
   ENABLED: habilitado
   DISABLED: discapacitado
@@ -1480,6 +1488,10 @@ CONFIG:
       RELOAD-SUCCESS: "&aFREEZE CONFIG RELOADED."
   ORDERS:
     GUI:
+      CANCEL_ORDER:
+        TITLE: Orders -> Cancel Order
+      DELIVERY_DEPOSIT:
+        TITLE: Orders -> Deliver Items
       MAIN:
         TITLE: "&8Orders"
       MY_ORDERS:
@@ -1759,6 +1771,26 @@ CONFIG:
       sounds:
         click: {}
 MESSAGES:
+  COMMAND-HELP:
+    DISABLED: '&cHelp is turned off on this server.'
+    UNKNOWN: '&cThere is no help for &f{input}&c. Try &f/help &cto see the categories.'
+    HEADER: '&8&m------&r &b&lHelp &8&m------'
+    EMPTY: '&7There are no commands you can use right now.'
+    CATEGORY-LINE: '&b{title} &8({count}) &7- {description}'
+    CATEGORY-HOVER: '&7Click to see the {title} commands'
+    OVERVIEW-FOOTER: '&7Use &f/help <category> &7or &f/help <command>&7.'
+    CATEGORY-EMPTY: '&7You have no &f{title} &7commands.'
+    CATEGORY-HEADER: '&8&m------&r &b&l{title} &7({page}/{pages}) &8&m------'
+    COMMAND-LINE: '&f/{command} &8- &7{description}'
+    COMMAND-HOVER: "&f{usage}\n&7Click to type it"
+    COMMAND-HEADER: '&8&m------&r &b&l/{command} &8&m------'
+    COMMAND-USAGE: '&7Usage: &f{usage}'
+    COMMAND-ALIASES: '&7Also: &f{aliases}'
+    COMMAND-DISABLED: '&cThis command is turned off on this server.'
+    COMMAND-PERMISSION: '&7Permission: &f{permission}'
+    PAGE-HINT: '&7More: &f/help {category} {next}'
+    PREVIOUS: '&b« Previous'
+    NEXT: '&bNext »'
   AUCTION_HOUSE:
     PLAYERS_ONLY: "&cONLY PLAYERS CAN USE THIS COMMAND."
     NO_PERMISSION: '&cyou cannot use that auction house action.'
@@ -1909,6 +1941,7 @@ MESSAGES:
     PM-ENABLED: "&aPRIVATE MESSAGES ARE NOW ENABLED"
     PM-DISABLED: "&cPRIVATE MESSAGES ARE NOW DISABLED"
   TPAUTO:
+    ACTION-BAR: '&fYou have tpauto on.'
     ENABLED: "&7YOU TURNED ON TPAUTO."
     DISABLED: "&7YOU TURNED OFF TPAUTO."
   TPAHEREAUTO:
@@ -2094,14 +2127,6 @@ MESSAGES:
     TARGET-DISABLED-PAYMENTS: "&cTHE TARGET PLAYER HAS THE PAYMENTS DISABLED."
     SUCCESS-SENDER: "&7YOU PAID &b{player} &#A303F9{amount}&7 SHARDS."
     SUCCESS-RECEIVER: "&7YOU RECEIVED &#A303F9{amount}&7 SHARDS FROM &b{player}&7."
-  FINDPLAYER:
-    AFK: "&7{player}'S IN THE &#A303F9AFK"
-    RTP_ZONE: "&7{player}'S IN THE &cRTPZONE"
-    SPAWN: "&7{player}'S IN THE &bSPAWN"
-    OVERWORLD: "&7{player}'S IN THE &bOVERWORLD &7(&b{biome}&7)"
-    NETHER: "&7{player}'S IN THE &bNETHER &7(&b{biome}&7)"
-    THE_END: "&7{player}'S IN THE &bTHE END &7(&b{biome}&7)"
-    UNKNOWN: "&7{player}'S IN THE &b{world}"
   PUNISHMENTS:
     PLAYER-ONLY: "&cONLY PLAYERS CAN USE THIS COMMAND."
     NO-PERMISSION: '&cyou do not have permission to view punishment history.'
@@ -3519,7 +3544,6 @@ BUILTIN:
   c77190ba5e78d1b8df80: '&cusage: /cuboid crear <name>'
   4d29a2b8774a78044eff: '&cusage: /cuboid eliminar <name>'
   83fad9e4e4da8171c3eb: '&cusage: /delhome <name>'
-  0875240f77275dbdbbbd: '&cusage: /findplayer <player>'
   9693c86bc206fc68b182: '&cusage: /kick <player> [motivo]'
   692da4ab36c472e22f6a: '&cusage: /mute <player> [motivo]'
   6c88c5573a74036340c6: '&cusage: /pardon <player> [motivo]'

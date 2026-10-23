@@ -6,7 +6,6 @@ import com.bx.smpPlugin.managers.OrdersManager;
 import com.bx.smpPlugin.models.Order;
 import com.bx.smpPlugin.models.OrderSort;
 import com.bx.smpPlugin.utils.ColorUtils;
-import com.bx.smpPlugin.utils.SoundUtils;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
@@ -28,7 +27,15 @@ public class OrdersDeleteConfirmMenu extends BaseMenu {
             OrderSort sortMode,
             String categoryFilter
     ) {
-        super(plugin, OrdersMenuSupport.text(plugin, "ORDERS.GUI.DELETE.TITLE", "&8ᴏʀᴅᴇʀѕ -> ᴅᴇʟᴇᴛᴇ ᴏʀᴅᴇʀ"), 27);
+        super(
+                plugin,
+                plugin != null && plugin.getOrdersManager() != null
+                        ? plugin.getOrdersManager().getCancelOrderTitle(orderId)
+                        : OrdersMenuSupport.text(plugin, "ORDERS.GUI.DELETE.TITLE", "Orders -> Cancel Order"),
+                plugin != null && plugin.getOrdersManager() != null
+                        ? plugin.getOrdersManager().getCancelOrderSize()
+                        : 27
+        );
         this.orderId = orderId;
         this.backToMyOrders = backToMyOrders;
         this.originPage = Math.max(1, originPage);
@@ -39,30 +46,35 @@ public class OrdersDeleteConfirmMenu extends BaseMenu {
     @Override
     public void build(Player player) {
         clear();
-        fill(Material.GRAY_STAINED_GLASS_PANE);
+        int backSlot = OrdersMenuSupport.slot(plugin, "GUI.CANCEL_ORDER.BUTTONS.BACK.SLOT", 10);
+        int itemSlot = OrdersMenuSupport.slot(plugin, "GUI.CANCEL_ORDER.BUTTONS.ITEM.SLOT", 13);
+        int confirmSlot = OrdersMenuSupport.slot(plugin, "GUI.CANCEL_ORDER.BUTTONS.CONFIRM.SLOT", 16);
+
         Order order = plugin.getOrdersManager().getOrder(orderId);
         if (order != null) {
-            set(13, OrdersMenuSupport.createOrderDisplay(plugin, plugin.getOrdersManager(), order, true));
+            set(itemSlot, OrdersMenuSupport.createOrderDisplay(plugin, plugin.getOrdersManager(), order, true));
         }
-        set(10, OrdersMenuSupport.button(
-                plugin, "GUI.DELETE.BUTTONS.BACK", "ORDERS.GUI.DELETE.BACK",
-                Material.RED_STAINED_GLASS_PANE, "&cʙᴀᴄᴋ", List.of("&fʀᴇᴛᴜʀɴ ᴡɪᴛʜᴏᴜᴛ ᴄᴀɴᴄᴇʟʟɪɴɢ")
+        set(backSlot, OrdersMenuSupport.button(
+                plugin, "GUI.CANCEL_ORDER.BUTTONS.BACK", "ORDERS.GUI.DELETE.BACK",
+                Material.RED_STAINED_GLASS_PANE, "&fCancel", List.of("&7&oClick to return")
         ));
-        set(16, OrdersMenuSupport.button(
-                plugin, "GUI.DELETE.BUTTONS.CONFIRM", "ORDERS.GUI.DELETE.CONFIRM",
-                Material.LIME_STAINED_GLASS_PANE, "&aᴄᴏɴꜰɪʀᴍ",
-                List.of("&fᴄᴀɴᴄᴇʟ ᴛʜɪѕ ᴏʀᴅᴇʀ", "&7ᴜɴᴜѕᴇᴅ ᴇѕᴄʀᴏᴡ ʙᴇᴄᴏᴍᴇѕ ᴀ ᴄᴏʟʟᴇᴄᴛᴀʙʟᴇ ʀᴇꜰᴜɴᴅ")
+        set(confirmSlot, OrdersMenuSupport.button(
+                plugin, "GUI.CANCEL_ORDER.BUTTONS.CONFIRM", "ORDERS.GUI.DELETE.CONFIRM",
+                Material.LIME_STAINED_GLASS_PANE, "&fConfirm",
+                List.of("&7&oClick to cancel order")
         ));
     }
 
     @Override
     public void handleClick(int slot, Player player) {
-        if (slot == 10) {
-            SoundUtils.play(player, plugin.getConfigManager().getSound("MENUS.BUTTON-CLICK"));
+        int backSlot = OrdersMenuSupport.slot(plugin, "GUI.CANCEL_ORDER.BUTTONS.BACK.SLOT", 10);
+        int confirmSlot = OrdersMenuSupport.slot(plugin, "GUI.CANCEL_ORDER.BUTTONS.CONFIRM.SLOT", 16);
+        if (slot == backSlot) {
+            OrdersMenuSupport.click(player, plugin);
             openEdit(player);
             return;
         }
-        if (slot != 16) {
+        if (slot != confirmSlot) {
             return;
         }
 
@@ -75,19 +87,19 @@ public class OrdersDeleteConfirmMenu extends BaseMenu {
             OrdersManager.CancelOrderResult result = manager.cancelOrder(player, orderId);
             if (!result.success()) {
                 player.sendMessage(ColorUtils.toComponent(OrdersMenuSupport.text(
-                        plugin, "ORDERS.ORDER_NOT_ACTIVE", "&cᴛʜᴀᴛ ᴏʀᴅᴇʀ ᴄᴀɴ ɴᴏ ʟᴏɴɢᴇʀ ʙᴇ ᴄᴀɴᴄᴇʟʟᴇᴅ."
+                        plugin, "ORDERS.ORDER_NOT_ACTIVE", "&cThat order can no longer be cancelled."
                 )));
-                SoundUtils.play(player, plugin.getConfigManager().getSound("ORDERS.FAIL"));
+                OrdersMenuSupport.play(player, plugin, "ORDERS.FAIL");
                 openEdit(player);
                 return;
             }
             player.sendMessage(ColorUtils.toComponent(OrdersMenuSupport.text(
                     plugin,
                     "ORDERS.CANCELLED",
-                    "&eᴏʀᴅᴇʀ #{order_id} ᴡᴀѕ ᴄᴀɴᴄᴇʟʟᴇᴅ. ʀᴇᴍᴀɪɴɪɴɢ ᴇѕᴄʀᴏᴡ ɪѕ ʀᴇᴀᴅʏ ᴛᴏ ᴄᴏʟʟᴇᴄᴛ.",
+                    "&eOrder #{order_id} was cancelled. Remaining money has been refunded.",
                     "{order_id}", String.valueOf(orderId)
             )));
-            SoundUtils.play(player, plugin.getConfigManager().getSound("ORDERS.SUCCESS"));
+            OrdersMenuSupport.play(player, plugin, "ORDERS.CANCEL");
             new OrdersMyOrdersMenu(plugin, 1, sortMode).open(player);
         } finally {
             manager.endAction(player.getUniqueId());

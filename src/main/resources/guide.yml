@@ -131,9 +131,6 @@ PAGES:
         TEXT: "Bet on a dice roll against the house; shows the odds first"
       - COMMAND: "/roulette"
         TEXT: "Put money in the head roulette; the middle head wins the pot"
-      - COMMAND: "/rps"
-        TEXT: "Rock, paper, scissors against the server"
-        SUGGEST: true
 
   help:
     TITLE: "Rules and help"

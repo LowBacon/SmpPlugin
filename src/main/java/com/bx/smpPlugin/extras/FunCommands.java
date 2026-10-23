@@ -34,7 +34,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public final class FunCommands implements CommandExecutor, TabCompleter {
 
-    public static final List<String> EMOTES = List.of("slap", "highfive", "poke", "wave", "cheer");
+    public static final List<String> EMOTES = List.of("slap", "highfive", "poke", "cheer");
 
     private final SmpPlugin plugin;
     private final Map<String, Map<UUID, Long>> cooldowns = new ConcurrentHashMap<>();
@@ -69,7 +69,6 @@ public final class FunCommands implements CommandExecutor, TabCompleter {
             return true;
         }
         switch (name) {
-            case "rps" -> rps(player, args);
             case "rate" -> rate(player, args);
             case "firework" -> firework(player);
             case "sit" -> sit(player);
@@ -132,7 +131,7 @@ public final class FunCommands implements CommandExecutor, TabCompleter {
 
     private void emote(Player player, String name, String[] args) {
         ConfigurationSection emote = config().getConfigurationSection("EMOTES.LIST." + name);
-        boolean needsTarget = emote == null ? !name.equals("wave") && !name.equals("cheer") : emote.getBoolean("TARGET", false);
+        boolean needsTarget = emote == null ? !name.equals("cheer") : emote.getBoolean("TARGET", false);
         Player target = null;
         if (needsTarget) {
             if (args.length < 1) {
@@ -181,54 +180,6 @@ public final class FunCommands implements CommandExecutor, TabCompleter {
                 target.setVelocity(target.getVelocity().add(away.normalize().multiply(push).setY(0.2)));
             }
         }
-    }
-
-    // ------------------------------------------------------------------ games
-
-    private void rps(Player player, String[] args) {
-        List<String> moves = List.of("rock", "paper", "scissors");
-        String move = args.length > 0 ? args[0].toLowerCase(Locale.ROOT) : "";
-        if (!moves.contains(move)) {
-            Text.send(player, "FUN.RPS-USAGE", "&7/rps <rock|paper|scissors>");
-            return;
-        }
-        if (onCooldown(player, "rps", 3L)) {
-            return;
-        }
-        String bot = moves.get(ThreadLocalRandom.current().nextInt(3));
-        String[] countdown = {"&fRock...", "&fPaper...", "&fScissors...", "&e&lSHOOT!"};
-        for (int i = 0; i < countdown.length; i++) {
-            String frame = countdown[i];
-            plugin.getSpigotScheduler().runEntityLater(player, () -> {
-                if (player.isOnline()) {
-                    Text.title(player, frame, "", 0, 12, 0);
-                    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_SNARE, 0.6F, 1.0F);
-                }
-            }, 1L + i * 10L);
-        }
-        plugin.getSpigotScheduler().runEntityLater(player, () -> {
-            if (!player.isOnline()) {
-                return;
-            }
-            int outcome = (moves.indexOf(move) - moves.indexOf(bot) + 3) % 3; // 0 draw, 1 win, 2 lose
-            String result = switch (outcome) {
-                case 1 -> Text.get("FUN.RPS-WIN", "&a&lYou win!");
-                case 2 -> Text.get("FUN.RPS-LOSE", "&c&lYou lose!");
-                default -> Text.get("FUN.RPS-DRAW", "&e&lDraw!");
-            };
-            Text.title(player, result, "&7" + icon(move) + " &8vs &7" + icon(bot), 0, 40, 10);
-            player.playSound(player.getLocation(), outcome == 1 ? Sound.ENTITY_PLAYER_LEVELUP : Sound.ENTITY_VILLAGER_NO, 0.6F, 1.2F);
-            Text.send(player, "FUN.RPS", "&7You threw &f{you}&7, the server threw &f{bot}&7. {result}",
-                    "{you}", move, "{bot}", bot, "{result}", result);
-        }, 42L);
-    }
-
-    private static String icon(String move) {
-        return switch (move) {
-            case "rock" -> "🪨 rock";
-            case "paper" -> "📄 paper";
-            default -> "✂ scissors";
-        };
     }
 
     private void rate(Player player, String[] args) {
@@ -329,9 +280,6 @@ public final class FunCommands implements CommandExecutor, TabCompleter {
             return List.of();
         }
         String typed = args[0].toLowerCase(Locale.ROOT);
-        if (name.equals("rps")) {
-            return List.of("rock", "paper", "scissors").stream().filter(o -> o.startsWith(typed)).toList();
-        }
         if (EMOTES.contains(name) && sender instanceof Player player) {
             List<String> names = new ArrayList<>();
             for (Player online : Bukkit.getOnlinePlayers()) {

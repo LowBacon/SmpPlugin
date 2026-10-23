@@ -27,7 +27,6 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.coinflip.challenge` | Send private CoinFlip challenges and rematches. | everyone | New in 2.0. |
 | `smpplugin.coinflip.practice` | Flip practice coins (no currency). | everyone | New in 2.0. |
 | `smpplugin.afk.away` | Mark yourself AFK where you stand with /away. | everyone | New in 2.0.0-alpha.5. |
-| `smpplugin.findplayer` | See which dimension and biome another online player is in with /findplayer. | everyone | New in 2.0. /findplayer had no permission check in 1.5; default true keeps that behaviour. |
 | `smpplugin.friends` | Use /friends to add, remove and follow friends. | everyone | Declared in 2.0 with default true. It was undeclared in 1.5, which made it op-only unless granted. |
 | `smpplugin.lobby` | Use /lobby and /lobby survival. | everyone | Declared in 2.0 with default true. It was undeclared in 1.5, which made it op-only unless granted. |
 | `smpplugin.safety.use` | Read the server safety book with /safety. | everyone | Renamed from safety.use in 2.0; default changed from op-only to true. |
@@ -42,11 +41,10 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.halloween.trickortreat` | Knock for a treat (or a harmless trick) with /trickortreat during the Halloween season. | everyone | New in 3.0. |
 | `smpplugin.daily` | Claim the daily reward and keep a streak with /daily. | everyone | New in 3.0. |
 | `smpplugin.challenges` | See and finish the daily challenges with /challenges. | everyone | New in 3.0. |
-| `smpplugin.poll.vote` | Vote in polls started by staff. | everyone | New in 3.0. |
 | `smpplugin.giveaway.join` | Join giveaways started by staff. | everyone | New in 3.0. |
 | `smpplugin.mail` | Send and read /mail, including to offline players. | everyone | New in 3.0. |
-| `smpplugin.fun.emotes` | Use /slap, /highfive, /poke, /wave and /cheer. | everyone | New in 3.0; /hug removed in 3.1. |
-| `smpplugin.fun.games` | Use /rps, /rate and /dice roll. | everyone | New in 3.0; /8ball removed in 3.1. |
+| `smpplugin.fun.emotes` | Use /slap, /highfive, /poke and /cheer. | everyone | New in 3.0; /hug removed in 3.1, /wave in 4.3. |
+| `smpplugin.fun.games` | Use /rate and /dice roll. | everyone | New in 3.0; /8ball removed in 3.1, /rps in 4.3. |
 | `smpplugin.fun.sit` | Sit down where you stand with /sit. | everyone | New in 3.0. |
 | `smpplugin.back` | Return to where you were before your last teleport with /back. | everyone | New in 3.0. |
 | `smpplugin.seen` | See when a player was last online with /seen. | everyone | New in 3.0. |
@@ -71,6 +69,7 @@ including destructive actions and bypasses. Only use one when you mean that.
 | Node | Allows | Default | Notes |
 |---|---|---|---|
 | `smpplugin.chat.color` | Keep colour codes typed into /msg and staff chat. | nobody | New in 2.0.0-alpha.5. Without it the codes are removed. |
+| `smpplugin.homes.unlimited` | Set as many homes as you like (also given by HOME-LIMITS ranks marked UNLIMITED). | nobody | New in 4.3. |
 | `smpplugin.auctionhouse.fastbuy` | Allow the quick-purchase setting that skips the Auction House buy confirmation. | nobody | Declared in 2.0; previously undeclared (op-only unless granted). |
 | `smpplugin.auctionhouse.fastsell` | Allow the quick-sell setting for Auction House listings. | nobody | Declared in 2.0; previously undeclared (op-only unless granted). |
 | `smpplugin.donutplus` | Show the CustomSmp+ badge (player setting). | nobody | Declared in 2.0; previously undeclared (op-only unless granted). |
@@ -168,8 +167,6 @@ including destructive actions and bypasses. Only use one when you mean that.
 | `smpplugin.security.inspect` | View TitanGuard violation levels and evidence (grants titanguard.evidence). | nobody | New in 2.0. Since 4.2 the anti-cheat is TitanGuard. Grants: `titanguard.evidence` |
 | `smpplugin.coinflip.alerts` | Receive CoinFlip storage and settlement alerts. | nobody | New in 2.0. |
 | `smpplugin.coinflip.inspect` | /coinflipadmin status, inspect, audit, reconcile report, debug and any player's statistics. | nobody | New in 2.0. |
-| `smpplugin.staff.poll` | Start and end polls with /poll. | nobody | New in 3.0. |
-| `smpplugin.staff.chatgame` | Start and stop chat games with /chatgame. | nobody | New in 3.0. |
 | `smpplugin.staff.countdown` | Show a server-wide countdown with /countdown. | nobody | New in 3.0. |
 | `smpplugin.staff.speed` | Change walk and fly speed with /speed. | nobody | New in 3.0. |
 | `smpplugin.staff.whois` | Look up a player's details with /whois (the IP also needs smpplugin.staff.alts). | nobody | New in 3.0. |
@@ -322,13 +319,13 @@ including destructive actions and bypasses. Only use one when you mean that.
 
 | Node | Allows | Default | Notes |
 |---|---|---|---|
-| `smpplugin.admin` | Default-op administrator bundle: staff tools, administration and operational bypasses. Excludes destructive actions and security bypasses. | ops | In 2.0 this no longer includes destructive actions or security bypasses. Contains 146 nodes: every node in the staff, administration and operational-bypass tables. |
-| `smpplugin.role.helper` | Helper role: staff chat, reports, warn, kick, temp-mute, /whois and events. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 14 nodes: every node in the staff, administration and operational-bypass tables. |
+| `smpplugin.admin` | Default-op administrator bundle: staff tools, administration and operational bypasses. Excludes destructive actions and security bypasses. | ops | In 2.0 this no longer includes destructive actions or security bypasses. Contains 144 nodes: every node in the staff, administration and operational-bypass tables. |
+| `smpplugin.role.helper` | Helper role: staff chat, reports, warn, kick, temp-mute, /whois and events. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 12 nodes: every node in the staff, administration and operational-bypass tables. |
 | `smpplugin.role.moderator` | Moderator role: everything a helper has, plus staff mode, vanish, freeze, bans, mutes, invsee and spy. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 31 nodes: every node in the staff, administration and operational-bypass tables. |
 | `smpplugin.role.admin` | Admin role: everything a moderator has plus every tool in smpplugin.admin (no destructive actions). | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 2 nodes: every node in the staff, administration and operational-bypass tables. |
 | `smpplugin.role.manager` | Manager role: the admin role plus managing giveaways. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 2 nodes: every node in the staff, administration and operational-bypass tables. |
 | `smpplugin.role.developer` | Developer role: the admin role plus managing giveaways. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 2 nodes: every node in the staff, administration and operational-bypass tables. |
-| `smpplugin.role.owner` | Owner role: the admin role plus every destructive action (wipes, set-money) and every rank perk. Security bypasses (anti-cheat, hidden names) are still granted one by one. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 54 nodes: every node in the staff, administration and operational-bypass tables. |
+| `smpplugin.role.owner` | Owner role: the admin role plus every destructive action (wipes, set-money) and every rank perk. Security bypasses (anti-cheat, hidden names) are still granted one by one. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 55 nodes: every node in the staff, administration and operational-bypass tables. |
 | `smpplugin.role.coowner` | Co-owner role: everything the owner role has. | nobody | New in 3.0. Give this one node to a rank (for example with LuckPerms) instead of picking nodes. Contains 1 nodes: every node in the staff, administration and operational-bypass tables. |
 
 ## Legacy names and bundles

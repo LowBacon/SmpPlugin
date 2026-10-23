@@ -9,7 +9,7 @@ is set up from config files and built to stay light on the server.
 > candy shop, a reworked Trick or Treat, and rank perks for VIP and VIP+.
 > **3.1** added 🎲 `/dice` and the 🎰 `/roulette` head jackpot, a one-screen CoinFlip, `/guide`, an in-game
 > scoreboard editor, a cleaner tab list and real Minecraft borders for the spawn and the lobby.
-> **3.0** added the 🎃 Spooky Calendar, daily rewards and challenges, polls, giveaways, chat games and staff roles.
+> **3.0** added the 🎃 Spooky Calendar, daily rewards and challenges, giveaways and staff roles.
 >
 > Runs on **Minecraft 1.21.11, 26.1, 26.1.1, 26.1.2, 26.2 and 26.3**
 > on **Paper, Purpur, Spigot and CraftBukkit**, from one jar per server type.
@@ -18,11 +18,11 @@ is set up from config files and built to stay light on the server.
 
 ## ✨ Highlights
 
-- **All-in-one:** 220 commands replace a stack of separate plugins, set up the same way throughout.
+- **All-in-one:** 214 commands replace a stack of separate plugins, set up the same way throughout.
 - **Menus that move:**
   - 110+ chest menus with animated reveals
   - pop-up dialog screens on Paper 1.21.6+
-- **Feels alive:** daily rewards, daily challenges, chat games, polls, giveaways, emotes and a
+- **Feels alive:** daily rewards, daily challenges, giveaways, emotes and a
   rotating announcer.
 - **Light on the server:**
   - player data loads while the player is logging in
@@ -61,13 +61,11 @@ is set up from config files and built to stay light on the server.
 
 ## 🎉 Events & Fun (new in 3.0)
 
-- **`/poll`:** clickable votes with a boss-bar timer and a bar-chart result.
 - **`/giveaway`:** senior staff give away an item or money; players join with one click.
-- **Chat games:** unscramble, quick maths, fast typer and trivia. The first right answer wins.
 - **`/countdown`, a rotating announcer, and `/mail`** for offline players.
-- **Emotes:** `/slap` `/highfive` `/poke` `/wave` `/cheer`.
+- **Emotes:** `/slap` `/highfive` `/poke` `/cheer`.
 - **Games and toys:** `/dice` (bet against the house, odds shown first), `/roulette` (a head jackpot),
-  `/coinflip`, `/rps` `/rate` `/firework` `/sit`.
+  `/coinflip`, `/rate` `/firework` `/sit`.
 
 ## 🏠 Homes & Teleporting
 

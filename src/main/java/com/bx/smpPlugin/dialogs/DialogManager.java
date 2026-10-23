@@ -54,7 +54,9 @@ public final class DialogManager implements DialogGateway {
         this.notice = new NoticeDialog(plugin, config, sessions);
         this.tpa = new com.bx.smpPlugin.dialogs.screens.TpaDialog(plugin, config, sessions);
         this.auction = new com.bx.smpPlugin.dialogs.screens.AuctionDialog(plugin, config, sessions);
-        this.screens = List.of(settings, rtpQueue, quickBuyItem, tpa, auction, homes, stats, notice);
+        com.bx.smpPlugin.dialogs.screens.OrdersDialog orders =
+                new com.bx.smpPlugin.dialogs.screens.OrdersDialog(plugin, config, sessions);
+        this.screens = List.of(settings, rtpQueue, quickBuyItem, tpa, auction, orders, homes, stats, notice);
     }
 
     @SuppressWarnings("unchecked")
@@ -92,12 +94,29 @@ public final class DialogManager implements DialogGateway {
 
     @Override
     public boolean openTpaRequest(Player target, UUID requester, String requesterName, boolean tpaHere) {
-        return config.isScreenEnabled("TPA") && tpa.openRequest(target, requester, requesterName, tpaHere);
+        return config.isScreenEnabled("TPA-REQUEST") && tpa.openRequest(target, requester, requesterName, tpaHere);
     }
 
     @Override
     public boolean openAuctionPurchase(Player player, long listingId) {
         return config.isScreenEnabled("AUCTION-HOUSE") && auction.openPurchase(player, listingId);
+    }
+
+    @Override
+    public boolean openOrdersChooseItem(Player player) {
+        com.bx.smpPlugin.dialogs.screens.OrdersDialog orders = getScreen(com.bx.smpPlugin.dialogs.screens.OrdersDialog.class);
+        return orders != null && orders.openChooseItem(player);
+    }
+
+    @Override
+    public boolean openOrdersSearch(Player player, com.bx.smpPlugin.models.OrderSort sort, String categoryFilter, String query) {
+        com.bx.smpPlugin.dialogs.screens.OrdersDialog orders = getScreen(com.bx.smpPlugin.dialogs.screens.OrdersDialog.class);
+        return orders != null && orders.openSearch(player, sort, categoryFilter, query);
+    }
+
+    @Override
+    public boolean sendClickAction(Player viewer, String legacy, String hoverLegacy, java.util.function.Consumer<Player> onClick) {
+        return ChatClickMessages.sendInstantAction(plugin, viewer, legacy, hoverLegacy, onClick);
     }
 
     @Override

@@ -2,7 +2,7 @@
 # CustomSmp - Extras (new in 3.0)
 # ==============================================================================
 #
-# Daily rewards, daily challenges, polls, giveaways, chat games, the announcer,
+# Daily rewards, daily challenges, giveaways, the announcer,
 # mail, emotes, the utility commands, /dice and /roulette. Each part can be switched off as a
 # feature (/smpplugin feature) and every message can be changed in messages.yml
 # under V3.
@@ -127,36 +127,6 @@ CHALLENGES:
     SHARDS: 10
 
 # ------------------------------------------------------------------------------
-# Chat games - a question pops up in chat; the first right answer wins
-# ------------------------------------------------------------------------------
-CHAT-GAMES:
-  AUTO: true
-  # Minutes between automatic games.
-  INTERVAL-MINUTES: 12
-  # Fewer players online than this and no automatic game starts.
-  MIN-PLAYERS: 3
-  # Seconds before the answer is revealed.
-  TIME-LIMIT: 60
-  TYPES: [UNSCRAMBLE, MATH, TYPE, TRIVIA]
-  REWARD:
-    MONEY: 750
-    SHARDS: 2
-  WORDS: [diamond, creeper, netherite, enderman, pumpkin, redstone, villager, obsidian,
-          elytra, beacon, trident, axolotl, lantern, skeleton, emerald, phantom, warden,
-          blaze, totem, shulker, spawner, amethyst, cobblestone, furnace]
-  TRIVIA:
-    - QUESTION: "How many blocks of obsidian does a full nether portal frame need?"
-      ANSWERS: ["14"]
-    - QUESTION: "Which mob drops a totem of undying?"
-      ANSWERS: ["evoker", "evokers"]
-    - QUESTION: "What is the hardest ore to find in the Nether?"
-      ANSWERS: ["ancient debris", "debris"]
-    - QUESTION: "How many hearts does the Wither have?"
-      ANSWERS: ["150"]
-    - QUESTION: "What do you trade with piglins?"
-      ANSWERS: ["gold", "gold ingots", "gold ingot"]
-
-# ------------------------------------------------------------------------------
 # Announcer - rotating server messages
 # ------------------------------------------------------------------------------
 ANNOUNCER:
@@ -173,11 +143,8 @@ ANNOUNCER:
     - - "&6&l✦ TIP &8» &7Everything in one place: &f/menu"
 
 # ------------------------------------------------------------------------------
-# Polls and giveaways
+# Giveaways
 # ------------------------------------------------------------------------------
-POLLS:
-  MAX-OPTIONS: 6
-  DEFAULT-SECONDS: 60
 GIVEAWAYS:
   DEFAULT-SECONDS: 60
   MAX-WINNERS: 10
@@ -200,7 +167,7 @@ MAIL:
   SEND-COOLDOWN-SECONDS: 15
 
 # ------------------------------------------------------------------------------
-# Emotes - /slap /highfive /wave /poke /cheer
+# Emotes - /slap /highfive /poke /cheer
 # ------------------------------------------------------------------------------
 EMOTES:
   COOLDOWN-SECONDS: 10
@@ -224,11 +191,6 @@ EMOTES:
       MESSAGE: "&b{player} &7pokes &b{target}&7."
       PARTICLE: CLOUD
       SOUND: ENTITY_CHICKEN_EGG
-    wave:
-      TARGET: false
-      MESSAGE: "&a{player} &7waves at everyone &a👋"
-      PARTICLE: NOTE
-      SOUND: ENTITY_VILLAGER_YES
     cheer:
       TARGET: false
       MESSAGE: "&6{player} &7cheers! &6\\o/"

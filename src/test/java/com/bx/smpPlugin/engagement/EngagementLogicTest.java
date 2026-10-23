@@ -77,18 +77,6 @@ class EngagementLogicTest {
     }
 
     @Test
-    void scrambledWordsKeepTheirLettersButMove() {
-        String scrambled = ChatGames.scramble("netherite");
-        assertNotEquals("netherite", scrambled);
-        char[] a = "netherite".toCharArray();
-        char[] b = scrambled.toCharArray();
-        java.util.Arrays.sort(a);
-        java.util.Arrays.sort(b);
-        assertEquals(new String(a), new String(b));
-        assertEquals("ancient debris", ChatGames.normalize("  Ancient   DEBRIS "));
-    }
-
-    @Test
     void pendingItemsTextIsEmptyForNothing() {
         assertTrue(PendingItems.read(null).isEmpty());
         assertTrue(PendingItems.read("").isEmpty());

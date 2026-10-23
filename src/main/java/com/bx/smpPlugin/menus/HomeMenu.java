@@ -53,7 +53,7 @@ public class HomeMenu extends BaseMenu {
         List<Home> homes = new ArrayList<>(plugin.getHomeManager().getHomes(player.getUniqueId()));
         homes.sort(Comparator.comparingLong(Home::getCreatedAt));
 
-        int maxHomes = plugin.getHomeManager().getMaxHomes(player);
+        int maxHomes = plugin.getHomeManager().visibleHomeSlots(player);
         int totalPages = plugin.getHomeManager().getMaxHomePages(player);
         page = Math.max(0, Math.min(page, totalPages - 1));
 

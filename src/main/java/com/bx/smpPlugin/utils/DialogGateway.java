@@ -34,6 +34,19 @@ public interface DialogGateway {
         return false;
     }
 
+    default boolean openOrdersChooseItem(Player player) {
+        return false;
+    }
+
+    default boolean openOrdersSearch(Player player, com.bx.smpPlugin.models.OrderSort sort, String categoryFilter, String query) {
+        return false;
+    }
+
+    // A chat message whose click runs code instead of a command (Paper 1.21.6+ callbacks).
+    default boolean sendClickAction(Player viewer, String legacy, String hoverLegacy, java.util.function.Consumer<Player> onClick) {
+        return false;
+    }
+
     default boolean openStats(Player player) {
         return false;
     }

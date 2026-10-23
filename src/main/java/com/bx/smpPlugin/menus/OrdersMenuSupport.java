@@ -6,10 +6,14 @@ import com.bx.smpPlugin.managers.OrdersManager;
 import com.bx.smpPlugin.models.ItemKey;
 import com.bx.smpPlugin.models.Order;
 import com.bx.smpPlugin.models.OrderCollectionClaim;
+import com.bx.smpPlugin.models.OrderSort;
 import com.bx.smpPlugin.utils.ColorUtils;
 import com.bx.smpPlugin.utils.ItemUtils;
 import com.bx.smpPlugin.utils.NumberUtils;
+import com.bx.smpPlugin.utils.SoundUtils;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -17,6 +21,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 final class OrdersMenuSupport {
+
+    static final int PREV_SLOT = 45;
+    static final int FILTER_SLOT = 47;
+    static final int SHARD_SHOP_SLOT = 48;
+    static final int INFO_SLOT = 49;
+    static final int SEARCH_SLOT = 50;
+    static final int MY_ORDERS_SLOT = 51;
+    static final int NEXT_SLOT = 53;
 
     private OrdersMenuSupport() {
     }
@@ -55,26 +67,37 @@ final class OrdersMenuSupport {
         );
     }
 
+    static String publicOwnerName(SmpPlugin plugin, Order order) {
+        if (order == null) {
+            return "";
+        }
+        return plugin != null && plugin.getHideManager() != null
+                ? plugin.getHideManager().publicName(order.ownerUuid(), order.ownerName())
+                : (order.ownerName() != null ? order.ownerName() : "");
+    }
+
     static ItemStack createOrderDisplay(
             SmpPlugin plugin,
             OrdersManager manager,
             Order order,
             boolean ownedByViewer
     ) {
+        String owner = plugin != null && plugin.getHideManager() != null
+                ? plugin.getHideManager().publicName(order.ownerUuid(), order.ownerName())
+                : (order.ownerName() != null ? order.ownerName() : "");
         List<String> lore = list(
                 plugin,
                 "ORDERS.GUI.ORDER_ITEM.LORE",
                 List.of(
-                        "&f{item}",
-                        "&a{price_each} &fᴇᴀᴄʜ",
+                        "&a{requested} &frequested",
                         "",
-                        "&e{delivered}&7/&a{requested} &7ᴅᴇʟɪᴠᴇʀᴇᴅ",
-                        "&e{paid}&7/&a{total} &7ᴘᴀɪᴅ",
+                        "&a{price_each} &feach",
+                        "&a{delivered}/{requested} &fDelivered",
                         "",
-                        ownedByViewer ? "&fᴄʟɪᴄᴋ ᴛᴏ ᴍᴀɴᴀɢᴇ ᴛʜɪѕ ᴏʀᴅᴇʀ" : "&fᴄʟɪᴄᴋ ᴛᴏ ᴅᴇʟɪᴠᴇʀ ᴛʜɪѕ ɪᴛᴇᴍ"
+                        "&7{time} Until Order expires"
                 ),
                 "{item}", manager.describeItem(order.requestedItem()),
-                "{owner}", order.ownerName(),
+                "{owner}", owner,
                 "{price_each}", plugin.getCurrencyManager().formatMoney(order.priceEach()),
                 "{delivered}", String.valueOf(order.deliveredQuantity()),
                 "{requested}", String.valueOf(order.requestedQuantity()),
@@ -88,11 +111,16 @@ final class OrdersMenuSupport {
         String name = text(
                 plugin,
                 "ORDERS.GUI.ORDER_ITEM.NAME",
-                "&a{owner}'ѕ ᴏʀᴅᴇʀ",
-                "{owner}", order.ownerName(),
+                "&f{item}",
+                "{owner}", owner,
                 "{item}", manager.describeItem(order.requestedItem())
         );
-        return decorateItem(plugin, order.requestedItem(), name, lore, false);
+        ItemStack display = decorateItem(plugin, order.requestedItem(), name, lore, false);
+        int shown = Math.max(1, Math.min(64, order.remainingQuantity() > 0
+                ? order.remainingQuantity()
+                : order.requestedQuantity()));
+        display.setAmount(shown);
+        return display;
     }
 
     static ItemStack createClaimDisplay(
@@ -103,11 +131,11 @@ final class OrdersMenuSupport {
         if (claim.refundClaim()) {
             return ItemUtils.createItem(
                     Material.SUNFLOWER,
-                    text(plugin, "ORDERS.GUI.CLAIM.REFUND_NAME", "&aᴇѕᴄʀᴏᴡ ʀᴇꜰᴜɴᴅ"),
+                    text(plugin, "ORDERS.GUI.CLAIM.REFUND_NAME", "&aEscrow refund"),
                     list(
                             plugin,
                             "ORDERS.GUI.CLAIM.REFUND_LORE",
-                            List.of("&7ᴀᴍᴏᴜɴᴛ: &f{amount}", "&7ᴏʀᴅᴇʀ: &f#{order_id}", "", "&eᴄʟɪᴄᴋ ᴛᴏ ᴄᴏʟʟᴇᴄᴛ"),
+                            List.of("&7Amount: &f{amount}", "&7Order: &f#{order_id}", "", "&eClick to collect"),
                             "{amount}", plugin.getCurrencyManager().formatMoney(claim.moneyAmount()),
                             "{order_id}", String.valueOf(claim.orderId())
                     )
@@ -118,10 +146,10 @@ final class OrdersMenuSupport {
                 plugin,
                 "ORDERS.GUI.CLAIM.ITEM_LORE",
                 List.of(
-                        "&7ᴏʀᴅᴇʀ: &f#{order_id}",
-                        "&7ᴄʀᴇᴀᴛᴇᴅ: &f{age} ᴀɢᴏ",
+                        "&7Order: &f#{order_id}",
+                        "&7Created: &f{age} ago",
                         "",
-                        "&eᴄʟɪᴄᴋ ᴛᴏ ᴄᴏʟʟᴇᴄᴛ"
+                        "&eClick to collect"
                 ),
                 "{order_id}", String.valueOf(claim.orderId()),
                 "{age}", NumberUtils.formatTimeLong(Math.max(0L,
@@ -144,7 +172,7 @@ final class OrdersMenuSupport {
             boolean preserveOriginalLore
     ) {
         if (source == null || source.getType().isAir()) {
-            return ItemUtils.createItem(Material.BARRIER, "&cᴍɪѕѕɪɴɢ ɪᴛᴇᴍ", List.of("&7ѕᴛᴏʀᴇᴅ ɪᴛᴇᴍ ᴅᴀᴛᴀ ɪѕ ᴜɴᴀᴠᴀɪʟᴀʙʟᴇ."));
+            return ItemUtils.createItem(Material.BARRIER, "&cMissing item", List.of("&7Stored item data is unavailable."));
         }
 
         ItemStack display = source.clone();
@@ -155,9 +183,9 @@ final class OrdersMenuSupport {
         }
 
         List<String> combinedLore = new ArrayList<>();
-        List<String> enchantLines = ItemKey.fromStack(source).enchantLoreLines("&7- &d");
+        List<String> enchantLines = ItemKey.fromStack(source).enchantLoreLines("&7- &e");
         if (!enchantLines.isEmpty()) {
-            combinedLore.add(text(plugin, "ORDERS.GUI.REQUIRED_ENCHANTMENTS", "&bʀᴇǫᴜɪʀᴇᴅ ᴇɴᴄʜᴀɴᴛᴍᴇɴᴛѕ:"));
+            combinedLore.add(text(plugin, "ORDERS.GUI.REQUIRED_ENCHANTMENTS", "&bRequired enchantments:"));
             combinedLore.addAll(enchantLines);
             combinedLore.add("");
         }
@@ -182,7 +210,193 @@ final class OrdersMenuSupport {
         return decorateItem(plugin, source, displayName, extraLore, true);
     }
 
-    static String tr(String value) {
-        return value;
+    static void placeNavigation(
+            BaseMenu menu,
+            Player player,
+            boolean includeSearch,
+            boolean alwaysShowNext,
+            int page,
+            boolean hasPrev,
+            boolean hasNext,
+            OrderSort sort
+    ) {
+        SmpPlugin plugin = menu.plugin;
+        int prevSlot = slot(plugin, "GUI.MAIN.BUTTONS.PREV.SLOT", PREV_SLOT);
+        int filterSlot = slot(plugin, "GUI.MAIN.BUTTONS.FILTER.SLOT", FILTER_SLOT);
+        int shardSlot = slot(plugin, "GUI.MAIN.BUTTONS.SHARD_SHOP.SLOT", SHARD_SHOP_SLOT);
+        int infoSlot = slot(plugin, "GUI.MAIN.BUTTONS.INFO.SLOT", INFO_SLOT);
+        int searchSlot = slot(plugin, "GUI.MAIN.BUTTONS.SEARCH.SLOT", SEARCH_SLOT);
+        int myOrdersSlot = slot(plugin, "GUI.MAIN.BUTTONS.MY_ORDERS.SLOT", MY_ORDERS_SLOT);
+        int nextSlot = slot(plugin, "GUI.MAIN.BUTTONS.NEXT.SLOT", NEXT_SLOT);
+
+        if (hasPrev) {
+            menu.set(prevSlot, button(
+                    plugin, "GUI.MAIN.BUTTONS.PREV", "ORDERS.GUI.MAIN.PREV",
+                    Material.ARROW, "&fPrevious page",
+                    List.of("&f&oClick to view previous page")
+            ));
+        }
+
+        List<String> filterLore = new ArrayList<>(list(
+                plugin, "ORDERS.GUI.MAIN.FILTER.LORE", List.of("&7Click to change")
+        ));
+        filterLore.add("");
+        OrderSort current = sort == null ? plugin.getOrdersManager().getDefaultSort() : sort;
+        for (OrderSort value : plugin.getOrdersManager().getAllowedSorts()) {
+            String prefix = value == current ? "&f• " : "&7• ";
+            filterLore.add(prefix + plugin.getLanguageManager().display(
+                    "ORDER_SORTS", value.name(), value.displayName()
+            ));
+        }
+        menu.set(filterSlot, ItemUtils.createItem(
+                material(plugin, "GUI.MAIN.BUTTONS.FILTER.MATERIAL", Material.HOPPER),
+                text(plugin, "ORDERS.GUI.MAIN.FILTER.NAME", "&fFilter"),
+                filterLore
+        ));
+        menu.set(shardSlot, button(
+                plugin, "GUI.MAIN.BUTTONS.SHARD_SHOP", "ORDERS.GUI.MAIN.SHARD_SHOP",
+                Material.AMETHYST_SHARD, "&fShard Shop", List.of("&7Click to view")
+        ));
+        menu.set(infoSlot, button(
+                plugin, "GUI.MAIN.BUTTONS.INFO", "ORDERS.GUI.MAIN.INFO",
+                Material.BOOK, "&fOrders", List.of("&7Request and deliver items")
+        ));
+        if (includeSearch) {
+            menu.set(searchSlot, button(
+                    plugin, "GUI.MAIN.BUTTONS.SEARCH", "ORDERS.GUI.MAIN.SEARCH",
+                    Material.OAK_SIGN, "&fSearch", List.of("&7Click to search")
+            ));
+        }
+        menu.set(myOrdersSlot, button(
+                plugin, "GUI.MAIN.BUTTONS.MY_ORDERS", "ORDERS.GUI.MAIN.MY_ORDERS",
+                Material.CHEST, "&fYour Orders", List.of("&7Click to view")
+        ));
+        if (hasNext || alwaysShowNext) {
+            menu.set(nextSlot, button(
+                    plugin, "GUI.MAIN.BUTTONS.NEXT", "ORDERS.GUI.MAIN.NEXT",
+                    Material.ARROW, "&fNext page",
+                    List.of("&f&oClick to view next page")
+            ));
+        }
+    }
+
+    static boolean handleNavigationClick(
+            BaseMenu menu,
+            Player player,
+            int slot,
+            ClickType clickType,
+            int page,
+            boolean hasPrev,
+            boolean hasNext,
+            OrderSort sort,
+            String categoryFilter,
+            String query,
+            boolean fromMyOrders
+    ) {
+        SmpPlugin plugin = menu.plugin;
+        OrdersManager manager = plugin.getOrdersManager();
+        int prevSlot = slot(plugin, "GUI.MAIN.BUTTONS.PREV.SLOT", PREV_SLOT);
+        int filterSlot = slot(plugin, "GUI.MAIN.BUTTONS.FILTER.SLOT", FILTER_SLOT);
+        int shardSlot = slot(plugin, "GUI.MAIN.BUTTONS.SHARD_SHOP.SLOT", SHARD_SHOP_SLOT);
+        int infoSlot = slot(plugin, "GUI.MAIN.BUTTONS.INFO.SLOT", INFO_SLOT);
+        int searchSlot = slot(plugin, "GUI.MAIN.BUTTONS.SEARCH.SLOT", SEARCH_SLOT);
+        int myOrdersSlot = slot(plugin, "GUI.MAIN.BUTTONS.MY_ORDERS.SLOT", MY_ORDERS_SLOT);
+        int nextSlot = slot(plugin, "GUI.MAIN.BUTTONS.NEXT.SLOT", NEXT_SLOT);
+
+        if (slot == prevSlot && hasPrev) {
+            pageTurn(player, plugin);
+            openCurrent(plugin, player, page - 1, sort, categoryFilter, query, fromMyOrders);
+            return true;
+        }
+        if (slot == nextSlot && hasNext) {
+            pageTurn(player, plugin);
+            openCurrent(plugin, player, page + 1, sort, categoryFilter, query, fromMyOrders);
+            return true;
+        }
+        if (slot == filterSlot) {
+            click(player, plugin);
+            OrderSort next = nextSort(plugin, sort);
+            manager.getUiState(player.getUniqueId()).sort(next);
+            openCurrent(plugin, player, 1, next, categoryFilter, query, fromMyOrders);
+            return true;
+        }
+        if (slot == shardSlot) {
+            click(player, plugin);
+            player.performCommand("shardshop");
+            return true;
+        }
+        if (slot == infoSlot) {
+            click(player, plugin);
+            if (fromMyOrders) {
+                new OrdersBrowseMenu(plugin, 1, sort, "ALL", "").open(player);
+            }
+            return true;
+        }
+        if (slot == searchSlot && !fromMyOrders) {
+            click(player, plugin);
+            if (clickType != null && clickType.isRightClick()) {
+                new OrdersBrowseMenu(plugin, 1, sort, categoryFilter, "").open(player);
+                return true;
+            }
+            openSearch(plugin, player, sort, categoryFilter, query);
+            return true;
+        }
+        if (slot == myOrdersSlot) {
+            click(player, plugin);
+            new OrdersMyOrdersMenu(plugin, 1, sort, query).open(player);
+            return true;
+        }
+        return false;
+    }
+
+    static void openSearch(
+            SmpPlugin plugin,
+            Player player,
+            OrderSort sort,
+            String categoryFilter,
+            String query
+    ) {
+        if (plugin.getDialogManager() != null
+                && plugin.getDialogManager().openOrdersSearch(player, sort, categoryFilter, query)) {
+            return;
+        }
+        plugin.getOrdersManager().promptOrdersMenuSearch(player, sort, categoryFilter, false);
+    }
+
+    static void click(Player player, SmpPlugin plugin) {
+        play(player, plugin, "ORDERS.CLICK");
+    }
+
+    static void pageTurn(Player player, SmpPlugin plugin) {
+        play(player, plugin, "ORDERS.PAGE-TURN");
+    }
+
+    static void play(Player player, SmpPlugin plugin, String path) {
+        if (player == null || plugin == null || plugin.getConfigManager() == null) {
+            return;
+        }
+        SoundUtils.play(player, plugin.getConfigManager().getSound(path));
+    }
+
+    static OrderSort nextSort(SmpPlugin plugin, OrderSort current) {
+        List<OrderSort> sorts = plugin.getOrdersManager().getAllowedSorts();
+        int index = sorts.indexOf(current);
+        return index < 0 ? plugin.getOrdersManager().getDefaultSort() : sorts.get((index + 1) % sorts.size());
+    }
+
+    private static void openCurrent(
+            SmpPlugin plugin,
+            Player player,
+            int page,
+            OrderSort sort,
+            String categoryFilter,
+            String query,
+            boolean fromMyOrders
+    ) {
+        if (fromMyOrders) {
+            new OrdersMyOrdersMenu(plugin, page, sort, query).open(player);
+        } else {
+            new OrdersBrowseMenu(plugin, page, sort, categoryFilter, query).open(player);
+        }
     }
 }

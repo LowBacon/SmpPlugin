@@ -7,7 +7,6 @@ import com.bx.smpPlugin.models.OrderAlphaSort;
 import com.bx.smpPlugin.models.OrderCatalogEntry;
 import com.bx.smpPlugin.models.OrderUiState;
 import com.bx.smpPlugin.utils.ItemUtils;
-import com.bx.smpPlugin.utils.SoundUtils;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
@@ -61,7 +60,7 @@ public class OrdersSearchItemMenu extends BaseMenu {
                             "&7" + OrdersMenuSupport.text(plugin, "ORDERS.GUI.ITEM.CATEGORY", "Category")
                                     + ": &f" + plugin.getOrdersManager().prettifyCategory(entry.categoryKey()),
                             "",
-                            OrdersMenuSupport.text(plugin, "ORDERS.GUI.ITEM.SELECT", "&eᴄʟɪᴄᴋ ᴛᴏ ѕᴇʟᴇᴄᴛ")
+                            OrdersMenuSupport.text(plugin, "ORDERS.GUI.ITEM.SELECT", "&eClick to select")
                     ),
                     true
             ));
@@ -69,27 +68,27 @@ public class OrdersSearchItemMenu extends BaseMenu {
 
         int lastRow = inventory.getSize() - 9;
         set(lastRow, ItemUtils.createItem(Material.COMPASS,
-                OrdersMenuSupport.text(plugin, "ORDERS.GUI.BACK.NAME", "&bʙᴀᴄᴋ"),
-                List.of(OrdersMenuSupport.text(plugin, "ORDERS.GUI.BACK.LORE", "&7ʀᴇᴛᴜʀɴ"))));
+                OrdersMenuSupport.text(plugin, "ORDERS.GUI.BACK.NAME", "&bBack"),
+                List.of(OrdersMenuSupport.text(plugin, "ORDERS.GUI.BACK.LORE", "&7Return"))));
         set(lastRow + 1, page > 1
-                ? ItemUtils.createItem(Material.ARROW, "&aᴘʀᴇᴠɪᴏᴜѕ ᴘᴀɢᴇ", List.of("&7ᴘᴀɢᴇ " + (page - 1)))
+                ? ItemUtils.createItem(Material.ARROW, "&aPrevious page", List.of("&7Page " + (page - 1)))
                 : ItemUtils.createPlaceholder(Material.BLACK_STAINED_GLASS_PANE));
-        set(lastRow + 2, ItemUtils.createItem(Material.SPYGLASS, "&bɴᴇᴡ ѕᴇᴀʀᴄʜ",
-                List.of("&7ѕᴇᴀʀᴄʜ ᴀɴᴏᴛʜᴇʀ ɪᴛᴇᴍ ᴏʀ ᴄᴀᴛᴇɢᴏʀʏ")));
+        set(lastRow + 2, ItemUtils.createItem(Material.SPYGLASS, "&bNew search",
+                List.of("&7Search another item or category")));
         set(lastRow + 3, ItemUtils.createItem(Material.HOPPER,
-                "&eѕᴏʀᴛ: &f" + state.itemSort().name().replace('_', '-'),
-                List.of("&7ᴄʟɪᴄᴋ ᴛᴏ ᴛᴏɢɢʟᴇ ᴀ-ᴢ / ᴢ-ᴀ")));
+                "&eSort: &f" + state.itemSort().name().replace('_', '-'),
+                List.of("&7Click to toggle a-z / z-a")));
         set(lastRow + 5, ItemUtils.createItem(Material.BOOK,
-                "&eᴘᴀɢᴇ " + page + "&7/&e" + totalPages(results.size(), itemsPerPage),
-                List.of("&7ᴍᴀᴛᴄʜᴇѕ: &f" + results.size(), "&7ǫᴜᴇʀʏ: &f" + query)));
+                "&ePage " + page + "&7/&e" + totalPages(results.size(), itemsPerPage),
+                List.of("&7Matches: &f" + results.size(), "&7Query: &f" + query)));
         set(lastRow + 7, page < totalPages(results.size(), itemsPerPage)
-                ? ItemUtils.createItem(Material.ARROW, "&aɴᴇxᴛ ᴘᴀɢᴇ", List.of("&7ᴘᴀɢᴇ " + (page + 1)))
+                ? ItemUtils.createItem(Material.ARROW, "&aNext page", List.of("&7Page " + (page + 1)))
                 : ItemUtils.createPlaceholder(Material.BLACK_STAINED_GLASS_PANE));
 
         if (results.isEmpty()) {
             set(Math.min(itemsPerPage - 1, itemsPerPage / 2),
-                    ItemUtils.createItem(Material.BARRIER, "&cɴᴏ ʀᴇѕᴜʟᴛѕ",
-                            List.of("&7ɴᴏ ᴄᴀᴛᴀʟᴏɢ ɪᴛᴇᴍѕ ᴍᴀᴛᴄʜᴇᴅ &f" + query + "&7.")));
+                    ItemUtils.createItem(Material.BARRIER, "&cNo results",
+                            List.of("&7No catalog items matched &f" + query + "&7.")));
         }
     }
 
@@ -101,6 +100,7 @@ public class OrdersSearchItemMenu extends BaseMenu {
         int lastRow = inventory.getSize() - 9;
 
         if (slot == lastRow) {
+            OrdersMenuSupport.click(player, plugin);
             if (isEditMode()) {
                 openEditMenu(player);
             } else {
@@ -113,6 +113,7 @@ public class OrdersSearchItemMenu extends BaseMenu {
             return;
         }
         if (slot == lastRow + 2) {
+            OrdersMenuSupport.click(player, plugin);
             if (isEditMode()) {
                 plugin.getOrdersManager().promptEditOrderSearchInput(player, editOrderId, editNavigation);
             } else {
@@ -142,9 +143,7 @@ public class OrdersSearchItemMenu extends BaseMenu {
         boolean accepted = plugin.getOrdersManager().selectOrderItem(
                 player, selected.createPreviewItem(), selected.categoryKey(), editOrderId, editNavigation
         );
-        SoundUtils.play(player, plugin.getConfigManager().getSound(
-                accepted ? "MENUS.BUTTON-CLICK" : "ORDERS.FAIL"
-        ));
+        OrdersMenuSupport.play(player, plugin, accepted ? "ORDERS.CLICK" : "ORDERS.FAIL");
     }
 
     private List<OrderCatalogEntry> results(OrderUiState state) {
@@ -152,7 +151,7 @@ public class OrdersSearchItemMenu extends BaseMenu {
     }
 
     private void openPage(Player player, int targetPage) {
-        SoundUtils.play(player, plugin.getConfigManager().getSound("MENUS.PAGE-TURN"));
+        OrdersMenuSupport.pageTurn(player, plugin);
         new OrdersSearchItemMenu(plugin, query, targetPage, editOrderId, editNavigation).open(player);
     }
 

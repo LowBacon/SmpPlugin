@@ -47,7 +47,21 @@ public final class PerksCommand implements CommandExecutor, TabCompleter {
             check(sender, args);
             return true;
         }
+        if (args.length == 0 && sender instanceof Player player && hasRankCatalog()) {
+            new PerksMenu(player).open(player);
+            return true;
+        }
+        if (args.length == 0 && hasRankCatalog()) {
+            for (String id : rankIdsFromConfig()) {
+                sendConfiguredRank(sender, id);
+            }
+            return true;
+        }
         if (args.length >= 1) {
+            if (hasConfiguredRank(args[0])) {
+                sendConfiguredRank(sender, args[0]);
+                return true;
+            }
             Optional<Rank> rank = perks.rank(args[0]);
             if (rank.isEmpty()) {
                 Text.send(sender, "PERKS.UNKNOWN-RANK", "&7No rank called &f{rank}&7. Ranks: &f{ranks}",
@@ -71,6 +85,30 @@ public final class PerksCommand implements CommandExecutor, TabCompleter {
             }
         }
         return true;
+    }
+
+    private boolean hasRankCatalog() {
+        return plugin.getConfigManager().getRanks().getConfigurationSection("RANKS") != null;
+    }
+
+    private boolean hasConfiguredRank(String id) {
+        return plugin.getConfigManager().getRanks().isConfigurationSection("RANKS." + id.toLowerCase(Locale.ROOT));
+    }
+
+    private List<String> rankIdsFromConfig() {
+        var section = plugin.getConfigManager().getRanks().getConfigurationSection("RANKS");
+        return section == null ? List.of() : new ArrayList<>(section.getKeys(false));
+    }
+
+    private void sendConfiguredRank(CommandSender sender, String id) {
+        var config = plugin.getConfigManager().getRanks();
+        String path = "RANKS." + id.toLowerCase(Locale.ROOT);
+        String display = config.getString(path + ".DISPLAY", id);
+        Text.send(sender, "PERKS.RANK-HEADER", "{rank} &7rank details:", "{rank}", display);
+        Text.raw(sender, "&7Prefix: &f" + config.getString(path + ".PREFIX", "none"));
+        for (String permission : config.getStringList(path + ".PERMISSIONS")) Text.raw(sender, "&8 • &7Permission: &f" + permission);
+        for (String benefit : config.getStringList(path + ".BENEFITS")) Text.raw(sender, "&8 • &a" + benefit);
+        for (String perk : config.getStringList(path + ".PERKS")) Text.raw(sender, "&8 • &bPerk: &f" + perk);
     }
 
     private void check(CommandSender sender, String[] args) {
@@ -161,30 +199,38 @@ public final class PerksCommand implements CommandExecutor, TabCompleter {
             MenuStyle.frame(inventory, Material.PURPLE_STAINED_GLASS_PANE);
             Optional<Rank> own = perks.rankOf(node -> PermissionUtils.has(player, node));
             List<String> info = new ArrayList<>();
-            info.add(MenuStyle.MUTED + "Ranks add to event rewards and");
-            info.add(MenuStyle.MUTED + "shorten event waits. They never");
-            info.add(MenuStyle.MUTED + "change odds, prices or the rules.");
+            info.add(MenuStyle.MUTED + "Server ranks, permissions,");
+            info.add(MenuStyle.MUTED + "benefits and perks.");
             info.add("");
             info.add(MenuStyle.TEXT + "Your rank: " + own.map(Rank::display).orElse(MenuStyle.MUTED + "none"));
             if (!perks.isEnabled()) {
                 info.add(MenuStyle.BAD + "Rank perks are switched off.");
             }
             set(INFO_SLOT, ItemUtils.createItem(Material.NETHER_STAR, MenuStyle.ACCENT + "&lRank Perks", info));
-            List<Rank> ranks = perks.ranks();
-            for (int i = 0; i < ranks.size() && i < RANK_SLOTS.length; i++) {
-                Rank rank = ranks.get(i);
-                boolean mine = own.isPresent() && own.get().id().equals(rank.id());
-                List<String> lore = new ArrayList<>(lines(rank));
+            List<String> catalog = rankIdsFromConfig();
+            for (int i = 0; i < catalog.size() && i < RANK_SLOTS.length; i++) {
+                String id = catalog.get(i);
+                String path = "RANKS." + id;
+                var cfg = plugin.getConfigManager().getRanks();
+                String display = cfg.getString(path + ".DISPLAY", id);
+                boolean mine = PermissionUtils.has(player, "group." + id)
+                        || PermissionUtils.has(player, cfg.getString(path + ".PERMISSION", "smpplugin.rank." + id));
+                List<String> lore = new ArrayList<>();
+                lore.add(MenuStyle.MUTED + "Prefix: " + cfg.getString(path + ".PREFIX", "none"));
+                for (String permission : cfg.getStringList(path + ".PERMISSIONS")) lore.add(MenuStyle.TEXT + "Permission: " + permission);
+                for (String benefit : cfg.getStringList(path + ".BENEFITS")) lore.add(MenuStyle.GOOD + "• " + benefit);
+                for (String perk : cfg.getStringList(path + ".PERKS")) lore.add(MenuStyle.ACCENT + "• " + perk);
+                if (lore.size() == 1) lore.add(MenuStyle.MUTED + "No extra benefits configured.");
                 if (mine) {
                     lore.add("");
                     lore.add(MenuStyle.GOOD + "✔ Your rank");
                 }
-                ItemStack item = ItemUtils.createItem(mine ? Material.NETHER_STAR : Material.AMETHYST_SHARD, rank.display(), lore);
+                ItemStack item = ItemUtils.createItem(mine ? Material.NETHER_STAR : Material.AMETHYST_SHARD, display, lore);
                 set(RANK_SLOTS[i], ItemUtils.setGlint(item, mine));
             }
-            if (ranks.isEmpty()) {
+            if (catalog.isEmpty()) {
                 set(13, ItemUtils.createItem(Material.GRAY_DYE, MenuStyle.MUTED + "No ranks yet",
-                        List.of(MenuStyle.MUTED + "Staff add them in perks.yml.")));
+                        List.of(MenuStyle.MUTED + "Add them in ranks.yml.")));
             }
             set(CLOSE_SLOT, MenuStyle.close());
         }

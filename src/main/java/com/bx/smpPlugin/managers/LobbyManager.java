@@ -291,6 +291,13 @@ public final class LobbyManager {
                     lobby.getString("LEAVE-TO-SURVIVAL.NO-SAVED-LOCATION-MESSAGE", ""), player));
         }
 
+        leaveTo(player, destination);
+    }
+
+    // Takes a player out of the lobby to a place in the SMP: their SMP inventory, game mode and the
+    // rest come back exactly as with the lobby NPC. /spawn in the lobby uses it with the spawn.
+    public void leaveTo(Player player, Location destination) {
+        FileConfiguration lobby = config();
         Location finalDestination = destination;
         plugin.getSpigotScheduler().teleport(player, finalDestination).thenAccept(success -> {
             if (!Boolean.TRUE.equals(success)) {
@@ -591,7 +598,11 @@ public final class LobbyManager {
     // Scoreboard integration (consumed by ScoreboardManager)
     // ------------------------------------------------------------------
 
-    public String getScoreboardTitle() {
+    public String getScoreboardTitle(int animationFrame) {
+        List<String> frames = config().getStringList("SCOREBOARD.TITLE-FRAMES");
+        if (!frames.isEmpty()) {
+            return frames.get(Math.floorMod(animationFrame, frames.size()));
+        }
         return config().getString("SCOREBOARD.TITLE", "&6&lLOBBY");
     }
 

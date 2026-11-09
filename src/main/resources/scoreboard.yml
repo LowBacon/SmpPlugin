@@ -35,7 +35,15 @@ SCOREBOARD:
   # The text or value for Shard Cuboid. Available options: Any valid string text
   SHARD-CUBOID: '&#A303F9⌛ &fShards &#A303F9%economy_shard_cuboid_display%     '
   TITLE:
-  - '&#0069d6&lC&#0374da&lu&#067fdf&ls&#0a8be3&lt&#0d96e7&lo&#10a1ec&lm&#13acf0&lS&#17b8f4&lM&#1ac3f9&lP'
+  - '&#FFFFFF&lC&#DDF5FF&lu&#A9E3FF&ls&#6CC8F0&lt&#6CC8F0&lo&#6CC8F0&lm&#6CC8F0&lS&#A9E3FF&lM&#DDF5FF&lP'
+  - '&#DDF5FF&lC&#FFFFFF&lu&#DDF5FF&ls&#A9E3FF&lt&#6CC8F0&lo&#6CC8F0&lm&#6CC8F0&lS&#6CC8F0&lM&#A9E3FF&lP'
+  - '&#A9E3FF&lC&#DDF5FF&lu&#FFFFFF&ls&#DDF5FF&lt&#A9E3FF&lo&#6CC8F0&lm&#6CC8F0&lS&#6CC8F0&lM&#6CC8F0&lP'
+  - '&#6CC8F0&lC&#A9E3FF&lu&#DDF5FF&ls&#FFFFFF&lt&#DDF5FF&lo&#A9E3FF&lm&#6CC8F0&lS&#6CC8F0&lM&#6CC8F0&lP'
+  - '&#6CC8F0&lC&#6CC8F0&lu&#A9E3FF&ls&#DDF5FF&lt&#FFFFFF&lo&#DDF5FF&lm&#A9E3FF&lS&#6CC8F0&lM&#6CC8F0&lP'
+  - '&#6CC8F0&lC&#6CC8F0&lu&#6CC8F0&ls&#A9E3FF&lt&#DDF5FF&lo&#FFFFFF&lm&#DDF5FF&lS&#A9E3FF&lM&#6CC8F0&lP'
+  - '&#6CC8F0&lC&#6CC8F0&lu&#6CC8F0&ls&#6CC8F0&lt&#A9E3FF&lo&#DDF5FF&lm&#FFFFFF&lS&#DDF5FF&lM&#A9E3FF&lP'
+  - '&#A9E3FF&lC&#6CC8F0&lu&#6CC8F0&ls&#6CC8F0&lt&#6CC8F0&lo&#A9E3FF&lm&#DDF5FF&lS&#FFFFFF&lM&#DDF5FF&lP'
+  - '&#DDF5FF&lC&#A9E3FF&lu&#6CC8F0&ls&#6CC8F0&lt&#6CC8F0&lo&#6CC8F0&lm&#A9E3FF&lS&#DDF5FF&lM&#FFFFFF&lP'
   # Configuration section for Lines.
   LINES:
   - ''

@@ -39,12 +39,18 @@ Full list of commands: [docs/commands.md](docs/commands.md) (generated from `plu
   on Paper, sounds, a `DIRECT` delivery mode and safer shared state. The database is unchanged, so
   every order, delivery and claim is kept. `orders.yml` has the new `GUI` layout; an older file
   keeps working and missing keys use the defaults.
+- **PvP areas inside a protected world** (`worlds.yml` `PVP-AREAS`): `ring <min> <max> <x> <z>` or
+  `box <x1> <z1> <x2> <z2>`. Building stays protected there; only fighting is allowed, and only when
+  attacker and victim both stand inside (no hitting into the arena from the safe town). Used for the
+  arena ring around the medieval spawn.
 - **`docs/commands.md`**, generated from `plugin.yml` with each command's category, usage,
   aliases, permission, default access and feature switch, and checked by a test.
 
 ### Fixed
 - **Deleted homes came back after a restart** when the name was typed in a different case
   (`/delhome Base` for a home saved as `base`): the database delete now uses the saved name.
+- Shutting the server down with crates bound to blocks logged an error: the crate hologram clean-up
+  tried to schedule a task while SmpPlugin was already disabled. It now cleans up directly.
 - Orders: an item claim delivered to a player who logged out in the same moment is handed back to
   the claim list (kept from 4.2 through the Orders update).
 

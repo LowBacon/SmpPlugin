@@ -12,6 +12,10 @@ public interface DialogGateway {
 
     boolean openSettings(Player player);
 
+    default boolean openMainMenu(Player player) {
+        return false;
+    }
+
     boolean openRtpQueue(Player player);
 
     default boolean openHomes(Player player) {

@@ -43,7 +43,8 @@ public record WorldRules(
         long lockTime,
         boolean lockWeather,
         Map<String, String> gameRules,
-        String spawn
+        String spawn,
+        List<PvpArea> pvpAreas
 ) {
 
     public static final String SAME_WORLD = "SAME_WORLD";
@@ -60,7 +61,7 @@ public record WorldRules(
                 !lobby && !ffa, !lobby, !lobby, lobby,
                 lobby ? Set.of("help", "list", "msg", "tell", "reply", "rules", "lobby", "spawn") : Set.of(),
                 lobby || ffa ? -1 : 100, lobby || ffa, "DEFAULT", lobby ? "PEACEFUL" : "",
-                lobby ? 6000L : -1L, lobby, Map.of(), "");
+                lobby ? 6000L : -1L, lobby, Map.of(), "", List.of());
     }
 
     static WorldRules read(String key, ConfigurationSection section) {
@@ -113,7 +114,8 @@ public record WorldRules(
                 section.getLong("LOCK-TIME", d.lockTime()),
                 section.getBoolean("LOCK-WEATHER", d.lockWeather()),
                 Map.copyOf(gameRules),
-                text(section.getString("SPAWN"), d.spawn()));
+                text(section.getString("SPAWN"), d.spawn()),
+                PvpArea.parseAll(section.getStringList("PVP-AREAS")));
     }
 
     public WorldRules withEnabled(boolean value) {
@@ -121,7 +123,20 @@ public record WorldRules(
                 hiddenFromOtherWorlds, sidebar, pvp, blockBreak, blockPlace, containers, entityInteract, itemDrop,
                 itemPickup, hunger, fallDamage, otherDamage, mobSpawning, portals, leaveByTeleport, commandAllowlist,
                 allowedCommands, protectedRadius, respawnInWorld, deathInventory, difficulty, lockTime, lockWeather,
-                gameRules, spawn);
+                gameRules, spawn, pvpAreas);
+    }
+
+    // Inside the protected area PvP is off unless both players stand in one of the PVP-AREAS.
+    public boolean pvpAllowedBetween(double attackerX, double attackerZ, double victimX, double victimZ) {
+        if (pvp) {
+            return true;
+        }
+        for (PvpArea area : pvpAreas) {
+            if (area.contains(attackerX, attackerZ) && area.contains(victimX, victimZ)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean isProtectedAt(double x, double z, double cx, double cz) {

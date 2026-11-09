@@ -673,10 +673,11 @@ commands:
     - seasonalevents
     - smpevents
   perks:
-    description: See the ranks and what each one adds
-    usage: /perks [rank|check <player>]
+    description: See all server ranks, permissions, benefits and perks
+    usage: /rank [rank|check <player>]
     permission: smpplugin.perks
     aliases:
+    - rank
     - ranks
     - vip
   claimitems:

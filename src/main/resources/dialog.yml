@@ -6,9 +6,9 @@
 # Purpur. On Spigot, or when a screen is turned off below, the command opens the
 # chest menu from menus.yml instead, so this file is safe on every server.
 #
-# Screens in this version: /settings, /homes, /stats, /tpa, the TPA request pop-up (off by default),
-# the Auction House purchase and sell screens, the /rtpq confirmation and the
-# Quick Buy item picker in the Auction House.
+# Screens in this version: the Custom SMP menu, /settings, /homes, /stats, /tpa,
+# the TPA request pop-up (off by default), Auction House purchase and sell screens,
+# the /rtpq confirmation and the Quick Buy item picker.
 #
 # Keys missing from your copy of this file are read from the plugin's built-in
 # copy, so screens added in an update work without editing anything.
@@ -29,8 +29,17 @@
 # Master switch. false keeps every command on the chest menus even on Paper.
 ENABLED: true
 
+# Adds the Custom SMP entry to the in-game ESC menu. Requires a Paper or Purpur
+# server with dialog support; the generated datapack is prepared before worlds load.
+PAUSE-SCREEN:
+  ENABLED: true
+  KEY: "smpplugin:custom_smp"
+  BUTTON-LABEL: "Custom SMP"
+  PACK-FORMAT: 80
+
 # Per-screen switches. false sends that command back to its chest menu.
 SCREENS:
+  MAIN: true
   SETTINGS: true
   RTP-QUEUE: true
   # /homes as a grid of slots with a manage screen per home. false uses the chest menu.
@@ -201,7 +210,7 @@ HOMES_DIALOG:
   # so you can name the rank that unlocks them, e.g. LOCKED-TOOLTIP-2: "&7Unlocked by &bVIP".
   LOCKED-TOOLTIP: "&7Get a higher rank for more home slots"
   SHOW-MORE-LABEL: "Show More"
-  TOTAL-SLOTS: 90
+  TOTAL-SLOTS: 99
   # How many slots each "Show More" press reveals in total.
   TIERS:
     - 3

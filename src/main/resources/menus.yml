@@ -1760,7 +1760,7 @@ RULES-MENU:
       SLOT: 12
       NAME: '&#00A4FCServer Rules'
       LORE:
-      - "&#00A4FC● &fNo Hacked Clients"
+      - "&#00A4FC● &fNo cheats, hacked clients, or unfair advantage"
       - "&#00A4FC● &fNo Movement Mods"
       - "&#00A4FC● &fNo Inventory Mods"
       - "&#00A4FC● &fNo Health Indicators"
@@ -1769,18 +1769,19 @@ RULES-MENU:
       - "&#00A4FC● &fNo Auto Place"
       - "&#00A4FC● &fNo Easy Place"
       - "&#00A4FC● &fNo Macros or Scripts"
-      - "&#00A4FC● &fNo Abusing bugs"
-      - "&#00A4FC● &fNo Using dupe methods"
-      - "&#00A4FC● &fNo Irl trading"
+      - "&#00A4FC● &fNo abusing bugs or exploits"
+      - "&#00A4FC● &fNo using item duplication methods"
+      - "&#00A4FC● &fNo griefing at spawn"
+      - "&#00A4FC● &fNo IRL trading"
       - "&#00A4FC● &fNo Invite Rewards"
       - "&#00A4FC● &fNo Cross Server Trading"
-      - "&#00A4FC● &fNo Finding or Using the seed"
-      - "&#00A4FC● &fNo Using More Than 5 Accounts"
+      - "&#00A4FC● &fNo finding or using the world seed"
+      - "&#00A4FC● &fUse no more than 5 accounts"
       - "&#00A4FC● &fNo Mouse Tweaks / Scrollers"
       - "&#00A4FC● &fNo Nitro Boost Rewards"
       - "&#00A4FC● &fNo Crafting Modifications"
       - "&#00A4FC● &fNo Staff Impersonation"
-      - "&#00A4FC● &fNo EXternal Gambling"
+      - "&#00A4FC● &fNo external gambling"
     RULE_2:
       MATERIAL: KNOWLEDGE_BOOK
       SLOT: 14

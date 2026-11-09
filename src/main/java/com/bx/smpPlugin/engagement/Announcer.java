@@ -4,6 +4,8 @@ package com.bx.smpPlugin.engagement;
 import com.bx.smpPlugin.SmpPlugin;
 import com.bx.smpPlugin.core.Text;
 import com.bx.smpPlugin.managers.FeatureManager;
+import com.bx.smpPlugin.seasonal.EventId;
+import com.bx.smpPlugin.seasonal.SeasonalEvents;
 import com.bx.smpPlugin.utils.PermissionUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
@@ -49,11 +51,31 @@ public final class Announcer implements CommandExecutor, TabCompleter {
                 List<String> block = new ArrayList<>();
                 lines.forEach(line -> block.add(String.valueOf(line)));
                 out.add(block);
+            } else if (entry instanceof java.util.Map<?, ?> conditional) {
+                Object event = conditional.get("EVENT");
+                Object rawLines = conditional.get("LINES");
+                if (event == null || !isEventTipActive(String.valueOf(event)) || !(rawLines instanceof List<?> lines)) {
+                    continue;
+                }
+                List<String> block = new ArrayList<>();
+                lines.forEach(line -> block.add(String.valueOf(line)));
+                if (!block.isEmpty()) out.add(block);
             } else if (entry != null) {
                 out.add(List.of(String.valueOf(entry)));
             }
         }
         return out;
+    }
+
+    private boolean isEventTipActive(String name) {
+        EventId id = EventId.parse(name).orElse(null);
+        if (id == null || plugin.getFeatureManager() == null) return false;
+        FeatureManager.Feature feature = id == EventId.ADVENT
+                ? FeatureManager.Feature.ADVENT : FeatureManager.Feature.HALLOWEEN;
+        if (!plugin.getFeatureManager().isEnabled(feature)) return false;
+        com.bx.smpPlugin.core.V3Module modules = plugin.getV3Module();
+        SeasonalEvents events = modules == null ? null : modules.events();
+        return events != null && events.isActive(id);
     }
 
     public void tick() {

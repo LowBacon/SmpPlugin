@@ -1,0 +1,76 @@
+# Public rank guide shown by /rank and /ranks. Edit this file to change names,
+# listed permissions, benefits and perks. It is a guide: permissions are still
+# granted by LuckPerms. Keep the group ID (section key) matched to LuckPerms.
+RANKS:
+  default:
+    DISPLAY: "&f&lBASIC"
+    PREFIX: "&7"
+    PERMISSIONS: ["smpplugin.perks", "smpplugin.homes"]
+    BENEFITS: ["5 personal homes", "1 team home through your team"]
+    PERKS: ["Access to the Custom SMP features"]
+  vip:
+    DISPLAY: "&a&lVIP"
+    PREFIX: "&a&lVIP &r"
+    PERMISSIONS: ["smpplugin.rank.vip"]
+    BENEFITS: ["5 to 10 personal homes", "VIP rank prefix"]
+    PERKS: ["10% calendar and daily reward bonus", "Faster event waits and extra Halloween knocks"]
+  vipplus:
+    DISPLAY: "&6&lVIP+"
+    PREFIX: "&6&lVIP+ &r"
+    PERMISSIONS: ["smpplugin.rank.vipplus"]
+    BENEFITS: ["10 to 20 personal homes", "VIP+ rank prefix"]
+    PERKS: ["20% calendar and daily reward bonus", "More event wait reductions and extra Halloween knocks"]
+  media:
+    DISPLAY: "&d&lMEDIA"
+    PREFIX: "&d&lMEDIA &r"
+    PERMISSIONS: ["rank.media", "group.media"]
+    BENEFITS: ["Up to 99 personal homes", "Media rank prefix"]
+    PERKS: ["Creator rank perks configured by the server"]
+  helperjr:
+    DISPLAY: "&b&lHELPER JR"
+    PREFIX: "&b&lHELPER JR &r"
+    PERMISSIONS: ["smpplugin.role.helperjr"]
+    BENEFITS: ["10 to 20 personal homes", "Junior helper staff tools"]
+    PERKS: ["Staff role; permissions depend on the server's LuckPerms setup"]
+  helper:
+    DISPLAY: "&9&lHELPER"
+    PREFIX: "&9&lHELPER &r"
+    PERMISSIONS: ["smpplugin.role.helper"]
+    BENEFITS: ["15 to 25 personal homes", "Chat, report and basic moderation tools"]
+    PERKS: ["Staff role; permissions depend on the server's LuckPerms setup"]
+  moderator:
+    DISPLAY: "&5&lMOD"
+    PREFIX: "&5&lMOD &r"
+    PERMISSIONS: ["smpplugin.role.moderator"]
+    BENEFITS: ["20 to 30 personal homes", "Moderation, staff mode and player support tools"]
+    PERKS: ["Staff role; permissions depend on the server's LuckPerms setup"]
+  admin:
+    DISPLAY: "&c&lADMIN"
+    PREFIX: "&c&lADMIN &r"
+    PERMISSIONS: ["smpplugin.role.admin"]
+    BENEFITS: ["30 to 50 personal homes", "Administrative tools"]
+    PERKS: ["Staff role; permissions depend on the server's LuckPerms setup"]
+  developer:
+    DISPLAY: "&3&lDEVELOPER"
+    PREFIX: "&3&lDEV &r"
+    PERMISSIONS: ["smpplugin.role.developer"]
+    BENEFITS: ["Unlimited personal homes", "Developer tools"]
+    PERKS: ["Staff role; permissions depend on the server's LuckPerms setup"]
+  manager:
+    DISPLAY: "&2&lMANAGER"
+    PREFIX: "&2&lMANAGER &r"
+    PERMISSIONS: ["smpplugin.role.manager"]
+    BENEFITS: ["Unlimited personal homes", "Server management tools"]
+    PERKS: ["Staff role; permissions depend on the server's LuckPerms setup"]
+  coowner:
+    DISPLAY: "&4&lCO-OWNER"
+    PREFIX: "&4&lCO-OWNER &r"
+    PERMISSIONS: ["smpplugin.role.coowner"]
+    BENEFITS: ["Unlimited personal homes", "Co-owner server tools"]
+    PERKS: ["Staff role; permissions depend on the server's LuckPerms setup"]
+  owner:
+    DISPLAY: "&4&lOWNER"
+    PREFIX: "&4&lOWNER &r"
+    PERMISSIONS: ["smpplugin.role.owner"]
+    BENEFITS: ["Unlimited personal homes", "Owner server tools"]
+    PERKS: ["Staff role; permissions depend on the server's LuckPerms setup"]

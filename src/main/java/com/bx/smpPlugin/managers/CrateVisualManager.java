@@ -632,13 +632,19 @@ public class CrateVisualManager {
         }
 
         Location center = new Location(world, key.x() + 0.5, key.y() + getHologramOffsetY() - 0.35, key.z() + 0.5);
-        plugin.getSpigotScheduler().runRegion(center, () -> {
+        Runnable purge = () -> {
             for (Entity entity : world.getNearbyEntities(center, 0.4, 2.5, 0.4, candidate -> candidate instanceof TextDisplay || candidate instanceof ItemDisplay)) {
                 if (isAtCrateHologramColumn(entity, key) || isAtCratePreviewColumn(entity, key)) {
                     entity.remove();
                 }
             }
-        });
+        };
+        // During shutdown the scheduler refuses new tasks; the server thread can clean up directly.
+        if (!plugin.isEnabled() && Bukkit.isPrimaryThread()) {
+            purge.run();
+            return;
+        }
+        plugin.getSpigotScheduler().runRegion(center, purge);
     }
 
     private void purgeUntrackedDisplaysForCrate(CrateManager.CrateBlockKey key) {

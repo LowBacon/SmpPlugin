@@ -275,7 +275,9 @@ public final class WorldListener implements Listener {
             return;
         }
         if (event.getEntity() instanceof Player victim && !victim.equals(attacker)) {
-            if (!rules.pvp()) {
+            Location from = attacker.getLocation();
+            Location to = victim.getLocation();
+            if (!rules.pvpAllowedBetween(from.getX(), from.getZ(), to.getX(), to.getZ())) {
                 event.setCancelled(true);
             }
             return;

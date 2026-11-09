@@ -67,7 +67,7 @@ SETTINGS:
     # The numerical value for Amount. Available options: Any valid integer
     AMOUNT: 16
   # The fewest homes anyone gets. HOME-LIMITS below usually gives more.
-  HOME-DEFAULT: 2
+  HOME-DEFAULT: 5
   # Extra homes by permission, so ranks need no numbered nodes. The highest one a player has wins.
   # smpplugin.homes.<number> and smpplugin.homes.page.<pages> still work too.
   HOME-PERMISSIONS: {}
@@ -81,7 +81,8 @@ SETTINGS:
   # smpplugin.homes.unlimited and smpplugin.homes.<number> still work on top of this.
   HOME-PLAYTIME-PER-EXTRA: 10h
   HOME-LIMITS:
-    default: {MIN: 3, MAX: 5}
+    media: {MIN: 99, MAX: 99}
+    default: {MIN: 5, MAX: 5}
     vip: {MIN: 5, MAX: 10}
     vipplus: {MIN: 10, MAX: 20}
     helperjr: {MIN: 10, MAX: 20}
@@ -518,13 +519,13 @@ TABLIST:
   # The text or value for Icon Head Skin. Available options: Any valid string text
   ICON-HEAD-SKIN: <head:%player_name%>
   # The text or value for Icon Media. Available options: Any valid string text
-  ICON-MEDIA: 📹
+  ICON-MEDIA: ''
   # The text or value for Media Badge Format. Available options: Any valid string text
-  MEDIA-BADGE-FORMAT: '&d<icon_media>&#37BFF9+'
+  MEDIA-BADGE-FORMAT: ''
   # The text or value for Media Badge Permission. Available options: Any valid string text
   MEDIA-BADGE-PERMISSION: rank.media
   # The text or value for Name Format. Available options: Any valid string text
-  NAME-FORMAT: <media_badge>%prefix%&f<nick>%team_suffix%
+  NAME-FORMAT: '%prefix%&f<nick>%team_suffix%'
   # Header and footer lines. Besides PlaceholderAPI placeholders these work:
   #   %animated_title% (the shining title below), %animated_line% (the moving gradient bar below)
   #   %player%, %rank% (LuckPerms prefix), %world%, %team%, %online%, %max_players%, %afk_count%
@@ -548,19 +549,19 @@ TABLIST:
   # A band of light that sweeps across the title, used by %animated_title%
   ANIMATION:
     ENABLED: true
-    TEXT: CustomSmp
+    TEXT: CustomSMP
     # Base colour of the letters and the colour of the passing shine (hex)
-    COLOR: '#00ADFC'
+    COLOR: '#78D1F6'
     SHINE: '#FFFFFF'
     BOLD: true
     # %animated_line%: a bar of LINE-CHAR fading from LINE-FROM to LINE-TO, with the same shine
     LINE-CHAR: '▬'
     LINE-LENGTH: 28
-    LINE-FROM: '#0B3D91'
-    LINE-TO: '#00ADFC'
+    LINE-FROM: '#FFFFFF'
+    LINE-TO: '#78D1F6'
     # Ticks between frames (20 ticks = 1 second). Lower is smoother but sends more updates.
     # Read at start-up. Pauses by itself while the server is lagging
-    INTERVAL-TICKS: 3
+    INTERVAL-TICKS: 2
   # Lines shown one at a time by %tip%, changing every TIPS-SECONDS
   TIPS:
   - '&#37BFF9/discord &8• &7Join our community'
@@ -965,3 +966,14 @@ MENU-ANIMATIONS:
   SPEED: 2
   # A soft page sound with the sweep. Available options: true, false
   SOUND: true
+
+# Messages and sounds for command errors and unemployed-villager interactions.
+COMMAND-FEEDBACK:
+  ENABLED: true
+  # Shown in the action bar for unknown player commands and permission-denied commands.
+  MESSAGE: "&cYou don't have permission to use this command, or this command doesn't exist!"
+  UNEMPLOYED-VILLAGER:
+    ENABLED: true
+    SOUND: ENTITY_VILLAGER_NO
+    VOLUME: 0.8
+    PITCH: 1.0

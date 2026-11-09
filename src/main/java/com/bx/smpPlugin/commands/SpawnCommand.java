@@ -56,6 +56,12 @@ public class SpawnCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        // From the lobby /spawn is a way into the SMP, so the player's own things come back with them.
+        if (plugin.getLobbyManager() != null && plugin.getLobbyManager().isInLobby(player)) {
+            plugin.getLobbyManager().leaveTo(player, destination);
+            return true;
+        }
+
         plugin.getTeleportManager().queue(player, destination, "SPAWN", null);
         return true;
     }

@@ -78,7 +78,7 @@ MESSAGES:
 
 WORLDS:
   LOBBY:
-    ENABLED: true
+    ENABLED: false
     WORLD-NAME: lobby
     CREATE-IF-MISSING: true
     # VOID: an empty world with only a small stone platform at the spawn, to build on.
@@ -167,6 +167,10 @@ WORLDS:
     ALLOWED-COMMANDS: []
     # Only this close to the spawn point is protected; -1 protects the whole world.
     PROTECTED-RADIUS: 100
+    # Places inside the protected area where players may still fight (building stays protected),
+    # e.g. an arena ring around the spawn town. "ring <min-radius> <max-radius> <centre-x> <centre-z>"
+    # or "box <x1> <z1> <x2> <z2>". Both players must stand inside one to hurt each other.
+    PVP-AREAS: []
     RESPAWN-IN-WORLD: false
     DEATH-INVENTORY: DEFAULT
     DIFFICULTY: ''
@@ -176,7 +180,7 @@ WORLDS:
     SPAWN: ''
 
   FFA:
-    ENABLED: true
+    ENABLED: false
     WORLD-NAME: ffa
     CREATE-IF-MISSING: true
     GENERATOR: VOID

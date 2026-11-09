@@ -695,7 +695,8 @@ public class ScoreboardManager {
 
     private String getTitle(Player player) {
         if (plugin.getLobbyManager() != null && plugin.getLobbyManager().isInLobby(player)) {
-            return ColorUtils.toTitleCaseSmart(ColorUtils.colorize(plugin.getLobbyManager().getScoreboardTitle(), player));
+            return ColorUtils.toTitleCaseSmart(ColorUtils.colorize(
+                    plugin.getLobbyManager().getScoreboardTitle(titleIndex), player));
         }
         List<String> titles = plugin.getConfigManager().getScoreboard().getStringList("SCOREBOARD.TITLE");
         if (titles.isEmpty()) {

@@ -3,6 +3,7 @@ package com.bx.smpPlugin.dialogs;
 
 import com.bx.smpPlugin.SmpPlugin;
 import com.bx.smpPlugin.dialogs.screens.QuickBuyItemDialog;
+import com.bx.smpPlugin.dialogs.screens.MainDialog;
 import com.bx.smpPlugin.dialogs.screens.RtpQueueDialog;
 import com.bx.smpPlugin.dialogs.screens.SettingsDialog;
 import com.bx.smpPlugin.dialogs.screens.NoticeDialog;
@@ -25,6 +26,7 @@ public final class DialogManager implements DialogGateway {
     private final DialogSession.Store sessions = new DialogSession.Store();
 
     private final SettingsDialog settings;
+    private final MainDialog main;
     private final RtpQueueDialog rtpQueue;
     private final QuickBuyItemDialog quickBuyItem;
     private final StatsDialog stats;
@@ -46,6 +48,7 @@ public final class DialogManager implements DialogGateway {
         this.plugin = plugin;
         this.config = new DialogConfig(plugin);
         this.settings = new SettingsDialog(plugin, config, sessions);
+        this.main = new MainDialog(plugin, config, sessions);
         this.rtpQueue = new RtpQueueDialog(plugin, config, sessions);
         this.quickBuyItem = new QuickBuyItemDialog(plugin, config, sessions);
         // Ordered so the cheap exact-match screens answer before the prefix-matching ones.
@@ -56,7 +59,7 @@ public final class DialogManager implements DialogGateway {
         this.auction = new com.bx.smpPlugin.dialogs.screens.AuctionDialog(plugin, config, sessions);
         com.bx.smpPlugin.dialogs.screens.OrdersDialog orders =
                 new com.bx.smpPlugin.dialogs.screens.OrdersDialog(plugin, config, sessions);
-        this.screens = List.of(settings, rtpQueue, quickBuyItem, tpa, auction, orders, homes, stats, notice);
+        this.screens = List.of(main, settings, rtpQueue, quickBuyItem, tpa, auction, orders, homes, stats, notice);
     }
 
     @SuppressWarnings("unchecked")
@@ -80,6 +83,11 @@ public final class DialogManager implements DialogGateway {
     @Override
     public boolean openSettings(Player player) {
         return config.isScreenEnabled("SETTINGS") && settings.open(player);
+    }
+
+    @Override
+    public boolean openMainMenu(Player player) {
+        return config.isScreenEnabled("MAIN") && main.open(player);
     }
 
     @Override

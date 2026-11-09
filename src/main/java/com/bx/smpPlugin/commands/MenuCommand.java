@@ -22,6 +22,9 @@ public class MenuCommand implements CommandExecutor {
             sender.sendMessage("Player only.");
             return true;
         }
+        if (plugin.getDialogManager() != null && plugin.getDialogManager().openMainMenu(player)) {
+            return true;
+        }
         new MainMenu(plugin, player).open(player);
         return true;
     }

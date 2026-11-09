@@ -16,7 +16,7 @@ JOIN:
   # Every player is teleported to the lobby on join, regardless of where they logged out.
   # (Ignored while maintenance mode is actively redirecting a player, or while a pending
   # maintenance-location restore exists for them - those systems take priority.)
-  ENABLED: true
+  ENABLED: false
   TELEPORT-DELAY-TICKS: 2
   HEAL: true
   FEED: true
@@ -57,7 +57,7 @@ COOLDOWNS:
   BLOCKED-BY-COMBAT-MESSAGE: "&cYou cannot do that while in combat."
 
 BORDER:
-  ENABLED: true
+  ENABLED: false
   # These are set automatically the first time you run /setlobby (as a 200x200 square centered
   # on it) or /lobby border - don't hand-edit unless you know the exact world coordinates you
   # want. Two ways to set an exact size/position in-game:
@@ -103,7 +103,7 @@ PROTECTION:
 
 NPC:
   # Requires FancyNpcs. Right-clicking the NPC with this exact name sends the player to survival.
-  ENABLED: true
+  ENABLED: false
   FANCYNPCS-NAME: "smp_entrance"
 
   INTERACTION-COOLDOWN-SECONDS: 3
@@ -131,6 +131,17 @@ NPC:
 
 SCOREBOARD:
   TITLE: "&6&lLOBBY"
+  # Animated SMP name, matching the Finnish white and light-blue colors.
+  TITLE-FRAMES:
+    - '&#FFFFFF&lC&#DDF5FF&lu&#A9E3FF&ls&#6CC8F0&lt&#6CC8F0&lo&#6CC8F0&lm&#6CC8F0&lS&#A9E3FF&lM&#DDF5FF&lP'
+    - '&#DDF5FF&lC&#FFFFFF&lu&#DDF5FF&ls&#A9E3FF&lt&#6CC8F0&lo&#6CC8F0&lm&#6CC8F0&lS&#6CC8F0&lM&#A9E3FF&lP'
+    - '&#A9E3FF&lC&#DDF5FF&lu&#FFFFFF&ls&#DDF5FF&lt&#A9E3FF&lo&#6CC8F0&lm&#6CC8F0&lS&#6CC8F0&lM&#6CC8F0&lP'
+    - '&#6CC8F0&lC&#A9E3FF&lu&#DDF5FF&ls&#FFFFFF&lt&#DDF5FF&lo&#A9E3FF&lm&#6CC8F0&lS&#6CC8F0&lM&#6CC8F0&lP'
+    - '&#6CC8F0&lC&#6CC8F0&lu&#A9E3FF&ls&#DDF5FF&lt&#FFFFFF&lo&#DDF5FF&lm&#A9E3FF&lS&#6CC8F0&lM&#6CC8F0&lP'
+    - '&#6CC8F0&lC&#6CC8F0&lu&#6CC8F0&ls&#A9E3FF&lt&#DDF5FF&lo&#FFFFFF&lm&#DDF5FF&lS&#A9E3FF&lM&#6CC8F0&lP'
+    - '&#6CC8F0&lC&#6CC8F0&lu&#6CC8F0&ls&#6CC8F0&lt&#A9E3FF&lo&#DDF5FF&lm&#FFFFFF&lS&#DDF5FF&lM&#A9E3FF&lP'
+    - '&#A9E3FF&lC&#6CC8F0&lu&#6CC8F0&ls&#6CC8F0&lt&#6CC8F0&lo&#A9E3FF&lm&#DDF5FF&lS&#FFFFFF&lM&#DDF5FF&lP'
+    - '&#DDF5FF&lC&#A9E3FF&lu&#6CC8F0&ls&#6CC8F0&lt&#6CC8F0&lo&#6CC8F0&lm&#A9E3FF&lS&#DDF5FF&lM&#FFFFFF&lP'
   # %server_online% is resolved directly by the plugin (Bukkit.getOnlinePlayers().size()) -
   # it does NOT require PlaceholderAPI or any expansion to be installed.
   LINES:

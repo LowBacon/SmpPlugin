@@ -136,7 +136,13 @@ ANNOUNCER:
   RANDOM: false
   SOUND: BLOCK_NOTE_BLOCK_CHIME
   MESSAGES:
-    - - "&6&l✦ TIP &8» &7Open one door a day in the &6Spooky Calendar&7: &f/halloween"
+    # Event tips appear only while their seasonal event is active (/events <id> on|auto).
+    - EVENT: HALLOWEEN
+      LINES:
+      - "&6&l✦ TIP &8» &7Check &f/halloween &7for event rewards and candy shop prices."
+    - EVENT: ADVENT
+      LINES:
+      - "&b&l✦ TIP &8» &7Open today's Advent Calendar door with &f/advent&7."
     - - "&6&l✦ TIP &8» &7Claim your &adaily reward &7and keep your streak: &f/daily"
     - - "&6&l✦ TIP &8» &7Three new &bchallenges &7every day: &f/challenges"
     - - "&6&l✦ TIP &8» &7Sell items to other players on the Auction House: &f/ah"

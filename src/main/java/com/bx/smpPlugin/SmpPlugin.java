@@ -160,6 +160,19 @@ public final class SmpPlugin extends JavaPlugin {
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
     @Override
+    public void onLoad() {
+        // The ESC screen datapack must exist before Minecraft loads the world's datapacks.
+        try {
+            Class<?> type = Class.forName("com.bx.smpPlugin.dialogs.PauseScreenDatapack");
+            type.getMethod("writeBeforeWorldLoad", SmpPlugin.class).invoke(null, this);
+        } catch (ClassNotFoundException ignored) {
+            // Spigot builds omit the Paper dialog classes.
+        } catch (ReflectiveOperationException | LinkageError error) {
+            getLogger().warning("Could not prepare the Custom SMP pause-screen button: " + error.getMessage());
+        }
+    }
+
+    @Override
     public void onEnable() {
         detectInProcessReload();
         if (!checkMinecraftVersionSupport()) {
@@ -609,6 +622,7 @@ public final class SmpPlugin extends JavaPlugin {
     private void registerListeners() {
         PluginManager pm = getServer().getPluginManager();
         registerListener("PlayerContextListener", () -> new PlayerContextListener(this));
+        registerListener("CommandFeedbackListener", () -> new CommandFeedbackListener(this));
         registerListener("WorldListener", () -> new com.bx.smpPlugin.worlds.WorldListener(this, worldSystem));
         registerListener("WorldCommandGate", () -> new com.bx.smpPlugin.worlds.WorldCommandGate(this, worldSystem));
         joinPreloadListener = new com.bx.smpPlugin.listeners.JoinPreloadListener(this);

@@ -68,6 +68,7 @@ public class ConfigManager {
             "halloween.yml",
             "advent.yml",
             "perks.yml",
+            "ranks.yml",
             "extras.yml",
             "guide.yml",
             "borders.yml",
@@ -117,6 +118,7 @@ public class ConfigManager {
     private FileConfiguration halloween;
     private FileConfiguration advent;
     private FileConfiguration perks;
+    private FileConfiguration ranks;
     private FileConfiguration extras;
     private FileConfiguration guide;
     private FileConfiguration borders;
@@ -150,6 +152,7 @@ public class ConfigManager {
         halloween    = load("halloween.yml", halloween);
         advent       = load("advent.yml", advent);
         perks        = load("perks.yml", perks);
+        ranks        = load("ranks.yml", ranks);
         extras       = load("extras.yml", extras);
         guide        = load("guide.yml", guide);
         borders      = load("borders.yml", borders);
@@ -2244,6 +2247,7 @@ public class ConfigManager {
     public FileConfiguration getHalloween()     { return halloween; }
     public FileConfiguration getAdvent()        { return advent; }
     public FileConfiguration getPerks()         { return perks; }
+    public FileConfiguration getRanks()         { return ranks; }
     public FileConfiguration getExtras()        { return extras; }
     public FileConfiguration getGuide()         { return guide; }
     public FileConfiguration getBorders()       { return borders; }

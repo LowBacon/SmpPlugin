@@ -2,6 +2,8 @@
 
 A complete, feature-rich **Minecraft SMP core plugin** for **Minecraft 1.21.11 – 26.3** on **Paper, Purpur, Spigot and CraftBukkit**.
 
+> **Latest release: 4.4.0.** This release adds a CustomSMP pause-screen dialog, a smooth Finland-colour tab list,
+> a configurable `/rank` guide, rank-based home limits, polished rules and command feedback, and event-aware chat tips.
 > **4.1.0** shows each player's rank (for example **Owner**) above their head and removes the balance limit:
 > balances stay exact to the cent all the way to 92 quadrillion.
 > **4.0.0** made every balance change exact and saved at once, with a ledger behind `/transactions`, `/baltop`
@@ -16,6 +18,18 @@ A complete, feature-rich **Minecraft SMP core plugin** for **Minecraft 1.21.11 �
 SmpPlugin is designed to provide an entire SMP server experience from a single, highly configurable plugin. It combines gameplay, economy, social features, moderation, player utilities, competitive systems, GUI menus, statistics, server management, and extensive integrations into one unified system.
 
 Instead of running a small army of plugins just to make an SMP function, SmpPlugin brings the majority of the core systems together in one optimized and configurable package.
+
+## 🆕 New in 4.4
+
+| | |
+|---|---|
+| 🖥️ **CustomSMP pause screen** | Opens the CustomSMP menu dialog from the Minecraft pause screen, with a generated datapack fallback for the button. |
+| 🇫🇮 **Animated tab list** | Smooth white and light-blue title and moving highlight line. Edit the colors, title and animation speed in `config.yml`. |
+| 🏅 **`/rank` and `/ranks`** | Browse rank prefixes, permission nodes, benefits and perks. Edit the catalog in `ranks.yml`. |
+| 🏠 **Homes by rank** | Configure home tiers in `config.yml`; the included setup gives Basic five homes and Media 99. Teams keep one shared team home. |
+| 📜 **Rules and command feedback** | `/rules` shows server rules. Unknown and permission-denied commands can show a configurable red action bar. |
+| 🔔 **Season-aware tips** | Halloween and Advent chat tips appear only while those events are active. The Halloween tip points to `/halloween` for rewards and candy-shop prices. |
+| 🧑‍🌾 **Villager refusal sound** | Unemployed adult villagers and nitwits play the configurable villager refusal sound when right-clicked. |
 
 ## 🆕 New in 4.1
 
@@ -400,17 +414,18 @@ For 1.21.10 and older use SmpPlugin 1.5. See [COMPATIBILITY.md](COMPATIBILITY.md
 ### Build
 
 ```bash
-mvn clean package
+mvn clean package -DskipTests
 ```
 
 This builds the jar for **Paper and Purpur**:
 
 ```text
-target/SmpPlugin-4.1.0-paper.jar
+target/SmpPlugin-4.4.0-paper.jar
 ```
 
-For **Spigot and CraftBukkit**, build with `mvn clean package -Pspigot`, which produces
-`target/SmpPlugin-4.1.0-spigot.jar`. The two APIs are not binary compatible; use the matching jar.
+For **Spigot and CraftBukkit**, build with `mvn package -Pspigot -DskipTests`, which produces
+`target/SmpPlugin-4.4.0-spigot.jar`. Run the Paper build first and omit `clean` from the second command
+to keep both jars in `target/`. The two APIs are not binary compatible; use the matching jar.
 
 ## 📦 Installation
 
@@ -421,6 +436,13 @@ For **Spigot and CraftBukkit**, build with `mvn clean package -Pspigot`, which p
 4. Configure the generated configuration files.
 5. Install optional dependencies for the integrations you want to use.
 6. Restart the server, or run `/smpplugin reload`, after configuration changes.
+
+### Upgrading to 4.4
+
+- Existing player and world data is kept. New settings are added from the bundled defaults; existing custom values
+  stay in place. Review `TABLIST.ANIMATION`, `SETTINGS.HOME-LIMITS` and `COMMAND-FEEDBACK` in `config.yml`.
+- `ranks.yml` is created if it is missing. Edit it to change the public rank guide; LuckPerms still controls which
+  permissions players actually receive.
 
 ### Upgrading to 4.0
 

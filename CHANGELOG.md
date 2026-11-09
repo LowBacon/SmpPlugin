@@ -1,6 +1,33 @@
 # Changelog
 
-## 4.3.0 — unreleased
+## 4.4.0 — 9 November 2026
+
+**CustomSMP polish, a Finland-inspired animated identity, and configurable rank/event guidance.**
+
+### Added
+- **CustomSMP pause-screen dialog:** the server pause screen opens the plugin's menu dialog,
+  with a generated datapack fallback for the custom menu button.
+- **Animated Finland-colour tab list:** a smooth white and light-blue CustomSMP title and moving
+  highlight line, with configurable animation colours, speed and text.
+- **`/rank` and `/ranks` rank guide:** an editable `ranks.yml` catalog shows rank prefixes,
+  permission nodes, home limits, benefits and perks. Default players get five homes; Media gets
+  99, with the limits configurable. The existing team system continues to provide one team home.
+- **Custom command feedback:** unknown player commands and permission-denied commands can display
+  a configurable red action-bar message. Right-clicking an adult unemployed villager or nitwit
+  plays the configurable villager refusal sound.
+- **Event-aware chat tips:** Halloween and Advent announcements are shown only while their events
+  are active. The Halloween tip directs players to `/halloween` for event rewards and candy shop
+  prices.
+- **Rules menu:** `/rules` presents the configurable server and chat rules, including the no-cheats
+  rule.
+
+### Changed
+- Rank, command-feedback, villager-sound and event-tip settings are exposed in editable YAML
+  configuration files.
+- Test-server defaults disable the lobby and FFA worlds while preserving the Spawn and survival
+  worlds.
+
+## 4.3.0 — 8 November 2026
 
 **Commands cleaned up, a real `/help`, UltimateDonutSMP's TPA and Orders, and rank-based homes.**
 Full list of commands: [docs/commands.md](docs/commands.md) (generated from `plugin.yml`).
